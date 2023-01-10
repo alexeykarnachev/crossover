@@ -3,9 +3,6 @@
 #include "cimgui_impl.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
 #include <GL/gl.h>
 
 #ifdef IMGUI_HAS_IMSTR
@@ -19,9 +16,9 @@
 GLFWwindow* window;
 
 int main(int argc, char* argv[]) {
-
-    if (!glfwInit())
+    if (!glfwInit()) {
         return -1;
+    }
 
     // Decide GL+GLSL versions
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
@@ -29,13 +26,7 @@ int main(int argc, char* argv[]) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
-#if __APPLE__
-    // GL 3.2 Core + GLSL 150
-    const char* glsl_version = "#version 150";
-#else
-    // GL 3.2 + GLSL 130
-    const char* glsl_version = "#version 130";
-#endif
+    const char* glsl_version = "#version 460 core";
 
     // just an extra window hint for resize
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -48,43 +39,16 @@ int main(int argc, char* argv[]) {
     }
 
     glfwMakeContextCurrent(window);
-
-    // enable vsync
     glfwSwapInterval(1);
-
-    // check opengl version sdl uses
-    printf("opengl version: %s\n", (char*)glGetString(GL_VERSION));
-
-    // setup imgui
     igCreateContext(NULL);
 
-    // set docking
     ImGuiIO* ioptr = igGetIO();
-    ioptr->ConfigFlags
-        |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    // ioptr->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable
-    // Gamepad Controls
-#ifdef IMGUI_HAS_DOCK
-    ioptr->ConfigFlags
-        |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
-    ioptr->ConfigFlags
-        |= ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport /
-                                              // Platform Windows
-#endif
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    igStyleColorsDark(NULL);
-    // ImFontAtlas_AddFontDefault(io.Fonts, NULL);
-
     bool showDemoWindow = true;
     bool showAnotherWindow = false;
-    ImVec4 clearColor;
-    clearColor.x = 0.45f;
-    clearColor.y = 0.55f;
-    clearColor.z = 0.60f;
-    clearColor.w = 1.00f;
+    ImVec4 clearColor = {0.45, 0.55, 0.60, 1.00};
 
     // main event loop
     bool quit = false;
@@ -97,14 +61,14 @@ int main(int argc, char* argv[]) {
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
 
-        if (showDemoWindow)
+        if (showDemoWindow) {
             igShowDemoWindow(&showDemoWindow);
+        }
 
-        // show a simple window that we created ourselves.
+        static float f = 0.0f;
+        static int counter = 0;
+
         {
-            static float f = 0.0f;
-            static int counter = 0;
-
             igBegin("Hello, world!", NULL, 0);
             igText("This is some useful text");
             igCheckbox("Demo window", &showDemoWindow);
@@ -116,8 +80,9 @@ int main(int argc, char* argv[]) {
             ImVec2 buttonSize;
             buttonSize.x = 0;
             buttonSize.y = 0;
-            if (igButton("Button", buttonSize))
+            if (igButton("Button", buttonSize)) {
                 counter++;
+            }
             igSameLine(0.0f, -1.0f);
             igText("counter = %d", counter);
 
@@ -152,14 +117,6 @@ int main(int argc, char* argv[]) {
         );
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-#ifdef IMGUI_HAS_DOCK
-        if (ioptr->ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            GLFWwindow* backup_current_window = glfwGetCurrentContext();
-            igUpdatePlatformWindows();
-            igRenderPlatformWindowsDefault(NULL, NULL);
-            glfwMakeContextCurrent(backup_current_window);
-        }
-#endif
         glfwSwapBuffers(window);
     }
 
