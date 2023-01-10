@@ -1,8 +1,7 @@
 #pragma once
+#include "const.h"
 #include "guy.h"
 #include <stddef.h>
-
-#define MAX_N_GUYS 1024
 
 typedef struct World {
     size_t n_guys;
@@ -10,3 +9,6 @@ typedef struct World {
 } World;
 
 extern World WORLD;
+
+void init_world(void);
+void spawn_guy(Guy guy);

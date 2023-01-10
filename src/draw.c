@@ -15,7 +15,7 @@
 #define igButton igButton_Str
 #endif
 
-void draw_guys() {
+void draw_guys(void) {
     for (size_t i = 0; i < WORLD.n_guys; ++i) {
         Guy guy = WORLD.guys[i];
     }
