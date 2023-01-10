@@ -1,131 +1,30 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
-#include <GLFW/glfw3.h>
-#include <stdio.h>
+#include "draw.h"
 #include <GL/gl.h>
 
-#ifdef IMGUI_HAS_IMSTR
-#define igBegin igBegin_Str
-#define igSliderFloat igSliderFloat_Str
-#define igCheckbox igCheckbox_Str
-#define igColorEdit3 igColorEdit3_Str
-#define igButton igButton_Str
-#endif
-
-GLFWwindow* window;
-
 int main(int argc, char* argv[]) {
-    if (!glfwInit()) {
-        return -1;
-    }
+    init_app();
 
-    // Decide GL+GLSL versions
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-
-    const char* glsl_version = "#version 460 core";
-
-    // just an extra window hint for resize
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-    window = glfwCreateWindow(1024, 768, "Hello World!", NULL, NULL);
-    if (!window) {
-        printf("Failed to create window! Terminating!\n");
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    igCreateContext(NULL);
-
-    ImGuiIO* ioptr = igGetIO();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
-    bool showDemoWindow = true;
-    bool showAnotherWindow = false;
-    ImVec4 clearColor = {0.45, 0.55, 0.60, 1.00};
-
-    // main event loop
     bool quit = false;
-    while (!glfwWindowShouldClose(window)) {
-
+    while (!glfwWindowShouldClose(APP.window)) {
         glfwPollEvents();
 
-        // start imgui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        igNewFrame();
-
-        if (showDemoWindow) {
-            igShowDemoWindow(&showDemoWindow);
-        }
-
-        static float f = 0.0f;
-        static int counter = 0;
-
-        {
-            igBegin("Hello, world!", NULL, 0);
-            igText("This is some useful text");
-            igCheckbox("Demo window", &showDemoWindow);
-            igCheckbox("Another window", &showAnotherWindow);
-
-            igSliderFloat("Float", &f, 0.0f, 1.0f, "%.3f", 0);
-            igColorEdit3("clear color", (float*)&clearColor, 0);
-
-            ImVec2 buttonSize;
-            buttonSize.x = 0;
-            buttonSize.y = 0;
-            if (igButton("Button", buttonSize)) {
-                counter++;
-            }
-            igSameLine(0.0f, -1.0f);
-            igText("counter = %d", counter);
-
-            igText(
-                "Application average %.3f ms/frame (%.1f FPS)",
-                1000.0f / igGetIO()->Framerate,
-                igGetIO()->Framerate
-            );
-            igEnd();
-        }
-
-        if (showAnotherWindow) {
-            igBegin("imgui Another Window", &showAnotherWindow, 0);
-            igText("Hello from imgui");
-            ImVec2 buttonSize;
-            buttonSize.x = 0;
-            buttonSize.y = 0;
-            if (igButton("Close me", buttonSize)) {
-                showAnotherWindow = false;
-            }
-            igEnd();
-        }
-
-        // render
-        igRender();
-        glfwMakeContextCurrent(window);
-        glViewport(
-            0, 0, (int)ioptr->DisplaySize.x, (int)ioptr->DisplaySize.y
-        );
-        glClearColor(
-            clearColor.x, clearColor.y, clearColor.z, clearColor.w
-        );
+        glClearColor(0.2, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-        glfwSwapBuffers(window);
+
+        draw_gui();
+
+        glfwSwapBuffers(APP.window);
     }
 
-    // clean up
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     igDestroyContext(NULL);
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(APP.window);
     glfwTerminate();
 
     return 0;

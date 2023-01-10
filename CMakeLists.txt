@@ -83,10 +83,8 @@ ENDIF()
 
 # Link all
 file(GLOB SOURCES "src/*.c")
-file(GLOB HEADERS "src/*.h")
 set(SOURCES ${SOURCES})
-set(HEADERS ${HEADERS})
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME} ${SOURCES})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_GLFW)
