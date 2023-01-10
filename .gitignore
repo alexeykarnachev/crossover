@@ -2,4 +2,5 @@
 !dependencies/cimgui/imgui/.gitignore
 
 build/
+*.swp
 
