@@ -5,6 +5,7 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "math.h"
+#include "world.h"
 
 #ifdef IMGUI_HAS_IMSTR
 #define igBegin igBegin_Str
@@ -13,6 +14,12 @@
 #define igColorEdit3 igColorEdit3_Str
 #define igButton igButton_Str
 #endif
+
+void draw_guys() {
+    for (size_t i = 0; i < WORLD.n_guys; ++i) {
+        Guy guy = WORLD.guys[i];
+    }
+}
 
 void draw_gui(void) {
     ImGui_ImplOpenGL3_NewFrame();
