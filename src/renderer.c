@@ -1,10 +1,12 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "draw.h"
+#include <glad/glad.h>
 
 #include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "math.h"
+#include "program.h"
+#include "renderer.h"
 #include "world.h"
 
 #ifdef IMGUI_HAS_IMSTR
@@ -15,13 +17,37 @@
 #define igButton igButton_Str
 #endif
 
-void draw_guys(void) {
-    for (size_t i = 0; i < WORLD.n_guys; ++i) {
-        Guy guy = WORLD.guys[i];
-    }
+static GLuint DUMMY_VAO;
+
+void create_renderer(void) {
+    glCreateVertexArrays(1, &DUMMY_VAO);
+    create_all_programs();
 }
 
-void draw_gui(void) {
+void render_guys(void) {
+    GLuint program = CIRCLE_PROGRAM;
+    glUseProgram(program);
+
+    Vec3 color = vec3(1.0, 0.5, 0.2);
+    Vec2 center = vec2(0.1, 0.1);
+    glBindVertexArray(DUMMY_VAO);
+    set_uniform_1fv(program, "color", (float*)&color, 3);
+    set_uniform_1i(program, "n_polygons", 10);
+    set_uniform_1f(program, "radius", 0.05);
+    set_uniform_1fv(program, "center", (float*)&center, 2);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 12);
+
+    // for (size_t i = 0; i < WORLD.n_guys; ++i) {
+    //     Guy guy = WORLD.guys[i];
+    //     set_uniform_1fv(program, "color", vec3(1.0, 0.5, 0.2), 3);
+    //     set_uniform_1i(program, "n_polygons", 10);
+    //     set_uniform_1f(program, "radius", 0.05);
+    //     set_uniform_1fv(program, "center", vec2(0.1, 0.1), 2);
+    //     gldrawarrays(gl_triangle_fan, 0, 12);
+    // }
+}
+
+void render_gui(void) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();

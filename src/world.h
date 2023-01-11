@@ -10,5 +10,5 @@ typedef struct World {
 
 extern World WORLD;
 
-void init_world(void);
+void create_world(void);
 void spawn_guy(Guy guy);

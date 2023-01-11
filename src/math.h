@@ -10,3 +10,6 @@ typedef struct Vec3 {
     float y;
     float z;
 } Vec3;
+
+Vec2 vec2(float x, float y);
+Vec3 vec3(float x, float y, float z);

@@ -6,7 +6,7 @@
 
 World WORLD;
 
-void init_world(void) {
+void create_world(void) {
     WORLD.n_guys = 0;
 }
 

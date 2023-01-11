@@ -1,15 +1,15 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "app.h"
+#include <glad/glad.h>
 
+#include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
-#include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
 Application APP;
 
-void init_app(void) {
+void create_app(void) {
     if (!glfwInit()) {
         return;
     }
@@ -34,4 +34,10 @@ void init_app(void) {
     APP.gui_io = igGetIO();
     ImGui_ImplGlfw_InitForOpenGL(APP.window, true);
     ImGui_ImplOpenGL3_Init("#version 460 core");
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        printf("ERROR: failed to initialize GLAD\n");
+        glfwTerminate();
+        return;
+    }
 }

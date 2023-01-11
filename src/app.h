@@ -8,4 +8,4 @@ typedef struct Application {
 
 extern Application APP;
 
-void init_app(void);
+void create_app(void);
