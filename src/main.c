@@ -8,28 +8,19 @@
 #include "renderer.h"
 
 int main(int argc, char* argv[]) {
-    create_app();
+    create_app(1024, 768);
     create_renderer();
 
-    bool quit = false;
-    while (!glfwWindowShouldClose(APP.window)) {
-        glfwPollEvents();
-
+    while (!APP.window_should_close) {
         glClearColor(0.2, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        render_gui();
         render_guys();
-
-        glfwSwapBuffers(APP.window);
+        // render_gui();
+        update_window();
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    igDestroyContext(NULL);
-
-    glfwDestroyWindow(APP.window);
-    glfwTerminate();
+    destroy_app();
 
     return 0;
 }

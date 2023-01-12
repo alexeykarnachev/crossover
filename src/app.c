@@ -8,8 +8,28 @@
 #include <stdio.h>
 
 Application APP;
+static GLFWwindow* WINDOW;
 
-void create_app(void) {
+static void framebuffer_size_callback(
+    GLFWwindow* window, int width, int height
+) {
+    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    app->window_width = width;
+    app->window_height = height;
+}
+
+static void key_callback(
+    GLFWwindow* window, int key, int scancode, int action, int mods
+) {
+    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    if (key == GLFW_KEY_ESCAPE) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+        app->window_should_close = 1;
+        return;
+    }
+}
+
+void create_app(int window_width, int window_height) {
     if (!glfwInit()) {
         return;
     }
@@ -20,19 +40,24 @@ void create_app(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    APP.window = glfwCreateWindow(1024, 768, "Crossover", NULL, NULL);
-    if (!APP.window) {
+    WINDOW = glfwCreateWindow(
+        window_width, window_height, "Crossover", NULL, NULL
+    );
+    if (WINDOW == NULL) {
         printf("Failed to create window! Terminating!\n");
         glfwTerminate();
         return;
     }
 
-    glfwMakeContextCurrent(APP.window);
+    glfwMakeContextCurrent(WINDOW);
+    glfwSetWindowUserPointer(WINDOW, &APP);
+    glfwSetFramebufferSizeCallback(WINDOW, framebuffer_size_callback);
+    glfwSetKeyCallback(WINDOW, key_callback);
     glfwSwapInterval(1);
     igCreateContext(NULL);
 
     APP.gui_io = igGetIO();
-    ImGui_ImplGlfw_InitForOpenGL(APP.window, true);
+    ImGui_ImplGlfw_InitForOpenGL(WINDOW, true);
     ImGui_ImplOpenGL3_Init("#version 460 core");
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -40,4 +65,20 @@ void create_app(void) {
         glfwTerminate();
         return;
     }
+
+    APP.window_width = window_width;
+    APP.window_height = window_height;
+}
+
+void update_window() {
+    glfwSwapBuffers(WINDOW);
+    glfwPollEvents();
+}
+
+void destroy_app() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    igDestroyContext(NULL);
+    glfwDestroyWindow(WINDOW);
+    glfwTerminate();
 }

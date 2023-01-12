@@ -175,10 +175,18 @@ int set_uniform_1f(GLuint program, const char* name, GLfloat val) {
     return 1;
 }
 
-int set_uniform_1fv(
+int set_uniform_2fv(
     GLuint program, const char* name, GLfloat* data, int n_values
 ) {
     _GET_UNIFORM_LOC
-    glUniform1fv(loc, n_values, data);
+    glUniform2fv(loc, n_values, data);
+    return 1;
+}
+
+int set_uniform_3fv(
+    GLuint program, const char* name, GLfloat* data, int n_values
+) {
+    _GET_UNIFORM_LOC
+    glUniform3fv(loc, n_values, data);
     return 1;
 }

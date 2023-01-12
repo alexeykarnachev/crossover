@@ -27,15 +27,32 @@ void create_renderer(void) {
 void render_guys(void) {
     GLuint program = CIRCLE_PROGRAM;
     glUseProgram(program);
-
-    Vec3 color = vec3(1.0, 0.5, 0.2);
-    Vec2 center = vec2(0.1, 0.1);
+    glViewport(0, 0, APP.window_width, APP.window_height);
     glBindVertexArray(DUMMY_VAO);
-    set_uniform_1fv(program, "color", (float*)&color, 3);
-    set_uniform_1i(program, "n_polygons", 10);
-    set_uniform_1f(program, "radius", 0.05);
-    set_uniform_1fv(program, "center", (float*)&center, 2);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 12);
+
+    int n_polygons = 16;
+    float radius = 1.0;
+    Vec2 circle_position = vec2(0.0, 0.0);
+    Vec3 color = vec3(1.0, 0.5, 0.2);
+
+    float aspect_ratio = (float)APP.window_width / APP.window_height;
+    float elevation = 20.0;
+    Vec2 camera_position = vec2(0.0, 0.0);
+
+    set_uniform_1i(program, "circle.n_polygons", n_polygons);
+    set_uniform_1f(program, "circle.radius", radius);
+    set_uniform_2fv(
+        program, "circle.position", (float*)&circle_position, 1
+    );
+    set_uniform_3fv(program, "circle.color", (float*)&color, 1);
+
+    set_uniform_1f(program, "camera.aspect_ratio", aspect_ratio);
+    set_uniform_1f(program, "camera.elevation", elevation);
+    set_uniform_2fv(
+        program, "camera.position", (float*)&camera_position, 1
+    );
+
+    glDrawArrays(GL_TRIANGLE_FAN, 0, n_polygons + 2);
 
     // for (size_t i = 0; i < WORLD.n_guys; ++i) {
     //     Guy guy = WORLD.guys[i];

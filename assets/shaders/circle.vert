@@ -2,10 +2,21 @@
 
 #define PI 3.14159265359
 
-uniform vec2 center;
-uniform float radius;
-uniform int n_polygons;
+struct Circle {
+    int n_polygons;
+    float radius;
+    vec2 position;
+    vec3 color;
+};
 
+struct Camera {
+    float aspect_ratio;
+    float elevation;
+    vec2 position;
+};
+
+uniform Circle circle;
+uniform Camera camera;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
     vec2 p0 = point - center;
@@ -16,16 +27,20 @@ vec2 rotate(vec2 point, vec2 center, float angle) {
     return p1;
 }
 
-
 void main(void) {
     int id = gl_VertexID;
 
-    vec2 pos = center;
+    vec2 world_pos = circle.position;
     if (id > 0) {
-        vec2 point = center;
-        point.x += radius;
-        float angle = (id - 1) * PI / n_polygons;
-        pos = rotate(point, center, angle);
+        world_pos.x += circle.radius;
+        float angle = (id - 1) * 2.0 * PI / float(circle.n_polygons);
+        world_pos = rotate(world_pos, circle.position, angle);
     }
-    gl_Position = vec4(pos, 0.0, 1.0);
+
+    vec2 view_pos = world_pos - camera.position;
+    float view_width = 2.0 * camera.elevation * tan(0.25 * PI);
+    float view_height = view_width / camera.aspect_ratio;
+    vec2 proj_pos = (view_pos - camera.position) / (0.5 * vec2(view_width, view_height));
+
+    gl_Position = vec4(proj_pos, 0.0, 1.0);
 }
