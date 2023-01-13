@@ -1,14 +1,24 @@
 #pragma once
+#include "camera.h"
 #include "const.h"
-#include "guy.h"
+#include "transformation.h"
 #include <stddef.h>
 
 typedef struct World {
-    size_t n_guys;
-    Guy guys[MAX_N_GUYS];
+    size_t n_entities;
+
+    // Components
+    Transformation transformation[MAX_N_ENTITIES];
+    Vec2 velocity[MAX_N_ENTITIES];
+    int collider[MAX_N_ENTITIES];
+    int circle[MAX_N_ENTITIES];
+
+    Camera camera;
+    int player;
 } World;
 
 extern World WORLD;
 
-void create_world(void);
-void spawn_guy(Guy guy);
+void init_world(void);
+void update_world(void);
+int spawn_guy(Transformation transformation);

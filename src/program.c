@@ -109,7 +109,7 @@ static int create_program(
     return 1;
 }
 
-int create_all_programs() {
+int init_all_programs() {
     int ok = 1;
 
     CIRCLE_PROGRAM = glCreateProgram();

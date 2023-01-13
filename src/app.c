@@ -22,14 +22,12 @@ static void key_callback(
     GLFWwindow* window, int key, int scancode, int action, int mods
 ) {
     Application* app = (Application*)(glfwGetWindowUserPointer(window));
-    if (key == GLFW_KEY_ESCAPE) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-        app->window_should_close = 1;
-        return;
+    if (key != GLFW_KEY_UNKNOWN) {
+        app->key_states[key] = (int)(action != GLFW_RELEASE);
     }
 }
 
-void create_app(int window_width, int window_height) {
+void init_app(int window_width, int window_height) {
     if (!glfwInit()) {
         return;
     }
@@ -68,9 +66,14 @@ void create_app(int window_width, int window_height) {
 
     APP.window_width = window_width;
     APP.window_height = window_height;
+    APP.time = glfwGetTime();
 }
 
 void update_window() {
+    double current_time = glfwGetTime();
+    APP.dt = 1000.0 * (current_time - APP.time);
+    APP.time = current_time;
+
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();
 }

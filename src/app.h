@@ -1,15 +1,22 @@
+#pragma once
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include <GLFW/glfw3.h>
 
 typedef struct Application {
     int window_width;
     int window_height;
-    int window_should_close;
+
+    double time;
+    double dt;
+
     ImGuiIO* gui_io;
+
+    int key_states[512];
 } Application;
 
 extern Application APP;
 
-void create_app(int window_width, int window_height);
+void init_app(int window_width, int window_height);
 void update_window();
 void destroy_app();
