@@ -6,8 +6,10 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "math.h"
+#include "movement.h"
 #include "program.h"
 #include "renderer.h"
+#include "transformation.h"
 #include "world.h"
 
 int main(int argc, char* argv[]) {
@@ -15,16 +17,17 @@ int main(int argc, char* argv[]) {
     init_renderer();
     init_world();
 
-    WORLD.camera = camera(vec2(0.0, 0.0), 1.0);
+    WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
     WORLD.player = spawn_guy(
-        transformation(vec2(0.0, 0.0), vec2(1.0, 1.0), 0.0)
+        transformation(vec2(0.0, 0.0), vec2(1.0, 1.0), -PI / 2.0),
+        movement(5.0, 1.0, 2.0 * PI)
     );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         glClearColor(0.2, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        update_world();
+        update_world(APP.dt);
         render_world();
         render_gui();
         update_window();

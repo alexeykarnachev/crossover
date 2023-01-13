@@ -1,2 +1,1 @@
-#define PI 3.14159265359
 #define MAX_N_ENTITIES 1024
