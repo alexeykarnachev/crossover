@@ -68,12 +68,11 @@ vec2 get_rectangle_position() {
     int id = gl_VertexID;
 
     vec2 world_pos = rectangle.position;
-    if(id == 0) {
-        world_pos.y -= rectangle.height;
-    } else if(id == 1) {
+    if (id == 1) {
+        world_pos.y += rectangle.height;
+    } else if (id == 2) {
         world_pos.x += rectangle.width;
-        world_pos.y -= rectangle.height;
-    } else if(id == 3) {
+    } else if (id == 3) {
         world_pos.x += rectangle.width;
         world_pos.y += rectangle.height;
     }

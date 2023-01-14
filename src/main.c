@@ -21,6 +21,11 @@ int main(int argc, char* argv[]) {
     WORLD.player = spawn_guy(
         circle_primitive(vec2(0.0, 0.0), 1.0), physics(5.0, 2.0 * PI)
     );
+    spawn_obstacle(circle_primitive(vec2(0.0, 4.0), 1.8));
+    spawn_obstacle(rectangle_primitive(vec2(4.0, 4.0), 1.8, 1.8));
+    spawn_obstacle(triangle_primitive(
+        vec2(-7.0, -4.0), vec2(-2.0, -4.0), vec2(-3.0, -6.0)
+    ));
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         glClearColor(0.2, 0.2, 0.3, 1.0);
@@ -28,7 +33,7 @@ int main(int argc, char* argv[]) {
 
         update_world(APP.dt);
         render_world();
-        render_gui();
+        // render_gui();
         update_window();
     }
 

@@ -60,6 +60,7 @@ static void set_uniform_triangle(GLuint program, Triangle triangle) {
 void render_world(void) {
     // -------------------------------------------------------------------
     // Render primitives
+    glDisable(GL_CULL_FACE);
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
     glViewport(0, 0, APP.window_width, APP.window_height);
