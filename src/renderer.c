@@ -66,7 +66,8 @@ void render_world(void) {
     glViewport(0, 0, APP.window_width, APP.window_height);
     glBindVertexArray(DUMMY_VAO);
 
-    static const Vec4 color = {0.2, 0.6, 0.1, 1.0};
+    set_uniform_camera(program, WORLD.camera);
+
     for (size_t entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_component(entity, PRIMITIVE_COMPONENT)) {
             continue;
@@ -91,15 +92,22 @@ void render_world(void) {
         } else {
             fprintf(
                 stderr,
-                "ERROR: can't render the primitive with type id: %d\n",
+                "ERROR: can't render the primitive with type id: "
+                "%d\n",
                 type
             );
             continue;
         }
 
-        set_uniform_camera(program, WORLD.camera);
         set_uniform_1i(program, "type", type);
-        set_uniform_4fv(program, "color", (float*)&color, 1);
+
+        Material m = default_material();
+        if (entity_has_component(entity, MATERIAL_COMPONENT)) {
+            m = WORLD.material[entity];
+        }
+        set_uniform_3fv(
+            program, "diffuse_color", (float*)&m.diffuse_color, 1
+        );
 
         glDrawArrays(draw_mode, 0, n_points);
     }

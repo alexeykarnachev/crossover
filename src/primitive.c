@@ -1,7 +1,7 @@
 #include "primitive.h"
 
 #include "math.h"
-#include "physics.h"
+#include "movement.h"
 
 Circle circle(Vec2 position, float radius) {
     Circle circle = {position, radius};
@@ -39,14 +39,11 @@ Primitive triangle_primitive(Vec2 a, Vec2 b, Vec2 c) {
     return primitive;
 }
 
-void update_primitive_by_physics(
-    Primitive* primitive, Physics physics, float dt
-) {
+void move_primitive(Primitive* primitive, Movement movement, float dt) {
     dt /= 1000.0;
-    if (length_vec2(physics.movement_direction) > EPS) {
+    if (length_vec2(movement.direction) > EPS) {
         Vec2 step = scale_vec2(
-            normalize_vec2(physics.movement_direction),
-            physics.movement_speed * dt
+            normalize_vec2(movement.direction), movement.speed * dt
         );
         if (primitive->type & CIRCLE_PRIMITIVE) {
             primitive->p.circle.position = add_vec2(

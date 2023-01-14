@@ -1,6 +1,6 @@
 #pragma once
 #include "math.h"
-#include "physics.h"
+#include "movement.h"
 
 typedef struct Circle {
     Vec2 position;
@@ -41,6 +41,4 @@ Primitive circle_primitive(Vec2 position, float radius);
 Primitive rectangle_primitive(Vec2 position, float width, float height);
 Primitive triangle_primitive(Vec2 a, Vec2 b, Vec2 c);
 
-void update_primitive_by_physics(
-    Primitive* primitive, Physics physics, float dt
-);
+void move_primitive(Primitive* primitive, Movement movement, float dt);
