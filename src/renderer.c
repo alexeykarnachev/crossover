@@ -24,38 +24,83 @@ void init_renderer(void) {
     init_all_programs();
 }
 
+static const int N_POLYGONS_IN_CIRCLE = 16;
+
+static void set_uniform_camera(GLuint program, Camera camera) {
+    float aspect_ratio = (float)APP.window_width / APP.window_height;
+    set_uniform_2fv(
+        program, "camera.position", (float*)&camera.position, 1
+    );
+    set_uniform_1f(program, "camera.aspect_ratio", aspect_ratio);
+    set_uniform_1f(program, "camera.elevation", camera.elevation);
+}
+
+static void set_uniform_circle(GLuint program, Circle circle) {
+    set_uniform_2fv(
+        program, "circle.position", (float*)&circle.position, 1
+    );
+    set_uniform_1f(program, "circle.radius", circle.radius);
+    set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);
+}
+
+static void set_uniform_rectangle(GLuint program, Rectangle rectangle) {
+    set_uniform_2fv(
+        program, "rectangle.position", (float*)&rectangle.position, 1
+    );
+    set_uniform_1f(program, "rectangle.width", rectangle.width);
+    set_uniform_1f(program, "rectangle.height", rectangle.height);
+}
+
+static void set_uniform_triangle(GLuint program, Triangle triangle) {
+    set_uniform_2fv(program, "triangle.a", (float*)&triangle.a, 1);
+    set_uniform_2fv(program, "triangle.b", (float*)&triangle.b, 1);
+    set_uniform_2fv(program, "triangle.c", (float*)&triangle.c, 1);
+}
+
 void render_world(void) {
     // -------------------------------------------------------------------
-    // Render circles
-    GLuint program = CIRCLE_PROGRAM;
+    // Render primitives
+    GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
     glViewport(0, 0, APP.window_width, APP.window_height);
     glBindVertexArray(DUMMY_VAO);
 
-    static const int n_polygons = 16;
-    static const Vec3 color = {0.2, 0.6, 0.1};
-    float aspect_ratio = (float)APP.window_width / APP.window_height;
+    static const Vec4 color = {0.2, 0.6, 0.1, 1.0};
     for (size_t entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!WORLD.circle[entity]) {
+        if (!entity_has_component(entity, PRIMITIVE_COMPONENT)) {
             continue;
         }
-        Transformation t = WORLD.transformation[entity];
-        float radius = max(t.scale.x, t.scale.y) / 2.0;
-        set_uniform_1i(program, "circle.n_polygons", n_polygons);
-        set_uniform_1f(program, "circle.radius", radius);
-        set_uniform_2fv(
-            program, "circle.position", (float*)&t.position, 1
-        );
-        set_uniform_3fv(program, "circle.color", (float*)&color, 1);
 
-        set_uniform_1f(program, "camera.aspect_ratio", aspect_ratio);
-        set_uniform_1f(
-            program, "camera.elevation", WORLD.camera.elevation
-        );
-        set_uniform_2fv(
-            program, "camera.position", (float*)&WORLD.camera.position, 1
-        );
-        glDrawArrays(GL_TRIANGLE_FAN, 0, n_polygons + 2);
+        Primitive primitive = WORLD.primitive[entity];
+        PrimitiveType type = primitive.type;
+        GLuint draw_mode;
+        int n_points;
+        if (type & CIRCLE_PRIMITIVE) {
+            set_uniform_circle(program, primitive.p.circle);
+            draw_mode = GL_TRIANGLE_FAN;
+            n_points = N_POLYGONS_IN_CIRCLE + 2;
+        } else if (type & RECTANGLE_PRIMITIVE) {
+            set_uniform_rectangle(program, primitive.p.rectangle);
+            draw_mode = GL_TRIANGLE_STRIP;
+            n_points = 4;
+        } else if (type & TRIANGLE_PRIMITIVE) {
+            set_uniform_triangle(program, primitive.p.triangle);
+            draw_mode = GL_TRIANGLE_STRIP;
+            n_points = 3;
+        } else {
+            fprintf(
+                stderr,
+                "ERROR: can't render the primitive with type id: %d\n",
+                type
+            );
+            continue;
+        }
+
+        set_uniform_camera(program, WORLD.camera);
+        set_uniform_1i(program, "type", type);
+        set_uniform_4fv(program, "color", (float*)&color, 1);
+
+        glDrawArrays(draw_mode, 0, n_points);
     }
 }
 

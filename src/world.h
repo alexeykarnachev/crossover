@@ -2,7 +2,7 @@
 #include "camera.h"
 #include "const.h"
 #include "physics.h"
-#include "transformation.h"
+#include "primitive.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -11,25 +11,26 @@ typedef struct World {
 
     // Components
     uint64_t components[MAX_N_ENTITIES];
-    Transformation transformation[MAX_N_ENTITIES];
+
     Physics physics[MAX_N_ENTITIES];
+    Primitive primitive[MAX_N_ENTITIES];
     int collider[MAX_N_ENTITIES];
-    int circle[MAX_N_ENTITIES];
+    int rectangle[MAX_N_ENTITIES];
 
     Camera camera;
     int player;
 } World;
 
-typedef enum Component {
-    TRANSFORMATION_COMPONENT = 1,
-    PHYSICS_COMPONENT,
-    COLLIDER_COMPONENT,
-    CIRCLE_COMPONENT
-} Component;
+typedef enum ComponentType {
+    PHYSICS_COMPONENT = 1 << 0,
+    COLLIDER_COMPONENT = 1 << 1,
+    PRIMITIVE_COMPONENT = 1 << 2
+} ComponentType;
 
 extern World WORLD;
 
 void init_world(void);
-int entity_has_component(int entity, Component component);
-int spawn_guy(Transformation t, Physics p);
+int entity_has_component(int entity, ComponentType component);
+int spawn_guy(Primitive primitive, Physics physics);
+int spawn_obstacle(Primitive primitive);
 void update_world(float dt);

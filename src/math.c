@@ -36,6 +36,11 @@ Vec3 vec3(float x, float y, float z) {
     return res;
 }
 
+Vec4 vec4(float x, float y, float z, float w) {
+    Vec4 res = {x, y, z, w};
+    return res;
+}
+
 Vec2 scale_vec2(Vec2 v, float k) {
     Vec2 res = {v.x * k, v.y * k};
     return res;

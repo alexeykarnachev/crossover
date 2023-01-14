@@ -7,9 +7,9 @@
 #include "cimgui_impl.h"
 #include "math.h"
 #include "physics.h"
+#include "primitive.h"
 #include "program.h"
 #include "renderer.h"
-#include "transformation.h"
 #include "world.h"
 
 int main(int argc, char* argv[]) {
@@ -19,8 +19,7 @@ int main(int argc, char* argv[]) {
 
     WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
     WORLD.player = spawn_guy(
-        transformation(vec2(0.0, 0.0), vec2(1.0, 1.0), -PI / 2.0),
-        physics(5.0, 2.0 * PI)
+        circle_primitive(vec2(0.0, 0.0), 1.0), physics(5.0, 2.0 * PI)
     );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {

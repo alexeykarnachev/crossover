@@ -14,12 +14,20 @@ typedef struct Vec3 {
     float z;
 } Vec3;
 
+typedef struct Vec4 {
+    float x;
+    float y;
+    float z;
+    float w;
+} Vec4;
+
 float max(float x, float y);
 float min(float x, float y);
 float clamp(float x, float min_, float max_);
 float get_orientations_diff(float r0, float r1);
 Vec2 vec2(float x, float y);
 Vec3 vec3(float x, float y, float z);
+Vec4 vec4(float x, float y, float z, float w);
 Vec2 scale_vec2(Vec2 v, float k);
 Vec2 add_vec2(Vec2 v0, Vec2 v1);
 Vec2 normalize_vec2(Vec2 v);

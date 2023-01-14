@@ -7,10 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char* CIRCLE_VERT_SHADER = "./assets/shaders/circle.vert";
-static const char* CIRCLE_FRAG_SHADER = "./assets/shaders/circle.frag";
+static const char* PRIMITIVE_VERT_SHADER
+    = "./assets/shaders/primitive.vert";
+static const char* PRIMITIVE_FRAG_SHADER
+    = "./assets/shaders/primitive.frag";
 
-GLuint CIRCLE_PROGRAM;
+GLuint PRIMITIVE_PROGRAM;
 
 static int compile_program_source(
     const GLchar* source, GLenum shader_type, GLuint* shader
@@ -112,9 +114,9 @@ static int create_program(
 int init_all_programs() {
     int ok = 1;
 
-    CIRCLE_PROGRAM = glCreateProgram();
+    PRIMITIVE_PROGRAM = glCreateProgram();
     ok &= create_program(
-        CIRCLE_PROGRAM, CIRCLE_VERT_SHADER, CIRCLE_FRAG_SHADER
+        PRIMITIVE_PROGRAM, PRIMITIVE_VERT_SHADER, PRIMITIVE_FRAG_SHADER
     );
 
     return ok;
@@ -188,5 +190,13 @@ int set_uniform_3fv(
 ) {
     _GET_UNIFORM_LOC
     glUniform3fv(loc, n_values, data);
+    return 1;
+}
+
+int set_uniform_4fv(
+    GLuint program, const char* name, GLfloat* data, int n_values
+) {
+    _GET_UNIFORM_LOC
+    glUniform4fv(loc, n_values, data);
     return 1;
 }
