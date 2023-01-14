@@ -20,6 +20,12 @@ float clamp(float x, float min_, float max_) {
     }
 }
 
+float get_orientations_diff(float r0, float r1) {
+    float diff = fabs(r0 - r1);
+    diff = min(diff, fabs(diff - 2.0 * PI));
+    return diff;
+}
+
 Vec2 vec2(float x, float y) {
     Vec2 res = {x, y};
     return res;
@@ -40,13 +46,17 @@ Vec2 add_vec2(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+Vec2 normalize_vec2(Vec2 v) {
+    float length = length_vec2(v);
+    Vec2 res = {v.x / length, v.y / length};
+    return res;
+}
+
 float dot_vec2(Vec2 v0, Vec2 v1) {
     float res = v0.x * v1.x + v0.y * v1.y;
     return res;
 }
 
-float get_orientations_diff(float r0, float r1) {
-    float diff = fabs(r0 - r1);
-    diff = min(diff, fabs(diff - 2.0 * PI));
-    return diff;
+float length_vec2(Vec2 v) {
+    return sqrt(v.x * v.x + v.y * v.y);
 }

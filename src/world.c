@@ -3,7 +3,7 @@
 #include "app.h"
 #include "const.h"
 #include "math.h"
-#include "movement.h"
+#include "physics.h"
 #include "stdio.h"
 #include "transformation.h"
 
@@ -18,7 +18,7 @@ int entity_has_component(int entity, Component component) {
     return WORLD.components[entity] & component;
 }
 
-int spawn_guy(Transformation t, Movement m) {
+int spawn_guy(Transformation t, Physics p) {
     int entity = -1;
     if (WORLD.n_entities < MAX_N_ENTITIES) {
         entity = WORLD.n_entities++;
@@ -27,41 +27,50 @@ int spawn_guy(Transformation t, Movement m) {
     }
 
     WORLD.transformation[entity] = t;
-    WORLD.movement[entity] = m;
+    WORLD.physics[entity] = p;
     WORLD.collider[entity] = 1;
     WORLD.circle[entity] = 1;
-    WORLD.components[entity] = TRANSFORMATION_COMPONENT
-                               | MOVEMENT_COMPONENT | COLLIDER_COMPONENT
-                               | CIRCLE_COMPONENT;
+    WORLD.components[entity] = TRANSFORMATION_COMPONENT | PHYSICS_COMPONENT
+                               | COLLIDER_COMPONENT | CIRCLE_COMPONENT;
 
     return entity;
 }
 
 void update_world(float dt) {
     if (WORLD.player != -1) {
-        Movement* m = &WORLD.movement[WORLD.player];
-        m->target_speed = m->max_speed;
-        if (APP.key_states[GLFW_KEY_W]) {
-            m->target_orientation = 0.0;
-        } else if (APP.key_states[GLFW_KEY_S]) {
-            m->target_orientation = PI;
-        } else {
-            m->target_speed = 0.0;
-        }
-    }
+        Physics* p = &WORLD.physics[WORLD.player];
+        int w = APP.key_states[GLFW_KEY_W];
+        int s = APP.key_states[GLFW_KEY_S];
+        int a = APP.key_states[GLFW_KEY_A];
+        int d = APP.key_states[GLFW_KEY_D];
 
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (entity_has_component(entity, MOVEMENT_COMPONENT)) {
-            update_movement(&WORLD.movement[entity], dt);
+        if (w && d) {
+            p->movement_direction = normalize_vec2(vec2(1.0, 1.0));
+        } else if (w && a) {
+            p->movement_direction = normalize_vec2(vec2(-1.0, 1.0));
+        } else if (s && a) {
+            p->movement_direction = normalize_vec2(vec2(-1.0, -1.0));
+        } else if (s && d) {
+            p->movement_direction = normalize_vec2(vec2(1.0, -1.0));
+        } else if (w) {
+            p->movement_direction = vec2(0.0, 1.0);
+        } else if (s) {
+            p->movement_direction = vec2(0.0, -1.0);
+        } else if (a) {
+            p->movement_direction = vec2(-1.0, 0.0);
+        } else if (d) {
+            p->movement_direction = vec2(1.0, 0.0);
+        } else {
+            p->movement_direction = vec2(0.0, 0.0);
         }
     }
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (entity_has_component(
-                entity, TRANSFORMATION_COMPONENT | MOVEMENT_COMPONENT
+                entity, TRANSFORMATION_COMPONENT | PHYSICS_COMPONENT
             )) {
-            update_transformation_by_movement(
-                &WORLD.transformation[entity], WORLD.movement[entity], dt
+            update_transformation_by_physics(
+                &WORLD.transformation[entity], WORLD.physics[entity], dt
             );
         }
     }

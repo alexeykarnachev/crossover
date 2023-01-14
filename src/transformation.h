@@ -1,6 +1,6 @@
 #pragma once
 #include "math.h"
-#include "movement.h"
+#include "physics.h"
 
 typedef struct Transformation {
     Vec2 position;
@@ -12,6 +12,6 @@ Transformation transformation(
     Vec2 position, Vec2 scale, float orientation
 );
 
-void update_transformation_by_movement(
-    Transformation* t, Movement m, float dt
+void update_transformation_by_physics(
+    Transformation* t, Physics p, float dt
 );
