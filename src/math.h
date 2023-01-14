@@ -30,6 +30,8 @@ Vec3 vec3(float x, float y, float z);
 Vec4 vec4(float x, float y, float z, float w);
 Vec2 scale_vec2(Vec2 v, float k);
 Vec2 add_vec2(Vec2 v0, Vec2 v1);
+Vec2 sub_vec2(Vec2 v0, Vec2 v1);
 Vec2 normalize_vec2(Vec2 v);
 float dot_vec2(Vec2 v0, Vec2 v1);
+float dist_vec2(Vec2 v0, Vec2 v1);
 float length_vec2(Vec2 v);

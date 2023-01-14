@@ -51,6 +51,11 @@ Vec2 add_vec2(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+Vec2 sub_vec2(Vec2 v0, Vec2 v1) {
+    Vec2 res = {v0.x - v1.x, v0.y - v1.y};
+    return res;
+}
+
 Vec2 normalize_vec2(Vec2 v) {
     float length = length_vec2(v);
     Vec2 res = {v.x / length, v.y / length};
@@ -59,6 +64,11 @@ Vec2 normalize_vec2(Vec2 v) {
 
 float dot_vec2(Vec2 v0, Vec2 v1) {
     float res = v0.x * v1.x + v0.y * v1.y;
+    return res;
+}
+
+float dist_vec2(Vec2 v0, Vec2 v1) {
+    float res = length_vec2(sub_vec2(v1, v0));
     return res;
 }
 

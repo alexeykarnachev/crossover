@@ -1,8 +1,10 @@
 #pragma once
+#include "primitive.h"
 
 typedef enum CollisionType {
-    INTERSECTION_COLLISION,
-    CONTAINMENT_COLLISION
+    TOUCH_COLLISION = 1 << 0,
+    INTERSECTION_COLLISION = 1 << 1,
+    CONTAINMENT_COLLISION = 1 << 2
 } CollisionType;
 
 typedef struct Collision {
@@ -12,3 +14,4 @@ typedef struct Collision {
 } Collision;
 
 Collision collision(CollisionType type, int entity0, int entity1);
+int collide_primitives(Primitive p0, Primitive p1, CollisionType* out);

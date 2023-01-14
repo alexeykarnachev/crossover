@@ -1,6 +1,7 @@
 #include "world.h"
 
 #include "app.h"
+#include "collision.h"
 #include "const.h"
 #include "math.h"
 #include "movement.h"
@@ -43,6 +44,7 @@ int spawn_obstacle(Primitive primitive, Material material) {
         entity = WORLD.n_entities++;
         WORLD.primitive[entity] = primitive;
         WORLD.material[entity] = material;
+        WORLD.collider[entity] = primitive;
         WORLD.components[entity] = COLLIDER_COMPONENT
                                    | RIGID_BODY_COMPONENT
                                    | PRIMITIVE_COMPONENT
@@ -64,6 +66,7 @@ void update_world(float dt) {
         p->direction.x += 1.0 * APP.key_states[GLFW_KEY_D];
     }
 
+    // Update positions of the movable entities
     for (int e = 0; e < WORLD.n_entities; ++e) {
         if (!entity_has_component(e, MOVEMENT_COMPONENT)) {
             continue;
@@ -81,20 +84,24 @@ void update_world(float dt) {
         }
     }
 
-    // for (int e0 = 0; e0 < WORLD.n_entities; ++e0) {
-    //     if (!entity_has_component(e0, COLLIDER_COMPONENT)) {
-    //         continue;
-    //     }
-    //     for (int e1 = e0 + 1; e1 < WORLD.n_entities; ++e1) {
-    //         if (!entity_has_component(e1, COLLIDER_COMPONENT)) {
-    //             continue;
-    //         }
+    // Collide movable entities with the world
+    WORLD.n_collisions = 0;
+    for (int e0 = 0; e0 < WORLD.n_entities; ++e0) {
+        if (!entity_has_component(e0, COLLIDER_COMPONENT)
+            || !entity_has_component(e0, MOVEMENT_COMPONENT)) {
+            continue;
+        }
+        for (int e1 = e0 + 1; e1 < WORLD.n_entities; ++e1) {
+            if (!entity_has_component(e1, COLLIDER_COMPONENT)) {
+                continue;
+            }
 
-    //         WORLD.n_collisions += collide_primitives(
-    //             WORLD.primitives[e0],
-    //             WORLD.primitives[e1],
-    //             &WORLD.collisions[WORLD.n_collisions]
-    //         );
-    //     }
-    // }
+            Collision* collision = &WORLD.collisions[WORLD.n_collisions];
+            collision->entity0 = e0;
+            collision->entity1 = e1;
+            WORLD.n_collisions += collide_primitives(
+                WORLD.collider[e0], WORLD.collider[e1], &collision->type
+            );
+        }
+    }
 }
