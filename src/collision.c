@@ -23,6 +23,57 @@ static int collide_circles(Circle c0, Circle c1, CollisionType* out) {
     return 1;
 }
 
+static int collide_circle_with_polygon(
+    Circle circle, Vec2 vertices[], int n, CollisionType* out
+) {
+    float min_proj_t = HUGE_VAL;
+    float max_proj_t = -HUGE_VAL;
+    float min_proj_dist = HUGE_VAL;
+    float max_proj_dist = -HUGE_VAL;
+    int all_vertices_inside = 1;
+    int any_vertices_inside = 0;
+    int any_vertices_touch = 0;
+    int any_sides_intersect = 0;
+    int any_sides_touch = 0;
+    for (int i = 0; i < n; ++i) {
+        Vec2 v0 = vertices[i];
+        Vec2 v1 = vertices[i == n - 1 ? 0 : i + 1];
+        PointProjection proj = project_point_on_line(
+            circle.position, v0, v1
+        );
+        int t_ok = between(proj.t, 0.0, 1.0);
+        float vertex_depth = circle.radius
+                             - dist_between_points(circle.position, v0);
+
+        min_proj_t = min(min_proj_t, proj.t);
+        max_proj_t = max(max_proj_t, proj.t);
+        min_proj_dist = min(min_proj_dist, proj.dist);
+        max_proj_dist = max(max_proj_dist, proj.dist);
+        all_vertices_inside &= vertex_depth > EPS;
+        any_vertices_inside |= vertex_depth > EPS;
+        any_vertices_touch |= fabs(vertex_depth) < EPS;
+        any_sides_intersect |= circle.radius - proj.dist > EPS && t_ok;
+        any_sides_touch |= fabs(proj.dist - circle.radius) < EPS && t_ok;
+    }
+
+    int circle_inside = min_proj_t > 0.0 && max_proj_t < 1.0
+                        && min_proj_dist > circle.radius;
+
+    if (all_vertices_inside) {
+        *out = CONTAINMENT_COLLISION_0;
+    } else if (circle_inside) {
+        *out = CONTAINMENT_COLLISION_1;
+    } else if (any_sides_intersect || any_vertices_inside) {
+        *out = INTERSECTION_COLLISION;
+    } else if (any_sides_touch || any_vertices_touch) {
+        *out = TOUCH_COLLISION;
+    } else if (max_proj_dist > circle.radius) {
+        return 0;
+    }
+
+    return 1;
+}
+
 static int collide_circle_with_rectangle(
     Circle circle, Rectangle rectangle, CollisionType* out
 ) {
@@ -30,80 +81,15 @@ static int collide_circle_with_rectangle(
     Vec2 a = {d.x, d.y + rectangle.height};
     Vec2 b = {a.x + rectangle.width, a.y};
     Vec2 c = {b.x, d.y};
-    Line sides[4] = {{a, b}, {b, c}, {c, d}, {d, a}};
     Vec2 vertices[4] = {a, b, c, d};
-
-    float proj_dists_to_circle_center[4];
-    float proj_t_to_circle_center[4];
-    int sides_intersect[4];
-    int sides_touch[4];
-    int vertices_inside[4];
-    int vertices_touch[4];
-    for (int i = 0; i < 4; ++i) {
-        PointProjection proj = project_point_on_line(
-            circle.position, sides[i].a, sides[i].b
-        );
-        float vertex_to_center_dist = dist_between_points(
-            circle.position, vertices[i]
-        );
-        proj_dists_to_circle_center[i] = proj.dist;
-        proj_t_to_circle_center[i] = proj.t;
-        int t_valid = between(proj.t, 0.0, 1.0);
-
-        sides_intersect[i] = circle.radius - proj.dist > EPS && t_valid;
-        sides_touch[i] = fabs(proj.dist - circle.radius) < EPS && t_valid;
-        vertices_inside[i] = circle.radius - vertex_to_center_dist > EPS;
-        vertices_touch[i] = fabs(vertex_to_center_dist - circle.radius)
-                            < EPS;
-    }
-
-    int circle_inside = min_n(proj_t_to_circle_center, 4) > 0.0
-                        && max_n(proj_t_to_circle_center, 4) < 1.0
-                        && min_n(proj_dists_to_circle_center, 4)
-                               > circle.radius;
-
-    if (all(vertices_inside, 4)) {
-        *out = CONTAINMENT_COLLISION_0;
-        printf("CONTAINMENT 0\n");
-        return 1;
-    }
-
-    if (circle_inside) {
-        *out = CONTAINMENT_COLLISION_1;
-        printf("CONTAINMENT 1\n");
-        return 1;
-    }
-
-    if (any(sides_intersect, 4) || any(vertices_inside, 4)) {
-        *out = INTERSECTION_COLLISION;
-        printf("INTERSETION\n");
-        return 1;
-    }
-
-    if (any(sides_touch, 4) || any(vertices_touch, 4)) {
-        *out = TOUCH_COLLISION;
-        printf("TOUCH\n");
-        return 1;
-    }
-
-    if (max_n(proj_dists_to_circle_center, 4) > circle.radius) {
-        printf("NO COLLISIONS!\n");
-        return 0;
-    }
-
-    fprintf(
-        stderr,
-        "ERROR: unhandled collision case, it's a bug in the "
-        "`collide_circle_with_rectangle`"
-    );
-
-    return 0;
+    return collide_circle_with_polygon(circle, vertices, 4, out);
 };
 
 static int collide_circle_with_triangle(
-    Circle c, Triangle r, CollisionType* out
+    Circle circle, Triangle triangle, CollisionType* out
 ) {
-    return 0;
+    Vec2 vertices[3] = {triangle.a, triangle.b, triangle.c};
+    return collide_circle_with_polygon(circle, vertices, 3, out);
 };
 
 static int collide_rectangles(

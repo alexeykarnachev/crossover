@@ -24,28 +24,34 @@ int main(int argc, char* argv[]) {
         material(vec3(0.7, 0.3, 0.2)),
         movement(5.0, 2.0 * PI)
     );
-    spawn_obstacle(
-        rectangle_primitive(vec2(-6.0, -5.0), 5.0, 5.0),
-        material(vec3(0.05, 0.05, 0.05))
-    );
+    // spawn_obstacle(
+    //     rectangle_primitive(vec2(-6.0, -5.0), 5.0, 5.0),
+    //     material(vec3(0.05, 0.05, 0.05))
+    // );
     // spawn_obstacle(
     //     circle_primitive(vec2(0.0, 4.0), 1.8),
     //     material(vec3(0.05, 0.05, 0.05))
     // );
-    // spawn_obstacle(
-    //     rectangle_primitive(vec2(3.0, 0.0), 5.0, 5.0),
-    //     material(vec3(0.05, 0.05, 0.05))
-    // );
+    spawn_obstacle(
+        rectangle_primitive(vec2(3.0, 0.0), 5.0, 5.0),
+        material(vec3(0.05, 0.05, 0.05))
+    );
     spawn_obstacle(
         rectangle_primitive(vec2(-3.0, -2.0), 0.5, 0.7),
         material(vec3(0.10, 0.10, 0.10))
     );
-    // spawn_obstacle(
-    //     triangle_primitive(
-    //         vec2(-7.0, -4.0), vec2(-2.0, -4.0), vec2(-3.0, -6.0)
-    //     ),
-    //     material(vec3(0.05, 0.05, 0.05))
-    // );
+    spawn_obstacle(
+        triangle_primitive(
+            vec2(-7.0, -2.0), vec2(-2.0, -2.0), vec2(-3.0, -6.0)
+        ),
+        material(vec3(0.05, 0.05, 0.05))
+    );
+    spawn_obstacle(
+        triangle_primitive(
+            vec2(3.0, -4.0), vec2(4.0, -4.0), vec2(4.0, -5.0)
+        ),
+        material(vec3(0.05, 0.05, 0.05))
+    );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         glClearColor(0.2, 0.2, 0.3, 1.0);
