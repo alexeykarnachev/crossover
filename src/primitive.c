@@ -18,6 +18,11 @@ Triangle triangle(Vec2 a, Vec2 b, Vec2 c) {
     return triangle;
 }
 
+Line line(Vec2 a, Vec2 b) {
+    Line line = {a, b};
+    return line;
+}
+
 Primitive circle_primitive(Vec2 position, float radius) {
     Primitive primitive;
     primitive.type = CIRCLE_PRIMITIVE;
@@ -36,6 +41,13 @@ Primitive triangle_primitive(Vec2 a, Vec2 b, Vec2 c) {
     Primitive primitive;
     primitive.type = TRIANGLE_PRIMITIVE;
     primitive.p.triangle = triangle(a, b, c);
+    return primitive;
+}
+
+Primitive line_primitive(Vec2 a, Vec2 b) {
+    Primitive primitive;
+    primitive.type = LINE_PRIMITIVE;
+    primitive.p.line = line(a, b);
     return primitive;
 }
 
@@ -63,6 +75,9 @@ void move_primitive(Primitive* primitive, Movement movement, float dt) {
             primitive->p.triangle.c = add_vec2(
                 primitive->p.triangle.c, step
             );
+        } else if (primitive->type & LINE_PRIMITIVE) {
+            primitive->p.line.a = add_vec2(primitive->p.line.a, step);
+            primitive->p.line.b = add_vec2(primitive->p.line.b, step);
         }
     }
 }

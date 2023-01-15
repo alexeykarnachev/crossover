@@ -20,6 +20,10 @@ float clamp(float x, float min_, float max_) {
     }
 }
 
+int between(float x, float min_, float max_) {
+    return x >= min_ && x <= max_;
+}
+
 float get_orientations_diff(float r0, float r1) {
     float diff = fabs(r0 - r1);
     diff = min(diff, fabs(diff - 2.0 * PI));
@@ -62,13 +66,41 @@ Vec2 normalize_vec2(Vec2 v) {
     return res;
 }
 
-float dot_vec2(Vec2 v0, Vec2 v1) {
-    float res = v0.x * v1.x + v0.y * v1.y;
+PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b) {
+    PointProjection proj;
+    if (fabs(a.x - b.x) < EPS) {
+        float y = p.y;
+        proj.t = (y - a.y) / (b.y - a.y);
+    } else if (fabs(a.y - b.y) < EPS) {
+        float x = p.x;
+        proj.t = (x - a.x) / (b.x - a.x);
+    } else {
+        Vec2 v0 = sub_vec2(b, a);
+        Vec2 v1 = {-v0.y, v0.x};
+
+        float m0 = v0.y / v0.x;
+        float c0 = a.y - m0 * a.x;
+        float m1 = v1.y / v1.x;
+        float c1 = p.y - m1 * p.x;
+
+        float x = (c1 - c0) / (m0 - m1);
+        proj.t = (x - a.x) / (b.x - a.x);
+    }
+
+    float x = a.x + proj.t * (b.x - a.x);
+    float y = a.y + proj.t * (b.y - a.y);
+    proj.dist = length_vec2(sub_vec2(vec2(x, y), p));
+
+    return proj;
+}
+
+float dist_between_points(Vec2 v0, Vec2 v1) {
+    float res = length_vec2(sub_vec2(v1, v0));
     return res;
 }
 
-float dist_vec2(Vec2 v0, Vec2 v1) {
-    float res = length_vec2(sub_vec2(v1, v0));
+float dot_vec2(Vec2 v0, Vec2 v1) {
+    float res = v0.x * v1.x + v0.y * v1.y;
     return res;
 }
 

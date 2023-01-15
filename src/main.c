@@ -25,12 +25,20 @@ int main(int argc, char* argv[]) {
         movement(5.0, 2.0 * PI)
     );
     spawn_obstacle(
-        circle_primitive(vec2(0.0, 4.0), 1.8),
+        rectangle_primitive(vec2(-6.0, -5.0), 5.0, 5.0),
         material(vec3(0.05, 0.05, 0.05))
     );
     // spawn_obstacle(
-    //     rectangle_primitive(vec2(4.0, 4.0), 1.8, 1.8),
+    //     circle_primitive(vec2(0.0, 4.0), 1.8),
     //     material(vec3(0.05, 0.05, 0.05))
+    // );
+    // spawn_obstacle(
+    //     rectangle_primitive(vec2(3.0, 0.0), 5.0, 5.0),
+    //     material(vec3(0.05, 0.05, 0.05))
+    // );
+    // spawn_obstacle(
+    //     rectangle_primitive(vec2(-3.0, 0.0), 0.5, 0.7),
+    //     material(vec3(0.10, 0.10, 0.10))
     // );
     // spawn_obstacle(
     //     triangle_primitive(
