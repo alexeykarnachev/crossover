@@ -31,84 +31,71 @@ static int collide_circle_with_rectangle(
     Vec2 b = {a.x + rectangle.width, a.y};
     Vec2 c = {b.x, d.y};
     Line sides[4] = {{a, b}, {b, c}, {c, d}, {d, a}};
+    Vec2 vertices[4] = {a, b, c, d};
 
-    Vec2 point = circle.position;
-    float min_dist = HUGE_VAL;
-    float max_dist = -HUGE_VAL;
-    float min_t = HUGE_VAL;
-    float max_t = -HUGE_VAL;
-    int side_intersects = 0;
-    int side_touches = 0;
-    for (size_t i = 0; i < 4; ++i) {
-        Vec2 a = sides[i].a;
-        Vec2 b = sides[i].b;
-        PointProjection proj = project_point_on_line(point, a, b);
-        min_dist = min(min_dist, proj.dist);
-        max_dist = max(max_dist, proj.dist);
-        min_t = min(min_t, proj.t);
-        max_t = max(max_t, proj.t);
-        if (proj.t > 0.0 && proj.t < 1.0) {
-            side_intersects |= proj.dist < circle.radius;
-            side_touches |= between(proj.dist - circle.radius, 0.0, EPS);
-        }
+    float proj_dists_to_circle_center[4];
+    float proj_t_to_circle_center[4];
+    int sides_intersect[4];
+    int sides_touch[4];
+    int vertices_inside[4];
+    int vertices_touch[4];
+    for (int i = 0; i < 4; ++i) {
+        PointProjection proj = project_point_on_line(
+            circle.position, sides[i].a, sides[i].b
+        );
+        float vertex_to_center_dist = dist_between_points(
+            circle.position, vertices[i]
+        );
+        proj_dists_to_circle_center[i] = proj.dist;
+        proj_t_to_circle_center[i] = proj.t;
+        int t_valid = between(proj.t, 0.0, 1.0);
+
+        sides_intersect[i] = circle.radius - proj.dist > EPS && t_valid;
+        sides_touch[i] = fabs(proj.dist - circle.radius) < EPS && t_valid;
+        vertices_inside[i] = circle.radius - vertex_to_center_dist > EPS;
+        vertices_touch[i] = fabs(vertex_to_center_dist - circle.radius)
+                            < EPS;
     }
 
-    int circle_inside = min_t > 0.0 && max_t < 1.0
-                        && min_dist > circle.radius;
-    if (circle_inside) {
+    int circle_inside = min_n(proj_t_to_circle_center, 4) > 0.0
+                        && max_n(proj_t_to_circle_center, 4) < 1.0
+                        && min_n(proj_dists_to_circle_center, 4)
+                               > circle.radius;
+
+    if (all(vertices_inside, 4)) {
         *out = CONTAINMENT_COLLISION_0;
         printf("CONTAINMENT 0\n");
         return 1;
     }
 
-    float a_dist = dist_between_points(circle.position, a);
-    float b_dist = dist_between_points(circle.position, b);
-    float c_dist = dist_between_points(circle.position, c);
-    float d_dist = dist_between_points(circle.position, d);
-    int a_inside = a_dist < circle.radius;
-    int b_inside = b_dist < circle.radius;
-    int c_inside = c_dist < circle.radius;
-    int d_inside = d_dist < circle.radius;
-    int a_touches = between(a_dist - circle.radius, 0.0, EPS);
-    int b_touches = between(b_dist - circle.radius, 0.0, EPS);
-    int c_touches = between(c_dist - circle.radius, 0.0, EPS);
-    int d_touches = between(d_dist - circle.radius, 0.0, EPS);
-    int rectangle_inside = a_inside && b_inside && c_inside && d_inside;
-    if (rectangle_inside) {
+    if (circle_inside) {
         *out = CONTAINMENT_COLLISION_1;
         printf("CONTAINMENT 1\n");
         return 1;
     }
 
-    int angle_inside = a_inside || b_inside || c_inside || d_inside;
-    if (side_intersects || angle_inside) {
+    if (any(sides_intersect, 4) || any(vertices_inside, 4)) {
         *out = INTERSECTION_COLLISION;
         printf("INTERSETION\n");
         return 1;
     }
 
-    Vec2 points[4] = {a, b, c, d};
-    int angle_touches = 0;
-    for (size_t i = 0; i < 4; ++i) {
-        float dist = dist_between_points(points[i], circle.position);
-        angle_touches |= between(dist - circle.radius, 0.0, EPS);
-        if (angle_touches) {
-            break;
-        }
-    }
-
-    if (side_touches || angle_touches) {
+    if (any(sides_touch, 4) || any(vertices_touch, 4)) {
         *out = TOUCH_COLLISION;
         printf("TOUCH\n");
         return 1;
     }
 
-    if (max_dist > circle.radius) {
+    if (max_n(proj_dists_to_circle_center, 4) > circle.radius) {
         printf("NO COLLISIONS!\n");
         return 0;
     }
 
-    printf("--------------------------------------------------------\n");
+    fprintf(
+        stderr,
+        "ERROR: unhandled collision case, it's a bug in the "
+        "`collide_circle_with_rectangle`"
+    );
 
     return 0;
 };

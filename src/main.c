@@ -36,10 +36,10 @@ int main(int argc, char* argv[]) {
     //     rectangle_primitive(vec2(3.0, 0.0), 5.0, 5.0),
     //     material(vec3(0.05, 0.05, 0.05))
     // );
-    // spawn_obstacle(
-    //     rectangle_primitive(vec2(-3.0, 0.0), 0.5, 0.7),
-    //     material(vec3(0.10, 0.10, 0.10))
-    // );
+    spawn_obstacle(
+        rectangle_primitive(vec2(-3.0, -2.0), 0.5, 0.7),
+        material(vec3(0.10, 0.10, 0.10))
+    );
     // spawn_obstacle(
     //     triangle_primitive(
     //         vec2(-7.0, -4.0), vec2(-2.0, -4.0), vec2(-3.0, -6.0)

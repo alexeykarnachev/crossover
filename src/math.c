@@ -2,13 +2,29 @@
 
 #include <math.h>
 
+float min(float x, float y) {
+    return x < y ? x : y;
+};
+
 float max(float x, float y) {
     return x > y ? x : y;
 };
 
-float min(float x, float y) {
-    return x < y ? x : y;
-};
+float min_n(float vals[], int n) {
+    float res = HUGE_VAL;
+    for (int i = 0; i < n; ++i) {
+        res = min(res, vals[i]);
+    }
+    return res;
+}
+
+float max_n(float vals[], int n) {
+    float res = -HUGE_VAL;
+    for (int i = 0; i < n; ++i) {
+        res = max(res, vals[i]);
+    }
+    return res;
+}
 
 float clamp(float x, float min_, float max_) {
     if (x < min_) {
@@ -22,6 +38,28 @@ float clamp(float x, float min_, float max_) {
 
 int between(float x, float min_, float max_) {
     return x >= min_ && x <= max_;
+}
+
+int all(int vals[], int n) {
+    int res = 1;
+    for (int i = 0; i < n; ++i) {
+        res &= vals[i];
+        if (!res) {
+            return res;
+        }
+    }
+    return res;
+}
+
+int any(int vals[], int n) {
+    int res = 0;
+    for (int i = 0; i < n; ++i) {
+        res |= vals[i];
+        if (res) {
+            return res;
+        }
+    }
+    return res;
 }
 
 float get_orientations_diff(float r0, float r1) {

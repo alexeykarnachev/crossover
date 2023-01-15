@@ -26,10 +26,14 @@ typedef struct PointProjection {
     float dist;
 } PointProjection;
 
-float max(float x, float y);
 float min(float x, float y);
+float max(float x, float y);
+float min_n(float vals[], int n);
+float max_n(float vals[], int n);
 float clamp(float x, float min_, float max_);
 int between(float x, float min_, float max_);
+int all(int vals[], int n);
+int any(int vals[], int n);
 float get_orientations_diff(float r0, float r1);
 Vec2 vec2(float x, float y);
 Vec3 vec3(float x, float y, float z);
