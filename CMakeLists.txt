@@ -83,7 +83,7 @@ ENDIF()
 
 # Link all
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-file(GLOB SOURCES "src/*.c")
+file(GLOB SOURCES "src/**/*.c" "src/*.c")
 set(SOURCES ${SOURCES})
 add_executable(${PROJECT_NAME} ${SOURCES} "../dependencies/glad/glad.c")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
