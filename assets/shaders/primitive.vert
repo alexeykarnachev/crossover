@@ -21,7 +21,7 @@ struct Rectangle {
 };
 
 struct Triangle {
-    vec2 a;
+    vec2 position;
     vec2 b;
     vec2 c;
 };
@@ -86,11 +86,11 @@ vec2 get_triangle_position() {
 
     vec2 world_pos;
     if (id == 0) {
-        world_pos = triangle.a;
+        world_pos = triangle.position;
     } else if (id == 1) {
-        world_pos = triangle.b;
+        world_pos = triangle.position + triangle.b;
     } else if (id == 2) {
-        world_pos = triangle.c;
+        world_pos = triangle.position + triangle.c;
     }
 
     return world_pos;

@@ -52,7 +52,9 @@ static void set_uniform_rectangle(GLuint program, Rectangle rectangle) {
 }
 
 static void set_uniform_triangle(GLuint program, Triangle triangle) {
-    set_uniform_2fv(program, "triangle.a", (float*)&triangle.a, 1);
+    set_uniform_2fv(
+        program, "triangle.position", (float*)&triangle.position, 1
+    );
     set_uniform_2fv(program, "triangle.b", (float*)&triangle.b, 1);
     set_uniform_2fv(program, "triangle.c", (float*)&triangle.c, 1);
 }

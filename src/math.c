@@ -104,6 +104,11 @@ Vec2 normalize_vec2(Vec2 v) {
     return res;
 }
 
+Vec2 rotate90(Vec2 v) {
+    Vec2 res = {-v.y, v.x};
+    return res;
+}
+
 PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b) {
     PointProjection proj;
     if (fabs(a.x - b.x) < EPS) {

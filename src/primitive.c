@@ -13,8 +13,8 @@ Rectangle rectangle(Vec2 position, float width, float height) {
     return rectangle;
 }
 
-Triangle triangle(Vec2 a, Vec2 b, Vec2 c) {
-    Triangle triangle = {a, b, c};
+Triangle triangle(Vec2 position, Vec2 b, Vec2 c) {
+    Triangle triangle = {position, b, c};
     return triangle;
 }
 
@@ -37,10 +37,10 @@ Primitive rectangle_primitive(Vec2 position, float width, float height) {
     return primitive;
 }
 
-Primitive triangle_primitive(Vec2 a, Vec2 b, Vec2 c) {
+Primitive triangle_primitive(Vec2 position, Vec2 b, Vec2 c) {
     Primitive primitive;
     primitive.type = TRIANGLE_PRIMITIVE;
-    primitive.p.triangle = triangle(a, b, c);
+    primitive.p.triangle = triangle(position, b, c);
     return primitive;
 }
 
@@ -49,6 +49,27 @@ Primitive line_primitive(Vec2 a, Vec2 b) {
     primitive.type = LINE_PRIMITIVE;
     primitive.p.line = line(a, b);
     return primitive;
+}
+
+void get_triangle_vertices(Triangle triangle, Vec2* out) {
+    Vec2 a = triangle.position;
+    Vec2 b = add_vec2(a, triangle.b);
+    Vec2 c = add_vec2(a, triangle.c);
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+}
+
+void get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
+    Vec2 d = rectangle.position;
+    Vec2 a = {d.x, d.y + rectangle.height};
+    Vec2 b = {a.x + rectangle.width, a.y};
+    Vec2 c = {b.x, d.y};
+
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+    out[3] = d;
 }
 
 void move_primitive(Primitive* primitive, Movement movement, float dt) {
@@ -66,14 +87,8 @@ void move_primitive(Primitive* primitive, Movement movement, float dt) {
                 primitive->p.rectangle.position, step
             );
         } else if (primitive->type & TRIANGLE_PRIMITIVE) {
-            primitive->p.triangle.a = add_vec2(
-                primitive->p.triangle.a, step
-            );
-            primitive->p.triangle.b = add_vec2(
-                primitive->p.triangle.b, step
-            );
-            primitive->p.triangle.c = add_vec2(
-                primitive->p.triangle.c, step
+            primitive->p.triangle.position = add_vec2(
+                primitive->p.triangle.position, step
             );
         } else if (primitive->type & LINE_PRIMITIVE) {
             primitive->p.line.a = add_vec2(primitive->p.line.a, step);

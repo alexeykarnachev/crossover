@@ -42,6 +42,7 @@ Vec2 scale_vec2(Vec2 v, float k);
 Vec2 add_vec2(Vec2 v0, Vec2 v1);
 Vec2 sub_vec2(Vec2 v0, Vec2 v1);
 Vec2 normalize_vec2(Vec2 v);
+Vec2 rotate90(Vec2 v);
 PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b);
 float dist_between_points(Vec2 v0, Vec2 v1);
 float dot_vec2(Vec2 v0, Vec2 v1);
