@@ -3,6 +3,7 @@
 #include "app.h"
 #include "collision/collision.h"
 #include "const.h"
+#include "debug/debug.h"
 #include "math.h"
 #include "movement.h"
 #include "stdio.h"
@@ -57,6 +58,8 @@ int spawn_obstacle(Primitive primitive, Material material) {
 }
 
 void update_world(float dt) {
+    dt /= 1000.0;
+
     if (WORLD.player != -1) {
         Movement* p = &WORLD.movement[WORLD.player];
         p->direction = vec2(0.0, 0.0);
@@ -73,14 +76,9 @@ void update_world(float dt) {
         }
 
         Movement m = WORLD.movement[e];
-        int has_primitive = entity_has_component(e, PRIMITIVE_COMPONENT);
-        int has_collider = entity_has_component(e, COLLIDER_COMPONENT);
-        if (has_primitive) {
-            move_primitive(&WORLD.primitive[e], m, dt);
-        }
-
-        if (has_collider) {
-            move_primitive(&WORLD.collider[e], m, dt);
+        if (length_vec2(m.direction) > EPS) {
+            Vec2 t = scale_vec2(normalize_vec2(m.direction), m.speed * dt);
+            translate_entity(e, t);
         }
     }
 
@@ -91,5 +89,27 @@ void update_world(float dt) {
             Collision* collision = &WORLD.collisions[WORLD.n_collisions];
             WORLD.n_collisions += collide_entities(e0, e1, collision);
         }
+    }
+
+    // Resolve collisions
+    if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
+        DEBUG.collisions.resolve_once = 0;
+
+        for (int i = 0; i < WORLD.n_collisions; ++i) {
+            Collision collision = WORLD.collisions[i];
+            resolve_collision(collision);
+        }
+    }
+}
+
+void translate_entity(int entity, Vec2 translation) {
+    int has_primitive = entity_has_component(entity, PRIMITIVE_COMPONENT);
+    int has_collider = entity_has_component(entity, COLLIDER_COMPONENT);
+    if (has_primitive) {
+        translate_primitive(&WORLD.primitive[entity], translation);
+    }
+
+    if (has_collider) {
+        translate_primitive(&WORLD.collider[entity], translation);
     }
 }

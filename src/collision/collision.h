@@ -9,3 +9,4 @@ typedef struct Collision {
 } Collision;
 
 int collide_entities(int e0, int e1, Collision* out);
+void resolve_collision(Collision collision);

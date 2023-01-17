@@ -93,28 +93,22 @@ Vec2 get_primitive_position(Primitive primitive) {
     }
 }
 
-void move_primitive(Primitive* primitive, Movement movement, float dt) {
-    dt /= 1000.0;
-    if (length_vec2(movement.direction) > EPS) {
-        Vec2 step = scale_vec2(
-            normalize_vec2(movement.direction), movement.speed * dt
+void translate_primitive(Primitive* primitive, Vec2 translation) {
+    if (primitive->type & CIRCLE_PRIMITIVE) {
+        primitive->p.circle.position = add_vec2(
+            primitive->p.circle.position, translation
         );
-        if (primitive->type & CIRCLE_PRIMITIVE) {
-            primitive->p.circle.position = add_vec2(
-                primitive->p.circle.position, step
-            );
-        } else if (primitive->type & RECTANGLE_PRIMITIVE) {
-            primitive->p.rectangle.position = add_vec2(
-                primitive->p.rectangle.position, step
-            );
-        } else if (primitive->type & TRIANGLE_PRIMITIVE) {
-            primitive->p.triangle.position = add_vec2(
-                primitive->p.triangle.position, step
-            );
-        } else if (primitive->type & LINE_PRIMITIVE) {
-            primitive->p.line.position = add_vec2(
-                primitive->p.line.position, step
-            );
-        }
+    } else if (primitive->type & RECTANGLE_PRIMITIVE) {
+        primitive->p.rectangle.position = add_vec2(
+            primitive->p.rectangle.position, translation
+        );
+    } else if (primitive->type & TRIANGLE_PRIMITIVE) {
+        primitive->p.triangle.position = add_vec2(
+            primitive->p.triangle.position, translation
+        );
+    } else if (primitive->type & LINE_PRIMITIVE) {
+        primitive->p.line.position = add_vec2(
+            primitive->p.line.position, translation
+        );
     }
 }

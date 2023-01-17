@@ -54,5 +54,4 @@ void get_triangle_vertices(Triangle triangle, Vec2* out);
 void get_rectangle_vertices(Rectangle rectangle, Vec2* out);
 
 Vec2 get_primitive_position(Primitive primitive);
-
-void move_primitive(Primitive* primitive, Movement movement, float dt);
+void translate_primitive(Primitive* primitive, Vec2 translation);

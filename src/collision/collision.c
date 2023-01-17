@@ -1,5 +1,6 @@
 #include "collision.h"
 
+#include "../movement.h"
 #include "../primitive.h"
 #include "../world.h"
 #include "math.h"
@@ -215,11 +216,10 @@ static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
 //
 
 int collide_entities(int e0, int e1, Collision* collision) {
-    int could_be_collided = entity_has_component(e0, COLLIDER_COMPONENT)
-                            && entity_has_component(
-                                e1, COLLIDER_COMPONENT
-                            );
-    if (!could_be_collided) {
+
+    int can_collide = entity_has_component(e0, COLLIDER_COMPONENT)
+                      && entity_has_component(e1, COLLIDER_COMPONENT);
+    if (!can_collide) {
         return 0;
     }
 
@@ -239,6 +239,22 @@ int collide_entities(int e0, int e1, Collision* collision) {
             }
         default:
             return 0;
+    }
+}
+
+void resolve_collision(Collision collision) {
+    Vec2 mtv = collision.mtv;
+    int e0 = collision.entity0;
+    int e1 = collision.entity1;
+    int has_movement0 = entity_has_component(e0, MOVEMENT_COMPONENT);
+    int has_movement1 = entity_has_component(e1, MOVEMENT_COMPONENT);
+    if (has_movement0 && has_movement1) {
+        translate_entity(e0, scale_vec2(mtv, 0.5));
+        translate_entity(e1, scale_vec2(mtv, -0.5));
+    } else if (has_movement0) {
+        translate_entity(e0, mtv);
+    } else if (has_movement1) {
+        translate_entity(e0, scale_vec2(mtv, -1.0));
     }
 }
 

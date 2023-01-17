@@ -7,10 +7,12 @@ typedef struct Debug {
     struct shading {
         int material;
         int wireframe;
+        int mtv;
     } shading;
 
     struct collisions {
-        int mtv;
+        int resolve;
+        int resolve_once;
     } collisions;
 } Debug;
 

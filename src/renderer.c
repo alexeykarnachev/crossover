@@ -129,7 +129,7 @@ void render_world(void) {
         }
     }
 
-    if (DEBUG.collisions.mtv) {
+    if (DEBUG.shading.mtv) {
         set_uniform_1i(program, "type", LINE_PRIMITIVE);
         set_uniform_3fv(program, "diffuse_color", (float*)&MTV_COLOR, 1);
         for (int i = 0; i < WORLD.n_collisions; ++i) {
