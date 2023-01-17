@@ -1,20 +1,17 @@
 #include <glad/glad.h>
 
+#include "./debug/debug.h"
 #include "app.h"
 #include "math.h"
+#include "primitive.h"
 #include "program.h"
 #include "renderer.h"
 #include "world.h"
-
-#ifdef IMGUI_HAS_IMSTR
-#define igBegin igBegin_Str
-#define igSliderFloat igSliderFloat_Str
-#define igCheckbox igCheckbox_Str
-#define igColorEdit3 igColorEdit3_Str
-#define igButton igButton_Str
-#endif
+#include <stdio.h>
 
 static GLuint DUMMY_VAO;
+static Vec3 WIREFRAME_COLOR = {0.0, 0.0, 0.0};
+static Vec3 MTV_COLOR = {0.0, 1.0, 0.0};
 
 void init_renderer(void) {
     glCreateVertexArrays(1, &DUMMY_VAO);
@@ -56,6 +53,11 @@ static void set_uniform_triangle(GLuint program, Triangle triangle) {
     set_uniform_2fv(program, "triangle.c", (float*)&triangle.c, 1);
 }
 
+static void set_uniform_line(GLuint program, Line line) {
+    set_uniform_2fv(program, "line.position", (float*)&line.position, 1);
+    set_uniform_2fv(program, "line.b", (float*)&line.b, 1);
+}
+
 void render_world(void) {
     // -------------------------------------------------------------------
     // Render primitives
@@ -67,7 +69,7 @@ void render_world(void) {
 
     set_uniform_camera(program, WORLD.camera);
 
-    for (size_t entity = 0; entity < WORLD.n_entities; ++entity) {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_component(entity, PRIMITIVE_COMPONENT)) {
             continue;
         }
@@ -88,6 +90,10 @@ void render_world(void) {
             set_uniform_triangle(program, primitive.p.triangle);
             draw_mode = GL_TRIANGLE_STRIP;
             n_points = 3;
+        } else if (type & LINE_PRIMITIVE) {
+            set_uniform_line(program, primitive.p.line);
+            draw_mode = GL_LINE_STRIP;
+            n_points = 2;
         } else {
             fprintf(
                 stderr,
@@ -104,10 +110,37 @@ void render_world(void) {
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
             m = WORLD.material[entity];
         }
-        set_uniform_3fv(
-            program, "diffuse_color", (float*)&m.diffuse_color, 1
-        );
 
-        glDrawArrays(draw_mode, 0, n_points);
+        if (DEBUG.shading.material) {
+            set_uniform_3fv(
+                program, "diffuse_color", (float*)&m.diffuse_color, 1
+            );
+            glDrawArrays(draw_mode, 0, n_points);
+        }
+
+        if (DEBUG.shading.wireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            set_uniform_3fv(
+                program, "diffuse_color", (float*)&WIREFRAME_COLOR, 1
+            );
+            glDrawArrays(draw_mode, 0, n_points);
+
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
+
+    if (DEBUG.collisions.mtv) {
+        set_uniform_1i(program, "type", LINE_PRIMITIVE);
+        set_uniform_3fv(program, "diffuse_color", (float*)&MTV_COLOR, 1);
+        for (int i = 0; i < WORLD.n_collisions; ++i) {
+            Collision collision = WORLD.collisions[i];
+            Vec2 mtv = collision.mtv;
+            int e0 = collision.entity0;
+            Primitive p0 = WORLD.collider[e0];
+            Vec2 position = get_primitive_position(p0);
+            Line mtv_line = line(position, add_vec2(position, mtv));
+            set_uniform_line(program, mtv_line);
+            glDrawArrays(GL_LINE_STRIP, 0, 2);
+        }
     }
 }

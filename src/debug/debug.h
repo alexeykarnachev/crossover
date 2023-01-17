@@ -1,9 +1,17 @@
 typedef struct Debug {
-    struct n_collisions {
-        int touch;
-        int intersection;
-        int containment;
-    } n_collisions;
+    struct general {
+        int n_entities;
+        int n_collisions;
+    } general;
+
+    struct shading {
+        int material;
+        int wireframe;
+    } shading;
+
+    struct collisions {
+        int mtv;
+    } collisions;
 } Debug;
 
 extern Debug DEBUG;

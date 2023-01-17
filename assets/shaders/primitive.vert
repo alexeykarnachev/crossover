@@ -26,10 +26,16 @@ struct Triangle {
     vec2 c;
 };
 
+struct Line {
+    vec2 position;
+    vec2 b;
+};
+
 uniform Camera camera;
 uniform Circle circle;
 uniform Rectangle rectangle;
 uniform Triangle triangle;
+uniform Line line;
 uniform int type;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
@@ -96,14 +102,30 @@ vec2 get_triangle_position() {
     return world_pos;
 }
 
+// Render with LINE with 2 vertices
+vec2 get_line_position() {
+    int id = gl_VertexID;
+
+    vec2 world_pos;
+    if (id == 0) {
+        world_pos = line.position;
+    } else if (id == 1) {
+        world_pos = line.position + line.b;
+    }
+
+    return world_pos;
+}
+
 void main(void) {
     vec2 world_position;
-    if ((type & 1) != 0) {
+    if ((type & 1 << 0) != 0) {
         world_position = get_circle_position();
-    } else if ((type & 2) != 0) {
+    } else if ((type & 1 << 1) != 0) {
         world_position = get_rectangle_position();
-    } else if ((type & 4) != 0) {
+    } else if ((type & 1 << 2) != 0) {
         world_position = get_triangle_position();
+    } else if ((type & 1 << 3) != 0) {
+        world_position = get_line_position();
     }
 
     vec2 proj_pos = world2proj(world_position); 

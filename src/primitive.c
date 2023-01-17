@@ -2,6 +2,7 @@
 
 #include "math.h"
 #include "movement.h"
+#include <stdio.h>
 
 Circle circle(Vec2 position, float radius) {
     Circle circle = {position, radius};
@@ -18,8 +19,8 @@ Triangle triangle(Vec2 position, Vec2 b, Vec2 c) {
     return triangle;
 }
 
-Line line(Vec2 a, Vec2 b) {
-    Line line = {a, b};
+Line line(Vec2 position, Vec2 b) {
+    Line line = {position, b};
     return line;
 }
 
@@ -44,10 +45,10 @@ Primitive triangle_primitive(Vec2 position, Vec2 b, Vec2 c) {
     return primitive;
 }
 
-Primitive line_primitive(Vec2 a, Vec2 b) {
+Primitive line_primitive(Vec2 position, Vec2 b) {
     Primitive primitive;
     primitive.type = LINE_PRIMITIVE;
-    primitive.p.line = line(a, b);
+    primitive.p.line = line(position, b);
     return primitive;
 }
 
@@ -72,6 +73,26 @@ void get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
     out[3] = d;
 }
 
+Vec2 get_primitive_position(Primitive primitive) {
+    PrimitiveType type = primitive.type;
+    if (type == CIRCLE_PRIMITIVE) {
+        return primitive.p.circle.position;
+    } else if (type == RECTANGLE_PRIMITIVE) {
+        return primitive.p.rectangle.position;
+    } else if (type == TRIANGLE_PRIMITIVE) {
+        return primitive.p.triangle.position;
+    } else if (type == LINE_PRIMITIVE) {
+        return primitive.p.line.position;
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: can't get the position of the primitive with type id: "
+            "%d. Needs to be implemented\n",
+            type
+        );
+    }
+}
+
 void move_primitive(Primitive* primitive, Movement movement, float dt) {
     dt /= 1000.0;
     if (length_vec2(movement.direction) > EPS) {
@@ -91,8 +112,9 @@ void move_primitive(Primitive* primitive, Movement movement, float dt) {
                 primitive->p.triangle.position, step
             );
         } else if (primitive->type & LINE_PRIMITIVE) {
-            primitive->p.line.a = add_vec2(primitive->p.line.a, step);
-            primitive->p.line.b = add_vec2(primitive->p.line.b, step);
+            primitive->p.line.position = add_vec2(
+                primitive->p.line.position, step
+            );
         }
     }
 }

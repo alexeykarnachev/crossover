@@ -1,7 +1,7 @@
 #include "world.h"
 
 #include "app.h"
-#include "collision.h"
+#include "collision/collision.h"
 #include "const.h"
 #include "math.h"
 #include "movement.h"
@@ -84,24 +84,12 @@ void update_world(float dt) {
         }
     }
 
-    // Collide movable entities with the world
+    // Collide entities with each other
     WORLD.n_collisions = 0;
     for (int e0 = 0; e0 < WORLD.n_entities; ++e0) {
-        if (!entity_has_component(e0, COLLIDER_COMPONENT)
-            || !entity_has_component(e0, MOVEMENT_COMPONENT)) {
-            continue;
-        }
         for (int e1 = e0 + 1; e1 < WORLD.n_entities; ++e1) {
-            if (!entity_has_component(e1, COLLIDER_COMPONENT)) {
-                continue;
-            }
-
             Collision* collision = &WORLD.collisions[WORLD.n_collisions];
-            collision->entity0 = e0;
-            collision->entity1 = e1;
-            WORLD.n_collisions += collide_primitives(
-                WORLD.collider[e0], WORLD.collider[e1], &collision->type
-            );
+            WORLD.n_collisions += collide_entities(e0, e1, collision);
         }
     }
 }
