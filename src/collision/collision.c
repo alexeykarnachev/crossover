@@ -12,7 +12,7 @@ static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
     if (dist < radii_sum) {
         *mtv = scale_vec2(
             normalize_vec2(sub_vec2(c1.position, c0.position)),
-            radii_sum - dist
+            dist - radii_sum
         );
         return 1;
     }

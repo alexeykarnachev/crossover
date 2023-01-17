@@ -133,13 +133,14 @@ void render_world(void) {
         set_uniform_1i(program, "type", LINE_PRIMITIVE);
         set_uniform_3fv(program, "diffuse_color", (float*)&MTV_COLOR, 1);
         for (int i = 0; i < WORLD.n_collisions; ++i) {
-            Collision collision = WORLD.collisions[i];
-            Vec2 mtv = collision.mtv;
-            int e0 = collision.entity0;
-            Primitive p0 = WORLD.collider[e0];
-            Vec2 position = get_primitive_position(p0);
-            Line mtv_line = line(position, add_vec2(position, mtv));
-            set_uniform_line(program, mtv_line);
+            Collision c = WORLD.collisions[i];
+            Vec2 p0 = get_primitive_position(WORLD.collider[c.entity0]);
+            Vec2 p1 = get_primitive_position(WORLD.collider[c.entity1]);
+
+            set_uniform_line(program, line(p0, c.mtv));
+            glDrawArrays(GL_LINE_STRIP, 0, 2);
+
+            set_uniform_line(program, line(p1, scale_vec2(c.mtv, -1.0)));
             glDrawArrays(GL_LINE_STRIP, 0, 2);
         }
     }
