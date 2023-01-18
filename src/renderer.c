@@ -58,16 +58,63 @@ static void set_uniform_line(GLuint program, Line line) {
     set_uniform_2fv(program, "line.b", (float*)&line.b, 1);
 }
 
+static void render_primitive(Primitive primitive, Material material) {
+    GLuint program = PRIMITIVE_PROGRAM;
+    glUseProgram(program);
+    set_uniform_camera(program, WORLD.camera);
+
+    PrimitiveType type = primitive.type;
+    GLuint draw_mode;
+    int n_points;
+    if (type & CIRCLE_PRIMITIVE) {
+        set_uniform_circle(program, primitive.p.circle);
+        draw_mode = GL_TRIANGLE_FAN;
+        n_points = N_POLYGONS_IN_CIRCLE + 2;
+    } else if (type & RECTANGLE_PRIMITIVE) {
+        set_uniform_rectangle(program, primitive.p.rectangle);
+        draw_mode = GL_TRIANGLE_STRIP;
+        n_points = 4;
+    } else if (type & TRIANGLE_PRIMITIVE) {
+        set_uniform_triangle(program, primitive.p.triangle);
+        draw_mode = GL_TRIANGLE_STRIP;
+        n_points = 3;
+    } else if (type & LINE_PRIMITIVE) {
+        set_uniform_line(program, primitive.p.line);
+        draw_mode = GL_LINE_STRIP;
+        n_points = 2;
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: can't render the primitive with type id: "
+            "%d\n",
+            type
+        );
+    }
+
+    set_uniform_1i(program, "type", type);
+    if (DEBUG.shading.material) {
+        set_uniform_3fv(
+            program, "diffuse_color", (float*)&material.diffuse_color, 1
+        );
+        glDrawArrays(draw_mode, 0, n_points);
+    }
+
+    if (DEBUG.shading.wireframe) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        set_uniform_3fv(
+            program, "diffuse_color", (float*)&WIREFRAME_COLOR, 1
+        );
+        glDrawArrays(draw_mode, 0, n_points);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+}
+
 void render_world(void) {
     // -------------------------------------------------------------------
     // Render primitives
     glDisable(GL_CULL_FACE);
-    GLuint program = PRIMITIVE_PROGRAM;
-    glUseProgram(program);
     glViewport(0, 0, APP.window_width, APP.window_height);
     glBindVertexArray(DUMMY_VAO);
-
-    set_uniform_camera(program, WORLD.camera);
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_component(entity, PRIMITIVE_COMPONENT)) {
@@ -75,73 +122,28 @@ void render_world(void) {
         }
 
         Primitive primitive = WORLD.primitive[entity];
-        PrimitiveType type = primitive.type;
-        GLuint draw_mode;
-        int n_points;
-        if (type & CIRCLE_PRIMITIVE) {
-            set_uniform_circle(program, primitive.p.circle);
-            draw_mode = GL_TRIANGLE_FAN;
-            n_points = N_POLYGONS_IN_CIRCLE + 2;
-        } else if (type & RECTANGLE_PRIMITIVE) {
-            set_uniform_rectangle(program, primitive.p.rectangle);
-            draw_mode = GL_TRIANGLE_STRIP;
-            n_points = 4;
-        } else if (type & TRIANGLE_PRIMITIVE) {
-            set_uniform_triangle(program, primitive.p.triangle);
-            draw_mode = GL_TRIANGLE_STRIP;
-            n_points = 3;
-        } else if (type & LINE_PRIMITIVE) {
-            set_uniform_line(program, primitive.p.line);
-            draw_mode = GL_LINE_STRIP;
-            n_points = 2;
-        } else {
-            fprintf(
-                stderr,
-                "ERROR: can't render the primitive with type id: "
-                "%d\n",
-                type
-            );
-            continue;
-        }
-
-        set_uniform_1i(program, "type", type);
-
-        Material m = default_material();
+        Material material = default_material();
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
-            m = WORLD.material[entity];
+            material = WORLD.material[entity];
         }
-
-        if (DEBUG.shading.material) {
-            set_uniform_3fv(
-                program, "diffuse_color", (float*)&m.diffuse_color, 1
-            );
-            glDrawArrays(draw_mode, 0, n_points);
-        }
-
-        if (DEBUG.shading.wireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            set_uniform_3fv(
-                program, "diffuse_color", (float*)&WIREFRAME_COLOR, 1
-            );
-            glDrawArrays(draw_mode, 0, n_points);
-
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
+        render_primitive(primitive, material);
     }
 
-    if (DEBUG.shading.mtv) {
-        set_uniform_1i(program, "type", LINE_PRIMITIVE);
-        set_uniform_3fv(program, "diffuse_color", (float*)&MTV_COLOR, 1);
-        for (int i = 0; i < WORLD.n_collisions; ++i) {
-            Collision c = WORLD.collisions[i];
-            Vec2 p0 = get_primitive_position(WORLD.collider[c.entity0]);
-            Vec2 p1 = get_primitive_position(WORLD.collider[c.entity1]);
-
-            set_uniform_line(program, line(p0, c.mtv));
-            glDrawArrays(GL_LINE_STRIP, 0, 2);
-
-            set_uniform_line(program, line(p1, scale_vec2(c.mtv, -1.0)));
-            glDrawArrays(GL_LINE_STRIP, 0, 2);
+    while (DEBUG.n_render_commands > 0) {
+        DEBUG.n_render_commands -= 1;
+        RenderCommand c = DEBUG.render_commands[DEBUG.n_render_commands];
+        if (c.type == PRIMITIVE_RENDER) {
+            Primitive primitive = c.command.render_primitive.primitive;
+            Material material = c.command.render_primitive.material;
+            render_primitive(primitive, material);
         }
     }
+}
+
+RenderCommand render_primitive_command(
+    Primitive primitive, Material material
+) {
+    RenderCommand render_command = {
+        PRIMITIVE_RENDER, {primitive, material}};
+    return render_command;
 }

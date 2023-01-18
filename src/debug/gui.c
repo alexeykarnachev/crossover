@@ -25,6 +25,9 @@ void render_debug_gui(void) {
         igCheckbox("Material", (bool*)(&DEBUG.shading.material));
         igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
         igCheckbox("Collision MTV", (bool*)(&DEBUG.shading.mtv));
+        igCheckbox(
+            "Collision axis", (bool*)(&DEBUG.shading.collision_axis)
+        );
         igTreePop();
     }
 

@@ -50,8 +50,10 @@ Primitive rectangle_primitive(Vec2 position, float width, float height);
 Primitive triangle_primitive(Vec2 position, Vec2 b, Vec2 c);
 Primitive line_primitive(Vec2 position, Vec2 b);
 
-void get_triangle_vertices(Triangle triangle, Vec2* out);
-void get_rectangle_vertices(Rectangle rectangle, Vec2* out);
+int get_triangle_vertices(Triangle triangle, Vec2* out);
+int get_rectangle_vertices(Rectangle rectangle, Vec2* out);
+int get_line_vertices(Line line, Vec2* out);
+int get_primitive_vertices(Primitive primitive, Vec2* out);
 
 Vec2 get_primitive_position(Primitive primitive);
 void translate_primitive(Primitive* primitive, Vec2 translation);

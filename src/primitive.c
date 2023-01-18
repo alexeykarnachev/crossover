@@ -52,16 +52,19 @@ Primitive line_primitive(Vec2 position, Vec2 b) {
     return primitive;
 }
 
-void get_triangle_vertices(Triangle triangle, Vec2* out) {
+int get_triangle_vertices(Triangle triangle, Vec2* out) {
     Vec2 a = triangle.position;
     Vec2 b = add_vec2(a, triangle.b);
     Vec2 c = add_vec2(a, triangle.c);
+
     out[0] = a;
     out[1] = b;
     out[2] = c;
+
+    return 3;
 }
 
-void get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
+int get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
     Vec2 d = rectangle.position;
     Vec2 a = {d.x, d.y + rectangle.height};
     Vec2 b = {a.x + rectangle.width, a.y};
@@ -71,6 +74,38 @@ void get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
     out[1] = b;
     out[2] = c;
     out[3] = d;
+
+    return 4;
+}
+
+int get_line_vertices(Line line, Vec2* out) {
+    Vec2 a = line.position;
+    Vec2 b = add_vec2(a, line.b);
+
+    out[0] = a;
+    out[1] = b;
+
+    return 2;
+}
+
+int get_primitive_vertices(Primitive primitive, Vec2* out) {
+    PrimitiveType type = primitive.type;
+    if (type == CIRCLE_PRIMITIVE) {
+        return 0;
+    } else if (type == RECTANGLE_PRIMITIVE) {
+        return get_rectangle_vertices(primitive.p.rectangle, out);
+    } else if (type == TRIANGLE_PRIMITIVE) {
+        return get_triangle_vertices(primitive.p.triangle, out);
+    } else if (type == LINE_PRIMITIVE) {
+        return get_line_vertices(primitive.p.line, out);
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: can't get the vertices of the primitive with type id: "
+            "%d. Needs to be implemented\n",
+            type
+        );
+    }
 }
 
 Vec2 get_primitive_position(Primitive primitive) {

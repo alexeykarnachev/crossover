@@ -1,11 +1,65 @@
 #include "collision.h"
 
+#include "../debug/debug.h"
 #include "../movement.h"
 #include "../primitive.h"
 #include "../world.h"
 #include "math.h"
 #include <math.h>
 #include <stdio.h>
+
+static Vec2 get_circle_proj_bound(Circle c, Vec2 axis) {
+    Vec2 r = scale_vec2(normalize_vec2(axis), c.radius);
+    Vec2 p0 = normalize_vec2(add_vec2(c.position, r));
+    Vec2 p1 = normalize_vec2(add_vec2(c.position, scale_vec2(r, -1.0)));
+    float k0 = dot_vec2(p0, axis);
+    float k1 = dot_vec2(p1, axis);
+    return k1 > k0 ? vec2(k0, k1) : vec2(k1, k0);
+}
+
+static Vec2 get_polygon_proj_bound(Vec2 points[], int n, Vec2 axis) {
+    float min_k = HUGE_VAL;
+    float max_k = -HUGE_VAL;
+    for (int i = 0; i < n; ++i) {
+        float k = dot_vec2(normalize_vec2(points[i]), axis);
+        min_k = min(min_k, k);
+        max_k = max(max_k, k);
+    }
+    return vec2(min_k, max_k);
+}
+
+static void update_overlap(
+    Vec2 bound0,
+    Vec2 bound1,
+    Vec2 axis,
+    Vec2* min_overlap_axis,
+    float* min_overlap
+) {
+    float r0 = 0.5 * (bound0.y - bound0.x);
+    float r1 = 0.5 * (bound1.y - bound1.x);
+    float c0 = 0.5 * (bound0.y + bound0.x);
+    float c1 = 0.5 * (bound1.y + bound1.x);
+    float radii_sum = r0 + r1;
+    float dist = fabs(c1 - c0);
+    float overlap = radii_sum - dist;
+    if (overlap < *min_overlap) {
+        *min_overlap = overlap;
+        *min_overlap_axis = axis;
+    }
+}
+
+static void update_circle_polygon_overlap(
+    Circle circle,
+    Vec2 vertices[],
+    int n,
+    Vec2 axis,
+    Vec2* min_overlap_axis,
+    float* min_overlap
+) {
+    Vec2 bound0 = get_circle_proj_bound(circle, axis);
+    Vec2 bound1 = get_polygon_proj_bound(vertices, n, axis);
+    update_overlap(bound0, bound1, axis, min_overlap_axis, min_overlap);
+}
 
 static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
     float dist = dist_between_points(c0.position, c1.position);
@@ -17,203 +71,53 @@ static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
         );
         return 1;
     }
-
     return 0;
 }
 
-// static int collide_circle_with_polygon(
-//     Circle circle, Vec2 vertices[], int n, CollisionType* out
-// ) {
-//     float min_proj_t = HUGE_VAL;
-//     float max_proj_t = -HUGE_VAL;
-//     float min_proj_dist = HUGE_VAL;
-//     float max_proj_dist = -HUGE_VAL;
-//     int all_vertices_inside = 1;
-//     int any_vertices_inside = 0;
-//     int any_vertices_touch = 0;
-//     int any_sides_intersect = 0;
-//     int any_sides_touch = 0;
-//     for (int i = 0; i < n; ++i) {
-//         Vec2 v0 = vertices[i];
-//         Vec2 v1 = vertices[i == n - 1 ? 0 : i + 1];
-//         PointProjection proj = project_point_on_line(
-//             circle.position, v0, v1
-//         );
-//         int t_ok = between(proj.t, 0.0, 1.0);
-//         float vertex_depth = circle.radius
-//                              - dist_between_points(circle.position, v0);
-//
-//         min_proj_t = min(min_proj_t, proj.t);
-//         max_proj_t = max(max_proj_t, proj.t);
-//         min_proj_dist = min(min_proj_dist, proj.dist);
-//         max_proj_dist = max(max_proj_dist, proj.dist);
-//         all_vertices_inside &= vertex_depth >= 0;
-//         any_vertices_inside |= vertex_depth > 0;
-//         any_vertices_touch |= fabs(vertex_depth) < EPS;
-//         any_sides_intersect |= circle.radius - proj.dist > 0 && t_ok;
-//         any_sides_touch |= fabs(proj.dist - circle.radius) < EPS &&
-//         t_ok;
-//     }
-//
-//     int circle_inside = min_proj_t >= 0.0 && max_proj_t <= 1.0
-//                         && min_proj_dist >= circle.radius;
-//
-//     if (all_vertices_inside) {
-//         *out = CONTAINMENT_COLLISION_0;
-//     } else if (circle_inside) {
-//         *out = CONTAINMENT_COLLISION_1;
-//     } else if (any_sides_intersect || any_vertices_inside) {
-//         *out = INTERSECTION_COLLISION;
-//     } else if (any_sides_touch || any_vertices_touch) {
-//         *out = TOUCH_COLLISION;
-//     } else if (max_proj_dist > circle.radius) {
-//         return 0;
-//     } else {
-//         fprintf(
-//             stderr,
-//             "ERROR: unhandles collision case. It's a bug in the "
-//             "`collide_circle_with_polygon` function"
-//         );
-//         return 0;
-//     }
-//
-//     return 1;
-// }
-//
-// static int collide_polygons(
-//     Vec2 vertices0[], int n0, Vec2 vertices1[], int n1, CollisionType*
-//     out
-// ) {
-//
-//     Vec2* vertex_lists[2] = {vertices0, vertices1};
-//     int vertex_numbers[2] = {n0, n1};
-//     int containment0 = 1;
-//     int containment1 = 1;
-//     int intersection = 1;
-//     int separated = 0;
-//     int touch = 0;
-//     for (int polygon_idx = 0; polygon_idx < 2; ++polygon_idx) {
-//         Vec2* vertices = vertex_lists[polygon_idx];
-//         int n = vertex_numbers[polygon_idx];
-//         for (int vertex_idx = 0; vertex_idx <
-//         vertex_numbers[polygon_idx];
-//              ++vertex_idx) {
-//             Vec2 v0 = vertices[vertex_idx];
-//             Vec2 v1 = vertices[vertex_idx == n - 1 ? 0 : vertex_idx +
-//             1]; Vec2 axis = normalize_vec2(rotate90(sub_vec2(v1, v0)));
-//
-//             float min_k0 = HUGE_VAL;
-//             float max_k0 = -HUGE_VAL;
-//             for (int i = 0; i < n0; ++i) {
-//                 Vec2 vertex = vertices0[i];
-//                 float k = dot_vec2(axis, vertex);
-//                 min_k0 = min(min_k0, k);
-//                 max_k0 = max(max_k0, k);
-//             }
-//
-//             float min_k1 = HUGE_VAL;
-//             float max_k1 = -HUGE_VAL;
-//             for (int i = 0; i < n1; ++i) {
-//                 Vec2 vertex = vertices1[i];
-//                 float k = dot_vec2(axis, vertex);
-//                 min_k1 = min(min_k1, k);
-//                 max_k1 = max(max_k1, k);
-//             }
-//
-//             float min_k_left;
-//             float max_k_left;
-//             float min_k_right;
-//             float max_k_right;
-//             if (min_k0 < min_k1) {
-//                 min_k_left = min_k0;
-//                 max_k_left = max_k0;
-//                 min_k_right = min_k1;
-//                 max_k_right = max_k1;
-//             } else {
-//                 min_k_left = min_k1;
-//                 max_k_left = max_k1;
-//                 min_k_right = min_k0;
-//                 max_k_right = max_k0;
-//             }
-//
-//             separated |= max_k_left < min_k_right;
-//             if (separated) {
-//                 return 0;
-//             }
-//             containment0 &= min(min_k1 - min_k0, max_k0 - max_k1) >= 0;
-//             containment1 &= min(min_k0 - min_k1, max_k1 - max_k0) >= 0;
-//             intersection &= max_k_left - min_k_right > 0;
-//             touch |= min(fabs(max_k0 - min_k1), fabs(max_k1 - min_k0))
-//                      < EPS;
-//         }
-//     }
-//
-//     if (containment0) {
-//         *out = CONTAINMENT_COLLISION_0;
-//     } else if (containment1) {
-//         *out = CONTAINMENT_COLLISION_1;
-//     } else if (intersection) {
-//         *out = INTERSECTION_COLLISION;
-//     } else if (touch) {
-//         *out = TOUCH_COLLISION;
-//     } else {
-//         fprintf(
-//             stderr,
-//             "ERROR: unhandles collision case. It's a bug in the "
-//             "`collide_polygons` function"
-//         );
-//         return 0;
-//     }
-//
-//     return 1;
-// }
+static int collide_circle_with_polygon(
+    Circle circle, Vec2 vertices[], int n, Vec2* mtv
+) {
+    Vec2 min_overlap_axis;
+    Vec2 nearest_vertex;
+    float min_overlap = HUGE_VAL;
+    float nearest_dist = HUGE_VAL;
+    for (int vertex_idx = 0; vertex_idx < n; ++vertex_idx) {
+        Vec2 v0 = vertices[vertex_idx];
+        Vec2 v1 = vertices[vertex_idx < n - 1 ? vertex_idx + 1 : 0];
+        Vec2 axis = rotate90(sub_vec2(v1, v0));
+        if (DEBUG.shading.collision_axis) {
+            // render_debug_primitive()
+        }
 
-// static int collide_circle_with_rectangle(
-//     Circle circle, Rectangle rectangle, CollisionType* out
-// ) {
-//     Vec2 vertices[4];
-//     get_rectangle_vertices(rectangle, vertices);
-//     return collide_circle_with_polygon(circle, vertices, 4, out);
-// };
-//
-// static int collide_circle_with_triangle(
-//     Circle circle, Triangle triangle, CollisionType* out
-// ) {
-//     Vec2 vertices[3];
-//     get_triangle_vertices(triangle, vertices);
-//     return collide_circle_with_polygon(circle, vertices, 3, out);
-// };
-//
-// static int collide_rectangles(
-//     Rectangle rectangle0, Rectangle rectangle1, CollisionType* out
-// ) {
-//     Vec2 vertices0[4];
-//     Vec2 vertices1[4];
-//     get_rectangle_vertices(rectangle0, vertices0);
-//     get_rectangle_vertices(rectangle1, vertices1);
-//     return collide_polygons(vertices0, 4, vertices1, 4, out);
-// };
-//
-// static int collide_rectangle_with_triangle(
-//     Rectangle rectangle, Triangle triangle, CollisionType* out
-// ) {
-//     Vec2 vertices0[4];
-//     Vec2 vertices1[3];
-//     get_rectangle_vertices(rectangle, vertices0);
-//     get_triangle_vertices(triangle, vertices1);
-//     return collide_polygons(vertices0, 4, vertices1, 3, out);
-// };
-//
-// static int collide_triangles(
-//     Triangle triangle0, Triangle triangle1, CollisionType* out
-// ) {
-//     Vec2 vertices0[3];
-//     Vec2 vertices1[3];
-//     get_triangle_vertices(triangle0, vertices0);
-//     get_triangle_vertices(triangle1, vertices1);
-//     return collide_polygons(vertices0, 3, vertices1, 3, out);
-// };
-//
+        axis = normalize_vec2(axis);
+
+        update_circle_polygon_overlap(
+            circle, vertices, n, axis, &min_overlap_axis, &min_overlap
+        );
+
+        if (min_overlap <= 0) {
+            return 0;
+        }
+
+        float dist = dist_between_points(v0, circle.position);
+        if (dist < nearest_dist) {
+            nearest_dist = dist;
+            nearest_vertex = v0;
+        }
+    }
+
+    Vec2 axis = normalize_vec2(sub_vec2(circle.position, nearest_vertex));
+    update_circle_polygon_overlap(
+        circle, vertices, n, axis, &min_overlap_axis, &min_overlap
+    );
+
+    if (min_overlap > 0) {
+        *mtv = scale_vec2(normalize_vec2(axis), 2.0);
+        return 1;
+    }
+
+    return 0;
+}
 
 int collide_entities(int e0, int e1, Collision* collision) {
 
@@ -223,23 +127,47 @@ int collide_entities(int e0, int e1, Collision* collision) {
         return 0;
     }
 
-    Primitive p0 = WORLD.primitive[e0];
-    Primitive p1 = WORLD.primitive[e1];
+    Vec2 v0[4];
+    Vec2 v1[4];
     collision->entity0 = e0;
     collision->entity1 = e1;
-    switch (p0.type) {
-        case CIRCLE_PRIMITIVE:
-            switch (p1.type) {
-                case CIRCLE_PRIMITIVE:
-                    return collide_circles(
-                        p0.p.circle, p1.p.circle, &collision->mtv
-                    );
-                default:
-                    return 0;
-            }
-        default:
-            return 0;
+    Primitive p0 = WORLD.primitive[e0];
+    Primitive p1 = WORLD.primitive[e1];
+    int nv0 = get_primitive_vertices(p0, v0);
+    int nv1 = get_primitive_vertices(p1, v1);
+    int collided;
+    if (p0.type == CIRCLE_PRIMITIVE && p1.type == CIRCLE_PRIMITIVE) {
+        collided = collide_circles(
+            p0.p.circle, p1.p.circle, &collision->mtv
+        );
+    } else if (p0.type == CIRCLE_PRIMITIVE) {
+        collided = collide_circle_with_polygon(
+            p0.p.circle, v1, nv1, &collision->mtv
+        );
+    } else if (p1.type == CIRCLE_PRIMITIVE) {
+        collided = collide_circle_with_polygon(
+            p1.p.circle, v0, nv0, &collision->mtv
+        );
+    } else {
+        return 0;
     }
+
+    if (collided && DEBUG.shading.mtv) {
+        Vec2 pos0 = get_primitive_position(p0);
+        Vec2 pos1 = get_primitive_position(p1);
+        Primitive line0 = line_primitive(pos0, collision->mtv);
+        Primitive line1 = line_primitive(
+            pos1, scale_vec2(collision->mtv, -1.0)
+        );
+        submit_debug_render_command(
+            render_primitive_command(line0, default_mtv_material())
+        );
+        submit_debug_render_command(
+            render_primitive_command(line1, default_mtv_material())
+        );
+    }
+
+    return collided;
 }
 
 void resolve_collision(Collision collision) {
@@ -257,90 +185,3 @@ void resolve_collision(Collision collision) {
         translate_entity(e0, scale_vec2(mtv, -1.0));
     }
 }
-
-// int collide_primitives(Primitive p0, Primitive p1, CollisionType* out) {
-//     switch (p0.type) {
-//         case CIRCLE_PRIMITIVE:
-//             switch (p1.type) {
-//                 case CIRCLE_PRIMITIVE:
-//                     return collide_circles(p0.p.circle, p1.p.circle,
-//                     out);
-//                 case RECTANGLE_PRIMITIVE:
-//                     return collide_circle_with_rectangle(
-//                         p0.p.circle, p1.p.rectangle, out
-//                     );
-//                 case TRIANGLE_PRIMITIVE:
-//                     return collide_circle_with_triangle(
-//                         p0.p.circle, p1.p.triangle, out
-//                     );
-//                 default:
-//                     fprintf(
-//                         stderr,
-//                         "ERROR: can't collide the circle primitive with
-//                         " "the primitive of the type with id: %d\n",
-//                         p1.type
-//                     );
-//                     return 0;
-//             }
-//         case RECTANGLE_PRIMITIVE:
-//             switch (p1.type) {
-//                 case CIRCLE_PRIMITIVE:
-//                     return
-//                     flip_containment(collide_circle_with_rectangle(
-//                         p1.p.circle, p0.p.rectangle, out
-//                     ));
-//                 case RECTANGLE_PRIMITIVE:
-//                     return collide_rectangles(
-//                         p0.p.rectangle, p1.p.rectangle, out
-//                     );
-//                 case TRIANGLE_PRIMITIVE:
-//                     return collide_rectangle_with_triangle(
-//                         p0.p.rectangle, p1.p.triangle, out
-//                     );
-//                 default:
-//                     fprintf(
-//                         stderr,
-//                         "ERROR: can't collide the rectangle primitive "
-//                         "with the primitive of the type with id: %d\n",
-//                         p1.type
-//                     );
-//                     return 0;
-//             }
-//         case TRIANGLE_PRIMITIVE:
-//             switch (p1.type) {
-//                 case CIRCLE_PRIMITIVE:
-//                     return
-//                     flip_containment(collide_circle_with_triangle(
-//                         p1.p.circle, p0.p.triangle, out
-//                     ));
-//                 case RECTANGLE_PRIMITIVE:
-//                     return flip_containment(
-//                         collide_rectangle_with_triangle(
-//                             p1.p.rectangle, p0.p.triangle, out
-//                         )
-//                     );
-//                 case TRIANGLE_PRIMITIVE:
-//                     return collide_triangles(
-//                         p0.p.triangle, p1.p.triangle, out
-//                     );
-//                 default:
-//                     fprintf(
-//                         stderr,
-//                         "ERROR: can't collide the triangle primitive
-//                         with " "the primitive of the type with id:
-//                         %d\n", p1.type
-//                     );
-//                     return 0;
-//             }
-//         default:
-//             fprintf(
-//                 stderr,
-//                 "ERROR: can't collide the primitives with the ids: %d
-//                 and "
-//                 "%d\n",
-//                 p0.type,
-//                 p1.type
-//             );
-//             return 0;
-//     }
-// }
