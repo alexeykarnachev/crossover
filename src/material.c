@@ -14,3 +14,7 @@ Material default_material() {
 Material default_mtv_material() {
     return material(vec3(0.0, 1.0, 0.0));
 }
+
+Material default_collision_axis_material() {
+    return material(vec3(0.0, 0.0, 1.0));
+}

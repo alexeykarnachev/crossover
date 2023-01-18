@@ -8,3 +8,4 @@ typedef struct Material {
 Material material(Vec3 diffuse_color);
 Material default_material();
 Material default_mtv_material();
+Material default_collision_axis_material();

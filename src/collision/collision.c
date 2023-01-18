@@ -86,19 +86,19 @@ static int collide_circle_with_polygon(
         Vec2 v1 = vertices[vertex_idx < n - 1 ? vertex_idx + 1 : 0];
         Vec2 axis = rotate90(sub_vec2(v1, v0));
         if (DEBUG.shading.collision_axis) {
-            // render_debug_primitive()
+            RenderCommand command = render_primitive_command(
+                line_primitive(v0, axis), default_collision_axis_material()
+            );
+            submit_debug_render_command(command);
         }
 
         axis = normalize_vec2(axis);
-
         update_circle_polygon_overlap(
             circle, vertices, n, axis, &min_overlap_axis, &min_overlap
         );
-
         if (min_overlap <= 0) {
             return 0;
         }
-
         float dist = dist_between_points(v0, circle.position);
         if (dist < nearest_dist) {
             nearest_dist = dist;
@@ -106,7 +106,16 @@ static int collide_circle_with_polygon(
         }
     }
 
-    Vec2 axis = normalize_vec2(sub_vec2(circle.position, nearest_vertex));
+    Vec2 axis = sub_vec2(nearest_vertex, circle.position);
+    if (DEBUG.shading.collision_axis) {
+        RenderCommand command = render_primitive_command(
+            line_primitive(circle.position, axis),
+            default_collision_axis_material()
+        );
+        submit_debug_render_command(command);
+    }
+
+    axis = normalize_vec2(axis);
     update_circle_polygon_overlap(
         circle, vertices, n, axis, &min_overlap_axis, &min_overlap
     );
