@@ -54,8 +54,8 @@ Primitive line_primitive(Vec2 position, Vec2 b) {
 
 int get_triangle_vertices(Triangle triangle, Vec2* out) {
     Vec2 a = triangle.position;
-    Vec2 b = add_vec2(a, triangle.b);
-    Vec2 c = add_vec2(a, triangle.c);
+    Vec2 b = add(a, triangle.b);
+    Vec2 c = add(a, triangle.c);
 
     out[0] = a;
     out[1] = b;
@@ -80,7 +80,7 @@ int get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
 
 int get_line_vertices(Line line, Vec2* out) {
     Vec2 a = line.position;
-    Vec2 b = add_vec2(a, line.b);
+    Vec2 b = add(a, line.b);
 
     out[0] = a;
     out[1] = b;
@@ -130,19 +130,19 @@ Vec2 get_primitive_position(Primitive primitive) {
 
 void translate_primitive(Primitive* primitive, Vec2 translation) {
     if (primitive->type & CIRCLE_PRIMITIVE) {
-        primitive->p.circle.position = add_vec2(
+        primitive->p.circle.position = add(
             primitive->p.circle.position, translation
         );
     } else if (primitive->type & RECTANGLE_PRIMITIVE) {
-        primitive->p.rectangle.position = add_vec2(
+        primitive->p.rectangle.position = add(
             primitive->p.rectangle.position, translation
         );
     } else if (primitive->type & TRIANGLE_PRIMITIVE) {
-        primitive->p.triangle.position = add_vec2(
+        primitive->p.triangle.position = add(
             primitive->p.triangle.position, translation
         );
     } else if (primitive->type & LINE_PRIMITIVE) {
-        primitive->p.line.position = add_vec2(
+        primitive->p.line.position = add(
             primitive->p.line.position, translation
         );
     }

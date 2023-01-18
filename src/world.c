@@ -76,8 +76,8 @@ void update_world(float dt) {
         }
 
         Movement m = WORLD.movement[e];
-        if (length_vec2(m.direction) > EPS) {
-            Vec2 t = scale_vec2(normalize_vec2(m.direction), m.speed * dt);
+        if (length(m.direction) > EPS) {
+            Vec2 t = scale(normalize(m.direction), m.speed * dt);
             translate_entity(e, t);
         }
     }

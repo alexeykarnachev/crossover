@@ -83,24 +83,24 @@ Vec4 vec4(float x, float y, float z, float w) {
     return res;
 }
 
-Vec2 scale_vec2(Vec2 v, float k) {
+Vec2 scale(Vec2 v, float k) {
     Vec2 res = {v.x * k, v.y * k};
     return res;
 }
 
-Vec2 add_vec2(Vec2 v0, Vec2 v1) {
+Vec2 add(Vec2 v0, Vec2 v1) {
     Vec2 res = {v0.x + v1.x, v0.y + v1.y};
     return res;
 }
 
-Vec2 sub_vec2(Vec2 v0, Vec2 v1) {
+Vec2 sub(Vec2 v0, Vec2 v1) {
     Vec2 res = {v0.x - v1.x, v0.y - v1.y};
     return res;
 }
 
-Vec2 normalize_vec2(Vec2 v) {
-    float length = length_vec2(v);
-    Vec2 res = {v.x / length, v.y / length};
+Vec2 normalize(Vec2 v) {
+    float len = length(v);
+    Vec2 res = {v.x / len, v.y / len};
     return res;
 }
 
@@ -118,7 +118,7 @@ PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b) {
         float x = p.x;
         proj.t = (x - a.x) / (b.x - a.x);
     } else {
-        Vec2 v0 = sub_vec2(b, a);
+        Vec2 v0 = sub(b, a);
         Vec2 v1 = {-v0.y, v0.x};
 
         float m0 = v0.y / v0.x;
@@ -132,21 +132,21 @@ PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b) {
 
     float x = a.x + proj.t * (b.x - a.x);
     float y = a.y + proj.t * (b.y - a.y);
-    proj.dist = length_vec2(sub_vec2(vec2(x, y), p));
+    proj.dist = length(sub(vec2(x, y), p));
 
     return proj;
 }
 
 float dist_between_points(Vec2 v0, Vec2 v1) {
-    float res = length_vec2(sub_vec2(v1, v0));
+    float res = length(sub(v1, v0));
     return res;
 }
 
-float dot_vec2(Vec2 v0, Vec2 v1) {
+float dot(Vec2 v0, Vec2 v1) {
     float res = v0.x * v1.x + v0.y * v1.y;
     return res;
 }
 
-float length_vec2(Vec2 v) {
+float length(Vec2 v) {
     return sqrt(v.x * v.x + v.y * v.y);
 }
