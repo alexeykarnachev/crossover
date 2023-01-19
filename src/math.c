@@ -93,6 +93,14 @@ Vec2 add(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+Vec2 add_many(Vec2 vecs[], int n) {
+    Vec2 res = {0.0, 0.0};
+    for (int i = 0; i < n; ++i) {
+        res = add(res, vecs[i]);
+    }
+    return res;
+}
+
 Vec2 sub(Vec2 v0, Vec2 v1) {
     Vec2 res = {v0.x - v1.x, v0.y - v1.y};
     return res;
@@ -116,6 +124,14 @@ Vec2 normalize(Vec2 v) {
 
 Vec2 rotate90(Vec2 v) {
     Vec2 res = {-v.y, v.x};
+    return res;
+}
+
+Vec2 point_to_axis(Vec2 p, Vec2 axis) {
+    axis = normalize(axis);
+    float k = dot(axis, p);
+    Vec2 axis_p = scale(axis, k);
+    Vec2 res = sub(axis_p, p);
     return res;
 }
 

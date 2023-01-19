@@ -27,6 +27,38 @@ static Vec2 get_polygon_proj_bound(Vec2 points[], int n, Vec2 axis) {
     return vec2(min_k, max_k);
 }
 
+static Primitive project_circle_on_axis(
+    Circle circle, Vec2 axis, Vec2 offset
+) {
+    axis = normalize(axis);
+    Vec2 radius = scale(axis, circle.radius);
+    float k0 = dot(axis, add(circle.position, radius));
+    float k1 = dot(axis, add(circle.position, scale(radius, -1.0)));
+    Vec2 position = scale(axis, k0);
+    Vec2 b = sub(scale(axis, k1), position);
+    position = sub(position, offset);
+
+    return line_primitive(position, b);
+}
+
+static Primitive project_polygon_on_axis(
+    Vec2 vertices[], int n, Vec2 axis, Vec2 offset
+) {
+    axis = normalize(axis);
+    float k0 = HUGE_VAL;
+    float k1 = -HUGE_VAL;
+    for (int i = 0; i < n; ++i) {
+        float k = dot(axis, vertices[i]);
+        k0 = min(k0, k);
+        k1 = max(k1, k);
+    }
+    Vec2 position = scale(axis, k0);
+    Vec2 b = sub(scale(axis, k1), position);
+    position = sub(position, offset);
+
+    return line_primitive(position, b);
+}
+
 static void update_overlap(
     Vec2 bound0,
     Vec2 bound1,
@@ -47,42 +79,6 @@ static void update_overlap(
     }
 }
 
-static Primitive project_circle_on_axis(
-    Circle circle, Vec2 axis, float offset
-) {
-    axis = normalize(axis);
-    Vec2 radius = scale(axis, circle.radius);
-    float k0 = dot(axis, add(circle.position, radius));
-    float k1 = dot(axis, add(circle.position, scale(radius, -1.0)));
-    Vec2 position = scale(axis, k0);
-    Vec2 b = sub(scale(axis, k1), position);
-
-    Vec2 normal = rotate90(axis);
-    position = add(position, scale(normal, offset));
-
-    return line_primitive(position, b);
-}
-
-static Primitive project_polygon_on_axis(
-    Vec2 vertices[], int n, Vec2 axis, float offset
-) {
-    axis = normalize(axis);
-    float k0 = HUGE_VAL;
-    float k1 = -HUGE_VAL;
-    for (int i = 0; i < n; ++i) {
-        float k = dot(axis, vertices[i]);
-        k0 = min(k0, k);
-        k1 = max(k1, k);
-    }
-    Vec2 position = scale(axis, k0);
-    Vec2 b = sub(scale(axis, k1), position);
-
-    Vec2 normal = rotate90(axis);
-    position = add(position, scale(normal, offset));
-
-    return line_primitive(position, b);
-}
-
 static void render_mtv(Vec2 mtv, Vec2 position0, Vec2 position1) {
     Primitive line0 = line_primitive(position0, mtv);
     Primitive line1 = line_primitive(position1, scale(mtv, -1.0));
@@ -97,8 +93,18 @@ static void render_mtv(Vec2 mtv, Vec2 position0, Vec2 position1) {
 static void render_circle_polygon_proj(
     Vec2 axis, Circle circle, Vec2 vertices[], int n
 ) {
-    Primitive proj0 = project_circle_on_axis(circle, axis, 0.05);
-    Primitive proj1 = project_polygon_on_axis(vertices, n, axis, -0.05);
+    axis = normalize(axis);
+
+    Vec2 origin = add(circle.position, add_many(vertices, n));
+    origin = scale(origin, 1.0 / (n + 1));
+
+    Vec2 offset = point_to_axis(origin, axis);
+    Vec2 offset0 = add(offset, scale(normalize(offset), 1.0));
+    Vec2 offset1 = add(offset, scale(normalize(offset), 1.1));
+
+    Primitive proj0 = project_circle_on_axis(circle, axis, offset0);
+    Primitive proj1 = project_polygon_on_axis(vertices, n, axis, offset1);
+
     submit_debug_render_command(
         render_primitive_command(proj0, material(MAGENTA_COLOR))
     );
@@ -110,8 +116,18 @@ static void render_circle_polygon_proj(
 static void render_circles_proj(
     Vec2 axis, Circle circle0, Circle circle1
 ) {
-    Primitive proj0 = project_circle_on_axis(circle0, axis, 0.05);
-    Primitive proj1 = project_circle_on_axis(circle1, axis, -0.05);
+    axis = normalize(axis);
+
+    Vec2 origin = add(circle0.position, circle1.position);
+    origin = scale(origin, 0.5);
+
+    Vec2 offset = point_to_axis(origin, axis);
+    Vec2 offset0 = add(offset, scale(normalize(offset), 1.0));
+    Vec2 offset1 = add(offset, scale(normalize(offset), 1.1));
+
+    Primitive proj0 = project_circle_on_axis(circle0, axis, offset0);
+    Primitive proj1 = project_circle_on_axis(circle1, axis, offset1);
+
     submit_debug_render_command(
         render_primitive_command(proj0, material(MAGENTA_COLOR))
     );
@@ -123,8 +139,22 @@ static void render_circles_proj(
 static void render_polygons_proj(
     Vec2 axis, Vec2 vertices0[], int n0, Vec2 vertices1[], int n1
 ) {
-    Primitive proj0 = project_polygon_on_axis(vertices0, n0, axis, 0.05);
-    Primitive proj1 = project_polygon_on_axis(vertices1, n1, axis, -0.05);
+    axis = normalize(axis);
+
+    Vec2 origin = add(add_many(vertices0, n0), add_many(vertices1, n1));
+    origin = scale(origin, 1.0 / (n0 + n1));
+
+    Vec2 offset = point_to_axis(origin, axis);
+    Vec2 offset0 = add(offset, scale(normalize(offset), 1.0));
+    Vec2 offset1 = add(offset, scale(normalize(offset), 1.1));
+
+    Primitive proj0 = project_polygon_on_axis(
+        vertices0, n0, axis, offset0
+    );
+    Primitive proj1 = project_polygon_on_axis(
+        vertices1, n1, axis, offset1
+    );
+
     submit_debug_render_command(
         render_primitive_command(proj0, material(MAGENTA_COLOR))
     );

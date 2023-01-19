@@ -21,14 +21,11 @@ int main(int argc, char* argv[]) {
     WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
     WORLD.player = spawn_guy(
         circle_primitive(vec2(0.0, 1.0), 1.0),
-        // rectangle_primitive(vec2(0.0, 1.0), 1.0, 1.0),
-        // triangle_primitive(vec2(0.0, 0.0), vec2(-0.5, -1.0), vec2(0.5,
-        // -1.0)), line_primitive(vec2(0.0, 0.0), vec2(1.0, 0.0)),
         material(vec3(0.7, 0.3, 0.2)),
         movement(5.0, 2.0 * PI)
     );
     spawn_obstacle(
-        rectangle_primitive(vec2(-4.0, -6.0), 2.0, 2.0),
+        rectangle_primitive(vec2(-6.0, -6.0), 2.0, 2.0),
         material(vec3(0.05, 0.05, 0.05))
     );
     spawn_obstacle(
