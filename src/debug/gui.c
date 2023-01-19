@@ -24,10 +24,7 @@ void render_debug_gui(void) {
     if (igTreeNode_Str("Shading")) {
         igCheckbox("Material", (bool*)(&DEBUG.shading.material));
         igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
-        igCheckbox("Collision MTV", (bool*)(&DEBUG.shading.mtv));
-        igCheckbox(
-            "Collision axis", (bool*)(&DEBUG.shading.collision_axis)
-        );
+        igCheckbox("Collision", (bool*)(&DEBUG.shading.collision));
         igTreePop();
     }
 

@@ -98,6 +98,16 @@ Vec2 sub(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+Vec2 middle(Vec2 v0, Vec2 v1) {
+    Vec2 res = {0.5 * (v0.x + v1.x), 0.5 * (v0.y + v1.y)};
+    return res;
+}
+
+Vec2 flip(Vec2 v) {
+    Vec2 res = {-v.x, -v.y};
+    return res;
+}
+
 Vec2 normalize(Vec2 v) {
     float len = length(v);
     Vec2 res = {v.x / len, v.y / len};

@@ -20,8 +20,10 @@ int main(int argc, char* argv[]) {
 
     WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
     WORLD.player = spawn_guy(
-        // circle_primitive(vec2(0.0, 1.0), 1.0),
-        rectangle_primitive(vec2(0.0, 1.0), 1.0, 1.0),
+        circle_primitive(vec2(0.0, 1.0), 1.0),
+        // rectangle_primitive(vec2(0.0, 1.0), 1.0, 1.0),
+        // triangle_primitive(vec2(0.0, 0.0), vec2(-0.5, -1.0), vec2(0.5,
+        // -1.0)), line_primitive(vec2(0.0, 0.0), vec2(1.0, 0.0)),
         material(vec3(0.7, 0.3, 0.2)),
         movement(5.0, 2.0 * PI)
     );
@@ -33,30 +35,30 @@ int main(int argc, char* argv[]) {
         circle_primitive(vec2(1.0, 4.0), 2.0),
         material(vec3(0.25, 0.05, 0.05))
     );
-    // spawn_obstacle(
-    //     circle_primitive(vec2(-3.0, 4.0), 2.0),
-    //     material(vec3(0.25, 0.05, 0.05))
-    // );
+    spawn_obstacle(
+        circle_primitive(vec2(-3.0, 4.0), 2.0),
+        material(vec3(0.25, 0.05, 0.05))
+    );
     spawn_obstacle(
         rectangle_primitive(vec2(2.0, -1.0), 5.0, 2.0),
         material(vec3(0.05, 0.05, 0.05))
     );
-    // spawn_obstacle(
-    //     rectangle_primitive(vec2(-3.0, -2.0), 0.5, 0.7),
-    //     material(vec3(0.10, 0.10, 0.10))
-    // );
-    // spawn_obstacle(
-    //     triangle_primitive(
-    //         vec2(-2.0, 4.0), vec2(0.5, 0.0), vec2(0.0, -0.5)
-    //     ),
-    //     material(vec3(0.05, 0.05, 0.05))
-    // );
-    // spawn_obstacle(
-    //     triangle_primitive(
-    //         vec2(3.0, -4.0), vec2(4.0, -4.0), vec2(4.0, -5.0)
-    //     ),
-    //     material(vec3(0.05, 0.05, 0.05))
-    // );
+    spawn_obstacle(
+        rectangle_primitive(vec2(-3.0, -2.0), 0.5, 0.7),
+        material(vec3(0.10, 0.10, 0.10))
+    );
+    spawn_obstacle(
+        triangle_primitive(
+            vec2(-2.0, 4.0), vec2(0.5, 0.0), vec2(0.0, -0.5)
+        ),
+        material(vec3(0.05, 0.05, 0.05))
+    );
+    spawn_obstacle(
+        triangle_primitive(
+            vec2(3.0, -3.0), vec2(4.0, -3.0), vec2(4.0, -2.0)
+        ),
+        material(vec3(0.05, 0.05, 0.05))
+    );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         glClearColor(0.2, 0.2, 0.3, 1.0);

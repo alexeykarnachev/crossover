@@ -14,8 +14,7 @@ typedef struct Debug {
     struct shading {
         int material;
         int wireframe;
-        int mtv;
-        int collision_axis;
+        int collision;
     } shading;
 
     struct collisions {

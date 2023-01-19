@@ -11,10 +11,9 @@
 static Vec2 get_circle_proj_bound(Circle c, Vec2 axis) {
     axis = normalize(axis);
     Vec2 r = scale(axis, c.radius);
-    float k0 = dot(add(c.position, r), axis);
-    float k1 = dot(add(c.position, scale(r, -1.0)), axis);
-
-    return k1 > k0 ? vec2(k0, k1) : vec2(k1, k0);
+    float k0 = dot(sub(c.position, r), axis);
+    float k1 = dot(add(c.position, r), axis);
+    return vec2(k0, k1);
 }
 
 static Vec2 get_polygon_proj_bound(Vec2 points[], int n, Vec2 axis) {
@@ -35,7 +34,6 @@ static void update_overlap(
     Vec2* min_overlap_axis,
     float* min_overlap
 ) {
-    axis = bound0.x < bound1.x ? scale(axis, -1.0) : axis;
     float r0 = 0.5 * (bound0.y - bound0.x);
     float r1 = 0.5 * (bound1.y - bound1.x);
     float c0 = 0.5 * (bound0.y + bound0.x);
@@ -45,20 +43,8 @@ static void update_overlap(
     float overlap = radii_sum - dist;
     if (overlap < *min_overlap) {
         *min_overlap = overlap;
-        *min_overlap_axis = axis;
+        *min_overlap_axis = c1 - c0 < 0 ? flip(axis) : axis;
     }
-}
-
-static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
-    float dist = dist_between_points(c0.position, c1.position);
-    float radii_sum = c0.radius + c1.radius;
-    if (dist < radii_sum) {
-        *mtv = scale(
-            normalize(sub(c1.position, c0.position)), dist - radii_sum
-        );
-        return 1;
-    }
-    return 0;
 }
 
 static Primitive project_circle_on_axis(
@@ -97,57 +83,76 @@ static Primitive project_polygon_on_axis(
     return line_primitive(position, b);
 }
 
-static void render_collision_axis(
-    Vec2 axis, Circle circle, Vec2 vertices[], int n
-) {
-    if (!DEBUG.shading.collision_axis) {
-        return;
-    }
-
-    Primitive circle_proj = project_circle_on_axis(circle, axis, 0.05);
-    Primitive polygon_proj = project_polygon_on_axis(
-        vertices, n, axis, -0.05
+static void render_mtv(Vec2 mtv, Vec2 position0, Vec2 position1) {
+    Primitive line0 = line_primitive(position0, mtv);
+    Primitive line1 = line_primitive(position1, scale(mtv, -1.0));
+    submit_debug_render_command(
+        render_primitive_command(line0, material(MAGENTA_COLOR))
     );
-    submit_debug_render_command(render_primitive_command(
-        circle_proj, material(vec3(1.0, 0.0, 1.0))
-    ));
-    submit_debug_render_command(render_primitive_command(
-        polygon_proj, material(vec3(1.0, 1.0, 0.0))
-    ));
+    submit_debug_render_command(
+        render_primitive_command(line1, material(CYAN_COLOR))
+    );
 }
 
-static void render_mtv(
-    Vec2 mtv, Vec2 nearest_vertex, Vec2 circle_position
+static void render_circle_polygon_proj(
+    Vec2 axis, Circle circle, Vec2 vertices[], int n
 ) {
-    if (!DEBUG.shading.mtv) {
-        return;
-    }
+    Primitive proj0 = project_circle_on_axis(circle, axis, 0.05);
+    Primitive proj1 = project_polygon_on_axis(vertices, n, axis, -0.05);
+    submit_debug_render_command(
+        render_primitive_command(proj0, material(MAGENTA_COLOR))
+    );
+    submit_debug_render_command(
+        render_primitive_command(proj1, material(CYAN_COLOR))
+    );
+}
 
-    Primitive line0 = line_primitive(circle_position, mtv);
-    Primitive line1 = line_primitive(nearest_vertex, scale(mtv, -1.0));
+static void render_circles_proj(
+    Vec2 axis, Circle circle0, Circle circle1
+) {
+    Primitive proj0 = project_circle_on_axis(circle0, axis, 0.05);
+    Primitive proj1 = project_circle_on_axis(circle1, axis, -0.05);
     submit_debug_render_command(
-        render_primitive_command(line0, default_mtv_material())
+        render_primitive_command(proj0, material(MAGENTA_COLOR))
     );
     submit_debug_render_command(
-        render_primitive_command(line1, default_mtv_material())
+        render_primitive_command(proj1, material(CYAN_COLOR))
     );
+}
+
+static void render_polygons_proj(
+    Vec2 axis, Vec2 vertices0[], int n0, Vec2 vertices1[], int n1
+) {
+    Primitive proj0 = project_polygon_on_axis(vertices0, n0, axis, 0.05);
+    Primitive proj1 = project_polygon_on_axis(vertices1, n1, axis, -0.05);
+    submit_debug_render_command(
+        render_primitive_command(proj0, material(MAGENTA_COLOR))
+    );
+    submit_debug_render_command(
+        render_primitive_command(proj1, material(CYAN_COLOR))
+    );
+}
+
+static int collide_circles(Circle c0, Circle c1, Vec2* mtv) {
+    Vec2 axis = sub(c1.position, c0.position);
+    float dist = length(axis);
+    axis = normalize(axis);
+    float radii_sum = c0.radius + c1.radius;
+    if (dist < radii_sum) {
+        *mtv = scale(
+            normalize(sub(c1.position, c0.position)), dist - radii_sum
+        );
+        return 1;
+    }
+    return 0;
 }
 
 static int collide_circle_with_polygon(
     Circle circle, Vec2 vertices[], int n, Vec2* mtv
 ) {
     Vec2 nearest_vertex;
-    float nearest_dist = HUGE_VAL;
-    for (int vertex_idx = 0; vertex_idx < n; ++vertex_idx) {
-        Vec2 v = vertices[vertex_idx];
-        float dist = dist_between_points(v, circle.position);
-        if (dist < nearest_dist) {
-            nearest_dist = dist;
-            nearest_vertex = v;
-        }
-    }
-
     Vec2 min_overlap_axis;
+    float nearest_dist = HUGE_VAL;
     float min_overlap = HUGE_VAL;
     for (int vertex_idx = 0; vertex_idx < n; ++vertex_idx) {
         Vec2 v0 = vertices[vertex_idx];
@@ -158,6 +163,12 @@ static int collide_circle_with_polygon(
         update_overlap(
             bound0, bound1, axis, &min_overlap_axis, &min_overlap
         );
+
+        float dist = dist_between_points(v0, circle.position);
+        if (dist < nearest_dist) {
+            nearest_dist = dist;
+            nearest_vertex = v0;
+        }
     }
 
     Vec2 axis = normalize(sub(circle.position, nearest_vertex));
@@ -167,8 +178,41 @@ static int collide_circle_with_polygon(
 
     if (min_overlap > 0) {
         *mtv = scale(min_overlap_axis, min_overlap);
-        render_collision_axis(min_overlap_axis, circle, vertices, n);
-        render_mtv(*mtv, nearest_vertex, circle.position);
+        return 1;
+    }
+
+    return 0;
+}
+
+static int collide_polygons(
+    Vec2 vertices0[], int n0, Vec2 vertices1[], int n1, Vec2* mtv
+) {
+    Vec2 min_overlap_axis;
+    float min_overlap = HUGE_VAL;
+    for (int vertex_idx = 0; vertex_idx < n0; ++vertex_idx) {
+        Vec2 v0 = vertices0[vertex_idx];
+        Vec2 v1 = vertices0[vertex_idx < n0 - 1 ? vertex_idx + 1 : 0];
+        Vec2 axis = normalize(rotate90(sub(v1, v0)));
+        Vec2 bound0 = get_polygon_proj_bound(vertices1, n1, axis);
+        Vec2 bound1 = get_polygon_proj_bound(vertices0, n0, axis);
+        update_overlap(
+            bound0, bound1, axis, &min_overlap_axis, &min_overlap
+        );
+    }
+
+    for (int vertex_idx = 0; vertex_idx < n1; ++vertex_idx) {
+        Vec2 v0 = vertices1[vertex_idx];
+        Vec2 v1 = vertices1[vertex_idx < n1 - 1 ? vertex_idx + 1 : 0];
+        Vec2 axis = normalize(rotate90(sub(v1, v0)));
+        Vec2 bound1 = get_polygon_proj_bound(vertices0, n0, axis);
+        Vec2 bound0 = get_polygon_proj_bound(vertices1, n1, axis);
+        update_overlap(
+            bound0, bound1, axis, &min_overlap_axis, &min_overlap
+        );
+    }
+
+    if (min_overlap > 0) {
+        *mtv = scale(min_overlap_axis, min_overlap);
         return 1;
     }
 
@@ -176,7 +220,6 @@ static int collide_circle_with_polygon(
 }
 
 int collide_entities(int e0, int e1, Collision* collision) {
-
     int can_collide = entity_has_component(e0, COLLIDER_COMPONENT)
                       && entity_has_component(e1, COLLIDER_COMPONENT);
     if (!can_collide) {
@@ -196,16 +239,39 @@ int collide_entities(int e0, int e1, Collision* collision) {
         collided = collide_circles(
             p0.p.circle, p1.p.circle, &collision->mtv
         );
+        if (collided) {
+            render_circles_proj(collision->mtv, p0.p.circle, p1.p.circle);
+            render_mtv(
+                collision->mtv, p0.p.circle.position, p1.p.circle.position
+            );
+        }
     } else if (p0.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
             p0.p.circle, v1, nv1, &collision->mtv
         );
+        collision->mtv = flip(collision->mtv);
+        if (collided && DEBUG.shading.collision) {
+            render_circle_polygon_proj(
+                collision->mtv, p0.p.circle, v1, nv1
+            );
+            render_mtv(collision->mtv, p0.p.circle.position, v1[0]);
+        }
     } else if (p1.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
             p1.p.circle, v0, nv0, &collision->mtv
         );
+        if (collided && DEBUG.shading.collision) {
+            render_circle_polygon_proj(
+                collision->mtv, p1.p.circle, v0, nv0
+            );
+            render_mtv(collision->mtv, v0[0], p1.p.circle.position);
+        }
     } else {
-        return 0;
+        collided = collide_polygons(v0, nv0, v1, nv1, &collision->mtv);
+        if (collided && DEBUG.shading.collision) {
+            render_polygons_proj(collision->mtv, v0, nv0, v1, nv1);
+            render_mtv(collision->mtv, v0[0], v1[0]);
+        }
     }
 
     return collided;
@@ -223,6 +289,6 @@ void resolve_collision(Collision collision) {
     } else if (has_movement0) {
         translate_entity(e0, mtv);
     } else if (has_movement1) {
-        translate_entity(e0, scale(mtv, -1.0));
+        translate_entity(e1, flip(mtv));
     }
 }

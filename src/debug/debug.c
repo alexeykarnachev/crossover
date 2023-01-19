@@ -9,7 +9,7 @@ Debug DEBUG;
 
 void init_debug(void) {
     DEBUG.shading.material = 1;
-    DEBUG.shading.collision_axis = 1;
+    DEBUG.shading.collision = 1;
 }
 
 void update_debug(void) {

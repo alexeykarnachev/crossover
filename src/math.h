@@ -41,6 +41,8 @@ Vec4 vec4(float x, float y, float z, float w);
 Vec2 scale(Vec2 v, float k);
 Vec2 add(Vec2 v0, Vec2 v1);
 Vec2 sub(Vec2 v0, Vec2 v1);
+Vec2 middle(Vec2 v0, Vec2 v1);
+Vec2 flip(Vec2 v);
 Vec2 normalize(Vec2 v);
 Vec2 rotate90(Vec2 v);
 PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b);
