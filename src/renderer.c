@@ -8,6 +8,7 @@
 #include "renderer.h"
 #include "world.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static GLuint DUMMY_VAO;
 static Vec3 WIREFRAME_COLOR = {0.0, 0.0, 0.0};
@@ -37,25 +38,15 @@ static void set_uniform_circle(GLuint program, Circle circle) {
     set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);
 }
 
-static void set_uniform_rectangle(GLuint program, Rectangle rectangle) {
-    set_uniform_2fv(
-        program, "rectangle.position", (float*)&rectangle.position, 1
-    );
-    set_uniform_1f(program, "rectangle.width", rectangle.width);
-    set_uniform_1f(program, "rectangle.height", rectangle.height);
-}
+static int set_uniform_primitive(GLuint program, Primitive primitive) {
+    Vec2 vertices[4];
+    int n_points = get_primitive_vertices(primitive, vertices);
+    set_uniform_2fv(program, "polygon.a", (float*)&vertices[0], 1);
+    set_uniform_2fv(program, "polygon.b", (float*)&vertices[1], 1);
+    set_uniform_2fv(program, "polygon.c", (float*)&vertices[2], 1);
+    set_uniform_2fv(program, "polygon.d", (float*)&vertices[3], 1);
 
-static void set_uniform_triangle(GLuint program, Triangle triangle) {
-    set_uniform_2fv(
-        program, "triangle.position", (float*)&triangle.position, 1
-    );
-    set_uniform_2fv(program, "triangle.b", (float*)&triangle.b, 1);
-    set_uniform_2fv(program, "triangle.c", (float*)&triangle.c, 1);
-}
-
-static void set_uniform_line(GLuint program, Line line) {
-    set_uniform_2fv(program, "line.position", (float*)&line.position, 1);
-    set_uniform_2fv(program, "line.b", (float*)&line.b, 1);
+    return n_points;
 }
 
 static void render_primitive(Primitive primitive, Material material) {
@@ -71,24 +62,22 @@ static void render_primitive(Primitive primitive, Material material) {
         draw_mode = GL_TRIANGLE_FAN;
         n_points = N_POLYGONS_IN_CIRCLE + 2;
     } else if (type & RECTANGLE_PRIMITIVE) {
-        set_uniform_rectangle(program, primitive.p.rectangle);
+        n_points = set_uniform_primitive(program, primitive);
         draw_mode = GL_TRIANGLE_STRIP;
-        n_points = 4;
     } else if (type & TRIANGLE_PRIMITIVE) {
-        set_uniform_triangle(program, primitive.p.triangle);
+        n_points = set_uniform_primitive(program, primitive);
         draw_mode = GL_TRIANGLE_STRIP;
-        n_points = 3;
     } else if (type & LINE_PRIMITIVE) {
-        set_uniform_line(program, primitive.p.line);
+        n_points = set_uniform_primitive(program, primitive);
         draw_mode = GL_LINE_STRIP;
-        n_points = 2;
     } else {
         fprintf(
             stderr,
             "ERROR: can't render the primitive with type id: "
-            "%d\n",
+            "%d. Needs to be implemented\n",
             type
         );
+        exit(1);
     }
 
     set_uniform_1i(program, "type", type);

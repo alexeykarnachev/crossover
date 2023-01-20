@@ -8,34 +8,22 @@ struct Camera {
     float elevation;
 };
 
+struct Polygon {
+    vec2 a;
+    vec2 b;
+    vec2 c;
+    vec2 d;
+};
+
 struct Circle {
     vec2 position;
     float radius;
     int n_polygons;
 };
 
-struct Rectangle {
-    vec2 position;
-    float width;
-    float height;
-};
-
-struct Triangle {
-    vec2 position;
-    vec2 b;
-    vec2 c;
-};
-
-struct Line {
-    vec2 position;
-    vec2 b;
-};
-
-uniform Camera camera;
+uniform Polygon polygon;
 uniform Circle circle;
-uniform Rectangle rectangle;
-uniform Triangle triangle;
-uniform Line line;
+uniform Camera camera;
 uniform int type;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
@@ -72,48 +60,37 @@ vec2 get_circle_position() {
 // Render with TRIANGLE_STRIP with 4 vertices
 vec2 get_rectangle_position() {
     int id = gl_VertexID;
-
-    vec2 world_pos = rectangle.position;
-    if (id == 1) {
-        world_pos.y += rectangle.height;
+    if (id == 0) {
+        return polygon.d;
+    } else if (id == 1) {
+        return polygon.a;
     } else if (id == 2) {
-        world_pos.x += rectangle.width;
+        return polygon.c;
     } else if (id == 3) {
-        world_pos.x += rectangle.width;
-        world_pos.y += rectangle.height;
+        return polygon.b;
     }
-
-    return world_pos;
 }
 
 // Render with TRIANGLE_STRIP with 3 vertices
 vec2 get_triangle_position() {
     int id = gl_VertexID;
-
-    vec2 world_pos;
     if (id == 0) {
-        world_pos = triangle.position;
+        return polygon.a;
     } else if (id == 1) {
-        world_pos = triangle.position + triangle.b;
+        return polygon.b;
     } else if (id == 2) {
-        world_pos = triangle.position + triangle.c;
+        return polygon.c;
     }
-
-    return world_pos;
 }
 
 // Render with LINE with 2 vertices
 vec2 get_line_position() {
     int id = gl_VertexID;
-
-    vec2 world_pos;
     if (id == 0) {
-        world_pos = line.position;
+        return polygon.a;
     } else if (id == 1) {
-        world_pos = line.position + line.b;
+        return polygon.b;
     }
-
-    return world_pos;
 }
 
 void main(void) {
