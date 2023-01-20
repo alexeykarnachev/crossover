@@ -44,4 +44,4 @@ int entity_has_component(int entity, ComponentType component);
 int spawn_guy(Primitive primitive, Material material, Movement movement);
 int spawn_obstacle(Primitive primitive, Material material);
 void update_world(float dt);
-void translate_entity(int entity, Vec2 translation);
+void transform_entity(int entity, Vec2 translation, float angle);

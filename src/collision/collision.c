@@ -314,11 +314,11 @@ void resolve_collision(Collision collision) {
     int has_movement0 = entity_has_component(e0, MOVEMENT_COMPONENT);
     int has_movement1 = entity_has_component(e1, MOVEMENT_COMPONENT);
     if (has_movement0 && has_movement1) {
-        translate_entity(e0, scale(mtv, 0.5));
-        translate_entity(e1, scale(mtv, -0.5));
+        transform_entity(e0, scale(mtv, 0.5), 0.0);
+        transform_entity(e1, scale(mtv, -0.5), 0.0);
     } else if (has_movement0) {
-        translate_entity(e0, mtv);
+        transform_entity(e0, mtv, 0.0);
     } else if (has_movement1) {
-        translate_entity(e1, flip(mtv));
+        transform_entity(e1, flip(mtv), 0.0);
     }
 }

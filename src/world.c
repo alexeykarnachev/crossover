@@ -78,7 +78,7 @@ void update_world(float dt) {
         Movement m = WORLD.movement[e];
         if (length(m.direction) > EPS) {
             Vec2 t = scale(normalize(m.direction), m.speed * dt);
-            translate_entity(e, t);
+            transform_entity(e, t, 0.0);
         }
     }
 
@@ -102,7 +102,7 @@ void update_world(float dt) {
     }
 }
 
-void translate_entity(int entity, Vec2 translation) {
+void transform_entity(int entity, Vec2 translation, float angle) {
     int has_primitive = entity_has_component(entity, PRIMITIVE_COMPONENT);
     int has_collider = entity_has_component(entity, COLLIDER_COMPONENT);
     if (has_primitive) {
@@ -113,3 +113,4 @@ void translate_entity(int entity, Vec2 translation) {
         translate_primitive(&WORLD.collider[entity], translation);
     }
 }
+
