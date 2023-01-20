@@ -106,11 +106,14 @@ void transform_entity(int entity, Vec2 translation, float angle) {
     int has_primitive = entity_has_component(entity, PRIMITIVE_COMPONENT);
     int has_collider = entity_has_component(entity, COLLIDER_COMPONENT);
     if (has_primitive) {
-        translate_primitive(&WORLD.primitive[entity], translation);
+        Primitive* p = &WORLD.primitive[entity];
+        translate_primitive(p, translation);
+        rotate_primitive(p, angle);
     }
 
     if (has_collider) {
-        translate_primitive(&WORLD.collider[entity], translation);
+        Primitive* p = &WORLD.collider[entity];
+        translate_primitive(p, translation);
+        rotate_primitive(p, angle);
     }
 }
-

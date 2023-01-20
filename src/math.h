@@ -46,6 +46,7 @@ Vec2 middle(Vec2 v0, Vec2 v1);
 Vec2 flip(Vec2 v);
 Vec2 normalize(Vec2 v);
 Vec2 rotate90(Vec2 v);
+Vec2 rotate(Vec2 v, Vec2 origin, float angle);
 Vec2 point_to_axis(Vec2 p, Vec2 axis);
 PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b);
 float dist_between_points(Vec2 v0, Vec2 v1);

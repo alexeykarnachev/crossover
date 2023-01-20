@@ -3,56 +3,87 @@
 #include "math.h"
 #include "movement.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-Circle circle(Vec2 position, float radius) {
-    Circle circle = {position, radius};
+#define ORIGIN_TYPE_ERROR(primitive, origin_type) \
+    do { \
+        fprintf( \
+            stderr, \
+            "ERROR: can't get the origin of the %s primitive with the " \
+            "origin type id: %d. Needs to be implemented", \
+            primitive, \
+            origin_type \
+        ); \
+        exit(1); \
+    } while (0)
+
+#define PRIMITIVE_TYPE_ERROR(fn_name, type) \
+    do { \
+        fprintf( \
+            stderr, \
+            "ERROR: can't %s for the primitive with type id: %d. Needs " \
+            "to be implemented\n", \
+            fn_name, \
+            type \
+        ); \
+        exit(1); \
+    } while (0)
+
+Circle circle(Vec2 position, float radius, float rotation) {
+    Circle circle = {position, radius, rotation};
     return circle;
 }
 
-Rectangle rectangle(Vec2 position, float width, float height) {
-    Rectangle rectangle = {position, width, height};
+Rectangle rectangle(
+    Vec2 position, float width, float height, float rotation
+) {
+    Rectangle rectangle = {position, width, height, rotation};
     return rectangle;
 }
 
-Triangle triangle(Vec2 position, Vec2 b, Vec2 c) {
-    Triangle triangle = {position, b, c};
+Triangle triangle(Vec2 position, Vec2 b, Vec2 c, float rotation) {
+    Triangle triangle = {position, b, c, rotation};
     return triangle;
 }
 
-Line line(Vec2 position, Vec2 b) {
-    Line line = {position, b};
+Line line(Vec2 position, Vec2 b, float rotation) {
+    Line line = {position, b, rotation};
     return line;
 }
 
-Primitive circle_primitive(Vec2 position, float radius) {
+Primitive circle_primitive(Vec2 position, float radius, float rotation) {
     Primitive primitive;
     primitive.type = CIRCLE_PRIMITIVE;
-    primitive.p.circle = circle(position, radius);
+    primitive.p.circle = circle(position, radius, rotation);
     return primitive;
 }
 
-Primitive rectangle_primitive(Vec2 position, float width, float height) {
+Primitive rectangle_primitive(
+    Vec2 position, float width, float height, float rotation
+) {
     Primitive primitive;
     primitive.type = RECTANGLE_PRIMITIVE;
-    primitive.p.rectangle = rectangle(position, width, height);
+    primitive.p.rectangle = rectangle(position, width, height, rotation);
     return primitive;
 }
 
-Primitive triangle_primitive(Vec2 position, Vec2 b, Vec2 c) {
+Primitive triangle_primitive(
+    Vec2 position, Vec2 b, Vec2 c, float rotation
+) {
     Primitive primitive;
     primitive.type = TRIANGLE_PRIMITIVE;
-    primitive.p.triangle = triangle(position, b, c);
+    primitive.p.triangle = triangle(position, b, c, rotation);
     return primitive;
 }
 
-Primitive line_primitive(Vec2 position, Vec2 b) {
+Primitive line_primitive(Vec2 position, Vec2 b, float rotation) {
     Primitive primitive;
     primitive.type = LINE_PRIMITIVE;
-    primitive.p.line = line(position, b);
+    primitive.p.line = line(position, b, rotation);
     return primitive;
 }
 
-int get_triangle_vertices(Triangle triangle, Vec2* out) {
+static int get_triangle_vertices(Triangle triangle, Vec2* out) {
     Vec2 a = triangle.position;
     Vec2 b = add(a, triangle.b);
     Vec2 c = add(a, triangle.c);
@@ -64,7 +95,7 @@ int get_triangle_vertices(Triangle triangle, Vec2* out) {
     return 3;
 }
 
-int get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
+static int get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
     Vec2 d = rectangle.position;
     Vec2 a = {d.x, d.y + rectangle.height};
     Vec2 b = {a.x + rectangle.width, a.y};
@@ -78,7 +109,7 @@ int get_rectangle_vertices(Rectangle rectangle, Vec2* out) {
     return 4;
 }
 
-int get_line_vertices(Line line, Vec2* out) {
+static int get_line_vertices(Line line, Vec2* out) {
     Vec2 a = line.position;
     Vec2 b = add(a, line.b);
 
@@ -88,62 +119,137 @@ int get_line_vertices(Line line, Vec2* out) {
     return 2;
 }
 
-int get_primitive_vertices(Primitive primitive, Vec2* out) {
-    PrimitiveType type = primitive.type;
-    if (type == CIRCLE_PRIMITIVE) {
-        return 0;
-    } else if (type == RECTANGLE_PRIMITIVE) {
-        return get_rectangle_vertices(primitive.p.rectangle, out);
-    } else if (type == TRIANGLE_PRIMITIVE) {
-        return get_triangle_vertices(primitive.p.triangle, out);
-    } else if (type == LINE_PRIMITIVE) {
-        return get_line_vertices(primitive.p.line, out);
-    } else {
-        fprintf(
-            stderr,
-            "ERROR: can't get the vertices of the primitive with type id: "
-            "%d. Needs to be implemented\n",
-            type
-        );
+static Vec2 get_circle_origin(
+    Circle circle, PrimitiveOriginType origin_type
+) {
+    switch (origin_type) {
+        case BARYCENTRIC_ORIGIN:
+            return circle.position;
+        default:
+            ORIGIN_TYPE_ERROR("Circle", origin_type);
     }
 }
 
-Vec2 get_primitive_position(Primitive primitive) {
+static Vec2 get_rectangle_origin(
+    Rectangle rectangle, PrimitiveOriginType origin_type
+) {
+    switch (origin_type) {
+        case BARYCENTRIC_ORIGIN: {
+            float x = rectangle.position.x + 0.5 * rectangle.width;
+            float y = rectangle.position.y + 0.5 * rectangle.height;
+            return vec2(x, y);
+        }
+        default:
+            ORIGIN_TYPE_ERROR("Rectangle", origin_type);
+    }
+}
+
+static Vec2 get_triangle_origin(
+    Triangle triangle, PrimitiveOriginType origin_type
+) {
+    switch (origin_type) {
+        case BARYCENTRIC_ORIGIN: {
+            Vec2 vertices[3];
+            get_triangle_vertices(triangle, vertices);
+            return scale(add_many(vertices, 3), 1.0 / 3.0);
+        }
+        default:
+            ORIGIN_TYPE_ERROR("Triangle", origin_type);
+    }
+}
+
+static Vec2 get_line_origin(Line line, PrimitiveOriginType origin_type) {
+    switch (origin_type) {
+        case BARYCENTRIC_ORIGIN:
+            return scale(add(line.position, line.b), 0.5);
+        default:
+            ORIGIN_TYPE_ERROR("Line", origin_type);
+    }
+}
+
+int get_primitive_vertices(Primitive primitive, Vec2* out) {
     PrimitiveType type = primitive.type;
-    if (type == CIRCLE_PRIMITIVE) {
-        return primitive.p.circle.position;
-    } else if (type == RECTANGLE_PRIMITIVE) {
-        return primitive.p.rectangle.position;
-    } else if (type == TRIANGLE_PRIMITIVE) {
-        return primitive.p.triangle.position;
-    } else if (type == LINE_PRIMITIVE) {
-        return primitive.p.line.position;
-    } else {
-        fprintf(
-            stderr,
-            "ERROR: can't get the position of the primitive with type id: "
-            "%d. Needs to be implemented\n",
-            type
-        );
+    PrimitiveOriginType origin_type = BARYCENTRIC_ORIGIN;
+    float rotation;
+    Vec2 origin;
+    int n;
+
+    switch (type) {
+        case CIRCLE_PRIMITIVE:
+            return 0;
+        case RECTANGLE_PRIMITIVE:
+            rotation = primitive.p.rectangle.rotation;
+            origin = get_rectangle_origin(
+                primitive.p.rectangle, origin_type
+            );
+            n = get_rectangle_vertices(primitive.p.rectangle, out);
+            break;
+        case TRIANGLE_PRIMITIVE:
+            rotation = primitive.p.triangle.rotation;
+            origin = get_triangle_origin(
+                primitive.p.triangle, origin_type
+            );
+            n = get_triangle_vertices(primitive.p.triangle, out);
+            break;
+        case LINE_PRIMITIVE:
+            rotation = primitive.p.line.rotation;
+            origin = get_line_origin(primitive.p.line, origin_type);
+            n = get_line_vertices(primitive.p.line, out);
+            break;
+        default:
+            PRIMITIVE_TYPE_ERROR("get_primitive_vertices", type);
+    }
+
+    for (int i = 0; i < n; ++i) {
+        out[i] = rotate(out[i], origin, rotation);
     }
 }
 
 void translate_primitive(Primitive* primitive, Vec2 translation) {
-    if (primitive->type & CIRCLE_PRIMITIVE) {
-        primitive->p.circle.position = add(
-            primitive->p.circle.position, translation
-        );
-    } else if (primitive->type & RECTANGLE_PRIMITIVE) {
-        primitive->p.rectangle.position = add(
-            primitive->p.rectangle.position, translation
-        );
-    } else if (primitive->type & TRIANGLE_PRIMITIVE) {
-        primitive->p.triangle.position = add(
-            primitive->p.triangle.position, translation
-        );
-    } else if (primitive->type & LINE_PRIMITIVE) {
-        primitive->p.line.position = add(
-            primitive->p.line.position, translation
-        );
+    PrimitiveType type = primitive->type;
+    switch (type) {
+        case CIRCLE_PRIMITIVE:
+            primitive->p.circle.position = add(
+                primitive->p.circle.position, translation
+            );
+            break;
+        case RECTANGLE_PRIMITIVE:
+            primitive->p.rectangle.position = add(
+                primitive->p.rectangle.position, translation
+            );
+            break;
+        case TRIANGLE_PRIMITIVE:
+            primitive->p.triangle.position = add(
+                primitive->p.triangle.position, translation
+            );
+            break;
+        case LINE_PRIMITIVE:
+            primitive->p.line.position = add(
+                primitive->p.line.position, translation
+            );
+            break;
+        default:
+            PRIMITIVE_TYPE_ERROR("translate_primitive", type);
+    }
+}
+
+void rotate_primitive(Primitive* primitive, float angle) {
+    PrimitiveType type = primitive->type;
+
+    switch (type) {
+        case CIRCLE_PRIMITIVE:
+            primitive->p.circle.rotation += angle;
+            break;
+        case RECTANGLE_PRIMITIVE:
+            primitive->p.rectangle.rotation += angle;
+            break;
+        case TRIANGLE_PRIMITIVE:
+            primitive->p.triangle.rotation += angle;
+            break;
+        case LINE_PRIMITIVE:
+            primitive->p.line.rotation += angle;
+            break;
+        default:
+            PRIMITIVE_TYPE_ERROR("rotate_primitive", type);
     }
 }

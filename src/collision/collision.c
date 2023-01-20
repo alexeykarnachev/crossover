@@ -38,7 +38,7 @@ static Primitive project_circle_on_axis(
     Vec2 b = sub(scale(axis, k1), position);
     position = sub(position, offset);
 
-    return line_primitive(position, b);
+    return line_primitive(position, b, 0.0);
 }
 
 static Primitive project_polygon_on_axis(
@@ -56,7 +56,7 @@ static Primitive project_polygon_on_axis(
     Vec2 b = sub(scale(axis, k1), position);
     position = sub(position, offset);
 
-    return line_primitive(position, b);
+    return line_primitive(position, b, 0.0);
 }
 
 static void update_overlap(
@@ -80,8 +80,8 @@ static void update_overlap(
 }
 
 static void render_mtv(Vec2 mtv, Vec2 position0, Vec2 position1) {
-    Primitive line0 = line_primitive(position0, mtv);
-    Primitive line1 = line_primitive(position1, scale(mtv, -1.0));
+    Primitive line0 = line_primitive(position0, mtv, 0.0);
+    Primitive line1 = line_primitive(position1, scale(mtv, -1.0), 0.0);
     submit_debug_render_command(
         render_primitive_command(line0, material(MAGENTA_COLOR))
     );

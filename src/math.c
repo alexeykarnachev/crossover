@@ -127,6 +127,17 @@ Vec2 rotate90(Vec2 v) {
     return res;
 }
 
+Vec2 rotate(Vec2 v, Vec2 origin, float angle) {
+    v = sub(v, origin);
+    float c = cos(angle);
+    float s = sin(angle);
+
+    float x = v.x * c - v.y * s;
+    float y = v.x * s + v.y * c;
+
+    return add(vec2(x, y), origin);
+}
+
 Vec2 point_to_axis(Vec2 p, Vec2 axis) {
     axis = normalize(axis);
     float k = dot(axis, p);
