@@ -8,3 +8,4 @@ typedef struct Movement {
 } Movement;
 
 Movement movement(float speed, float rotation_speed);
+void move_entity(int entity, float dt);

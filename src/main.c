@@ -18,12 +18,14 @@ int main(int argc, char* argv[]) {
     init_world();
     init_debug();
 
+    Vec2 player_position = {0.0, 0.0};
     WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
     WORLD.player = spawn_guy(
-        // circle_primitive(vec2(0.0, 1.0), 1.0, 0.0),
-        rectangle_primitive(vec2(0.0, 0.0), 1.0, 1.0, 1.0),
+        // circle_primitive(player_position, 1.0, 0.0),
+        rectangle_primitive(player_position, 1.0, 1.0, 1.0),
         material(vec3(0.7, 0.3, 0.2)),
-        movement(5.0, 2.0 * PI)
+        movement(5.0, 2.0 * PI),
+        vision(player_position, 0.0, 0.5 * PI, 5.0, 11)
     );
     spawn_obstacle(
         rectangle_primitive(vec2(-6.0, -6.0), 2.0, 2.0, 0.0),

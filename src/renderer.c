@@ -11,8 +11,6 @@
 #include <stdlib.h>
 
 static GLuint DUMMY_VAO;
-static Vec3 WIREFRAME_COLOR = {0.0, 0.0, 0.0};
-static Vec3 MTV_COLOR = {0.0, 1.0, 0.0};
 
 void init_renderer(void) {
     glCreateVertexArrays(1, &DUMMY_VAO);
@@ -90,9 +88,7 @@ static void render_primitive(Primitive primitive, Material material) {
 
     if (DEBUG.shading.wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        set_uniform_3fv(
-            program, "diffuse_color", (float*)&WIREFRAME_COLOR, 1
-        );
+        set_uniform_3fv(program, "diffuse_color", (float*)&GRAY_COLOR, 1);
         glDrawArrays(draw_mode, 0, n_points);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
