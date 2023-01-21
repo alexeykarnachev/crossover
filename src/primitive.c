@@ -51,35 +51,31 @@ Line line(Vec2 position, Vec2 b, float rotation) {
     return line;
 }
 
-Primitive circle_primitive(Vec2 position, float radius, float rotation) {
+Primitive circle_primitive(Circle c) {
     Primitive primitive;
     primitive.type = CIRCLE_PRIMITIVE;
-    primitive.p.circle = circle(position, radius, rotation);
+    primitive.p.circle = c;
     return primitive;
 }
 
-Primitive rectangle_primitive(
-    Vec2 position, float width, float height, float rotation
-) {
+Primitive rectangle_primitive(Rectangle r) {
     Primitive primitive;
     primitive.type = RECTANGLE_PRIMITIVE;
-    primitive.p.rectangle = rectangle(position, width, height, rotation);
+    primitive.p.rectangle = r;
     return primitive;
 }
 
-Primitive triangle_primitive(
-    Vec2 position, Vec2 b, Vec2 c, float rotation
-) {
+Primitive triangle_primitive(Triangle t) {
     Primitive primitive;
     primitive.type = TRIANGLE_PRIMITIVE;
-    primitive.p.triangle = triangle(position, b, c, rotation);
+    primitive.p.triangle = t;
     return primitive;
 }
 
-Primitive line_primitive(Vec2 position, Vec2 b, float rotation) {
+Primitive line_primitive(Line v) {
     Primitive primitive;
     primitive.type = LINE_PRIMITIVE;
-    primitive.p.line = line(position, b, rotation);
+    primitive.p.line = v;
     return primitive;
 }
 

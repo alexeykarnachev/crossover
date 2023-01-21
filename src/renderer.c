@@ -132,3 +132,27 @@ RenderCommand render_primitive_command(
         PRIMITIVE_RENDER, {primitive, material}};
     return render_command;
 }
+
+RenderCommand render_circle_command(Circle circle, Material material) {
+    return render_primitive_command(circle_primitive(circle), material);
+}
+
+RenderCommand render_rectangle_command(
+    Rectangle rectangle, Material material
+) {
+    return render_primitive_command(
+        rectangle_primitive(rectangle), material
+    );
+}
+
+RenderCommand render_triangle_command(
+    Triangle triangle, Material material
+) {
+    return render_primitive_command(
+        triangle_primitive(triangle), material
+    );
+}
+
+RenderCommand render_line_command(Line line, Material material) {
+    return render_primitive_command(line_primitive(line), material);
+}

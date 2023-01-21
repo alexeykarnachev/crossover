@@ -1,6 +1,6 @@
 #pragma once
 #include "camera.h"
-#include "collision/collision.h"
+#include "collision.h"
 #include "const.h"
 #include "material.h"
 #include "movement.h"

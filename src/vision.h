@@ -20,6 +20,5 @@ Vision vision(
 
 void translate_vision(Vision* vision, Vec2 translation);
 void rotate_vision(Vision* vision, float rotation);
-void get_vision_rays(Vision vision, Vec2* out);
 
 void observe_another_entity(int e0, int e1);

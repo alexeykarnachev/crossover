@@ -1,7 +1,7 @@
 #include "world.h"
 
 #include "app.h"
-#include "collision/collision.h"
+#include "collision.h"
 #include "const.h"
 #include "debug/debug.h"
 #include "math.h"

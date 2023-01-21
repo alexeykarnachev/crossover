@@ -55,14 +55,10 @@ Rectangle rectangle(
 );
 Triangle triangle(Vec2 position, Vec2 b, Vec2 c, float rotation);
 Line line(Vec2 position, Vec2 b, float rotation);
-Primitive circle_primitive(Vec2 position, float radius, float rotation);
-Primitive rectangle_primitive(
-    Vec2 position, float width, float height, float rotation
-);
-Primitive triangle_primitive(
-    Vec2 position, Vec2 b, Vec2 c, float rotation
-);
-Primitive line_primitive(Vec2 position, Vec2 b, float rotation);
+Primitive circle_primitive(Circle c);
+Primitive rectangle_primitive(Rectangle r);
+Primitive triangle_primitive(Triangle t);
+Primitive line_primitive(Line v);
 
 int get_primitive_vertices(Primitive primitive, Vec2* out);
 void translate_primitive(Primitive* primitive, Vec2 translation);
