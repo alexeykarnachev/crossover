@@ -1,31 +1,23 @@
 #pragma once
 #include "math.h"
-#include "movement.h"
+#include "transformation.h"
 
 typedef struct Circle {
-    Vec2 position;
     float radius;
-    float rotation;
 } Circle;
 
 typedef struct Rectangle {
-    Vec2 position;
     float width;
     float height;
-    float rotation;
 } Rectangle;
 
 typedef struct Triangle {
-    Vec2 position;
     Vec2 b;
     Vec2 c;
-    float rotation;
 } Triangle;
 
 typedef struct Line {
-    Vec2 position;
     Vec2 b;
-    float rotation;
 } Line;
 
 typedef enum PrimitiveType {
@@ -49,17 +41,15 @@ typedef struct Primitive {
     } p;
 } Primitive;
 
-Circle circle(Vec2 position, float radius, float rotation);
-Rectangle rectangle(
-    Vec2 position, float width, float height, float rotation
-);
-Triangle triangle(Vec2 position, Vec2 b, Vec2 c, float rotation);
-Line line(Vec2 position, Vec2 b, float rotation);
+Circle circle(float radius);
+Rectangle rectangle(float width, float height);
+Triangle triangle(Vec2 b, Vec2 c);
+Line line(Vec2 b);
 Primitive circle_primitive(Circle c);
 Primitive rectangle_primitive(Rectangle r);
 Primitive triangle_primitive(Triangle t);
 Primitive line_primitive(Line v);
 
-int get_primitive_vertices(Primitive primitive, Vec2* out);
-void translate_primitive(Primitive* primitive, Vec2 translation);
-void rotate_primitive(Primitive* primitive, float angle);
+int get_primitive_vertices(
+    Primitive primitive, Transformation transformation, Vec2* out
+);

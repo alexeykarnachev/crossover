@@ -28,17 +28,23 @@ static void set_uniform_camera(GLuint program, Camera camera) {
     set_uniform_1f(program, "camera.elevation", camera.elevation);
 }
 
-static void set_uniform_circle(GLuint program, Circle circle) {
+static void set_uniform_circle(
+    GLuint program, Transformation transformation, Circle circle
+) {
     set_uniform_2fv(
-        program, "circle.position", (float*)&circle.position, 1
+        program, "circle.position", (float*)&transformation.position, 1
     );
     set_uniform_1f(program, "circle.radius", circle.radius);
     set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);
 }
 
-static int set_uniform_primitive(GLuint program, Primitive primitive) {
+static int set_uniform_primitive(
+    GLuint program, Transformation transformation, Primitive primitive
+) {
     Vec2 vertices[4];
-    int n_points = get_primitive_vertices(primitive, vertices);
+    int n_points = get_primitive_vertices(
+        primitive, transformation, vertices
+    );
     set_uniform_2fv(program, "polygon.a", (float*)&vertices[0], 1);
     set_uniform_2fv(program, "polygon.b", (float*)&vertices[1], 1);
     set_uniform_2fv(program, "polygon.c", (float*)&vertices[2], 1);
@@ -47,35 +53,44 @@ static int set_uniform_primitive(GLuint program, Primitive primitive) {
     return n_points;
 }
 
-static void render_primitive(Primitive primitive, Material material) {
+static GLuint get_primitive_type_draw_mode(PrimitiveType type) {
+    switch (type) {
+        case CIRCLE_PRIMITIVE:
+            return GL_TRIANGLE_FAN;
+        case RECTANGLE_PRIMITIVE:
+            return GL_TRIANGLE_STRIP;
+        case TRIANGLE_PRIMITIVE:
+            return GL_TRIANGLE_STRIP;
+        case LINE_PRIMITIVE:
+            return GL_LINE_STRIP;
+        default:
+            fprintf(
+                stderr,
+                "ERROR: can't render the primitive with type id: "
+                "%d. Needs to be implemented\n",
+                type
+            );
+            exit(1);
+    }
+}
+
+static void render_primitive(
+    Transformation transformation, Primitive primitive, Material material
+) {
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
     set_uniform_camera(program, WORLD.camera);
 
     PrimitiveType type = primitive.type;
-    GLuint draw_mode;
+    GLuint draw_mode = get_primitive_type_draw_mode(type);
     int n_points;
     if (type & CIRCLE_PRIMITIVE) {
-        set_uniform_circle(program, primitive.p.circle);
-        draw_mode = GL_TRIANGLE_FAN;
+        set_uniform_circle(program, transformation, primitive.p.circle);
         n_points = N_POLYGONS_IN_CIRCLE + 2;
-    } else if (type & RECTANGLE_PRIMITIVE) {
-        n_points = set_uniform_primitive(program, primitive);
-        draw_mode = GL_TRIANGLE_STRIP;
-    } else if (type & TRIANGLE_PRIMITIVE) {
-        n_points = set_uniform_primitive(program, primitive);
-        draw_mode = GL_TRIANGLE_STRIP;
-    } else if (type & LINE_PRIMITIVE) {
-        n_points = set_uniform_primitive(program, primitive);
-        draw_mode = GL_LINE_STRIP;
     } else {
-        fprintf(
-            stderr,
-            "ERROR: can't render the primitive with type id: "
-            "%d. Needs to be implemented\n",
-            type
+        n_points = set_uniform_primitive(
+            program, transformation, primitive
         );
-        exit(1);
     }
 
     set_uniform_1i(program, "type", type);
@@ -102,57 +117,27 @@ void render_world(void) {
     glBindVertexArray(DUMMY_VAO);
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, PRIMITIVE_COMPONENT)) {
+        if (!entity_can_be_rendered) {
             continue;
         }
 
+        Transformation transformation = WORLD.transformation[entity];
         Primitive primitive = WORLD.primitive[entity];
         Material material = default_material();
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
             material = WORLD.material[entity];
         }
-        render_primitive(primitive, material);
+        render_primitive(transformation, primitive, material);
     }
 
     while (DEBUG.n_render_commands > 0) {
         DEBUG.n_render_commands -= 1;
-        RenderCommand c = DEBUG.render_commands[DEBUG.n_render_commands];
-        if (c.type == PRIMITIVE_RENDER) {
-            Primitive primitive = c.command.render_primitive.primitive;
-            Material material = c.command.render_primitive.material;
-            render_primitive(primitive, material);
-        }
+        // RenderCommand c =
+        // DEBUG.render_commands[DEBUG.n_render_commands]; if (c.type ==
+        // PRIMITIVE_RENDER) {
+        //     Primitive primitive = c.command.render_primitive.primitive;
+        //     Material material = c.command.render_primitive.material;
+        //     render_primitive(primitive, material);
+        // }
     }
-}
-
-RenderCommand render_primitive_command(
-    Primitive primitive, Material material
-) {
-    RenderCommand render_command = {
-        PRIMITIVE_RENDER, {primitive, material}};
-    return render_command;
-}
-
-RenderCommand render_circle_command(Circle circle, Material material) {
-    return render_primitive_command(circle_primitive(circle), material);
-}
-
-RenderCommand render_rectangle_command(
-    Rectangle rectangle, Material material
-) {
-    return render_primitive_command(
-        rectangle_primitive(rectangle), material
-    );
-}
-
-RenderCommand render_triangle_command(
-    Triangle triangle, Material material
-) {
-    return render_primitive_command(
-        triangle_primitive(triangle), material
-    );
-}
-
-RenderCommand render_line_command(Line line, Material material) {
-    return render_primitive_command(line_primitive(line), material);
 }

@@ -41,8 +41,16 @@ void render_debug_gui(void) {
     }
 
     if (igTreeNode_Str("Inputs")) {
-        igText("Cursor pos: (%g, %g)", DEBUG.inputs.cursor_x, DEBUG.inputs.cursor_y);
-        igText("Cursor delta: (%g, %g)", DEBUG.inputs.cursor_dx, DEBUG.inputs.cursor_dy);
+        igText(
+            "Cursor pos: (%g, %g)",
+            DEBUG.inputs.cursor_x,
+            DEBUG.inputs.cursor_y
+        );
+        igText(
+            "Cursor delta: (%g, %g)",
+            DEBUG.inputs.cursor_dx,
+            DEBUG.inputs.cursor_dy
+        );
         igTreePop();
     }
 

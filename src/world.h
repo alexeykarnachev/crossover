@@ -2,8 +2,8 @@
 #include "camera.h"
 #include "collision.h"
 #include "const.h"
+#include "kinematic.h"
 #include "material.h"
-#include "movement.h"
 #include "primitive.h"
 #include "vision.h"
 #include <stddef.h>
@@ -15,7 +15,8 @@ typedef struct World {
 
     // Components
     uint64_t components[MAX_N_ENTITIES];
-    Movement movement[MAX_N_ENTITIES];
+    Transformation transformation[MAX_N_ENTITIES];
+    Kinematic kinematic[MAX_N_ENTITIES];
     Vision vision[MAX_N_ENTITIES];
     Primitive collider[MAX_N_ENTITIES];
     Primitive primitive[MAX_N_ENTITIES];
@@ -32,25 +33,33 @@ typedef struct World {
 } World;
 
 typedef enum ComponentType {
-    MOVEMENT_COMPONENT = 1 << 0,
-    VISION_COMPONENT = 1 << 1,
-    COLLIDER_COMPONENT = 1 << 2,
-    RIGID_BODY_COMPONENT = 1 << 3,
-    PRIMITIVE_COMPONENT = 1 << 4,
-    MATERIAL_COMPONENT = 1 << 5,
-    OBSERVABLE_COMPONENT = 1 << 6
+    TRANSFORMATION_COMPONENT = 1 << 0,
+    KINEMATIC_COMPONENT = 1 << 1,
+    VISION_COMPONENT = 1 << 2,
+    COLLIDER_COMPONENT = 1 << 3,
+    RIGID_BODY_COMPONENT = 1 << 4,
+    PRIMITIVE_COMPONENT = 1 << 5,
+    MATERIAL_COMPONENT = 1 << 6,
+    OBSERVABLE_COMPONENT = 1 << 7
 } ComponentType;
 
 extern World WORLD;
 
 void init_world(void);
 int entity_has_component(int entity, ComponentType component);
+int entity_can_collide(int entity);
+int entity_can_observe(int entity);
+int entity_can_be_rendered(int entity);
+int entity_can_be_observed(int entity);
 int spawn_guy(
+    Transformation transformation,
     Primitive primitive,
     Material material,
-    Movement movement,
+    Kinematic kinematic,
     Vision vision
 );
-int spawn_obstacle(Primitive primitive, Material material);
+int spawn_obstacle(
+    Transformation transformation, Primitive primitive, Material material
+);
 void update_world(float dt);
 void transform_entity(int entity, Vec2 translation, float angle);

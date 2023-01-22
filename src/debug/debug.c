@@ -1,8 +1,8 @@
 #include "debug.h"
 
+#include "../app.h"
 #include "../const.h"
 #include "../world.h"
-#include "../app.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -22,10 +22,4 @@ void update_debug(void) {
     DEBUG.inputs.cursor_y = APP.cursor_y;
     DEBUG.inputs.cursor_dx = APP.cursor_dx;
     DEBUG.inputs.cursor_dy = APP.cursor_dy;
-}
-
-void submit_debug_render_command(RenderCommand command) {
-    if (DEBUG.n_render_commands < MAX_N_DEBUG_RENDER_COMMANDS) {
-        DEBUG.render_commands[DEBUG.n_render_commands++] = command;
-    }
 }

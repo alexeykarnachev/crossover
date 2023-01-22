@@ -1,6 +1,7 @@
 #pragma once
 #include "math.h"
 #include "primitive.h"
+#include "transformation.h"
 
 typedef struct Collision {
     Vec2 mtv;
@@ -8,8 +9,12 @@ typedef struct Collision {
     int entity1;
 } Collision;
 
-int collide_primitives(Primitive p0, Primitive p1, Collision* collision);
+int collide_primitives(
+    Primitive p0,
+    Transformation t0,
+    Primitive p1,
+    Transformation t1,
+    Collision* collision
+);
 void collide_with_world(int entity);
 void resolve_collision(Collision collision);
-Line project_circle_on_axis(Circle circle, Vec2 axis);
-Line project_polygon_on_axis(Vec2 vertices[], int n, Vec2 axis);

@@ -4,8 +4,9 @@
 #include "collision.h"
 #include "const.h"
 #include "debug/debug.h"
+#include "kinematic.h"
 #include "math.h"
-#include "movement.h"
+#include "transformation.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,21 +23,50 @@ int entity_has_component(int entity, ComponentType type) {
     return WORLD.components[entity] & type;
 }
 
+int entity_can_collide(int entity) {
+    return entity_has_component(
+        entity, COLLIDER_COMPONENT | TRANSFORMATION_COMPONENT
+    );
+}
+
+int entity_can_observe(int entity) {
+    return entity_has_component(
+        entity, TRANSFORMATION_COMPONENT | VISION_COMPONENT
+    );
+}
+
+int entity_can_be_rendered(int entity) {
+    return entity_has_component(
+        entity, PRIMITIVE_COMPONENT | TRANSFORMATION_COMPONENT
+    );
+}
+
+int entity_can_be_observed(int entity) {
+    return entity_has_component(
+        entity,
+        COLLIDER_COMPONENT | TRANSFORMATION_COMPONENT
+            | OBSERVABLE_COMPONENT
+    );
+}
+
 int spawn_guy(
+    Transformation transformation,
     Primitive primitive,
     Material material,
-    Movement movement,
+    Kinematic kinematic,
     Vision vision
 ) {
     int entity = -1;
     if (WORLD.n_entities < MAX_N_ENTITIES) {
         entity = WORLD.n_entities++;
+        WORLD.transformation[entity] = transformation;
         WORLD.primitive[entity] = primitive;
         WORLD.material[entity] = material;
-        WORLD.movement[entity] = movement;
+        WORLD.kinematic[entity] = kinematic;
         WORLD.vision[entity] = vision;
         WORLD.collider[entity] = primitive;
-        WORLD.components[entity] = MOVEMENT_COMPONENT | VISION_COMPONENT
+        WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                                   | KINEMATIC_COMPONENT | VISION_COMPONENT
                                    | OBSERVABLE_COMPONENT
                                    | COLLIDER_COMPONENT
                                    | RIGID_BODY_COMPONENT
@@ -50,14 +80,18 @@ int spawn_guy(
     return entity;
 }
 
-int spawn_obstacle(Primitive primitive, Material material) {
+int spawn_obstacle(
+    Transformation transformation, Primitive primitive, Material material
+) {
     int entity = -1;
     if (WORLD.n_entities < MAX_N_ENTITIES) {
         entity = WORLD.n_entities++;
+        WORLD.transformation[entity] = transformation;
         WORLD.primitive[entity] = primitive;
         WORLD.material[entity] = material;
         WORLD.collider[entity] = primitive;
-        WORLD.components[entity] = COLLIDER_COMPONENT
+        WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                                   | COLLIDER_COMPONENT
                                    | OBSERVABLE_COMPONENT
                                    | RIGID_BODY_COMPONENT
                                    | PRIMITIVE_COMPONENT
@@ -73,14 +107,13 @@ int spawn_obstacle(Primitive primitive, Material material) {
 void update_world(float dt) {
     dt /= 1000.0;
 
-    // Update movement component based on the player input
+    // Update kinematic component based on the player input
     if (WORLD.player != -1) {
-        Movement* m = &WORLD.movement[WORLD.player];
-        m->direction = vec2(0.0, 0.0);
-        m->direction.y += 1.0 * APP.key_states[GLFW_KEY_W];
-        m->direction.y -= 1.0 * APP.key_states[GLFW_KEY_S];
-        m->direction.x -= 1.0 * APP.key_states[GLFW_KEY_A];
-        m->direction.x += 1.0 * APP.key_states[GLFW_KEY_D];
+        Kinematic* k = &WORLD.kinematic[WORLD.player];
+        // += 1.0 * APP.key_states[GLFW_KEY_W];
+        // -= 1.0 * APP.key_states[GLFW_KEY_S];
+        // -= 1.0 * APP.key_states[GLFW_KEY_A];
+        // += 1.0 * APP.key_states[GLFW_KEY_D];
     }
 
     // Observe world via vision component
@@ -91,34 +124,9 @@ void update_world(float dt) {
 
     // Update positions of the movable entities
     for (int e = 0; e < WORLD.n_entities; ++e) {
-        if (!entity_has_component(e, MOVEMENT_COMPONENT)) {
+        if (!entity_has_component(e, KINEMATIC_COMPONENT)) {
             continue;
         }
-
-        Movement m = WORLD.movement[e];
-        Vec2 translation = {0.0, 0.0};
-        if (length(m.direction) > EPS) {
-            translation = scale(normalize(m.direction), m.speed * dt);
-        }
-        
-        float rotation = 0.0;
-        float target_rotation = m.rotation;
-        float abs_target_rotation = fabs(target_rotation);
-        float rotation_step = m.rotation_speed * dt;
-        if (abs_target_rotation > 0.0) {
-            if (abs_target_rotation <= rotation_step) {
-                m.rotation = 0.0;
-                rotation = target_rotation;
-            } else if (copysign(1.0, target_rotation)) {
-                m.rotation -= rotation_step;
-                rotation = rotation_step;
-            } else {
-                m.rotation += rotation_step;
-                rotation = -rotation_step;
-            }
-        }
-
-        transform_entity(e, translation, rotation);
     }
 
     // Collide entities with each other
@@ -135,28 +143,5 @@ void update_world(float dt) {
             Collision collision = WORLD.collisions[i];
             resolve_collision(collision);
         }
-    }
-}
-
-void transform_entity(int entity, Vec2 translation, float angle) {
-    int has_primitive = entity_has_component(entity, PRIMITIVE_COMPONENT);
-    int has_collider = entity_has_component(entity, COLLIDER_COMPONENT);
-    int has_vision = entity_has_component(entity, VISION_COMPONENT);
-    if (has_primitive) {
-        Primitive* p = &WORLD.primitive[entity];
-        translate_primitive(p, translation);
-        rotate_primitive(p, angle);
-    }
-
-    if (has_collider) {
-        Primitive* p = &WORLD.collider[entity];
-        translate_primitive(p, translation);
-        rotate_primitive(p, angle);
-    }
-
-    if (has_vision) {
-        Vision* v = &WORLD.vision[entity];
-        translate_vision(v, translation);
-        rotate_vision(v, angle);
     }
 }

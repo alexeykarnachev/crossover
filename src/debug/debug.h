@@ -3,7 +3,7 @@
 #include "../renderer.h"
 
 typedef struct Debug {
-    RenderCommand render_commands[MAX_N_DEBUG_RENDER_COMMANDS];
+    // RenderCommand render_commands[MAX_N_DEBUG_RENDER_COMMANDS];
     int n_render_commands;
 
     struct general {
@@ -35,4 +35,3 @@ extern Debug DEBUG;
 
 void init_debug(void);
 void update_debug(void);
-void submit_debug_render_command(RenderCommand render_command);
