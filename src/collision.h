@@ -9,7 +9,7 @@ typedef struct Collision {
 } Collision;
 
 int collide_primitives(Primitive p0, Primitive p1, Collision* collision);
-int collide_entities(int e0, int e1, Collision* collision);
+void collide_with_world(int entity);
 void resolve_collision(Collision collision);
 Line project_circle_on_axis(Circle circle, Vec2 axis);
 Line project_polygon_on_axis(Vec2 vertices[], int n, Vec2 axis);

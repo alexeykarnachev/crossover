@@ -7,8 +7,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static Vec2 VIEW_RAYS_ARENA[MAX_N_VIEW_RAYS];
+
+Observation observation(Vec2 position, int entity) {
+    Observation obs = {position, entity};
+    return obs;
+}
 
 Vision vision(
     Vec2 position,
@@ -20,8 +26,19 @@ Vision vision(
     if (n_view_rays > MAX_N_VIEW_RAYS) {
         exit(1);
     }
-    Vision v = {position, rotation, fov, distance, n_view_rays};
+
+    Vision v;
+    reset_observations(&v);
+    v.position = position;
+    v.rotation = rotation;
+    v.fov = fov;
+    v.distance = distance;
+    v.n_view_rays = n_view_rays;
     return v;
+}
+
+void reset_observations(Vision* v) {
+    memset(v->observations, -1, sizeof(Observation) * v->n_view_rays);
 }
 
 void translate_vision(Vision* vision, Vec2 translation) {
@@ -55,34 +72,23 @@ static int intersect_lines(Line line0, Line line1, Vec2* out) {
     Vec2 d0 = line0.b;
     Vec2 d1 = line1.b;
 
-    Vec2 s0 = line0.position;
-    Vec2 e0 = add(s0, d0);
-    Vec2 s1 = line1.position;
-    Vec2 e1 = add(s1, d1);
+    Vec2 r = sub(line1.position, line0.position);
 
-    Vec2 r = sub(s0, s1);
-
-    float c0 = d0.x * d1.y - d0.y * d1.x;
-    if (fabs(c0) < EPS) {
+    float c = d0.x * d1.y - d0.y * d1.x;
+    if (fabs(c) < EPS) {
         return 0;
     }
 
-    float c1 = r.x * d1.y - r.y * d1.x;
-    float t = -c1 / c0;
-    Vec2 p = add(s0, scale(d0, t));
+    float t0 = (r.x * d1.y - r.y * d1.x) / c;
+    float t1 = (r.x * d0.y - r.y * d0.x) / c;
 
-    int on_line0 = p.x >= min(s0.x, e0.x) && p.x <= max(s0.x, e0.x)
-                   && p.y >= min(s0.y, e0.y) && p.y <= max(s0.y, e0.y);
-    int on_line1 = p.x >= min(s1.x, e1.x) && p.x <= max(s1.x, e1.x)
-                   && p.y >= min(s1.y, e1.y) && p.y <= max(s1.y, e1.y);
-    if (on_line0 && on_line1) {
-        *out = p;
+    if (t0 >= 0 && t0 <= 1 && t1 >= 0 && t1 <= 1) {
+        *out = add(line0.position, scale(d0, t0));
         return 1;
     }
 
     return 0;
 }
-
 static int intersect_line_with_circle(
     Line line, Circle circle, Vec2* out
 ) {
@@ -102,38 +108,24 @@ static int intersect_line_with_circle(
               - 2 * (cx * x1 + cy * y1) - r * r;
 
     float det = b * b - 4 * a * c;
-    if (det < 0) {
-        return 0;
-    } else if (det == 0) {
-        // one intersection point
-        float t = -b / (2 * a);
-        if (t >= 0.0 && t <= 1.0) {
-            out[0].x = x1 + t * dx;
-            out[0].y = y1 + t * dy;
-            return 1;
-        }
-    } else {
-        // two intersection points
-        float t1 = (-b + sqrt(det)) / (2 * a);
-        float t2 = (-b - sqrt(det)) / (2 * a);
-        if (t1 >= 0.0 && t1 <= 1.0 && t2 >= 0.0 && t2 <= 1.0) {
-            out[0].x = x1 + t1 * dx;
-            out[0].y = y1 + t1 * dy;
-            out[1].x = x1 + t2 * dx;
-            out[1].y = y1 + t2 * dy;
-            return 2;
-        } else if (t1 >= 0.0 && t1 <= 1.0) {
-            out[0].x = x1 + t1 * dx;
-            out[0].y = y1 + t1 * dy;
-            return 1;
-        } else if (t2 >= 0.0 && t2 <= 1.0) {
-            out[0].x = x1 + t2 * dx;
-            out[0].y = y1 + t2 * dy;
-            return 1;
-        } else {
-            return 0;
-        }
+    int n_points = 0;
+    float t1 = 2.0;
+    float t2 = 2.0;
+    if (det == 0) {
+        t1 = -b / (2 * a);
+    } else if (det > 0) {
+        t1 = (-b + sqrt(det)) / (2 * a);
+        t2 = (-b - sqrt(det)) / (2 * a);
     }
+
+    if (t1 >= 0.0 && t1 <= 1.0) {
+        out[n_points++] = vec2(x1 + t1 * dx, y1 + t1 * dy);
+    }
+    if (t2 >= 0.0 && t2 <= 1.0) {
+        out[n_points++] = vec2(x1 + t2 * dx, y1 + t2 * dy);
+    }
+
+    return n_points;
 }
 
 static int intersect_line_with_circle_nearest(
@@ -197,28 +189,57 @@ static int intersect_line_with_primitive_nearest(
     }
 }
 
-void observe_another_entity(int e0, int e1) {
-    int can_observe = entity_has_component(e0, VISION_COMPONENT)
-                      && entity_has_component(e1, COLLIDER_COMPONENT);
-    if (!can_observe) {
+void observe_world(int entity) {
+    if (!entity_has_component(entity, VISION_COMPONENT)) {
         return;
     }
 
-    Collision collision;
-    Vision v = WORLD.vision[e0];
-    Primitive collider = WORLD.collider[e1];
+    Vision v = WORLD.vision[entity];
+    reset_observations(&v);
+    for (int target = 0; target < WORLD.n_entities; ++target) {
+        int can_be_observed
+            = target != entity
+              && entity_has_component(target, COLLIDER_COMPONENT)
+              && entity_has_component(target, OBSERVABLE_COMPONENT);
+        if (!can_be_observed) {
+            continue;
+        }
 
-    int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
-    for (int i = 0; i < n_view_rays; ++i) {
-        Line ray = {v.position, VIEW_RAYS_ARENA[i], 0.0};
-        Vec2 point;
-        if (intersect_line_with_primitive_nearest(ray, collider, &point)) {
-            submit_debug_render_command(
-                render_line_command(ray, material(GREEN_COLOR))
+        Primitive collider = WORLD.collider[target];
+        int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
+        for (int i = 0; i < n_view_rays; ++i) {
+            Line ray = {v.position, VIEW_RAYS_ARENA[i], 0.0};
+            Observation obs;
+            int is_observed = intersect_line_with_primitive_nearest(
+                ray, collider, &obs.position
             );
-            submit_debug_render_command(render_circle_command(
-                circle(point, 0.1, 0.0), material(RED_COLOR)
-            ));
+            if (!is_observed) {
+                continue;
+            }
+
+            float new_dist = dist(v.position, obs.position);
+            float old_dist = dist(v.position, v.observations[i].position);
+            int is_best = v.observations[i].entity == -1
+                          || new_dist < old_dist;
+            if (is_best) {
+                obs.entity = target;
+                v.observations[i] = obs;
+            }
+        }
+    }
+
+    if (DEBUG.shading.vision) {
+        for (int i = 0; i < v.n_view_rays; ++i) {
+            Observation obs = v.observations[i];
+            if (obs.entity != -1) {
+                submit_debug_render_command(render_line_command(
+                    line(v.position, sub(obs.position, v.position), 0.0),
+                    material(GREEN_COLOR)
+                ));
+                submit_debug_render_command(render_circle_command(
+                    circle(obs.position, 0.1, 0.0), material(RED_COLOR)
+                ));
+            }
         }
     }
 }

@@ -79,7 +79,7 @@ static void render_primitive(Primitive primitive, Material material) {
     }
 
     set_uniform_1i(program, "type", type);
-    if (DEBUG.shading.material) {
+    if (DEBUG.shading.materials) {
         set_uniform_3fv(
             program, "diffuse_color", (float*)&material.diffuse_color, 1
         );

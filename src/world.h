@@ -37,7 +37,8 @@ typedef enum ComponentType {
     COLLIDER_COMPONENT = 1 << 2,
     RIGID_BODY_COMPONENT = 1 << 3,
     PRIMITIVE_COMPONENT = 1 << 4,
-    MATERIAL_COMPONENT = 1 << 5
+    MATERIAL_COMPONENT = 1 << 5,
+    OBSERVABLE_COMPONENT = 1 << 6
 } ComponentType;
 
 extern World WORLD;

@@ -36,6 +36,7 @@ int spawn_guy(
         WORLD.vision[entity] = vision;
         WORLD.collider[entity] = primitive;
         WORLD.components[entity] = MOVEMENT_COMPONENT | VISION_COMPONENT
+                                   | OBSERVABLE_COMPONENT
                                    | COLLIDER_COMPONENT
                                    | RIGID_BODY_COMPONENT
                                    | PRIMITIVE_COMPONENT
@@ -56,6 +57,7 @@ int spawn_obstacle(Primitive primitive, Material material) {
         WORLD.material[entity] = material;
         WORLD.collider[entity] = primitive;
         WORLD.components[entity] = COLLIDER_COMPONENT
+                                   | OBSERVABLE_COMPONENT
                                    | RIGID_BODY_COMPONENT
                                    | PRIMITIVE_COMPONENT
                                    | MATERIAL_COMPONENT;
@@ -82,13 +84,8 @@ void update_world(float dt) {
 
     // Observe world via vision component
     WORLD.n_collisions = 0;
-    for (int e0 = 0; e0 < WORLD.n_entities; ++e0) {
-        for (int e1 = 0; e1 < WORLD.n_entities; ++e1) {
-            if (e0 == e1) {
-                continue;
-            }
-            observe_another_entity(e0, e1);
-        }
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        observe_world(e);
     }
 
     // Update positions of the movable entities
@@ -98,11 +95,8 @@ void update_world(float dt) {
 
     // Collide entities with each other
     WORLD.n_collisions = 0;
-    for (int e0 = 0; e0 < WORLD.n_entities; ++e0) {
-        for (int e1 = e0 + 1; e1 < WORLD.n_entities; ++e1) {
-            Collision* collision = &WORLD.collisions[WORLD.n_collisions];
-            WORLD.n_collisions += collide_entities(e0, e1, collision);
-        }
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        collide_with_world(e);
     }
 
     // Resolve collisions

@@ -253,7 +253,7 @@ int collide_primitives(Primitive p0, Primitive p1, Collision* collision) {
         collided = collide_circles(
             p0.p.circle, p1.p.circle, &collision->mtv
         );
-        if (collided && DEBUG.shading.collision) {
+        if (collided && DEBUG.shading.collisions) {
             render_circles_proj(collision->mtv, p0.p.circle, p1.p.circle);
             render_mtv(
                 collision->mtv, p0.p.circle.position, p1.p.circle.position
@@ -264,7 +264,7 @@ int collide_primitives(Primitive p0, Primitive p1, Collision* collision) {
             p0.p.circle, v1, nv1, &collision->mtv
         );
         collision->mtv = flip(collision->mtv);
-        if (collided && DEBUG.shading.collision && nv1 > 2) {
+        if (collided && DEBUG.shading.collisions && nv1 > 2) {
             render_circle_polygon_proj(
                 collision->mtv, p0.p.circle, v1, nv1
             );
@@ -274,7 +274,7 @@ int collide_primitives(Primitive p0, Primitive p1, Collision* collision) {
         collided = collide_circle_with_polygon(
             p1.p.circle, v0, nv0, &collision->mtv
         );
-        if (collided && DEBUG.shading.collision && nv0 > 2) {
+        if (collided && DEBUG.shading.collisions && nv0 > 2) {
             render_circle_polygon_proj(
                 collision->mtv, p1.p.circle, v0, nv0
             );
@@ -282,7 +282,7 @@ int collide_primitives(Primitive p0, Primitive p1, Collision* collision) {
         }
     } else {
         collided = collide_polygons(v0, nv0, v1, nv1, &collision->mtv);
-        if (collided && DEBUG.shading.collision && min(nv0, nv1) > 2) {
+        if (collided && DEBUG.shading.collisions && min(nv0, nv1) > 2) {
             render_polygons_proj(collision->mtv, v0, nv0, v1, nv1);
             render_mtv(collision->mtv, v0[0], v1[0]);
         }
@@ -291,19 +291,23 @@ int collide_primitives(Primitive p0, Primitive p1, Collision* collision) {
     return collided;
 }
 
-int collide_entities(int e0, int e1, Collision* collision) {
-    int can_collide = entity_has_component(e0, COLLIDER_COMPONENT)
-                      && entity_has_component(e1, COLLIDER_COMPONENT);
-    if (!can_collide) {
-        return 0;
+void collide_with_world(int entity) {
+    if (!entity_has_component(entity, COLLIDER_COMPONENT)) {
+        return;
     }
 
-    collision->entity0 = e0;
-    collision->entity1 = e1;
-    Primitive p0 = WORLD.collider[e0];
-    Primitive p1 = WORLD.collider[e1];
+    for (int target = entity + 1; target < WORLD.n_entities; ++target) {
+        Collision* collision = &WORLD.collisions[WORLD.n_collisions];
+        if (!entity_has_component(target, COLLIDER_COMPONENT)) {
+            continue;
+        }
 
-    return collide_primitives(p0, p1, collision);
+        collision->entity0 = entity;
+        collision->entity1 = target;
+        Primitive p0 = WORLD.collider[entity];
+        Primitive p1 = WORLD.collider[target];
+        WORLD.n_collisions += collide_primitives(p0, p1, collision);
+    }
 }
 
 void resolve_collision(Collision collision) {

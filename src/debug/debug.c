@@ -8,8 +8,10 @@
 Debug DEBUG;
 
 void init_debug(void) {
-    DEBUG.shading.material = 1;
-    DEBUG.shading.collision = 1;
+    DEBUG.shading.materials = 1;
+    DEBUG.shading.collisions = 1;
+    DEBUG.shading.vision = 1;
+    DEBUG.collisions.resolve = 1;
 }
 
 void update_debug(void) {

@@ -12,9 +12,10 @@ typedef struct Debug {
     } general;
 
     struct shading {
-        int material;
+        int materials;
         int wireframe;
-        int collision;
+        int collisions;
+        int vision;
     } shading;
 
     struct collisions {
