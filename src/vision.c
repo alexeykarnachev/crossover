@@ -196,6 +196,7 @@ void observe_world(int entity) {
 
     Vision v = WORLD.vision[entity];
     reset_observations(&v);
+    int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
     for (int target = 0; target < WORLD.n_entities; ++target) {
         int can_be_observed
             = target != entity
@@ -206,7 +207,6 @@ void observe_world(int entity) {
         }
 
         Primitive collider = WORLD.collider[target];
-        int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
         for (int i = 0; i < n_view_rays; ++i) {
             Line ray = {v.position, VIEW_RAYS_ARENA[i], 0.0};
             Observation obs;
@@ -238,6 +238,11 @@ void observe_world(int entity) {
                 ));
                 submit_debug_render_command(render_circle_command(
                     circle(obs.position, 0.1, 0.0), material(RED_COLOR)
+                ));
+            } else {
+                submit_debug_render_command(render_line_command(
+                    line(v.position, VIEW_RAYS_ARENA[i], 0.0),
+                    material(GREEN_COLOR)
                 ));
             }
         }
