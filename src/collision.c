@@ -190,9 +190,9 @@ static int collide_circle_with_polygon(
             bound0, bound1, axis, &min_overlap_axis, &min_overlap
         );
 
-        float dist = dist_between_points(v0, circle.position);
-        if (dist < nearest_dist) {
-            nearest_dist = dist;
+        float curr_dist = dist(v0, circle.position);
+        if (curr_dist < nearest_dist) {
+            nearest_dist = curr_dist;
             nearest_vertex = v0;
         }
     }

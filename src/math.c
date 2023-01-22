@@ -174,7 +174,7 @@ PointProjection project_point_on_line(Vec2 p, Vec2 a, Vec2 b) {
     return proj;
 }
 
-float dist_between_points(Vec2 v0, Vec2 v1) {
+float dist(Vec2 v0, Vec2 v1) {
     float res = length(sub(v1, v0));
     return res;
 }
