@@ -27,6 +27,16 @@ static void key_callback(
     }
 }
 
+static void cursor_position_callback(
+    GLFWwindow* window, double x, double y
+) {
+    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    app->cursor_dx += x - app->cursor_x;
+    app->cursor_dy += y - app->cursor_y;
+    app->cursor_x = x;
+    app->cursor_y = y;
+}
+
 void init_app(int window_width, int window_height) {
     if (!glfwInit()) {
         return;
@@ -51,6 +61,7 @@ void init_app(int window_width, int window_height) {
     glfwSetWindowUserPointer(WINDOW, &APP);
     glfwSetFramebufferSizeCallback(WINDOW, framebuffer_size_callback);
     glfwSetKeyCallback(WINDOW, key_callback);
+    glfwSetCursorPosCallback(WINDOW, cursor_position_callback);
     glfwSwapInterval(1);
     igCreateContext(NULL);
 
@@ -73,6 +84,8 @@ void update_window() {
     double current_time = glfwGetTime();
     APP.dt = 1000.0 * (current_time - APP.time);
     APP.time = current_time;
+    APP.cursor_dx = 0.0;
+    APP.cursor_dy = 0.0;
 
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();

@@ -30,14 +30,20 @@ void render_debug_gui(void) {
     }
 
     if (igTreeNode_Str("Collisions")) {
-        igTreePop();
         igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
-        igSameLine(100.0, 0.0);
+        igSameLine(105.0, 0.0);
         ImVec2 buttonSize = {0, 0};
         if (igButton("once", buttonSize)) {
             DEBUG.collisions.resolve_once = 1;
         }
+        igTreePop();
+    }
+
+    if (igTreeNode_Str("Inputs")) {
+        igText("Cursor pos: (%g, %g)", DEBUG.inputs.cursor_x, DEBUG.inputs.cursor_y);
+        igText("Cursor delta: (%g, %g)", DEBUG.inputs.cursor_dx, DEBUG.inputs.cursor_dy);
+        igTreePop();
     }
 
     igRender();

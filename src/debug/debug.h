@@ -22,6 +22,13 @@ typedef struct Debug {
         int resolve;
         int resolve_once;
     } collisions;
+
+    struct inputs {
+        float cursor_x;
+        float cursor_y;
+        float cursor_dx;
+        float cursor_dy;
+    } inputs;
 } Debug;
 
 extern Debug DEBUG;

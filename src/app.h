@@ -9,6 +9,10 @@ typedef struct Application {
 
     double time;
     double dt;
+    double cursor_x;
+    double cursor_y;
+    double cursor_dx;
+    double cursor_dy;
 
     ImGuiIO* gui_io;
 

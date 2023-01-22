@@ -6,6 +6,7 @@
 #include "debug/debug.h"
 #include "math.h"
 #include "movement.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -90,7 +91,34 @@ void update_world(float dt) {
 
     // Update positions of the movable entities
     for (int e = 0; e < WORLD.n_entities; ++e) {
-        move_entity(e, dt);
+        if (!entity_has_component(e, MOVEMENT_COMPONENT)) {
+            continue;
+        }
+
+        Movement m = WORLD.movement[e];
+        Vec2 translation = {0.0, 0.0};
+        if (length(m.direction) > EPS) {
+            translation = scale(normalize(m.direction), m.speed * dt);
+        }
+        
+        float rotation = 0.0;
+        float target_rotation = m.rotation;
+        float abs_target_rotation = fabs(target_rotation);
+        float rotation_step = m.rotation_speed * dt;
+        if (abs_target_rotation > 0.0) {
+            if (abs_target_rotation <= rotation_step) {
+                m.rotation = 0.0;
+                rotation = target_rotation;
+            } else if (copysign(1.0, target_rotation)) {
+                m.rotation -= rotation_step;
+                rotation = rotation_step;
+            } else {
+                m.rotation += rotation_step;
+                rotation = -rotation_step;
+            }
+        }
+
+        transform_entity(e, translation, rotation);
     }
 
     // Collide entities with each other
