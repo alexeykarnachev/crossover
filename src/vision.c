@@ -125,23 +125,19 @@ void observe_world(int entity) {
         }
     }
 
-    // if (DEBUG.shading.vision) {
-    //     for (int i = 0; i < v.n_view_rays; ++i) {
-    //         Observation obs = v.observations[i];
-    //         if (obs.entity != -1) {
-    //             submit_debug_render_command(render_line_command(
-    //                 line(v.position, sub(obs.position, v.position),
-    //                 0.0), material(GREEN_COLOR)
-    //             ));
-    //             submit_debug_render_command(render_circle_command(
-    //                 circle(obs.position, 0.1, 0.0), material(RED_COLOR)
-    //             ));
-    //         } else {
-    //             submit_debug_render_command(render_line_command(
-    //                 line(v.position, VIEW_RAYS_ARENA[i], 0.0),
-    //                 material(GREEN_COLOR)
-    //             ));
-    //         }
-    //     }
-    // }
+    if (DEBUG.shading.vision) {
+        for (int i = 0; i < v.n_view_rays; ++i) {
+            Observation obs = v.observations[i];
+            if (obs.entity != -1) {
+                render_debug_line(t0.position, obs.position, GREEN_COLOR);
+                render_debug_circle(obs.position, 0.05, RED_COLOR);
+            } else {
+                render_debug_line(
+                    t0.position,
+                    add(VIEW_RAYS_ARENA[i], t0.position),
+                    GREEN_COLOR
+                );
+            }
+        }
+    }
 }

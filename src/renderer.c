@@ -130,14 +130,9 @@ void render_world(void) {
         render_primitive(transformation, primitive, material);
     }
 
-    while (DEBUG.n_render_commands > 0) {
-        DEBUG.n_render_commands -= 1;
-        // RenderCommand c =
-        // DEBUG.render_commands[DEBUG.n_render_commands]; if (c.type ==
-        // PRIMITIVE_RENDER) {
-        //     Primitive primitive = c.command.render_primitive.primitive;
-        //     Material material = c.command.render_primitive.material;
-        //     render_primitive(primitive, material);
-        // }
+    while (DEBUG.n_primitives > 0) {
+        DEBUG.n_primitives -= 1;
+        DebugPrimitive p = DEBUG.primitives[DEBUG.n_primitives];
+        render_primitive(p.transformation, p.primitive, p.material);
     }
 }

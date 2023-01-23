@@ -159,16 +159,24 @@ void collide_with_world(int entity) {
             return;
         }
 
-        Collision* collision = &WORLD.collisions[WORLD.n_collisions];
-        collision->entity0 = entity;
-        collision->entity1 = target;
+        Collision* c = &WORLD.collisions[WORLD.n_collisions];
+        c->entity0 = entity;
+        c->entity1 = target;
         Primitive p0 = WORLD.collider[entity];
         Primitive p1 = WORLD.collider[target];
         Transformation t0 = WORLD.transformation[entity];
         Transformation t1 = WORLD.transformation[target];
-        WORLD.n_collisions += collide_primitives(
-            p0, t0, p1, t1, collision
-        );
+        int collided = collide_primitives(p0, t0, p1, t1, c);
+        WORLD.n_collisions += collided;
+
+        if (collided && DEBUG.shading.collisions) {
+            render_debug_line(
+                t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
+            );
+            render_debug_line(
+                t1.position, sub(t1.position, c->mtv), CYAN_COLOR
+            );
+        }
     }
 }
 
