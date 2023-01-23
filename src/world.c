@@ -17,10 +17,11 @@ void init_world(void) {
     WORLD.n_entities = 0;
     WORLD.n_collisions = 0;
     WORLD.player = -1;
+    WORLD.camera = -1;
 }
 
 int entity_has_component(int entity, ComponentType type) {
-    return WORLD.components[entity] & type;
+    return (WORLD.components[entity] & type) == type;
 }
 
 int entity_can_collide(int entity) {
@@ -49,6 +50,47 @@ int entity_can_be_observed(int entity) {
     );
 }
 
+int spawn_camera(Transformation transformation) {
+    int entity = -1;
+    if (WORLD.camera != -1) {
+        fprintf(stderr, "ERROR: Only one camera can be spawned\n");
+        exit(1);
+    }
+
+    if (WORLD.n_entities < MAX_N_ENTITIES) {
+        entity = WORLD.n_entities++;
+        WORLD.transformation[entity] = transformation;
+        WORLD.components[entity] = TRANSFORMATION_COMPONENT;
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: Can't spawn the camera, max number of entities has "
+            "been reached\n"
+        );
+        exit(1);
+    }
+
+    WORLD.camera = entity;
+    return entity;
+}
+
+int spawn_player(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    Kinematic kinematic,
+    Vision vision
+) {
+    if (WORLD.player != -1) {
+        fprintf(stderr, "ERROR: Only one player can be spawned\n");
+        exit(1);
+    }
+    WORLD.player = spawn_guy(
+        transformation, primitive, material, kinematic, vision
+    );
+    return WORLD.player;
+}
+
 int spawn_guy(
     Transformation transformation,
     Primitive primitive,
@@ -73,28 +115,11 @@ int spawn_guy(
                                    | PRIMITIVE_COMPONENT
                                    | MATERIAL_COMPONENT;
     } else {
-        fprintf(stderr, "ERROR: Can't spawn more guys");
+        fprintf(stderr, "ERROR: Can't spawn more guys\n");
         exit(1);
     }
 
     return entity;
-}
-
-int spawn_player(
-    Transformation transformation,
-    Primitive primitive,
-    Material material,
-    Kinematic kinematic,
-    Vision vision
-) {
-    if (WORLD.player != -1) {
-        fprintf(stderr, "ERROR: Only one player can be spawned");
-        exit(1);
-    }
-    WORLD.player = spawn_guy(
-        transformation, primitive, material, kinematic, vision
-    );
-    return WORLD.player;
 }
 
 int spawn_obstacle(
@@ -114,11 +139,20 @@ int spawn_obstacle(
                                    | PRIMITIVE_COMPONENT
                                    | MATERIAL_COMPONENT;
     } else {
-        fprintf(stderr, "ERROR: Can't spawn more obstacles");
+        fprintf(stderr, "ERROR: Can't spawn more obstacles\n");
         exit(1);
     }
 
     return entity;
+}
+
+static Vec2 screen_to_world(Vec2 screen_pos) {
+    Transformation t = WORLD.transformation[WORLD.camera];
+    float aspect_ratio = (float)APP.window_width / APP.window_height;
+    float camera_view_height = CAMERA_VIEW_WIDTH / aspect_ratio;
+    float x = t.position.x + CAMERA_VIEW_WIDTH * (screen_pos.x - 0.5);
+    float y = t.position.y + camera_view_height * (screen_pos.y - 0.5);
+    return vec2(x, y);
 }
 
 void update_world(float dt) {
@@ -127,6 +161,7 @@ void update_world(float dt) {
     // Update kinematic component based on the player input
     if (WORLD.player != -1) {
         Kinematic* k = &WORLD.kinematic[WORLD.player];
+        Transformation* t = &WORLD.transformation[WORLD.player];
         Vec2 velocity = {0.0, 0.0};
 
         velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
@@ -137,6 +172,8 @@ void update_world(float dt) {
             velocity = scale(normalize(velocity), k->max_speed);
         }
         k->velocity = velocity;
+        Vec2 look_at = screen_to_world(get_cursor_screen_pos());
+        k->rotation = atan2(look_at.y, look_at.x);
     }
 
     // Observe world via vision component
@@ -153,6 +190,23 @@ void update_world(float dt) {
         Transformation* t = &WORLD.transformation[e];
         Kinematic* k = &WORLD.kinematic[e];
         t->position = add(t->position, scale(k->velocity, dt));
+
+        float diff = get_orientations_diff(k->rotation, t->rotation);
+        float step = k->rotation_speed * dt;
+        // if (diff <= step) {
+        //     t->rotation = k->rotation;
+        // } else {
+        //     float new_rotation0 = t->rotation + step;
+        //     float new_rotation1 = t->rotation - step;
+        //     float diff0 = get_orientations_diff(k->rotation,
+        //     new_rotation0); float diff1 =
+        //     get_orientations_diff(k->rotation, new_rotation1); if (diff0
+        //     < diff1) {
+        //         t->rotation = new_rotation0;
+        //     } else {
+        //         t->rotation = new_rotation1;
+        //     }
+        // }
     }
 
     // Collide entities with each other

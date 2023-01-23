@@ -130,8 +130,15 @@ int get_primitive_vertices(
         case LINE_PRIMITIVE:
             n = get_line_vertices(primitive.p.line, out);
             break;
-        default:
+        default: {
+            printf(
+                "%f,%f\n",
+                transformation.position.x,
+                transformation.position.y
+            );
+
             PRIMITIVE_TYPE_ERROR("get_primitive_vertices", type);
+        }
     }
 
     for (int i = 0; i < n; ++i) {

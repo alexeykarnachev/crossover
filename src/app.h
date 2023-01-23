@@ -1,6 +1,7 @@
 #pragma once
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
+#include "math.h"
 #include <GLFW/glfw3.h>
 
 typedef struct Application {
@@ -20,6 +21,8 @@ typedef struct Application {
 } Application;
 
 extern Application APP;
+
+Vec2 get_cursor_screen_pos();
 
 void init_app(int window_width, int window_height);
 void update_window();

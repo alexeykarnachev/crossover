@@ -34,9 +34,7 @@ void reset_observations(Vision* v) {
     memset(v->observations, -1, sizeof(Observation) * v->n_view_rays);
 }
 
-static int get_view_rays(
-    Vision vision, Transformation transformation, Vec2* out
-) {
+static int get_view_rays(Vision vision, Vec2* out) {
     Vec2 origin = {0.0, 0.0};
     Vec2 start_ray = {vision.distance, 0.0};
 
@@ -48,8 +46,7 @@ static int get_view_rays(
     }
 
     for (int i = 0; i < vision.n_view_rays; ++i) {
-        float angle = -transformation.rotation - 0.5 * vision.fov
-                      + i * step;
+        float angle = -0.5 * vision.fov + i * step;
         out[i] = rotate(start_ray, origin, angle);
     }
 
@@ -75,12 +72,9 @@ static int intersect_line_with_primitive_nearest(
         default: {
             Vec2 vertices[4];
             int nv = get_primitive_vertices(primitive, t1, vertices);
+            Vec2 foo = transform(line.b, t0);
             return intersect_line_with_polygon_nearest(
-                transform(vec2(0.0, 0.0), t0),
-                transform(line.b, t0),
-                vertices,
-                nv,
-                out
+                t0.position, transform(line.b, t0), vertices, nv, out
             );
         }
     }
@@ -94,7 +88,7 @@ void observe_world(int entity) {
     Vision v = WORLD.vision[entity];
     Transformation t0 = WORLD.transformation[entity];
     reset_observations(&v);
-    int n_view_rays = get_view_rays(v, t0, VIEW_RAYS_ARENA);
+    int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
     for (int target = 0; target < WORLD.n_entities; ++target) {
         int can_be_observed = target != entity
                               && entity_can_be_observed(target);
@@ -134,7 +128,7 @@ void observe_world(int entity) {
             } else {
                 render_debug_line(
                     t0.position,
-                    add(VIEW_RAYS_ARENA[i], t0.position),
+                    transform(VIEW_RAYS_ARENA[i], t0),
                     GREEN_COLOR
                 );
             }

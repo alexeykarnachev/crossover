@@ -1,5 +1,4 @@
 #pragma once
-#include "camera.h"
 #include "collision.h"
 #include "const.h"
 #include "kinematic.h"
@@ -24,7 +23,7 @@ typedef struct World {
     int rectangle[MAX_N_ENTITIES];
 
     // Singleton entities
-    Camera camera;
+    int camera;
     int player;
 
     // Current counters
@@ -51,14 +50,15 @@ int entity_can_collide(int entity);
 int entity_can_observe(int entity);
 int entity_can_be_rendered(int entity);
 int entity_can_be_observed(int entity);
-int spawn_guy(
+int spawn_camera(Transformation transformation);
+int spawn_player(
     Transformation transformation,
     Primitive primitive,
     Material material,
     Kinematic kinematic,
     Vision vision
 );
-int spawn_player(
+int spawn_guy(
     Transformation transformation,
     Primitive primitive,
     Material material,

@@ -4,6 +4,7 @@
 #include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "math.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
@@ -35,6 +36,12 @@ static void cursor_position_callback(
     app->cursor_dy += y - app->cursor_y;
     app->cursor_x = x;
     app->cursor_y = y;
+}
+
+Vec2 get_cursor_screen_pos() {
+    float x = APP.cursor_x / APP.window_width;
+    float y = (APP.window_height - APP.cursor_y) / APP.window_height;
+    return vec2(x, y);
 }
 
 void init_app(int window_width, int window_height) {

@@ -4,8 +4,8 @@
 
 struct Camera {
     vec2 position;
-    float aspect_ratio;
-    float elevation;
+    float view_width;
+    float view_height;
 };
 
 struct Polygon {
@@ -37,9 +37,7 @@ vec2 rotate(vec2 point, vec2 center, float angle) {
 
 vec2 world2proj(vec2 world_pos) {
     vec2 view_pos = world_pos - camera.position;
-    float view_width = 2.0 * camera.elevation * tan(0.25 * PI);
-    float view_height = view_width / camera.aspect_ratio;
-    vec2 proj_pos = (view_pos - camera.position) / (0.5 * vec2(view_width, view_height));
+    vec2 proj_pos = (view_pos - camera.position) / (0.5 * vec2(camera.view_width, camera.view_height));
     return proj_pos;
 }
 

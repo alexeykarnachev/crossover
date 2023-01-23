@@ -19,13 +19,14 @@ void init_renderer(void) {
 
 static const int N_POLYGONS_IN_CIRCLE = 16;
 
-static void set_uniform_camera(GLuint program, Camera camera) {
+static void set_uniform_camera(GLuint program, Transformation camera) {
     float aspect_ratio = (float)APP.window_width / APP.window_height;
+    float camera_view_height = CAMERA_VIEW_WIDTH / aspect_ratio;
     set_uniform_2fv(
         program, "camera.position", (float*)&camera.position, 1
     );
-    set_uniform_1f(program, "camera.aspect_ratio", aspect_ratio);
-    set_uniform_1f(program, "camera.elevation", camera.elevation);
+    set_uniform_1f(program, "camera.view_width", CAMERA_VIEW_WIDTH);
+    set_uniform_1f(program, "camera.view_height", camera_view_height);
 }
 
 static void set_uniform_circle(
@@ -79,7 +80,7 @@ static void render_primitive(
 ) {
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
-    set_uniform_camera(program, WORLD.camera);
+    set_uniform_camera(program, WORLD.transformation[WORLD.camera]);
 
     PrimitiveType type = primitive.type;
     GLuint draw_mode = get_primitive_type_draw_mode(type);
@@ -117,7 +118,7 @@ void render_world(void) {
     glBindVertexArray(DUMMY_VAO);
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_be_rendered) {
+        if (!entity_can_be_rendered(entity)) {
             continue;
         }
 

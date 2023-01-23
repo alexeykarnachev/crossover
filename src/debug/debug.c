@@ -17,6 +17,7 @@ void init_debug(void) {
 }
 
 void update_debug(void) {
+    DEBUG.n_primitives = 0;
     DEBUG.general.n_entities = WORLD.n_entities;
     DEBUG.general.n_collisions = WORLD.n_collisions;
     DEBUG.inputs.cursor_x = APP.cursor_x;

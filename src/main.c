@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 
 #include "app.h"
-#include "camera.h"
 #include "debug/debug.h"
 #include "debug/gui.h"
 #include "kinematic.h"
@@ -19,13 +18,13 @@ int main(int argc, char* argv[]) {
     init_world();
     init_debug();
 
-    WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
+    spawn_camera(transformation(vec2(0.0, 0.0), 0.0));
     spawn_player(
-        transformation(vec2(0.0, 0.0), 0.0),
+        transformation(vec2(0.0, 0.0), 1.7),
         circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.2)),
-        kinematic(vec2(0.0, 0.0), 5.0),
-        vision(0.5 * PI, 5.0, 31)
+        kinematic(vec2(0.0, 0.0), 5.0, 2.0 * PI),
+        vision(0.5 * PI, 10.0, 31)
     );
     spawn_obstacle(
         transformation(vec2(4.0, 4.0), 1.0),
@@ -47,8 +46,8 @@ int main(int argc, char* argv[]) {
         glClearColor(0.2, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        update_world(APP.dt);
         update_debug();
+        update_world(APP.dt);
         render_world();
         render_debug_gui();
         update_window();
