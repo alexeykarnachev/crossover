@@ -17,21 +17,13 @@ Observation observation(Vec2 position, int entity) {
     return obs;
 }
 
-Vision vision(
-    Vec2 position,
-    float rotation,
-    float fov,
-    float distance,
-    int n_view_rays
-) {
+Vision vision(float fov, float distance, int n_view_rays) {
     if (n_view_rays > MAX_N_VIEW_RAYS) {
         exit(1);
     }
 
     Vision v;
     reset_observations(&v);
-    v.position = position;
-    v.rotation = rotation;
     v.fov = fov;
     v.distance = distance;
     v.n_view_rays = n_view_rays;
@@ -42,15 +34,9 @@ void reset_observations(Vision* v) {
     memset(v->observations, -1, sizeof(Observation) * v->n_view_rays);
 }
 
-void translate_vision(Vision* vision, Vec2 translation) {
-    vision->position = add(vision->position, translation);
-}
-
-void rotate_vision(Vision* vision, float angle) {
-    vision->rotation += angle;
-}
-
-static int get_view_rays(Vision vision, Vec2* out) {
+static int get_view_rays(
+    Vision vision, Transformation transformation, Vec2* out
+) {
     Vec2 origin = {0.0, 0.0};
     Vec2 start_ray = {vision.distance, 0.0};
 
@@ -62,7 +48,8 @@ static int get_view_rays(Vision vision, Vec2* out) {
     }
 
     for (int i = 0; i < vision.n_view_rays; ++i) {
-        float angle = -vision.rotation - 0.5 * vision.fov + i * step;
+        float angle = -transformation.rotation - 0.5 * vision.fov
+                      + i * step;
         out[i] = rotate(start_ray, origin, angle);
     }
 
@@ -105,8 +92,9 @@ void observe_world(int entity) {
     }
 
     Vision v = WORLD.vision[entity];
+    Transformation t0 = WORLD.transformation[entity];
     reset_observations(&v);
-    int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
+    int n_view_rays = get_view_rays(v, t0, VIEW_RAYS_ARENA);
     for (int target = 0; target < WORLD.n_entities; ++target) {
         int can_be_observed = target != entity
                               && entity_can_be_observed(target);
@@ -114,7 +102,6 @@ void observe_world(int entity) {
             continue;
         }
 
-        Transformation t0 = WORLD.transformation[entity];
         Transformation t1 = WORLD.transformation[target];
         Primitive collider = WORLD.collider[target];
         for (int i = 0; i < n_view_rays; ++i) {
@@ -127,8 +114,8 @@ void observe_world(int entity) {
                 continue;
             }
 
-            float new_dist = dist(v.position, obs.position);
-            float old_dist = dist(v.position, v.observations[i].position);
+            float new_dist = dist(t0.position, obs.position);
+            float old_dist = dist(t0.position, v.observations[i].position);
             int is_best = v.observations[i].entity == -1
                           || new_dist < old_dist;
             if (is_best) {

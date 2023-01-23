@@ -19,18 +19,27 @@ int main(int argc, char* argv[]) {
     init_world();
     init_debug();
 
-    Vec2 player_position = {0.0, 0.0};
     WORLD.camera = camera(vec2(0.0, 0.0), 10.0);
-    WORLD.player = spawn_guy(
+    spawn_player(
         transformation(vec2(0.0, 0.0), 0.0),
         circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.2)),
         kinematic(vec2(0.0, 0.0), 5.0),
-        vision(player_position, 0.0, 0.5 * PI, 5.0, 31)
+        vision(0.5 * PI, 5.0, 31)
     );
     spawn_obstacle(
         transformation(vec2(4.0, 4.0), 1.0),
         rectangle_primitive(rectangle(1.0, 1.0)),
+        material(vec3(0.05, 0.05, 0.05))
+    );
+    spawn_obstacle(
+        transformation(vec2(4.0, -4.0), 1.0),
+        circle_primitive(circle(2.0)),
+        material(vec3(0.05, 0.05, 0.05))
+    );
+    spawn_obstacle(
+        transformation(vec2(-4.0, -4.0), 1.0),
+        triangle_primitive(triangle(vec2(-2.0, 0.0), vec2(-2.0, -2.0))),
         material(vec3(0.05, 0.05, 0.05))
     );
 

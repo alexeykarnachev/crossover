@@ -73,11 +73,28 @@ int spawn_guy(
                                    | PRIMITIVE_COMPONENT
                                    | MATERIAL_COMPONENT;
     } else {
-        fprintf(stderr, "ERROR: Can't spawn more guys!");
+        fprintf(stderr, "ERROR: Can't spawn more guys");
         exit(1);
     }
 
     return entity;
+}
+
+int spawn_player(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    Kinematic kinematic,
+    Vision vision
+) {
+    if (WORLD.player != -1) {
+        fprintf(stderr, "ERROR: Only one player can be spawned");
+        exit(1);
+    }
+    WORLD.player = spawn_guy(
+        transformation, primitive, material, kinematic, vision
+    );
+    return WORLD.player;
 }
 
 int spawn_obstacle(
@@ -97,7 +114,7 @@ int spawn_obstacle(
                                    | PRIMITIVE_COMPONENT
                                    | MATERIAL_COMPONENT;
     } else {
-        fprintf(stderr, "ERROR: Can't spawn more obstacles!");
+        fprintf(stderr, "ERROR: Can't spawn more obstacles");
         exit(1);
     }
 
@@ -110,10 +127,16 @@ void update_world(float dt) {
     // Update kinematic component based on the player input
     if (WORLD.player != -1) {
         Kinematic* k = &WORLD.kinematic[WORLD.player];
-        // += 1.0 * APP.key_states[GLFW_KEY_W];
-        // -= 1.0 * APP.key_states[GLFW_KEY_S];
-        // -= 1.0 * APP.key_states[GLFW_KEY_A];
-        // += 1.0 * APP.key_states[GLFW_KEY_D];
+        Vec2 velocity = {0.0, 0.0};
+
+        velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
+        velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
+        velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
+        velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
+        if (length(velocity) > EPS) {
+            velocity = scale(normalize(velocity), k->max_speed);
+        }
+        k->velocity = velocity;
     }
 
     // Observe world via vision component
@@ -122,11 +145,14 @@ void update_world(float dt) {
         observe_world(e);
     }
 
-    // Update positions of the movable entities
+    // Update positions of the kinematic entities
     for (int e = 0; e < WORLD.n_entities; ++e) {
         if (!entity_has_component(e, KINEMATIC_COMPONENT)) {
             continue;
         }
+        Transformation* t = &WORLD.transformation[e];
+        Kinematic* k = &WORLD.kinematic[e];
+        t->position = add(t->position, scale(k->velocity, dt));
     }
 
     // Collide entities with each other

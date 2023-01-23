@@ -58,6 +58,13 @@ int spawn_guy(
     Kinematic kinematic,
     Vision vision
 );
+int spawn_player(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    Kinematic kinematic,
+    Vision vision
+);
 int spawn_obstacle(
     Transformation transformation, Primitive primitive, Material material
 );
