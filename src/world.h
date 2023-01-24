@@ -44,10 +44,18 @@ typedef enum ComponentType {
 
 extern World WORLD;
 
+typedef struct CameraFrustum {
+    Vec2 bot_left;
+    Vec2 top_right;
+} CameraFrustum;
+
+CameraFrustum get_camera_frustum();
+
 void init_world(void);
 int entity_has_component(int entity, ComponentType component);
 int entity_can_collide(int entity);
 int entity_can_observe(int entity);
+int entity_can_apply_kinematic(int entity);
 int entity_can_be_rendered(int entity);
 int entity_can_be_observed(int entity);
 int spawn_camera(Transformation transformation);

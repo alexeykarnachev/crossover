@@ -4,8 +4,9 @@
 typedef struct Kinematic {
     Vec2 velocity;
     float max_speed;
-    float rotation;
+    float orientation;
     float rotation_speed;
 } Kinematic;
 
 Kinematic kinematic(Vec2 velocity, float max_speed, float rotation_speed);
+void apply_kinematic(int entity, float dt);

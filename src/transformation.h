@@ -3,8 +3,8 @@
 
 typedef struct Transformation {
     Vec2 position;
-    float rotation;
+    float orientation;
 } Transformation;
 
-Transformation transformation(Vec2 position, float rotation);
+Transformation transformation(Vec2 position, float orientation);
 Vec2 transform(Vec2 v, Transformation t);

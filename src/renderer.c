@@ -20,13 +20,13 @@ void init_renderer(void) {
 static const int N_POLYGONS_IN_CIRCLE = 16;
 
 static void set_uniform_camera(GLuint program, Transformation camera) {
-    float aspect_ratio = (float)APP.window_width / APP.window_height;
-    float camera_view_height = CAMERA_VIEW_WIDTH / aspect_ratio;
+    CameraFrustum frustum = get_camera_frustum();
+    Vec2 view_size = sub(frustum.top_right, frustum.bot_left);
     set_uniform_2fv(
         program, "camera.position", (float*)&camera.position, 1
     );
-    set_uniform_1f(program, "camera.view_width", CAMERA_VIEW_WIDTH);
-    set_uniform_1f(program, "camera.view_height", camera_view_height);
+    set_uniform_1f(program, "camera.view_width", view_size.x);
+    set_uniform_1f(program, "camera.view_height", view_size.y);
 }
 
 static void set_uniform_circle(

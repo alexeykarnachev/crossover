@@ -20,24 +20,24 @@ int main(int argc, char* argv[]) {
 
     spawn_camera(transformation(vec2(0.0, 0.0), 0.0));
     spawn_player(
-        transformation(vec2(0.0, 0.0), 1.7),
+        transformation(vec2(0.0, 0.0), 0.0),
         circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.2)),
-        kinematic(vec2(0.0, 0.0), 5.0, 2.0 * PI),
+        kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         vision(0.5 * PI, 10.0, 31)
     );
     spawn_obstacle(
-        transformation(vec2(4.0, 4.0), 1.0),
+        transformation(vec2(4.0, 4.0), 0.0),
         rectangle_primitive(rectangle(1.0, 1.0)),
         material(vec3(0.05, 0.05, 0.05))
     );
     spawn_obstacle(
-        transformation(vec2(4.0, -4.0), 1.0),
+        transformation(vec2(4.0, -4.0), 0.0),
         circle_primitive(circle(2.0)),
         material(vec3(0.05, 0.05, 0.05))
     );
     spawn_obstacle(
-        transformation(vec2(-4.0, -4.0), 1.0),
+        transformation(vec2(-4.0, -4.0), 0.0),
         triangle_primitive(triangle(vec2(-2.0, 0.0), vec2(-2.0, -2.0))),
         material(vec3(0.05, 0.05, 0.05))
     );

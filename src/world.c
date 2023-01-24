@@ -36,6 +36,12 @@ int entity_can_observe(int entity) {
     );
 }
 
+int entity_can_apply_kinematic(int entity) {
+    return entity_has_component(
+        entity, TRANSFORMATION_COMPONENT | KINEMATIC_COMPONENT
+    );
+}
+
 int entity_can_be_rendered(int entity) {
     return entity_has_component(
         entity, PRIMITIVE_COMPONENT | TRANSFORMATION_COMPONENT
@@ -146,12 +152,25 @@ int spawn_obstacle(
     return entity;
 }
 
+CameraFrustum get_camera_frustum() {
+    CameraFrustum frustum;
+    if (WORLD.camera != -1) {
+        Transformation t = WORLD.transformation[WORLD.camera];
+        float aspect_ratio = (float)APP.window_width / APP.window_height;
+        float height = CAMERA_VIEW_WIDTH / aspect_ratio;
+        Vec2 half_size = scale(vec2(CAMERA_VIEW_WIDTH, height), 0.5);
+        frustum.bot_left = sub(t.position, half_size);
+        frustum.top_right = add(t.position, half_size);
+    }
+
+    return frustum;
+}
+
 static Vec2 screen_to_world(Vec2 screen_pos) {
-    Transformation t = WORLD.transformation[WORLD.camera];
-    float aspect_ratio = (float)APP.window_width / APP.window_height;
-    float camera_view_height = CAMERA_VIEW_WIDTH / aspect_ratio;
-    float x = t.position.x + CAMERA_VIEW_WIDTH * (screen_pos.x - 0.5);
-    float y = t.position.y + camera_view_height * (screen_pos.y - 0.5);
+    CameraFrustum frustum = get_camera_frustum();
+    Vec2 size = sub(frustum.top_right, frustum.bot_left);
+    float x = frustum.bot_left.x + size.x * screen_pos.x;
+    float y = frustum.bot_left.y + size.y * screen_pos.y;
     return vec2(x, y);
 }
 
@@ -173,7 +192,14 @@ void update_world(float dt) {
         }
         k->velocity = velocity;
         Vec2 look_at = screen_to_world(get_cursor_screen_pos());
-        k->rotation = atan2(look_at.y, look_at.x);
+        k->orientation = atan2(
+            look_at.y - t->position.y, look_at.x - t->position.x
+        );
+
+        DEBUG.general.look_at = look_at;
+        if (DEBUG.shading.look_at) {
+            render_debug_circle(look_at, 0.1, RED_COLOR);
+        }
     }
 
     // Observe world via vision component
@@ -184,29 +210,7 @@ void update_world(float dt) {
 
     // Update positions of the kinematic entities
     for (int e = 0; e < WORLD.n_entities; ++e) {
-        if (!entity_has_component(e, KINEMATIC_COMPONENT)) {
-            continue;
-        }
-        Transformation* t = &WORLD.transformation[e];
-        Kinematic* k = &WORLD.kinematic[e];
-        t->position = add(t->position, scale(k->velocity, dt));
-
-        float diff = get_orientations_diff(k->rotation, t->rotation);
-        float step = k->rotation_speed * dt;
-        // if (diff <= step) {
-        //     t->rotation = k->rotation;
-        // } else {
-        //     float new_rotation0 = t->rotation + step;
-        //     float new_rotation1 = t->rotation - step;
-        //     float diff0 = get_orientations_diff(k->rotation,
-        //     new_rotation0); float diff1 =
-        //     get_orientations_diff(k->rotation, new_rotation1); if (diff0
-        //     < diff1) {
-        //         t->rotation = new_rotation0;
-        //     } else {
-        //         t->rotation = new_rotation1;
-        //     }
-        // }
+        apply_kinematic(e, dt);
     }
 
     // Collide entities with each other

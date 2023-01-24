@@ -15,6 +15,8 @@ typedef struct Debug {
     struct general {
         int n_entities;
         int n_collisions;
+        Vec2 camera_position;
+        Vec2 look_at;
     } general;
 
     struct shading {
@@ -22,6 +24,9 @@ typedef struct Debug {
         int wireframe;
         int collisions;
         int vision;
+        int grid;
+        int look_at;
+        int orientation;
     } shading;
 
     struct collisions {

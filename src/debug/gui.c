@@ -18,6 +18,16 @@ void render_debug_gui(void) {
         );
         igText("Entities: %d", DEBUG.general.n_entities);
         igText("Collisions: %d", DEBUG.general.n_collisions);
+        igText(
+            "Camera pos: (%g, %g)",
+            DEBUG.general.camera_position.x,
+            DEBUG.general.camera_position.y
+        );
+        igText(
+            "Look at: (%g, %g)",
+            DEBUG.general.look_at.x,
+            DEBUG.general.look_at.y
+        );
         igTreePop();
     }
 
@@ -26,6 +36,9 @@ void render_debug_gui(void) {
         igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
         igCheckbox("Collision", (bool*)(&DEBUG.shading.collisions));
         igCheckbox("Vision", (bool*)(&DEBUG.shading.vision));
+        igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
+        igCheckbox("Look at", (bool*)(&DEBUG.shading.look_at));
+        igCheckbox("Orientation", (bool*)(&DEBUG.shading.orientation));
         igTreePop();
     }
 
