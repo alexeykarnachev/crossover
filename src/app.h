@@ -18,6 +18,7 @@ typedef struct Application {
     ImGuiIO* gui_io;
 
     int key_states[512];
+    int mouse_button_states[16];
 } Application;
 
 extern Application APP;

@@ -3,6 +3,7 @@
 #include "app.h"
 #include "debug/debug.h"
 #include "debug/gui.h"
+#include "gun.h"
 #include "kinematic.h"
 #include "material.h"
 #include "math.h"
@@ -19,13 +20,14 @@ int main(int argc, char* argv[]) {
     init_debug();
 
     spawn_camera(transformation(vec2(0.0, 0.0), 0.0));
-    spawn_player(
+    int player = spawn_player(
         transformation(vec2(0.0, 0.0), 0.0),
         circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.2)),
         kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         vision(0.5 * PI, 10.0, 31)
     );
+    set_gun(player, gun(material(MAGENTA_COLOR), 10.0, 0.5, 5.0));
     spawn_obstacle(
         transformation(vec2(4.0, 4.0), 0.0),
         rectangle_primitive(rectangle(1.0, 1.0)),

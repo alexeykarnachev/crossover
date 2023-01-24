@@ -1,6 +1,7 @@
 #pragma once
 #include "collision.h"
 #include "const.h"
+#include "gun.h"
 #include "kinematic.h"
 #include "material.h"
 #include "primitive.h"
@@ -20,6 +21,7 @@ typedef struct World {
     Primitive collider[MAX_N_ENTITIES];
     Primitive primitive[MAX_N_ENTITIES];
     Material material[MAX_N_ENTITIES];
+    Gun gun[MAX_N_ENTITIES];
     int rectangle[MAX_N_ENTITIES];
 
     // Singleton entities
@@ -39,7 +41,8 @@ typedef enum ComponentType {
     RIGID_BODY_COMPONENT = 1 << 4,
     PRIMITIVE_COMPONENT = 1 << 5,
     MATERIAL_COMPONENT = 1 << 6,
-    OBSERVABLE_COMPONENT = 1 << 7
+    OBSERVABLE_COMPONENT = 1 << 7,
+    GUN_COMPONENT = 1 << 8
 } ComponentType;
 
 extern World WORLD;
@@ -76,5 +79,12 @@ int spawn_guy(
 int spawn_obstacle(
     Transformation transformation, Primitive primitive, Material material
 );
+int spawn_bullet(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    Kinematic kinematic
+);
+void set_gun(int entity, Gun gun);
 void update_world(float dt);
 void transform_entity(int entity, Vec2 translation, float angle);

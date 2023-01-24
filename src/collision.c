@@ -186,14 +186,18 @@ void resolve_collision(Collision collision) {
     int e1 = collision.entity1;
     Transformation* t0 = &WORLD.transformation[e0];
     Transformation* t1 = &WORLD.transformation[e1];
-    int has_kinematic0 = entity_has_component(e0, KINEMATIC_COMPONENT);
-    int has_kinematic1 = entity_has_component(e1, KINEMATIC_COMPONENT);
-    if (has_kinematic0 && has_kinematic1) {
-        t0->position = add(t0->position, scale(mtv, 0.5));
-        t1->position = add(t1->position, scale(mtv, -0.5));
-    } else if (has_kinematic0) {
-        t0->position = add(t0->position, mtv);
-    } else if (has_kinematic1) {
-        t1->position = add(t1->position, flip(mtv));
+    int has_rigid_body0 = entity_has_component(e0, RIGID_BODY_COMPONENT);
+    int has_rigid_body1 = entity_has_component(e1, RIGID_BODY_COMPONENT);
+    if (has_rigid_body0 && has_rigid_body1) {
+        int has_kinematic0 = entity_has_component(e0, KINEMATIC_COMPONENT);
+        int has_kinematic1 = entity_has_component(e1, KINEMATIC_COMPONENT);
+        if (has_kinematic0 && has_kinematic1) {
+            t0->position = add(t0->position, scale(mtv, 0.5));
+            t1->position = add(t1->position, scale(mtv, -0.5));
+        } else if (has_kinematic0) {
+            t0->position = add(t0->position, mtv);
+        } else if (has_kinematic1) {
+            t1->position = add(t1->position, flip(mtv));
+        }
     }
 }

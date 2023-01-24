@@ -28,6 +28,13 @@ static void key_callback(
     }
 }
 
+static void mouse_button_callback(
+    GLFWwindow* window, int button, int action, int mods
+) {
+    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    app->mouse_button_states[button] = (int)(action != GLFW_RELEASE);
+}
+
 static void cursor_position_callback(
     GLFWwindow* window, double x, double y
 ) {
@@ -68,6 +75,7 @@ void init_app(int window_width, int window_height) {
     glfwSetWindowUserPointer(WINDOW, &APP);
     glfwSetFramebufferSizeCallback(WINDOW, framebuffer_size_callback);
     glfwSetKeyCallback(WINDOW, key_callback);
+    glfwSetMouseButtonCallback(WINDOW, mouse_button_callback);
     glfwSetCursorPosCallback(WINDOW, cursor_position_callback);
     glfwSwapInterval(1);
     igCreateContext(NULL);

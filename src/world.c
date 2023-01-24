@@ -152,6 +152,36 @@ int spawn_obstacle(
     return entity;
 }
 
+int spawn_bullet(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    Kinematic kinematic
+) {
+    int entity = -1;
+    if (WORLD.n_entities < MAX_N_ENTITIES) {
+        entity = WORLD.n_entities++;
+        WORLD.transformation[entity] = transformation;
+        WORLD.primitive[entity] = primitive;
+        WORLD.material[entity] = material;
+        WORLD.kinematic[entity] = kinematic;
+        WORLD.collider[entity] = primitive;
+        WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                                   | KINEMATIC_COMPONENT
+                                   | COLLIDER_COMPONENT
+                                   | PRIMITIVE_COMPONENT
+                                   | MATERIAL_COMPONENT;
+    } else {
+        fprintf(stderr, "ERROR: Can't spawn more bullets\n");
+        exit(1);
+    }
+}
+
+void set_gun(int entity, Gun gun) {
+    WORLD.components[entity] |= GUN_COMPONENT;
+    WORLD.gun[entity] = gun;
+}
+
 CameraFrustum get_camera_frustum() {
     CameraFrustum frustum;
     if (WORLD.camera != -1) {
@@ -177,7 +207,7 @@ static Vec2 screen_to_world(Vec2 screen_pos) {
 void update_world(float dt) {
     dt /= 1000.0;
 
-    // Update kinematic component based on the player input
+    // Update player based on the input
     if (WORLD.player != -1) {
         Kinematic* k = &WORLD.kinematic[WORLD.player];
         Transformation* t = &WORLD.transformation[WORLD.player];
@@ -199,6 +229,22 @@ void update_world(float dt) {
         DEBUG.general.look_at = look_at;
         if (DEBUG.shading.look_at) {
             render_debug_circle(look_at, 0.1, RED_COLOR);
+        }
+
+        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
+            if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
+                Gun gun = WORLD.gun[WORLD.player];
+                Vec2 velocity = vec2(
+                    cos(t->orientation), sin(t->orientation)
+                );
+                velocity = scale(velocity, gun.bullet.base_speed);
+                spawn_bullet(
+                    *t,
+                    circle_primitive(circle(gun.bullet.radius)),
+                    gun.bullet.material,
+                    kinematic(velocity, gun.bullet.base_speed, 0.0)
+                );
+            }
         }
     }
 
