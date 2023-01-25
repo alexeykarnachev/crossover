@@ -5,6 +5,7 @@
 #include "kinematic.h"
 #include "material.h"
 #include "primitive.h"
+#include "ttl.h"
 #include "vision.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -22,7 +23,7 @@ typedef struct World {
     Primitive primitive[MAX_N_ENTITIES];
     Material material[MAX_N_ENTITIES];
     Gun gun[MAX_N_ENTITIES];
-    int rectangle[MAX_N_ENTITIES];
+    TTL ttl[MAX_N_ENTITIES];
 
     // Singleton entities
     int camera;
@@ -31,6 +32,7 @@ typedef struct World {
     // Current counters
     size_t n_collisions;
     size_t n_entities;
+    size_t n_destroyed_entities;
 } World;
 
 typedef enum ComponentType {
@@ -42,7 +44,8 @@ typedef enum ComponentType {
     PRIMITIVE_COMPONENT = 1 << 5,
     MATERIAL_COMPONENT = 1 << 6,
     OBSERVABLE_COMPONENT = 1 << 7,
-    GUN_COMPONENT = 1 << 8
+    GUN_COMPONENT = 1 << 8,
+    TTL_COMPONENT = 1 << 9
 } ComponentType;
 
 extern World WORLD;
@@ -56,6 +59,7 @@ CameraFrustum get_camera_frustum();
 
 void init_world(void);
 int entity_has_component(int entity, ComponentType component);
+int entity_has_ttl(int entity);
 int entity_can_collide(int entity);
 int entity_can_observe(int entity);
 int entity_can_apply_kinematic(int entity);
@@ -83,7 +87,8 @@ int spawn_bullet(
     Transformation transformation,
     Primitive primitive,
     Material material,
-    Kinematic kinematic
+    Kinematic kinematic,
+    TTL ttl
 );
 void set_gun(int entity, Gun gun);
 void update_world(float dt);

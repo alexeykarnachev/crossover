@@ -7,6 +7,7 @@
 #include "kinematic.h"
 #include "math.h"
 #include "transformation.h"
+#include "ttl.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,7 @@ World WORLD;
 
 void init_world(void) {
     WORLD.n_entities = 0;
+    WORLD.n_destroyed_entities = 0;
     WORLD.n_collisions = 0;
     WORLD.player = -1;
     WORLD.camera = -1;
@@ -22,6 +24,10 @@ void init_world(void) {
 
 int entity_has_component(int entity, ComponentType type) {
     return (WORLD.components[entity] & type) == type;
+}
+
+int entity_has_ttl(int entity) {
+    return WORLD.components[entity] & TTL_COMPONENT;
 }
 
 int entity_can_collide(int entity) {
@@ -156,7 +162,8 @@ int spawn_bullet(
     Transformation transformation,
     Primitive primitive,
     Material material,
-    Kinematic kinematic
+    Kinematic kinematic,
+    TTL ttl
 ) {
     int entity = -1;
     if (WORLD.n_entities < MAX_N_ENTITIES) {
@@ -165,12 +172,13 @@ int spawn_bullet(
         WORLD.primitive[entity] = primitive;
         WORLD.material[entity] = material;
         WORLD.kinematic[entity] = kinematic;
+        WORLD.ttl[entity] = ttl;
         WORLD.collider[entity] = primitive;
         WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                    | KINEMATIC_COMPONENT
                                    | COLLIDER_COMPONENT
                                    | PRIMITIVE_COMPONENT
-                                   | MATERIAL_COMPONENT;
+                                   | MATERIAL_COMPONENT | TTL_COMPONENT;
     } else {
         fprintf(stderr, "ERROR: Can't spawn more bullets\n");
         exit(1);
@@ -233,20 +241,33 @@ void update_world(float dt) {
 
         if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
             if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
-                Gun gun = WORLD.gun[WORLD.player];
-                Vec2 velocity = vec2(
-                    cos(t->orientation), sin(t->orientation)
-                );
-                velocity = scale(velocity, gun.bullet.base_speed);
-                spawn_bullet(
-                    *t,
-                    circle_primitive(circle(gun.bullet.radius)),
-                    gun.bullet.material,
-                    kinematic(velocity, gun.bullet.base_speed, 0.0)
-                );
+                Gun* gun = &WORLD.gun[WORLD.player];
+                float time_since_last_shoot
+                    = (APP.time - gun->last_time_shoot);
+                if (time_since_last_shoot > 1.0 / gun->fire_rate) {
+                    gun->last_time_shoot = APP.time;
+                    Vec2 velocity = vec2(
+                        cos(t->orientation), sin(t->orientation)
+                    );
+                    velocity = scale(velocity, gun->bullet.base_speed);
+                    spawn_bullet(
+                        *t,
+                        circle_primitive(circle(gun->bullet.radius)),
+                        gun->bullet.material,
+                        kinematic(velocity, gun->bullet.base_speed, 0.0),
+                        gun->bullet.ttl
+                    );
+                }
             }
         }
     }
+
+    // Destroy TTL-ed entities
+    int n_destroyed_entities = 0;
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        n_destroyed_entities += apply_ttl(e, dt);
+    }
+    WORLD.n_destroyed_entities += n_destroyed_entities;
 
     // Observe world via vision component
     WORLD.n_collisions = 0;

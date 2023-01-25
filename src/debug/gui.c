@@ -17,6 +17,9 @@ void render_debug_gui(void) {
             igGetIO()->Framerate
         );
         igText("Entities: %d", DEBUG.general.n_entities);
+        igText(
+            "Destroyed entities: %d", DEBUG.general.n_destroyed_entities
+        );
         igText("Collisions: %d", DEBUG.general.n_collisions);
         igText(
             "Camera pos: (%g, %g)",

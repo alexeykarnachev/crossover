@@ -11,6 +11,7 @@
 #include "program.h"
 #include "renderer.h"
 #include "transformation.h"
+#include "ttl.h"
 #include "world.h"
 
 int main(int argc, char* argv[]) {
@@ -27,7 +28,9 @@ int main(int argc, char* argv[]) {
         kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         vision(0.5 * PI, 10.0, 31)
     );
-    set_gun(player, gun(material(MAGENTA_COLOR), 10.0, 0.5, 5.0));
+    set_gun(
+        player, gun(material(MAGENTA_COLOR), ttl(1.0), 30.0, 0.05, 100.0)
+    );
     spawn_obstacle(
         transformation(vec2(4.0, 4.0), 0.0),
         rectangle_primitive(rectangle(1.0, 1.0)),
