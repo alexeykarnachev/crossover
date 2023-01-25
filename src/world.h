@@ -32,7 +32,6 @@ typedef struct World {
     // Current counters
     size_t n_collisions;
     size_t n_entities;
-    size_t n_destroyed_entities;
 } World;
 
 typedef enum ComponentType {

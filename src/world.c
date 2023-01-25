@@ -16,7 +16,6 @@ World WORLD;
 
 void init_world(void) {
     WORLD.n_entities = 0;
-    WORLD.n_destroyed_entities = 0;
     WORLD.n_collisions = 0;
     WORLD.player = -1;
     WORLD.camera = -1;
@@ -62,25 +61,27 @@ int entity_can_be_observed(int entity) {
     );
 }
 
+static int spawn_entity() {
+    for (int entity = 0; entity < MAX_N_ENTITIES; ++entity) {
+        if (WORLD.components[entity] == 0) {
+            WORLD.n_entities = max(WORLD.n_entities, entity + 1);
+            return entity;
+        }
+    }
+
+    fprintf(stderr, "ERROR: Can't spawn more entities\n");
+    exit(1);
+}
+
 int spawn_camera(Transformation transformation) {
-    int entity = -1;
     if (WORLD.camera != -1) {
         fprintf(stderr, "ERROR: Only one camera can be spawned\n");
         exit(1);
     }
 
-    if (WORLD.n_entities < MAX_N_ENTITIES) {
-        entity = WORLD.n_entities++;
-        WORLD.transformation[entity] = transformation;
-        WORLD.components[entity] = TRANSFORMATION_COMPONENT;
-    } else {
-        fprintf(
-            stderr,
-            "ERROR: Can't spawn the camera, max number of entities has "
-            "been reached\n"
-        );
-        exit(1);
-    }
+    int entity = spawn_entity();
+    WORLD.transformation[entity] = transformation;
+    WORLD.components[entity] = TRANSFORMATION_COMPONENT;
 
     WORLD.camera = entity;
     return entity;
@@ -97,10 +98,13 @@ int spawn_player(
         fprintf(stderr, "ERROR: Only one player can be spawned\n");
         exit(1);
     }
-    WORLD.player = spawn_guy(
+
+    int entity = spawn_guy(
         transformation, primitive, material, kinematic, vision
     );
-    return WORLD.player;
+
+    WORLD.player = entity;
+    return entity;
 }
 
 int spawn_guy(
@@ -110,26 +114,18 @@ int spawn_guy(
     Kinematic kinematic,
     Vision vision
 ) {
-    int entity = -1;
-    if (WORLD.n_entities < MAX_N_ENTITIES) {
-        entity = WORLD.n_entities++;
-        WORLD.transformation[entity] = transformation;
-        WORLD.primitive[entity] = primitive;
-        WORLD.material[entity] = material;
-        WORLD.kinematic[entity] = kinematic;
-        WORLD.vision[entity] = vision;
-        WORLD.collider[entity] = primitive;
-        WORLD.components[entity] = TRANSFORMATION_COMPONENT
-                                   | KINEMATIC_COMPONENT | VISION_COMPONENT
-                                   | OBSERVABLE_COMPONENT
-                                   | COLLIDER_COMPONENT
-                                   | RIGID_BODY_COMPONENT
-                                   | PRIMITIVE_COMPONENT
-                                   | MATERIAL_COMPONENT;
-    } else {
-        fprintf(stderr, "ERROR: Can't spawn more guys\n");
-        exit(1);
-    }
+    int entity = spawn_entity();
+    WORLD.transformation[entity] = transformation;
+    WORLD.primitive[entity] = primitive;
+    WORLD.material[entity] = material;
+    WORLD.kinematic[entity] = kinematic;
+    WORLD.vision[entity] = vision;
+    WORLD.collider[entity] = primitive;
+    WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                               | KINEMATIC_COMPONENT | VISION_COMPONENT
+                               | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
+                               | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
+                               | MATERIAL_COMPONENT;
 
     return entity;
 }
@@ -137,23 +133,15 @@ int spawn_guy(
 int spawn_obstacle(
     Transformation transformation, Primitive primitive, Material material
 ) {
-    int entity = -1;
-    if (WORLD.n_entities < MAX_N_ENTITIES) {
-        entity = WORLD.n_entities++;
-        WORLD.transformation[entity] = transformation;
-        WORLD.primitive[entity] = primitive;
-        WORLD.material[entity] = material;
-        WORLD.collider[entity] = primitive;
-        WORLD.components[entity] = TRANSFORMATION_COMPONENT
-                                   | COLLIDER_COMPONENT
-                                   | OBSERVABLE_COMPONENT
-                                   | RIGID_BODY_COMPONENT
-                                   | PRIMITIVE_COMPONENT
-                                   | MATERIAL_COMPONENT;
-    } else {
-        fprintf(stderr, "ERROR: Can't spawn more obstacles\n");
-        exit(1);
-    }
+    int entity = spawn_entity();
+    WORLD.transformation[entity] = transformation;
+    WORLD.primitive[entity] = primitive;
+    WORLD.material[entity] = material;
+    WORLD.collider[entity] = primitive;
+    WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                               | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
+                               | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
+                               | MATERIAL_COMPONENT;
 
     return entity;
 }
@@ -165,24 +153,17 @@ int spawn_bullet(
     Kinematic kinematic,
     TTL ttl
 ) {
-    int entity = -1;
-    if (WORLD.n_entities < MAX_N_ENTITIES) {
-        entity = WORLD.n_entities++;
-        WORLD.transformation[entity] = transformation;
-        WORLD.primitive[entity] = primitive;
-        WORLD.material[entity] = material;
-        WORLD.kinematic[entity] = kinematic;
-        WORLD.ttl[entity] = ttl;
-        WORLD.collider[entity] = primitive;
-        WORLD.components[entity] = TRANSFORMATION_COMPONENT
-                                   | KINEMATIC_COMPONENT
-                                   | COLLIDER_COMPONENT
-                                   | PRIMITIVE_COMPONENT
-                                   | MATERIAL_COMPONENT | TTL_COMPONENT;
-    } else {
-        fprintf(stderr, "ERROR: Can't spawn more bullets\n");
-        exit(1);
-    }
+    int entity = spawn_entity();
+    WORLD.transformation[entity] = transformation;
+    WORLD.primitive[entity] = primitive;
+    WORLD.material[entity] = material;
+    WORLD.kinematic[entity] = kinematic;
+    WORLD.ttl[entity] = ttl;
+    WORLD.collider[entity] = primitive;
+    WORLD.components[entity] = TRANSFORMATION_COMPONENT
+                               | KINEMATIC_COMPONENT | COLLIDER_COMPONENT
+                               | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
+                               | TTL_COMPONENT;
 }
 
 void set_gun(int entity, Gun gun) {
@@ -212,8 +193,19 @@ static Vec2 screen_to_world(Vec2 screen_pos) {
     return vec2(x, y);
 }
 
+static void update_n_entities() {
+    int n_entities = 0;
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        if (WORLD.components[e] != 0) {
+            n_entities = e + 1;
+        }
+    }
+    WORLD.n_entities = n_entities;
+}
+
 void update_world(float dt) {
     dt /= 1000.0;
+    update_n_entities();
 
     // Update player based on the input
     if (WORLD.player != -1) {
@@ -262,13 +254,6 @@ void update_world(float dt) {
         }
     }
 
-    // Destroy TTL-ed entities
-    int n_destroyed_entities = 0;
-    for (int e = 0; e < WORLD.n_entities; ++e) {
-        n_destroyed_entities += apply_ttl(e, dt);
-    }
-    WORLD.n_destroyed_entities += n_destroyed_entities;
-
     // Observe world via vision component
     WORLD.n_collisions = 0;
     for (int e = 0; e < WORLD.n_entities; ++e) {
@@ -294,5 +279,10 @@ void update_world(float dt) {
             Collision collision = WORLD.collisions[i];
             resolve_collision(collision);
         }
+    }
+
+    // Destroy TTL-ed entities
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        apply_ttl(e, dt);
     }
 }

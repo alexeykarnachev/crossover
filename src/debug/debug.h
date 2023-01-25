@@ -14,7 +14,6 @@ typedef struct Debug {
 
     struct general {
         int n_entities;
-        int n_destroyed_entities;
         int n_collisions;
         Vec2 camera_position;
         Vec2 look_at;
