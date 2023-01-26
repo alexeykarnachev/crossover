@@ -75,14 +75,24 @@ static GLuint get_primitive_type_draw_mode(PrimitiveType type) {
     }
 }
 
-static void render_primitive(
+typedef struct RenderCall {
+    int n_points;
+    GLuint draw_mode;
+} RenderCall;
+
+static RenderCall prepare_primitive_render_call(
     Transformation transformation, Primitive primitive, Material material
 ) {
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
-    set_uniform_camera(program, WORLD.transformation[WORLD.camera]);
-
     PrimitiveType type = primitive.type;
+
+    set_uniform_camera(program, WORLD.transformation[WORLD.camera]);
+    set_uniform_1i(program, "type", type);
+    set_uniform_3fv(
+        program, "diffuse_color", (float*)&material.diffuse_color, 1
+    );
+
     GLuint draw_mode = get_primitive_type_draw_mode(type);
     int n_points;
     if (type & CIRCLE_PRIMITIVE) {
@@ -94,20 +104,30 @@ static void render_primitive(
         );
     }
 
-    set_uniform_1i(program, "type", type);
-    if (DEBUG.shading.materials) {
-        set_uniform_3fv(
-            program, "diffuse_color", (float*)&material.diffuse_color, 1
-        );
-        glDrawArrays(draw_mode, 0, n_points);
+    RenderCall render_call;
+    render_call.n_points = n_points;
+    render_call.draw_mode = draw_mode;
+
+    return render_call;
+}
+
+static void execute_render_call(RenderCall render_call, int fill_type) {
+    GLuint fill_type_gl;
+    switch (fill_type) {
+        case LINE: {
+            fill_type_gl = GL_LINE;
+            break;
+        }
+        case FILL: {
+            fill_type_gl = GL_FILL;
+            break;
+        }
+        default:
+            fill_type_gl = GL_FILL;
     }
 
-    if (DEBUG.shading.wireframe) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        set_uniform_3fv(program, "diffuse_color", (float*)&GRAY_COLOR, 1);
-        glDrawArrays(draw_mode, 0, n_points);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
+    glPolygonMode(GL_FRONT_AND_BACK, fill_type_gl);
+    glDrawArrays(render_call.draw_mode, 0, render_call.n_points);
 }
 
 void render_world(void) {
@@ -128,12 +148,26 @@ void render_world(void) {
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
             material = WORLD.material[entity];
         }
-        render_primitive(transformation, primitive, material);
+
+        RenderCall render_call = prepare_primitive_render_call(
+            transformation, primitive, material
+        );
+
+        if (DEBUG.shading.materials) {
+            execute_render_call(render_call, FILL);
+        }
+
+        if (DEBUG.shading.wireframe) {
+            execute_render_call(render_call, LINE);
+        }
     }
 
     while (DEBUG.n_primitives > 0) {
         DEBUG.n_primitives -= 1;
         DebugPrimitive p = DEBUG.primitives[DEBUG.n_primitives];
-        render_primitive(p.transformation, p.primitive, p.material);
+        RenderCall render_call = prepare_primitive_render_call(
+            p.transformation, p.primitive, material(p.color)
+        );
+        execute_render_call(render_call, p.fill_type);
     }
 }

@@ -5,7 +5,8 @@
 typedef struct DebugPrimitive {
     Transformation transformation;
     Primitive primitive;
-    Material material;
+    Vec3 color;
+    int fill_type;
 } DebugPrimitive;
 
 typedef struct Debug {
@@ -46,9 +47,11 @@ extern Debug DEBUG;
 
 void init_debug(void);
 void update_debug(void);
-void render_debug_primitive(Transformation t, Primitive p, Material m);
+void render_debug_primitive(
+    Transformation t, Primitive p, Vec3 color, int fill_type
+);
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color);
-void render_debug_circle(Vec2 c, float r, Vec3 color);
+void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type);
 void render_debug_rectangle(
-    Vec2 position, float width, float height, Vec3 color
+    Vec2 position, float width, float height, Vec3 color, int fill_type
 );

@@ -4,6 +4,7 @@
 #include "kinematic.h"
 #include "math.h"
 #include "primitive.h"
+#include "renderer.h"
 #include "transformation.h"
 #include "world.h"
 #include <math.h>
@@ -180,8 +181,8 @@ void collide_with_world(int entity) {
                 );
             }
 
-            render_debug_primitive(t0, p0, material(SKYBLUE_COLOR));
-            render_debug_primitive(t1, p1, material(SKYBLUE_COLOR));
+            render_debug_primitive(t0, p0, SKYBLUE_COLOR, LINE);
+            render_debug_primitive(t1, p1, SKYBLUE_COLOR, LINE);
         }
     }
 }

@@ -64,12 +64,17 @@ void update_debug(void) {
     update_grid();
 }
 
-void render_debug_primitive(Transformation t, Primitive p, Material m) {
+void render_debug_primitive(
+    Transformation t, Primitive p, Vec3 color, int fill_type
+) {
     if (DEBUG.n_primitives < MAX_N_DEBUG_PRIMITIVES) {
         DebugPrimitive* dp = &DEBUG.primitives[DEBUG.n_primitives++];
         dp->transformation = t;
         dp->primitive = p;
-        dp->material = m;
+        dp->color = color;
+        dp->fill_type = fill_type;
+    } else {
+        fprintf(stderr, "WARNING: Can't render more debug primitives\n");
     }
 }
 
@@ -77,22 +82,19 @@ void render_debug_line(Vec2 s, Vec2 e, Vec3 color) {
     Vec2 d = sub(e, s);
     Transformation t = {add(s, scale(d, 0.5)), 0.0};
     Primitive p = line_primitive(line(d));
-    Material m = {color};
-    render_debug_primitive(t, p, m);
+    render_debug_primitive(t, p, color, -1);
 }
 
-void render_debug_circle(Vec2 c, float r, Vec3 color) {
+void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type) {
     Transformation t = {c, 0.0};
     Primitive p = circle_primitive(circle(r));
-    Material m = {color};
-    render_debug_primitive(t, p, m);
+    render_debug_primitive(t, p, color, fill_type);
 }
 
 void render_debug_rectangle(
-    Vec2 position, float width, float height, Vec3 color
+    Vec2 position, float width, float height, Vec3 color, int fill_type
 ) {
     Transformation t = {position, 0.0};
     Primitive p = rectangle_primitive(rectangle(width, height));
-    Material m = {color};
-    render_debug_primitive(t, p, m);
+    render_debug_primitive(t, p, color, fill_type);
 }

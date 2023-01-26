@@ -131,7 +131,7 @@ void observe_world(int entity) {
             Observation obs = v.observations[i];
             if (obs.entity != -1) {
                 render_debug_line(t0.position, obs.position, GREEN_COLOR);
-                render_debug_circle(obs.position, 0.05, RED_COLOR);
+                render_debug_circle(obs.position, 0.05, RED_COLOR, -1);
             } else {
                 render_debug_line(
                     t0.position,

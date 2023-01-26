@@ -302,7 +302,7 @@ void update_world(float dt) {
 
         DEBUG.general.look_at = look_at;
         if (DEBUG.shading.look_at) {
-            render_debug_circle(look_at, 0.1, RED_COLOR);
+            render_debug_circle(look_at, 0.1, RED_COLOR, -1);
         }
 
         if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
