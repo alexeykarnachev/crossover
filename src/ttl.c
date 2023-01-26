@@ -16,7 +16,7 @@ int apply_ttl(int entity, float dt) {
     TTL* ttl = &WORLD.ttl[entity];
     ttl->time_to_live -= dt;
     if (ttl->time_to_live < 0.0) {
-        WORLD.components[entity] *= 0;
+        WORLD.components[entity] = 0;
         return 1;
     }
 

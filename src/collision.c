@@ -106,6 +106,7 @@ static int collide_polygons(
             );
         }
     }
+
     if (min_overlap > 0) {
         *mtv = scale(min_overlap_axis, min_overlap);
         return 1;
@@ -156,7 +157,7 @@ void collide_with_world(int entity) {
 
     for (int target = entity + 1; target < WORLD.n_entities; ++target) {
         if (!entity_can_collide(target)) {
-            return;
+            continue;
         }
 
         Collision* c = &WORLD.collisions[WORLD.n_collisions];

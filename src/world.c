@@ -205,6 +205,11 @@ static void update_n_entities() {
 
 void update_world(float dt) {
     dt /= 1000.0;
+
+    // Destroy TTL-ed entities
+    for (int e = 0; e < WORLD.n_entities; ++e) {
+        apply_ttl(e, dt);
+    }
     update_n_entities();
 
     // Update player based on the input
@@ -236,17 +241,25 @@ void update_world(float dt) {
                 Gun* gun = &WORLD.gun[WORLD.player];
                 float time_since_last_shoot
                     = (APP.time - gun->last_time_shoot);
-                if (time_since_last_shoot > 1.0 / gun->fire_rate) {
+                if (gun->last_time_shoot == 0
+                    || (time_since_last_shoot > 1.0 / gun->fire_rate)) {
                     gun->last_time_shoot = APP.time;
                     Vec2 velocity = vec2(
                         cos(t->orientation), sin(t->orientation)
                     );
                     velocity = scale(velocity, gun->bullet.base_speed);
+                    Kinematic kinematic = {
+                        velocity,
+                        gun->bullet.base_speed,
+                        t->orientation,
+                        0.0};
                     spawn_bullet(
                         *t,
-                        circle_primitive(circle(gun->bullet.radius)),
-                        gun->bullet.material,
-                        kinematic(velocity, gun->bullet.base_speed, 0.0),
+                        line_primitive(
+                            line(vec2(dt * gun->bullet.base_speed, 0.0))
+                        ),
+                        material(RED_COLOR),
+                        kinematic,
                         gun->bullet.ttl
                     );
                 }
@@ -255,7 +268,6 @@ void update_world(float dt) {
     }
 
     // Observe world via vision component
-    WORLD.n_collisions = 0;
     for (int e = 0; e < WORLD.n_entities; ++e) {
         observe_world(e);
     }
@@ -279,10 +291,5 @@ void update_world(float dt) {
             Collision collision = WORLD.collisions[i];
             resolve_collision(collision);
         }
-    }
-
-    // Destroy TTL-ed entities
-    for (int e = 0; e < WORLD.n_entities; ++e) {
-        apply_ttl(e, dt);
     }
 }
