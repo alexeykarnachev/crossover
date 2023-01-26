@@ -328,18 +328,6 @@ void update_world(float dt) {
                     Transformation bullet_transformation = *transformation;
                     float bullet_collider_length = gun->bullet.speed
                                                    / 30.0;
-                    bullet_transformation = *transformation;
-                    Vec2 bullet_position_offset = scale(
-                        vec2(
-                            cos(bullet_transformation.orientation),
-                            sin(bullet_transformation.orientation)
-                        ),
-                        bullet_collider_length * 0.5
-                    );
-                    bullet_transformation.position = add(
-                        bullet_transformation.position,
-                        bullet_position_offset
-                    );
                     Primitive bullet_primitive = circle_primitive(
                         circle(0.1)
                     );

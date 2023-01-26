@@ -23,18 +23,18 @@ int main(int argc, char* argv[]) {
     int player = spawn_guy(
         transformation(vec2(0.0, 0.0), 0.0),
         circle_primitive(circle(1.0)),
-        circle_primitive(circle(0.8)),
+        circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.2)),
         kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         vision(0.5 * PI, 10.0, 31),
-        gun(1000.0, 10.0, 2.0),
+        gun(2.0, 100.0, 2.0),
         100.0,
         1
     );
     spawn_guy(
         transformation(vec2(-4.0, 0.0), 0.0),
         circle_primitive(circle(1.0)),
-        circle_primitive(circle(0.9)),
+        circle_primitive(circle(1.0)),
         material(vec3(0.7, 0.3, 0.7)),
         kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         vision(0.5 * PI, 10.0, 31),
@@ -45,13 +45,13 @@ int main(int argc, char* argv[]) {
     spawn_obstacle(
         transformation(vec2(4.0, 4.0), 0.0),
         rectangle_primitive(rectangle(1.0, 1.0)),
-        rectangle_primitive(rectangle(0.9, 0.9)),
+        rectangle_primitive(rectangle(1.0, 1.0)),
         material(vec3(0.05, 0.05, 0.05))
     );
     spawn_obstacle(
         transformation(vec2(4.0, -4.0), 0.0),
         circle_primitive(circle(2.0)),
-        circle_primitive(circle(1.8)),
+        circle_primitive(circle(2.0)),
         material(vec3(0.05, 0.05, 0.05))
     );
     spawn_obstacle(
