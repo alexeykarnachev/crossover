@@ -16,5 +16,6 @@ int collide_primitives(
     Transformation t1,
     Collision* collision
 );
-void collide_with_world(int entity);
-void resolve_collision(Collision collision);
+
+void compute_collisions();
+void resolve_collisions();

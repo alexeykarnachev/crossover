@@ -56,23 +56,25 @@ static void render_debug_orientation(
     );
 }
 
-void apply_kinematic(int entity, float dt) {
-    if (!entity_has_kinematic(entity)) {
-        return;
-    }
+void apply_kinematics(float dt) {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_kinematic(entity)) {
+            continue;
+        }
 
-    Transformation* transformation = &WORLD.transformation[entity];
-    Kinematic kinematic = WORLD.kinematic[entity];
-    if (DEBUG.shading.orientation) {
-        render_debug_orientation(transformation, kinematic);
-    }
+        Transformation* transformation = &WORLD.transformation[entity];
+        Kinematic kinematic = WORLD.kinematic[entity];
+        if (DEBUG.shading.orientation) {
+            render_debug_orientation(transformation, kinematic);
+        }
 
-    float new_orientation = get_new_orientation(
-        transformation, kinematic, dt
-    );
-    Vec2 step = scale(kinematic.velocity, dt);
-    transformation->position = add(transformation->position, step);
-    transformation->orientation = new_orientation;
+        float new_orientation = get_new_orientation(
+            transformation, kinematic, dt
+        );
+        Vec2 step = scale(kinematic.velocity, dt);
+        transformation->position = add(transformation->position, step);
+        transformation->orientation = new_orientation;
+    }
 }
 
 float get_kinematic_damage(Kinematic kinematic) {

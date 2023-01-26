@@ -272,14 +272,7 @@ static void update_entities_ttl(float dt) {
     }
 }
 
-void update_world(float dt) {
-    dt /= 1000.0;
-
-    update_entities_ttl(dt);
-    check_entities_health();
-    update_entities_world_counter();
-
-    // Update player based on the input
+static void update_player() {
     if (WORLD.player != -1) {
         Kinematic* kinematic = &WORLD.kinematic[WORLD.player];
         Transformation* transformation
@@ -349,30 +342,17 @@ void update_world(float dt) {
             }
         }
     }
+}
 
-    // Observe world via vision component
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        observe_world(entity);
-    }
+void update_world(float dt) {
+    dt /= 1000.0;
 
-    // Update positions of the kinematic entities
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        apply_kinematic(entity, dt);
-    }
-
-    // Collide entities with each other
-    WORLD.n_collisions = 0;
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        collide_with_world(entity);
-    }
-
-    // Resolve collisions
-    if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
-        DEBUG.collisions.resolve_once = 0;
-
-        for (int i = 0; i < WORLD.n_collisions; ++i) {
-            Collision collision = WORLD.collisions[i];
-            resolve_collision(collision);
-        }
-    }
+    update_entities_ttl(dt);
+    check_entities_health();
+    update_entities_world_counter();
+    update_player();
+    compute_observations();
+    apply_kinematics(dt);
+    compute_collisions();
+    resolve_collisions();
 }

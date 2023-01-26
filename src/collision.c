@@ -151,71 +151,91 @@ int collide_primitives(
     return collided;
 }
 
-void collide_with_world(int entity) {
-    if (!entity_can_collide(entity)) {
-        return;
-    }
-
-    for (int target = entity + 1; target < WORLD.n_entities; ++target) {
-        if (!entity_can_collide(target)) {
+void compute_collisions() {
+    WORLD.n_collisions = 0;
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_can_collide(entity)) {
             continue;
         }
 
-        Collision* c = &WORLD.collisions[WORLD.n_collisions];
-        c->entity0 = entity;
-        c->entity1 = target;
         Primitive p0 = WORLD.collider[entity];
-        Primitive p1 = WORLD.collider[target];
         Transformation t0 = WORLD.transformation[entity];
-        Transformation t1 = WORLD.transformation[target];
-        int collided = collide_primitives(p0, t0, p1, t1, c);
-        WORLD.n_collisions += collided;
 
-        if (DEBUG.shading.collisions) {
-            if (collided) {
-                render_debug_line(
-                    t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
-                );
-                render_debug_line(
-                    t1.position, sub(t1.position, c->mtv), CYAN_COLOR
-                );
+        for (int target = entity + 1; target < WORLD.n_entities;
+             ++target) {
+            if (!entity_can_collide(target)) {
+                continue;
             }
 
+            Primitive p1 = WORLD.collider[target];
+            Transformation t1 = WORLD.transformation[target];
+            Collision* c = &WORLD.collisions[WORLD.n_collisions];
+            c->entity0 = entity;
+            c->entity1 = target;
+
+            int collided = collide_primitives(p0, t0, p1, t1, c);
+            WORLD.n_collisions += collided;
+            if (DEBUG.shading.collisions) {
+                if (collided) {
+                    render_debug_line(
+                        t0.position,
+                        add(t0.position, c->mtv),
+                        MAGENTA_COLOR
+                    );
+                    render_debug_line(
+                        t1.position, sub(t1.position, c->mtv), CYAN_COLOR
+                    );
+                }
+            }
+        }
+
+        if (DEBUG.shading.collisions) {
             render_debug_primitive(t0, p0, SKYBLUE_COLOR, LINE);
-            render_debug_primitive(t1, p1, SKYBLUE_COLOR, LINE);
         }
     }
 }
 
-void resolve_collision(Collision collision) {
-    Vec2 mtv = collision.mtv;
-    int e0 = collision.entity0;
-    int e1 = collision.entity1;
+void resolve_collisions() {
+    if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
+        DEBUG.collisions.resolve_once = 0;
 
-    Transformation* t0 = &WORLD.transformation[e0];
-    Transformation* t1 = &WORLD.transformation[e1];
-    if (entity_has_rigid_body(e0) && entity_has_rigid_body(e1)) {
-        int has_kinematic0 = entity_has_kinematic(e0);
-        int has_kinematic1 = entity_has_kinematic(e1);
-        if (has_kinematic0 && has_kinematic1) {
-            t0->position = add(t0->position, scale(mtv, 0.5));
-            t1->position = add(t1->position, scale(mtv, -0.5));
-        } else if (has_kinematic0) {
-            t0->position = add(t0->position, mtv);
-        } else if (has_kinematic1) {
-            t1->position = add(t1->position, flip(mtv));
+        for (int i = 0; i < WORLD.n_collisions; ++i) {
+            Collision collision = WORLD.collisions[i];
+
+            Vec2 mtv = collision.mtv;
+            int e0 = collision.entity0;
+            int e1 = collision.entity1;
+
+            Transformation* t0 = &WORLD.transformation[e0];
+            Transformation* t1 = &WORLD.transformation[e1];
+            if (entity_has_rigid_body(e0) && entity_has_rigid_body(e1)) {
+                int has_kinematic0 = entity_has_kinematic(e0);
+                int has_kinematic1 = entity_has_kinematic(e1);
+                if (has_kinematic0 && has_kinematic1) {
+                    t0->position = add(t0->position, scale(mtv, 0.5));
+                    t1->position = add(t1->position, scale(mtv, -0.5));
+                } else if (has_kinematic0) {
+                    t0->position = add(t0->position, mtv);
+                } else if (has_kinematic1) {
+                    t1->position = add(t1->position, flip(mtv));
+                }
+            }
+
+            if (entity_can_be_damaged_by_bullet(e1, e0)) {
+                WORLD.health[e0] -= get_kinematic_damage(
+                    WORLD.kinematic[e1]
+                );
+            } else if (entity_can_be_damaged_by_bullet(e0, e1)) {
+                WORLD.health[e1] -= get_kinematic_damage(
+                    WORLD.kinematic[e0]
+                );
+            }
+
+            if (bullet_can_be_destroyed_after_collision(e1, e0)) {
+                destroy_entity(e1);
+            } else if (bullet_can_be_destroyed_after_collision(e0, e1)) {
+                destroy_entity(e0);
+            }
         }
-    }
-
-    if (entity_can_be_damaged_by_bullet(e1, e0)) {
-        WORLD.health[e0] -= get_kinematic_damage(WORLD.kinematic[e1]);
-    } else if (entity_can_be_damaged_by_bullet(e0, e1)) {
-        WORLD.health[e1] -= get_kinematic_damage(WORLD.kinematic[e0]);
-    }
-
-    if (bullet_can_be_destroyed_after_collision(e1, e0)) {
-        destroy_entity(e1);
-    } else if (bullet_can_be_destroyed_after_collision(e0, e1)) {
-        destroy_entity(e0);
     }
 }

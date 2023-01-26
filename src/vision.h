@@ -19,4 +19,4 @@ Observation observation(Vec2 position, int entity);
 Vision vision(float fov, float distance, int n_view_rays);
 void reset_observations(Vision* v);
 
-void observe_world(int entity);
+void compute_observations();
