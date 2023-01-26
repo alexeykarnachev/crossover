@@ -170,13 +170,18 @@ void collide_with_world(int entity) {
         int collided = collide_primitives(p0, t0, p1, t1, c);
         WORLD.n_collisions += collided;
 
-        if (collided && DEBUG.shading.collisions) {
-            render_debug_line(
-                t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
-            );
-            render_debug_line(
-                t1.position, sub(t1.position, c->mtv), CYAN_COLOR
-            );
+        if (DEBUG.shading.collisions) {
+            if (collided) {
+                render_debug_line(
+                    t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
+                );
+                render_debug_line(
+                    t1.position, sub(t1.position, c->mtv), CYAN_COLOR
+                );
+            }
+
+            render_debug_primitive(t0, p0, material(SKYBLUE_COLOR));
+            render_debug_primitive(t1, p1, material(SKYBLUE_COLOR));
         }
     }
 }
@@ -201,17 +206,15 @@ void resolve_collision(Collision collision) {
         }
     }
 
-    if (entity_can_be_damaged_by_bullet(e0, e1)) {
-        WORLD.health[e0] -= get_kinematic_damage(WORLD.kinematic[e1]);
-    }
     if (entity_can_be_damaged_by_bullet(e1, e0)) {
+        WORLD.health[e0] -= get_kinematic_damage(WORLD.kinematic[e1]);
+    } else if (entity_can_be_damaged_by_bullet(e0, e1)) {
         WORLD.health[e1] -= get_kinematic_damage(WORLD.kinematic[e0]);
     }
 
-    if (entity_has_bullet(e0) && get_entity_owner(e0) != e1) {
-        destroy_entity(e0);
-    }
-    if (entity_has_bullet(e1) && get_entity_owner(e1) != e0) {
+    if (bullet_can_be_destroyed_after_collision(e1, e0)) {
         destroy_entity(e1);
+    } else if (bullet_can_be_destroyed_after_collision(e0, e1)) {
+        destroy_entity(e0);
     }
 }

@@ -89,12 +89,20 @@ int entity_can_be_observed(int entity) {
     );
 }
 
-int entity_can_be_damaged_by_bullet(int entity, int bullet) {
+int entity_can_be_damaged_by_bullet(int bullet, int target) {
     int bullet_owner = get_entity_owner(bullet);
     int bullet_is_real = entity_has_bullet(bullet);
     int bullet_has_kinematic = entity_has_kinematic(bullet);
-    return bullet_owner != entity && bullet_is_real && bullet_has_kinematic
-           && entity_has_health(entity);
+    return bullet_owner != target && bullet_is_real && bullet_has_kinematic
+           && entity_has_health(target);
+}
+
+int bullet_can_be_destroyed_after_collision(int bullet, int target) {
+    int bullet_owner = get_entity_owner(bullet);
+    int bullet_is_real = entity_has_bullet(bullet);
+    int target_is_not_bullet = !entity_has_bullet(target);
+    return bullet_owner != target && bullet_is_real
+           && target_is_not_bullet;
 }
 
 static int spawn_entity() {
@@ -126,6 +134,7 @@ int spawn_camera(Transformation transformation) {
 int spawn_guy(
     Transformation transformation,
     Primitive primitive,
+    Primitive collider,
     Material material,
     Kinematic kinematic,
     Vision vision,
@@ -146,13 +155,13 @@ int spawn_guy(
 
     WORLD.transformation[entity] = transformation;
     WORLD.primitive[entity] = primitive;
+    WORLD.collider[entity] = collider;
     WORLD.material[entity] = material;
     WORLD.kinematic[entity] = kinematic;
     WORLD.vision[entity] = vision;
     WORLD.gun[entity] = gun;
     WORLD.health[entity] = health;
 
-    WORLD.collider[entity] = primitive;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | VISION_COMPONENT
                                | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
@@ -164,13 +173,16 @@ int spawn_guy(
 }
 
 int spawn_obstacle(
-    Transformation transformation, Primitive primitive, Material material
+    Transformation transformation,
+    Primitive primitive,
+    Primitive collider,
+    Material material
 ) {
     int entity = spawn_entity();
     WORLD.transformation[entity] = transformation;
     WORLD.primitive[entity] = primitive;
+    WORLD.collider[entity] = collider;
     WORLD.material[entity] = material;
-    WORLD.collider[entity] = primitive;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
@@ -182,6 +194,7 @@ int spawn_obstacle(
 int spawn_bullet(
     Transformation transformation,
     Primitive primitive,
+    Primitive collider,
     Material material,
     Kinematic kinematic,
     float ttl,
@@ -193,7 +206,7 @@ int spawn_bullet(
     WORLD.material[entity] = material;
     WORLD.kinematic[entity] = kinematic;
     WORLD.ttl[entity] = ttl;
-    WORLD.collider[entity] = primitive;
+    WORLD.collider[entity] = collider;
     WORLD.owner[entity] = owner;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | COLLIDER_COMPONENT
@@ -224,28 +237,7 @@ static Vec2 screen_to_world(Vec2 screen_pos) {
     return vec2(x, y);
 }
 
-static void apply_ttl(int entity, float dt) {
-    if (!entity_has_ttl(entity)) {
-        return;
-    }
-
-    WORLD.ttl[entity] -= dt;
-    if (WORLD.ttl[entity] < 0) {
-        destroy_entity(entity);
-    }
-}
-
-static void destroy_zero_health(int entity) {
-    if (!entity_has_health(entity)) {
-        return;
-    }
-
-    if (WORLD.health[entity] <= 0) {
-        destroy_entity(entity);
-    }
-}
-
-static void update_n_entities() {
+static void update_entities_world_counter() {
     int n_entities = 0;
     for (int e = 0; e < WORLD.n_entities; ++e) {
         if (WORLD.components[e] != 0) {
@@ -255,20 +247,37 @@ static void update_n_entities() {
     WORLD.n_entities = n_entities;
 }
 
+static void check_entities_health() {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_health(entity)) {
+            continue;
+        }
+
+        if (WORLD.health[entity] <= 0) {
+            destroy_entity(entity);
+        }
+    }
+}
+
+static void update_entities_ttl(float dt) {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_ttl(entity)) {
+            continue;
+        }
+
+        WORLD.ttl[entity] -= dt;
+        if (WORLD.ttl[entity] < 0) {
+            destroy_entity(entity);
+        }
+    }
+}
+
 void update_world(float dt) {
     dt /= 1000.0;
 
-    // Destroy TTL-ed entities
-    for (int e = 0; e < WORLD.n_entities; ++e) {
-        apply_ttl(e, dt);
-    }
-
-    // Destroy 0 health entities
-    for (int e = 0; e < WORLD.n_entities; ++e) {
-        destroy_zero_health(e);
-    }
-
-    update_n_entities();
+    update_entities_ttl(dt);
+    check_entities_health();
+    update_entities_world_counter();
 
     // Update player based on the input
     if (WORLD.player != -1) {
@@ -304,23 +313,47 @@ void update_world(float dt) {
                 if (gun->last_time_shoot == 0
                     || (time_since_last_shoot > 1.0 / gun->fire_rate)) {
                     gun->last_time_shoot = APP.time;
-                    Vec2 velocity = vec2(
+                    Vec2 bullet_velocity = vec2(
                         cos(transformation->orientation),
                         sin(transformation->orientation)
                     );
-                    velocity = scale(velocity, gun->bullet.speed);
-                    Kinematic kinematic = {
-                        velocity,
+                    bullet_velocity = scale(
+                        bullet_velocity, gun->bullet.speed
+                    );
+                    Kinematic bullet_kinematic = {
+                        bullet_velocity,
                         gun->bullet.speed,
                         transformation->orientation,
                         0.0};
-                    spawn_bullet(
-                        *transformation,
-                        line_primitive(
-                            line(vec2(dt * gun->bullet.speed, 0.0))
+                    Transformation bullet_transformation = *transformation;
+                    float bullet_collider_length = gun->bullet.speed
+                                                   / 30.0;
+                    bullet_transformation = *transformation;
+                    Vec2 bullet_position_offset = scale(
+                        vec2(
+                            cos(bullet_transformation.orientation),
+                            sin(bullet_transformation.orientation)
                         ),
-                        material(RED_COLOR),
-                        kinematic,
+                        bullet_collider_length * 0.5
+                    );
+                    bullet_transformation.position = add(
+                        bullet_transformation.position,
+                        bullet_position_offset
+                    );
+                    Primitive bullet_primitive = circle_primitive(
+                        circle(0.1)
+                    );
+                    Primitive bullet_collider = line_primitive(
+                        line(vec2(bullet_collider_length, 0.0))
+                    );
+                    Material bullet_material = material(RED_COLOR);
+
+                    spawn_bullet(
+                        bullet_transformation,
+                        bullet_primitive,
+                        bullet_collider,
+                        bullet_material,
+                        bullet_kinematic,
                         gun->bullet.ttl,
                         WORLD.player
                     );

@@ -49,3 +49,6 @@ void update_debug(void);
 void render_debug_primitive(Transformation t, Primitive p, Material m);
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color);
 void render_debug_circle(Vec2 c, float r, Vec3 color);
+void render_debug_rectangle(
+    Vec2 position, float width, float height, Vec3 color
+);

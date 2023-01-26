@@ -78,12 +78,14 @@ int entity_can_collide(int entity);
 int entity_can_observe(int entity);
 int entity_can_be_rendered(int entity);
 int entity_can_be_observed(int entity);
-int entity_can_be_damaged_by_bullet(int entity, int bullet);
+int entity_can_be_damaged_by_bullet(int bullet, int target);
+int bullet_can_be_destroyed_after_collision(int bullet, int target);
 
 int spawn_camera(Transformation transformation);
 int spawn_guy(
     Transformation transformation,
     Primitive primitive,
+    Primitive collider,
     Material material,
     Kinematic kinematic,
     Vision vision,
@@ -92,11 +94,15 @@ int spawn_guy(
     int is_player
 );
 int spawn_obstacle(
-    Transformation transformation, Primitive primitive, Material material
+    Transformation transformation,
+    Primitive primitive,
+    Primitive collider,
+    Material material
 );
 int spawn_bullet(
     Transformation transformation,
     Primitive primitive,
+    Primitive collider,
     Material material,
     Kinematic kinematic,
     float ttl,

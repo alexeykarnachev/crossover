@@ -87,3 +87,12 @@ void render_debug_circle(Vec2 c, float r, Vec3 color) {
     Material m = {color};
     render_debug_primitive(t, p, m);
 }
+
+void render_debug_rectangle(
+    Vec2 position, float width, float height, Vec3 color
+) {
+    Transformation t = {position, 0.0};
+    Primitive p = rectangle_primitive(rectangle(width, height));
+    Material m = {color};
+    render_debug_primitive(t, p, m);
+}
