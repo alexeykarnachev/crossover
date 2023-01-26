@@ -19,14 +19,21 @@ Observation observation(Vec2 position, int entity) {
 
 Vision vision(float fov, float distance, int n_view_rays) {
     if (n_view_rays > MAX_N_VIEW_RAYS) {
+        fprintf(
+            stderr,
+            "ERROR: can't create the Vision component with more than %d "
+            "view rays\n",
+            MAX_N_VIEW_RAYS
+        );
         exit(1);
     }
 
     Vision v;
-    reset_observations(&v);
     v.fov = fov;
     v.distance = distance;
     v.n_view_rays = n_view_rays;
+
+    reset_observations(&v);
     return v;
 }
 

@@ -185,13 +185,12 @@ void resolve_collision(Collision collision) {
     Vec2 mtv = collision.mtv;
     int e0 = collision.entity0;
     int e1 = collision.entity1;
+
     Transformation* t0 = &WORLD.transformation[e0];
     Transformation* t1 = &WORLD.transformation[e1];
-    int has_rigid_body0 = entity_has_component(e0, RIGID_BODY_COMPONENT);
-    int has_rigid_body1 = entity_has_component(e1, RIGID_BODY_COMPONENT);
-    if (has_rigid_body0 && has_rigid_body1) {
-        int has_kinematic0 = entity_has_component(e0, KINEMATIC_COMPONENT);
-        int has_kinematic1 = entity_has_component(e1, KINEMATIC_COMPONENT);
+    if (entity_has_rigid_body(e0) && entity_has_rigid_body(e1)) {
+        int has_kinematic0 = entity_has_kinematic(e0);
+        int has_kinematic1 = entity_has_kinematic(e1);
         if (has_kinematic0 && has_kinematic1) {
             t0->position = add(t0->position, scale(mtv, 0.5));
             t1->position = add(t1->position, scale(mtv, -0.5));
@@ -200,5 +199,19 @@ void resolve_collision(Collision collision) {
         } else if (has_kinematic1) {
             t1->position = add(t1->position, flip(mtv));
         }
+    }
+
+    if (entity_can_be_damaged_by_bullet(e0, e1)) {
+        WORLD.health[e0] -= get_kinematic_damage(WORLD.kinematic[e1]);
+    }
+    if (entity_can_be_damaged_by_bullet(e1, e0)) {
+        WORLD.health[e1] -= get_kinematic_damage(WORLD.kinematic[e0]);
+    }
+
+    if (entity_has_bullet(e0) && get_entity_owner(e0) != e1) {
+        destroy_entity(e0);
+    }
+    if (entity_has_bullet(e1) && get_entity_owner(e1) != e0) {
+        destroy_entity(e1);
     }
 }

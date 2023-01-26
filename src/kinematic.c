@@ -57,7 +57,7 @@ static void render_debug_orientation(
 }
 
 void apply_kinematic(int entity, float dt) {
-    if (!entity_can_apply_kinematic(entity)) {
+    if (!entity_has_kinematic(entity)) {
         return;
     }
 
@@ -73,4 +73,8 @@ void apply_kinematic(int entity, float dt) {
     Vec2 step = scale(kinematic.velocity, dt);
     transformation->position = add(transformation->position, step);
     transformation->orientation = new_orientation;
+}
+
+float get_kinematic_damage(Kinematic kinematic) {
+    return length(kinematic.velocity);
 }
