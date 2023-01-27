@@ -1,4 +1,5 @@
 #pragma once
+#include "component.h"
 #include "math.h"
 
 // TODO: Hold the collisions array in this file, not in the world file
@@ -16,3 +17,7 @@ void update_kinematic(float dt);
 void update_player();
 void update_ttl(float dt);
 void update_vision();
+
+RayCastResult cast_ray(
+    Vec2 start, Vec2 ray, int target_components, int ray_owner
+);

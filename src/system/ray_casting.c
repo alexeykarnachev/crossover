@@ -1,9 +1,6 @@
-#include "ray_casting.h"
-
-#include "component.h"
-#include "math.h"
-#include "primitive.h"
-#include "world.h"
+#include "../component.h"
+#include "../math.h"
+#include "../world.h"
 
 RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner

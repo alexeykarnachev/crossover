@@ -1,8 +1,9 @@
 #pragma once
+#include "../component.h"
 #include "../const.h"
+#include "../gl.h"
 #include "../math.h"
 #include "../primitive.h"
-#include "../renderer.h"
 
 typedef struct DebugPrimitive {
     Transformation transformation;

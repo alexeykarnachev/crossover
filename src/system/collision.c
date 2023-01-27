@@ -1,7 +1,7 @@
 #include "../component.h"
 #include "../debug/debug.h"
+#include "../gl.h"
 #include "../math.h"
-#include "../renderer.h"
 #include "../system.h"
 #include "../world.h"
 #include <math.h>

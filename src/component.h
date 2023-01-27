@@ -2,12 +2,16 @@
 
 #include "const.h"
 #include "math.h"
-#include "ray_casting.h"
 
 typedef struct Transformation {
     Vec2 position;
     float orientation;
 } Transformation;
+
+typedef struct RayCastResult {
+    Vec2 position;
+    int entity;
+} RayCastResult;
 
 typedef struct Vision {
     RayCastResult observations[MAX_N_VIEW_RAYS];

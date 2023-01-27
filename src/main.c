@@ -1,12 +1,10 @@
-#include <glad/glad.h>
 
 #include "app.h"
 #include "component.h"
 #include "debug/debug.h"
 #include "debug/gui.h"
+#include "gl.h"
 #include "math.h"
-#include "program.h"
-#include "renderer.h"
 #include "world.h"
 
 int main(int argc, char* argv[]) {
