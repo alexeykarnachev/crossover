@@ -14,6 +14,7 @@ void init_debug(void) {
     DEBUG.shading.materials = 1;
     DEBUG.shading.collisions = 1;
     DEBUG.shading.look_at = 1;
+    DEBUG.shading.vision = 1;
     // DEBUG.shading.orientation = 1;
     DEBUG.collisions.resolve = 1;
 }

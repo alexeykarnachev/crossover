@@ -81,20 +81,12 @@ int entity_can_be_rendered(int entity) {
     );
 }
 
-int entity_can_be_observed(int entity) {
-    return entity_has_component(
-        entity,
-        COLLIDER_COMPONENT | TRANSFORMATION_COMPONENT
-            | OBSERVABLE_COMPONENT
-    );
-}
-
-int entity_can_be_damaged_by_bullet(int bullet, int target) {
+int entity_can_be_damaged_by_bullet(int entity, int bullet) {
     int bullet_owner = get_entity_owner(bullet);
     int bullet_is_real = entity_has_bullet(bullet);
     int bullet_has_kinematic = entity_has_kinematic(bullet);
-    return bullet_owner != target && bullet_is_real && bullet_has_kinematic
-           && entity_has_health(target);
+    return bullet_owner != entity && bullet_is_real && bullet_has_kinematic
+           && entity_has_health(entity);
 }
 
 int bullet_can_be_destroyed_after_collision(int bullet, int target) {

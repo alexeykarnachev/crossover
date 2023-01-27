@@ -175,17 +175,13 @@ void compute_collisions() {
 
             int collided = collide_primitives(p0, t0, p1, t1, c);
             WORLD.n_collisions += collided;
-            if (DEBUG.shading.collisions) {
-                if (collided) {
-                    render_debug_line(
-                        t0.position,
-                        add(t0.position, c->mtv),
-                        MAGENTA_COLOR
-                    );
-                    render_debug_line(
-                        t1.position, sub(t1.position, c->mtv), CYAN_COLOR
-                    );
-                }
+            if (DEBUG.shading.collisions && collided) {
+                render_debug_line(
+                    t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
+                );
+                render_debug_line(
+                    t1.position, sub(t1.position, c->mtv), CYAN_COLOR
+                );
             }
         }
 
@@ -221,11 +217,11 @@ void resolve_collisions() {
                 }
             }
 
-            if (entity_can_be_damaged_by_bullet(e1, e0)) {
+            if (entity_can_be_damaged_by_bullet(e0, e1)) {
                 WORLD.health[e0] -= get_kinematic_damage(
                     WORLD.kinematic[e1]
                 );
-            } else if (entity_can_be_damaged_by_bullet(e0, e1)) {
+            } else if (entity_can_be_damaged_by_bullet(e1, e0)) {
                 WORLD.health[e1] -= get_kinematic_damage(
                     WORLD.kinematic[e0]
                 );

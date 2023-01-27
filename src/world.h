@@ -67,6 +67,7 @@ int get_entity_owner(int entity);
 
 int entity_has_component(int entity, ComponentType component);
 int entity_has_transformation(int entity);
+int entity_has_collider(int entity);
 int entity_has_ttl(int entity);
 int entity_has_rigid_body(int entity);
 int entity_has_bullet(int entity);
@@ -77,8 +78,7 @@ int entity_has_owner(int entity);
 int entity_can_collide(int entity);
 int entity_can_observe(int entity);
 int entity_can_be_rendered(int entity);
-int entity_can_be_observed(int entity);
-int entity_can_be_damaged_by_bullet(int bullet, int target);
+int entity_can_be_damaged_by_bullet(int entity, int bullet);
 int bullet_can_be_destroyed_after_collision(int bullet, int target);
 
 int spawn_camera(Transformation transformation);

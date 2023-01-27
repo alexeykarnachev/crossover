@@ -2,6 +2,7 @@
 
 #include "debug/debug.h"
 #include "math.h"
+#include "ray_casting.h"
 #include "renderer.h"
 #include "transformation.h"
 #include "world.h"
@@ -11,11 +12,6 @@
 #include <string.h>
 
 static Vec2 VIEW_RAYS_ARENA[MAX_N_VIEW_RAYS];
-
-Observation observation(Vec2 position, int entity) {
-    Observation obs = {position, entity};
-    return obs;
-}
 
 Vision vision(float fov, float distance, int n_view_rays) {
     if (n_view_rays > MAX_N_VIEW_RAYS) {
@@ -38,12 +34,14 @@ Vision vision(float fov, float distance, int n_view_rays) {
 }
 
 void reset_observations(Vision* v) {
-    memset(v->observations, -1, sizeof(Observation) * v->n_view_rays);
+    memset(v->observations, -1, sizeof(RayCastResult) * v->n_view_rays);
 }
 
-static int get_view_rays(Vision vision, Vec2* out) {
+static int get_view_rays(Vision vision, float orientation, Vec2* out) {
     Vec2 origin = {0.0, 0.0};
-    Vec2 start_ray = {vision.distance, 0.0};
+    Vec2 start_ray = rotate(
+        vec2(vision.distance, 0.0), origin, orientation
+    );
 
     float step;
     if (vision.n_view_rays == 1) {
@@ -60,33 +58,6 @@ static int get_view_rays(Vision vision, Vec2* out) {
     return vision.n_view_rays;
 }
 
-static int intersect_line_with_primitive_nearest(
-    Transformation t0,
-    Line line,
-    Transformation t1,
-    Primitive primitive,
-    Vec2* out
-) {
-    switch (primitive.type) {
-        case CIRCLE_PRIMITIVE:
-            return intersect_line_with_circle_nearest(
-                transform(vec2(0.0, 0.0), t0),
-                transform(line.b, t0),
-                t1.position,
-                primitive.p.circle.radius,
-                out
-            );
-        default: {
-            Vec2 vertices[4];
-            int nv = get_primitive_vertices(primitive, t1, vertices);
-            Vec2 foo = transform(line.b, t0);
-            return intersect_line_with_polygon_nearest(
-                t0.position, transform(line.b, t0), vertices, nv, out
-            );
-        }
-    }
-}
-
 void compute_observations() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_observe(entity)) {
@@ -95,43 +66,23 @@ void compute_observations() {
 
         Vision v = WORLD.vision[entity];
         Transformation t0 = WORLD.transformation[entity];
+        Vec2 start = t0.position;
         reset_observations(&v);
-        int n_view_rays = get_view_rays(v, VIEW_RAYS_ARENA);
-        for (int target = 0; target < WORLD.n_entities; ++target) {
-            int can_be_observed = target != entity
-                                  && entity_can_be_observed(target);
-            if (!can_be_observed) {
-                continue;
-            }
+        int n_view_rays = get_view_rays(
+            v, t0.orientation, VIEW_RAYS_ARENA
+        );
 
-            Transformation t1 = WORLD.transformation[target];
-            Primitive collider = WORLD.collider[target];
-            for (int i = 0; i < n_view_rays; ++i) {
-                Line ray = {VIEW_RAYS_ARENA[i]};
-                Observation obs;
-                int is_observed = intersect_line_with_primitive_nearest(
-                    t0, ray, t1, collider, &obs.position
-                );
-                if (!is_observed) {
-                    continue;
-                }
-
-                float new_dist = dist(t0.position, obs.position);
-                float old_dist = dist(
-                    t0.position, v.observations[i].position
-                );
-                int is_best = v.observations[i].entity == -1
-                              || new_dist < old_dist;
-                if (is_best) {
-                    obs.entity = target;
-                    v.observations[i] = obs;
-                }
-            }
+        for (int i = 0; i < n_view_rays; ++i) {
+            Line ray = {VIEW_RAYS_ARENA[i]};
+            RayCastResult observation = cast_ray(
+                start, ray, OBSERVABLE_COMPONENT, entity
+            );
+            v.observations[i] = observation;
         }
 
         if (DEBUG.shading.vision) {
             for (int i = 0; i < v.n_view_rays; ++i) {
-                Observation obs = v.observations[i];
+                RayCastResult obs = v.observations[i];
                 if (obs.entity != -1) {
                     render_debug_line(
                         t0.position, obs.position, GREEN_COLOR
@@ -140,7 +91,7 @@ void compute_observations() {
                 } else {
                     render_debug_line(
                         t0.position,
-                        transform(VIEW_RAYS_ARENA[i], t0),
+                        add(t0.position, VIEW_RAYS_ARENA[i]),
                         GREEN_COLOR
                     );
                 }
