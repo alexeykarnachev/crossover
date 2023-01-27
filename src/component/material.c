@@ -1,6 +1,6 @@
 #include "material.h"
 
-#include "math.h"
+#include "../math.h"
 
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};
 Vec3 GREEN_COLOR = {0.0, 1.0, 0.0};

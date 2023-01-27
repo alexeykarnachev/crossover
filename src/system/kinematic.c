@@ -1,14 +1,29 @@
 #include "kinematic.h"
 
-#include "./debug/debug.h"
-#include "material.h"
-#include "math.h"
-#include "world.h"
+#include "../component/component.h"
+#include "../debug/debug.h"
+#include "../math.h"
+#include "../world.h"
 #include <math.h>
 
-Kinematic kinematic(Vec2 velocity, float max_speed, float rotation_speed) {
-    Kinematic k = {velocity, max_speed, 0.0, rotation_speed};
-    return k;
+static void render_debug_orientation(
+    Transformation* transformation, Kinematic kinematic
+) {
+    Vec2 d0 = vec2(
+        cos(transformation->orientation), sin(transformation->orientation)
+    );
+    Vec2 d1 = vec2(cos(kinematic.orientation), sin(kinematic.orientation));
+
+    render_debug_line(
+        transformation->position,
+        add(transformation->position, d0),
+        BLUE_COLOR
+    );
+    render_debug_line(
+        transformation->position,
+        add(transformation->position, d1),
+        RED_COLOR
+    );
 }
 
 static float get_new_orientation(
@@ -36,27 +51,7 @@ static float get_new_orientation(
     return new_orientation;
 }
 
-static void render_debug_orientation(
-    Transformation* transformation, Kinematic kinematic
-) {
-    Vec2 d0 = vec2(
-        cos(transformation->orientation), sin(transformation->orientation)
-    );
-    Vec2 d1 = vec2(cos(kinematic.orientation), sin(kinematic.orientation));
-
-    render_debug_line(
-        transformation->position,
-        add(transformation->position, d0),
-        BLUE_COLOR
-    );
-    render_debug_line(
-        transformation->position,
-        add(transformation->position, d1),
-        RED_COLOR
-    );
-}
-
-void apply_kinematics(float dt) {
+void update_kinematic(float dt) {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_kinematic(entity)) {
             continue;
@@ -75,8 +70,4 @@ void apply_kinematics(float dt) {
         transformation->position = add(transformation->position, step);
         transformation->orientation = new_orientation;
     }
-}
-
-float get_kinematic_damage(Kinematic kinematic) {
-    return length(kinematic.velocity);
 }

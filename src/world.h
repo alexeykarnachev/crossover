@@ -1,11 +1,7 @@
 #pragma once
-#include "collision.h"
+#include "./component/component.h"
+#include "./system/system.h"
 #include "const.h"
-#include "gun.h"
-#include "kinematic.h"
-#include "material.h"
-#include "primitive.h"
-#include "vision.h"
 #include <stddef.h>
 #include <stdint.h>
 

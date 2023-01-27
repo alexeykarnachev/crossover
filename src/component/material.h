@@ -1,5 +1,5 @@
 #pragma once
-#include "math.h"
+#include "../math.h"
 
 typedef struct Material {
     Vec3 diffuse_color;

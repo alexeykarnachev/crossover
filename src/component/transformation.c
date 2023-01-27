@@ -1,6 +1,6 @@
 #include "transformation.h"
 
-#include "math.h"
+#include "../math.h"
 
 Transformation transformation(Vec2 position, float orientation) {
     Transformation t = {position, orientation};

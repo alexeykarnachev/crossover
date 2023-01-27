@@ -1,8 +1,8 @@
 #include "debug.h"
 
 #include "../app.h"
+#include "../component/component.h"
 #include "../const.h"
-#include "../primitive.h"
 #include "../world.h"
 #include <math.h>
 #include <stdio.h>

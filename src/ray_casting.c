@@ -1,8 +1,8 @@
 #include "ray_casting.h"
 
+#include "./component/primitive.h"
+#include "./component/transformation.h"
 #include "math.h"
-#include "primitive.h"
-#include "transformation.h"
 #include "world.h"
 
 RayCastResult cast_ray(

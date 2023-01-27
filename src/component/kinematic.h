@@ -1,5 +1,5 @@
 #pragma once
-#include "math.h"
+#include "../math.h"
 
 typedef struct Kinematic {
     Vec2 velocity;
@@ -9,5 +9,4 @@ typedef struct Kinematic {
 } Kinematic;
 
 Kinematic kinematic(Vec2 velocity, float max_speed, float rotation_speed);
-void apply_kinematics(float dt);
 float get_kinematic_damage(Kinematic kinematic);

@@ -1,6 +1,6 @@
 #pragma once
+#include "./component/primitive.h"
 #include "math.h"
-#include "primitive.h"
 
 typedef struct RayCastResult {
     Vec2 position;

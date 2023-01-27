@@ -1,5 +1,5 @@
 #pragma once
-#include "math.h"
+#include "../math.h"
 
 typedef struct Transformation {
     Vec2 position;

@@ -1,16 +1,12 @@
 #include <glad/glad.h>
 
+#include "./component/component.h"
 #include "app.h"
 #include "debug/debug.h"
 #include "debug/gui.h"
-#include "gun.h"
-#include "kinematic.h"
-#include "material.h"
 #include "math.h"
-#include "primitive.h"
 #include "program.h"
 #include "renderer.h"
-#include "transformation.h"
 #include "world.h"
 
 int main(int argc, char* argv[]) {

@@ -1,6 +1,5 @@
 #pragma once
-#include "material.h"
-#include "primitive.h"
+#include "./component/component.h"
 
 typedef enum FILL_TYPE { LINE, FILL } FILL_TYPE;
 

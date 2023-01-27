@@ -1,12 +1,10 @@
 #include "collision.h"
 
-#include "debug/debug.h"
-#include "kinematic.h"
-#include "math.h"
-#include "primitive.h"
-#include "renderer.h"
-#include "transformation.h"
-#include "world.h"
+#include "../component/component.h"
+#include "../debug/debug.h"
+#include "../math.h"
+#include "../renderer.h"
+#include "../world.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -115,7 +113,7 @@ static int collide_polygons(
     return 0;
 }
 
-int collide_primitives(
+static int collide_primitives(
     Primitive p0,
     Transformation t0,
     Primitive p1,
@@ -151,7 +149,7 @@ int collide_primitives(
     return collided;
 }
 
-void compute_collisions() {
+static void compute_collision() {
     WORLD.n_collisions = 0;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_collide(entity)) {
@@ -191,7 +189,7 @@ void compute_collisions() {
     }
 }
 
-void resolve_collisions() {
+static void resolve_collision() {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
 
@@ -234,4 +232,9 @@ void resolve_collisions() {
             }
         }
     }
+}
+
+void update_collision() {
+    compute_collision();
+    resolve_collision();
 }
