@@ -1,8 +1,7 @@
 #pragma once
-#include "../component.h"
-#include "../const.h"
-#include "../gl.h"
-#include "../math.h"
+#include "component.h"
+#include "const.h"
+#include "math.h"
 
 typedef struct DebugPrimitive {
     Transformation transformation;
@@ -57,3 +56,5 @@ void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type);
 void render_debug_rectangle(
     Vec2 position, float width, float height, Vec3 color, int fill_type
 );
+
+void render_debug_gui(void);

@@ -3,7 +3,7 @@
 #include "app.h"
 #include "component.h"
 #include "const.h"
-#include "debug/debug.h"
+#include "debug.h"
 #include "math.h"
 #include "system.h"
 #include <math.h>

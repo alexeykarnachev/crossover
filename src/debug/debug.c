@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "../debug.h"
 
 #include "../app.h"
 #include "../component.h"

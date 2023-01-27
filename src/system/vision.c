@@ -1,5 +1,5 @@
 #include "../component.h"
-#include "../debug/debug.h"
+#include "../debug.h"
 #include "../system.h"
 #include "../world.h"
 

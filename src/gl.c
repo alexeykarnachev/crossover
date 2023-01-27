@@ -1,9 +1,9 @@
 #include "gl.h"
 #include <glad/glad.h>
 
-#include "./debug/debug.h"
 #include "app.h"
 #include "component.h"
+#include "debug.h"
 #include "math.h"
 #include "utils.h"
 #include "world.h"

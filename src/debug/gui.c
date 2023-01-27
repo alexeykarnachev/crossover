@@ -1,9 +1,9 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
+#include "../debug.h"
 #include "../math.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
-#include "debug.h"
 
 void render_debug_gui(void) {
     ImGui_ImplOpenGL3_NewFrame();

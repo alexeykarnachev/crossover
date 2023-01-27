@@ -1,8 +1,7 @@
 
 #include "app.h"
 #include "component.h"
-#include "debug/debug.h"
-#include "debug/gui.h"
+#include "debug.h"
 #include "gl.h"
 #include "math.h"
 #include "world.h"
