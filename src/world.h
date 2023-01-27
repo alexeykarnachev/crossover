@@ -1,7 +1,6 @@
 #pragma once
 #include "component.h"
 #include "const.h"
-#include "primitive.h"
 #include "system.h"
 #include <stddef.h>
 #include <stdint.h>

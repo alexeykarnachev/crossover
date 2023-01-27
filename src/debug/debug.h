@@ -3,7 +3,6 @@
 #include "../const.h"
 #include "../gl.h"
 #include "../math.h"
-#include "../primitive.h"
 
 typedef struct DebugPrimitive {
     Transformation transformation;

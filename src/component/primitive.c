@@ -1,5 +1,4 @@
-#include "primitive.h"
-
+#include "../component.h"
 #include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
