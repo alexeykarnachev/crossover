@@ -1,9 +1,8 @@
-#include "player.h"
-
 #include "../app.h"
-#include "../component/component.h"
+#include "../component.h"
 #include "../debug/debug.h"
 #include "../math.h"
+#include "../system.h"
 #include "../world.h"
 #include <math.h>
 
@@ -64,13 +63,12 @@ void update_player() {
                     Transformation bullet_transformation = *transformation;
                     float bullet_collider_length = gun->bullet.speed
                                                    / 30.0;
-                    Primitive bullet_primitive = circle_primitive(
-                        circle(0.1)
+                    Primitive bullet_primitive = init_circle_primitive(0.1
                     );
-                    Primitive bullet_collider = line_primitive(
-                        line(vec2(bullet_collider_length, 0.0))
+                    Primitive bullet_collider = init_line_primitive(
+                        vec2(bullet_collider_length, 0.0)
                     );
-                    Material bullet_material = material(RED_COLOR);
+                    Material bullet_material = init_material(RED_COLOR);
 
                     spawn_bullet(
                         bullet_transformation,

@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 
-#include "./component/component.h"
 #include "app.h"
+#include "component.h"
 #include "debug/debug.h"
 #include "debug/gui.h"
 #include "math.h"
@@ -15,46 +15,46 @@ int main(int argc, char* argv[]) {
     init_world();
     init_debug();
 
-    spawn_camera(transformation(vec2(0.0, 0.0), 0.0));
+    spawn_camera(init_transformation(vec2(0.0, 0.0), 0.0));
     int player = spawn_guy(
-        transformation(vec2(0.0, 0.0), 0.0),
-        circle_primitive(circle(1.0)),
-        circle_primitive(circle(1.0)),
-        material(vec3(0.7, 0.3, 0.2)),
-        kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
-        vision(0.5 * PI, 10.0, 31),
-        gun(2.0, 100.0, 2.0),
+        init_transformation(vec2(0.0, 0.0), 0.0),
+        init_circle_primitive(1.0),
+        init_circle_primitive(1.0),
+        init_material(vec3(0.7, 0.3, 0.2)),
+        init_kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
+        init_vision(0.5 * PI, 10.0, 31),
+        init_gun(2.0, 100.0, 2.0),
         100.0,
         1
     );
     spawn_guy(
-        transformation(vec2(-4.0, 0.0), 0.0),
-        circle_primitive(circle(1.0)),
-        circle_primitive(circle(1.0)),
-        material(vec3(0.7, 0.3, 0.7)),
-        kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
-        vision(0.5 * PI, 10.0, 31),
-        gun(1.0, 50.0, 2.0),
+        init_transformation(vec2(-4.0, 0.0), 0.0),
+        init_circle_primitive(1.0),
+        init_circle_primitive(1.0),
+        init_material(vec3(0.7, 0.3, 0.7)),
+        init_kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
+        init_vision(0.5 * PI, 10.0, 31),
+        init_gun(1.0, 50.0, 2.0),
         100.0,
         0
     );
     spawn_obstacle(
-        transformation(vec2(4.0, 4.0), 0.0),
-        rectangle_primitive(rectangle(1.0, 1.0)),
-        rectangle_primitive(rectangle(1.0, 1.0)),
-        material(vec3(0.05, 0.05, 0.05))
+        init_transformation(vec2(4.0, 4.0), 0.0),
+        init_rectangle_primitive(1.0, 1.0),
+        init_rectangle_primitive(1.0, 1.0),
+        init_material(GRAY_COLOR)
     );
     spawn_obstacle(
-        transformation(vec2(4.0, -4.0), 0.0),
-        circle_primitive(circle(2.0)),
-        circle_primitive(circle(2.0)),
-        material(vec3(0.05, 0.05, 0.05))
+        init_transformation(vec2(4.0, -4.0), 0.0),
+        init_circle_primitive(2.0),
+        init_circle_primitive(2.0),
+        init_material(GRAY_COLOR)
     );
     spawn_obstacle(
-        transformation(vec2(-4.0, -4.0), 0.0),
-        triangle_primitive(triangle(vec2(-2.0, 0.0), vec2(-2.0, -2.0))),
-        triangle_primitive(triangle(vec2(-2.0, 0.0), vec2(-2.0, -2.0))),
-        material(vec3(0.05, 0.05, 0.05))
+        init_transformation(vec2(-4.0, -4.0), 0.0),
+        init_triangle_primitive(vec2(-2.0, 0.0), vec2(-2.0, -2.0)),
+        init_triangle_primitive(vec2(-2.0, 0.0), vec2(-2.0, -2.0)),
+        init_material(GRAY_COLOR)
     );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {

@@ -1,5 +1,7 @@
 #pragma once
 #include "../const.h"
+#include "../math.h"
+#include "../primitive.h"
 #include "../renderer.h"
 
 typedef struct DebugPrimitive {

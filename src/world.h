@@ -1,7 +1,8 @@
 #pragma once
-#include "./component/component.h"
-#include "./system/system.h"
+#include "component.h"
 #include "const.h"
+#include "primitive.h"
+#include "system.h"
 #include <stddef.h>
 #include <stdint.h>
 

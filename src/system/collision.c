@@ -1,9 +1,8 @@
-#include "collision.h"
-
-#include "../component/component.h"
+#include "../component.h"
 #include "../debug/debug.h"
 #include "../math.h"
 #include "../renderer.h"
+#include "../system.h"
 #include "../world.h"
 #include <math.h>
 #include <stdio.h>
@@ -114,36 +113,49 @@ static int collide_polygons(
 }
 
 static int collide_primitives(
-    Primitive p0,
-    Transformation t0,
-    Primitive p1,
-    Transformation t1,
+    Primitive primitive0,
+    Transformation transformation0,
+    Primitive primitive1,
+    Transformation transformation1,
     Collision* collision
 ) {
-    Vec2 v0[4];
-    Vec2 v1[4];
-    int nv0 = get_primitive_vertices(p0, t0, v0);
-    int nv1 = get_primitive_vertices(p1, t1, v1);
+    Vec2 vertices0[4];
+    Vec2 vertices1[4];
+    int nv0 = get_primitive_vertices(primitive0, vertices0);
+    int nv1 = get_primitive_vertices(primitive1, vertices1);
+    apply_transformation(vertices0, nv0, transformation0);
+    apply_transformation(vertices1, nv1, transformation1);
     int collided;
-    if (p0.type == CIRCLE_PRIMITIVE && p1.type == CIRCLE_PRIMITIVE) {
+    if (primitive0.type == CIRCLE_PRIMITIVE
+        && primitive1.type == CIRCLE_PRIMITIVE) {
         collided = collide_circles(
-            t0.position,
-            p0.p.circle.radius,
-            t1.position,
-            p1.p.circle.radius,
+            transformation0.position,
+            primitive0.p.circle.radius,
+            transformation1.position,
+            primitive1.p.circle.radius,
             &collision->mtv
         );
-    } else if (p0.type == CIRCLE_PRIMITIVE) {
+    } else if (primitive0.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
-            t0.position, p0.p.circle.radius, v1, nv1, &collision->mtv
+            transformation0.position,
+            primitive0.p.circle.radius,
+            vertices1,
+            nv1,
+            &collision->mtv
         );
         collision->mtv = flip(collision->mtv);
-    } else if (p1.type == CIRCLE_PRIMITIVE) {
+    } else if (primitive1.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
-            t1.position, p1.p.circle.radius, v0, nv0, &collision->mtv
+            transformation1.position,
+            primitive1.p.circle.radius,
+            vertices0,
+            nv0,
+            &collision->mtv
         );
     } else {
-        collided = collide_polygons(v0, nv0, v1, nv1, &collision->mtv);
+        collided = collide_polygons(
+            vertices0, nv0, vertices1, nv1, &collision->mtv
+        );
     }
 
     return collided;

@@ -1,5 +1,5 @@
 #pragma once
-#include "./component/component.h"
+#include "component.h"
 
 typedef enum FILL_TYPE { LINE, FILL } FILL_TYPE;
 

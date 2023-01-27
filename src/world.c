@@ -1,11 +1,11 @@
 #include "world.h"
 
-#include "./component/component.h"
-#include "./system/system.h"
 #include "app.h"
+#include "component.h"
 #include "const.h"
 #include "debug/debug.h"
 #include "math.h"
+#include "system.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

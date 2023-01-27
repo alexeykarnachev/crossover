@@ -1,6 +1,6 @@
 #include "primitive.h"
 
-#include "../math.h"
+#include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,51 +16,35 @@
         exit(1); \
     } while (0)
 
-Circle circle(float radius) {
-    Circle circle = {radius};
-    return circle;
-}
-
-Rectangle rectangle(float width, float height) {
-    Rectangle rectangle = {width, height};
-    return rectangle;
-}
-
-Triangle triangle(Vec2 b, Vec2 c) {
-    Triangle triangle = {b, c};
-    return triangle;
-}
-
-Line line(Vec2 b) {
-    Line line = {b};
-    return line;
-}
-
-Primitive circle_primitive(Circle c) {
+Primitive init_circle_primitive(float radius) {
     Primitive primitive;
     primitive.type = CIRCLE_PRIMITIVE;
-    primitive.p.circle = c;
+    Circle circle = {radius};
+    primitive.p.circle = circle;
     return primitive;
 }
 
-Primitive rectangle_primitive(Rectangle r) {
+Primitive init_rectangle_primitive(float width, float height) {
     Primitive primitive;
     primitive.type = RECTANGLE_PRIMITIVE;
-    primitive.p.rectangle = r;
+    Rectangle rectangle = {width, height};
+    primitive.p.rectangle = rectangle;
     return primitive;
 }
 
-Primitive triangle_primitive(Triangle t) {
+Primitive init_triangle_primitive(Vec2 b, Vec2 c) {
     Primitive primitive;
     primitive.type = TRIANGLE_PRIMITIVE;
-    primitive.p.triangle = t;
+    Triangle triangle = {b, c};
+    primitive.p.triangle = triangle;
     return primitive;
 }
 
-Primitive line_primitive(Line v) {
+Primitive init_line_primitive(Vec2 b) {
     Primitive primitive;
     primitive.type = LINE_PRIMITIVE;
-    primitive.p.line = v;
+    Line line = {b};
+    primitive.p.line = line;
     return primitive;
 }
 
@@ -110,11 +94,8 @@ static int get_line_vertices(Line line, Vec2* out) {
     return 2;
 }
 
-int get_primitive_vertices(
-    Primitive primitive, Transformation transformation, Vec2* out
-) {
+int get_primitive_vertices(Primitive primitive, Vec2* out) {
     PrimitiveType type = primitive.type;
-    PrimitiveOriginType origin_type = BARYCENTRIC_ORIGIN;
     Vec2 origin;
     int n;
 
@@ -131,18 +112,8 @@ int get_primitive_vertices(
             n = get_line_vertices(primitive.p.line, out);
             break;
         default: {
-            printf(
-                "%f,%f\n",
-                transformation.position.x,
-                transformation.position.y
-            );
-
             PRIMITIVE_TYPE_ERROR("get_primitive_vertices", type);
         }
-    }
-
-    for (int i = 0; i < n; ++i) {
-        out[i] = transform(out[i], transformation);
     }
 
     return n;

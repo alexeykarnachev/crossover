@@ -1,7 +1,6 @@
-#include "vision.h"
-
-#include "../component/component.h"
+#include "../component.h"
 #include "../debug/debug.h"
+#include "../system.h"
 #include "../world.h"
 
 static Vec2 VIEW_RAYS_ARENA[MAX_N_VIEW_RAYS];
@@ -36,15 +35,14 @@ void update_vision() {
         Vision v = WORLD.vision[entity];
         Transformation t0 = WORLD.transformation[entity];
         Vec2 start = t0.position;
-        reset_observations(&v);
+        reset_vision(&v);
         int n_view_rays = get_view_rays(
             v, t0.orientation, VIEW_RAYS_ARENA
         );
 
         for (int i = 0; i < n_view_rays; ++i) {
-            Line ray = {VIEW_RAYS_ARENA[i]};
             RayCastResult observation = cast_ray(
-                start, ray, OBSERVABLE_COMPONENT, entity
+                start, VIEW_RAYS_ARENA[i], OBSERVABLE_COMPONENT, entity
             );
             v.observations[i] = observation;
         }

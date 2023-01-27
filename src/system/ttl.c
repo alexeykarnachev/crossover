@@ -1,5 +1,4 @@
-#include "ttl.h"
-
+#include "../system.h"
 #include "../world.h"
 
 void update_ttl(float dt) {

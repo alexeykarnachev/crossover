@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 
-#include "./component/component.h"
 #include "./debug/debug.h"
 #include "app.h"
+#include "component.h"
 #include "math.h"
 #include "program.h"
 #include "renderer.h"
@@ -43,15 +43,14 @@ static int set_uniform_primitive(
     GLuint program, Transformation transformation, Primitive primitive
 ) {
     Vec2 vertices[4];
-    int n_points = get_primitive_vertices(
-        primitive, transformation, vertices
-    );
+    int nv = get_primitive_vertices(primitive, vertices);
+    apply_transformation(vertices, nv, transformation);
     set_uniform_2fv(program, "polygon.a", (float*)&vertices[0], 1);
     set_uniform_2fv(program, "polygon.b", (float*)&vertices[1], 1);
     set_uniform_2fv(program, "polygon.c", (float*)&vertices[2], 1);
     set_uniform_2fv(program, "polygon.d", (float*)&vertices[3], 1);
 
-    return n_points;
+    return nv;
 }
 
 static GLuint get_primitive_type_draw_mode(PrimitiveType type) {
@@ -144,7 +143,7 @@ void render_world(void) {
 
         Transformation transformation = WORLD.transformation[entity];
         Primitive primitive = WORLD.primitive[entity];
-        Material material = default_material();
+        Material material = init_material(GRAY_COLOR);
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
             material = WORLD.material[entity];
         }
@@ -166,7 +165,7 @@ void render_world(void) {
         DEBUG.n_primitives -= 1;
         DebugPrimitive p = DEBUG.primitives[DEBUG.n_primitives];
         RenderCall render_call = prepare_primitive_render_call(
-            p.transformation, p.primitive, material(p.color)
+            p.transformation, p.primitive, init_material(p.color)
         );
         execute_render_call(render_call, p.fill_type);
     }

@@ -1,8 +1,7 @@
-#include "kinematic.h"
-
-#include "../component/component.h"
+#include "../component.h"
 #include "../debug/debug.h"
 #include "../math.h"
+#include "../system.h"
 #include "../world.h"
 #include <math.h>
 

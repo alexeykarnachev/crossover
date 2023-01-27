@@ -1,5 +1,4 @@
 #pragma once
-#include "./component/primitive.h"
 #include "math.h"
 
 typedef struct RayCastResult {
@@ -8,5 +7,5 @@ typedef struct RayCastResult {
 } RayCastResult;
 
 RayCastResult cast_ray(
-    Vec2 start, Line ray, int target_components, int ray_owner
+    Vec2 start, Vec2 direction, int target_components, int ray_owner
 );

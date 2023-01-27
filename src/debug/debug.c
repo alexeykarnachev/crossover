@@ -1,7 +1,7 @@
 #include "debug.h"
 
 #include "../app.h"
-#include "../component/component.h"
+#include "../component.h"
 #include "../const.h"
 #include "../world.h"
 #include <math.h>
@@ -82,13 +82,13 @@ void render_debug_primitive(
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color) {
     Vec2 d = sub(e, s);
     Transformation t = {add(s, scale(d, 0.5)), 0.0};
-    Primitive p = line_primitive(line(d));
+    Primitive p = init_line_primitive(d);
     render_debug_primitive(t, p, color, -1);
 }
 
 void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type) {
     Transformation t = {c, 0.0};
-    Primitive p = circle_primitive(circle(r));
+    Primitive p = init_circle_primitive(r);
     render_debug_primitive(t, p, color, fill_type);
 }
 
@@ -96,6 +96,6 @@ void render_debug_rectangle(
     Vec2 position, float width, float height, Vec3 color, int fill_type
 ) {
     Transformation t = {position, 0.0};
-    Primitive p = rectangle_primitive(rectangle(width, height));
+    Primitive p = init_rectangle_primitive(width, height);
     render_debug_primitive(t, p, color, fill_type);
 }

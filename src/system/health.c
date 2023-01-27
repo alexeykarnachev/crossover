@@ -1,5 +1,4 @@
-#include "health.h"
-
+#include "../system.h"
 #include "../world.h"
 
 void update_health() {
