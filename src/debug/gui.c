@@ -5,19 +5,16 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 
+static ImGuiWindowFlags GHOST_WINDOW_FLAGS
+    = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
+      | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
+      | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav
+      | ImGuiWindowFlags_NoBackground
+      | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDocking
+      | ImGuiWindowFlags_NoInputs;
+
 static void show_debug_info(void) {
     ImGuiIO* io = igGetIO();
-    ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_NoTitleBar;
-    window_flags |= ImGuiWindowFlags_NoScrollbar;
-    window_flags |= ImGuiWindowFlags_NoMove;
-    window_flags |= ImGuiWindowFlags_NoResize;
-    window_flags |= ImGuiWindowFlags_NoCollapse;
-    window_flags |= ImGuiWindowFlags_NoNav;
-    window_flags |= ImGuiWindowFlags_NoBackground;
-    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-    window_flags |= ImGuiWindowFlags_NoDocking;
-    window_flags |= ImGuiWindowFlags_NoInputs;
 
     ImVec2 position = {0, io->DisplaySize.y};
     ImVec2 pivot = {0, 1};
@@ -25,10 +22,10 @@ static void show_debug_info(void) {
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
     igSetNextWindowSize(size, ImGuiCond_Always);
 
-    if (igBegin("Debug info", NULL, window_flags)) {
+    if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
         igText("GUI interacted: %d", DEBUG.general.is_gui_interacted);
         igText(
-            "Average: %.3f ms/frame (%.1f FPS)",
+            "Rate: %.3f ms/frame (%.1f FPS)",
             1000.0f / io->Framerate,
             io->Framerate
         );
@@ -40,7 +37,7 @@ static void show_debug_info(void) {
             DEBUG.general.camera_position.y
         );
         igText(
-            "Look at: (%g, %g)",
+            "Player look-at: (%g, %g)",
             DEBUG.general.look_at.x,
             DEBUG.general.look_at.y
         );
@@ -92,6 +89,28 @@ static void show_debug(void) {
     igEnd();
 }
 
+static void show_game_controls(void) {
+    ImGuiIO* io = igGetIO();
+    ImGuiWindowFlags flags = GHOST_WINDOW_FLAGS;
+    flags ^= ImGuiWindowFlags_NoInputs;
+
+    char* name = "Game controls";
+
+    if (igBegin(name, NULL, flags)) {
+        ImVec2 buttonSize = {0, 0};
+        if (igButton("Play", buttonSize)) {}
+    }
+
+    ImVec2 window_size;
+    igGetWindowSize(&window_size);
+    ImVec2 position = {0.5 * (io->DisplaySize.x - window_size.x), 0};
+    ImVec2 size = {0, 0};
+    igSetWindowPos_Str(name, position, ImGuiCond_Always);
+    igSetWindowSize_Str(name, size, ImGuiCond_Always);
+
+    igEnd();
+}
+
 void render_debug_gui(void) {
     ImGuiIO* io = igGetIO();
     DEBUG.general.is_gui_interacted
@@ -105,6 +124,7 @@ void render_debug_gui(void) {
 
     show_debug_info();
     show_debug();
+    show_game_controls();
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
