@@ -24,7 +24,7 @@ void destroy_entity(int entity) {
 
 int get_entity_owner(int entity) {
     if (entity_has_owner(entity)) {
-        return WORLD.owner[entity];
+        return WORLD.owners[entity];
     }
     return -1;
 }
@@ -114,7 +114,7 @@ int spawn_camera(Transformation transformation) {
     }
 
     int entity = spawn_entity();
-    WORLD.transformation[entity] = transformation;
+    WORLD.transformations[entity] = transformation;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT;
 
     WORLD.camera = entity;
@@ -143,14 +143,14 @@ int spawn_guy(
         WORLD.player = entity;
     }
 
-    WORLD.transformation[entity] = transformation;
-    WORLD.primitive[entity] = primitive;
-    WORLD.collider[entity] = collider;
-    WORLD.material[entity] = material;
-    WORLD.kinematic[entity] = kinematic;
-    WORLD.vision[entity] = vision;
-    WORLD.gun[entity] = gun;
-    WORLD.health[entity] = health;
+    WORLD.transformations[entity] = transformation;
+    WORLD.primitives[entity] = primitive;
+    WORLD.colliders[entity] = collider;
+    WORLD.materials[entity] = material;
+    WORLD.kinematics[entity] = kinematic;
+    WORLD.visions[entity] = vision;
+    WORLD.guns[entity] = gun;
+    WORLD.healths[entity] = health;
 
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | VISION_COMPONENT
@@ -169,10 +169,10 @@ int spawn_obstacle(
     Material material
 ) {
     int entity = spawn_entity();
-    WORLD.transformation[entity] = transformation;
-    WORLD.primitive[entity] = primitive;
-    WORLD.collider[entity] = collider;
-    WORLD.material[entity] = material;
+    WORLD.transformations[entity] = transformation;
+    WORLD.primitives[entity] = primitive;
+    WORLD.colliders[entity] = collider;
+    WORLD.materials[entity] = material;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
@@ -191,13 +191,13 @@ int spawn_bullet(
     int owner
 ) {
     int entity = spawn_entity();
-    WORLD.transformation[entity] = transformation;
-    WORLD.primitive[entity] = primitive;
-    WORLD.material[entity] = material;
-    WORLD.kinematic[entity] = kinematic;
-    WORLD.ttl[entity] = ttl;
-    WORLD.collider[entity] = collider;
-    WORLD.owner[entity] = owner;
+    WORLD.transformations[entity] = transformation;
+    WORLD.primitives[entity] = primitive;
+    WORLD.materials[entity] = material;
+    WORLD.kinematics[entity] = kinematic;
+    WORLD.ttls[entity] = ttl;
+    WORLD.colliders[entity] = collider;
+    WORLD.owners[entity] = owner;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | COLLIDER_COMPONENT
                                | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
@@ -208,7 +208,7 @@ int spawn_bullet(
 CameraFrustum get_camera_frustum() {
     CameraFrustum frustum;
     if (WORLD.camera != -1) {
-        Transformation t = WORLD.transformation[WORLD.camera];
+        Transformation t = WORLD.transformations[WORLD.camera];
         float aspect_ratio = (float)APP.window_width / APP.window_height;
         float height = CAMERA_VIEW_WIDTH / aspect_ratio;
         Vec2 half_size = scale(vec2(CAMERA_VIEW_WIDTH, height), 0.5);
@@ -232,13 +232,27 @@ static void update_entities_world_counter() {
 
 void update_world(float dt) {
     if (DEBUG.is_playing) {
-        update_ttl(dt);
-        update_health();
+        update_camera();
+        update_ttls(dt);
+        update_healths();
         update_player();
-        update_kinematic(dt);
-        update_vision();
-        update_collision();
+        update_kinematics(dt);
+        update_visions();
+        update_collisions();
+
+        update_entities_world_counter();
     }
 
-    update_entities_world_counter();
+    if (DEBUG.shading.kinematics) {
+        render_debug_kinematics();
+    }
+    if (DEBUG.shading.collisions) {
+        render_debug_collisions();
+    }
+    if (DEBUG.shading.visions) {
+        render_debug_visions();
+    }
+    if (DEBUG.shading.player) {
+        render_debug_player();
+    }
 }

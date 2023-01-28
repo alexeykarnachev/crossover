@@ -165,15 +165,15 @@ static int collide_primitives(
     return collided;
 }
 
-static void compute_collision() {
+static void compute_collisions() {
     COLLISIONS_ARENA.n = 0;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_collide(entity)) {
             continue;
         }
 
-        Primitive p0 = WORLD.collider[entity];
-        Transformation t0 = WORLD.transformation[entity];
+        Primitive p0 = WORLD.colliders[entity];
+        Transformation t0 = WORLD.transformations[entity];
 
         for (int target = entity + 1; target < WORLD.n_entities;
              ++target) {
@@ -181,8 +181,8 @@ static void compute_collision() {
                 continue;
             }
 
-            Primitive p1 = WORLD.collider[target];
-            Transformation t1 = WORLD.transformation[target];
+            Primitive p1 = WORLD.colliders[target];
+            Transformation t1 = WORLD.transformations[target];
             Collision* c = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
             c->entity0 = entity;
             c->entity1 = target;
@@ -207,7 +207,7 @@ static void compute_collision() {
     DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 
-static void resolve_collision() {
+static void resolve_collisions() {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
 
@@ -218,8 +218,8 @@ static void resolve_collision() {
             int e0 = collision.entity0;
             int e1 = collision.entity1;
 
-            Transformation* t0 = &WORLD.transformation[e0];
-            Transformation* t1 = &WORLD.transformation[e1];
+            Transformation* t0 = &WORLD.transformations[e0];
+            Transformation* t1 = &WORLD.transformations[e1];
             if (entity_has_rigid_body(e0) && entity_has_rigid_body(e1)) {
                 int has_kinematic0 = entity_has_kinematic(e0);
                 int has_kinematic1 = entity_has_kinematic(e1);
@@ -234,12 +234,12 @@ static void resolve_collision() {
             }
 
             if (entity_can_be_damaged_by_bullet(e0, e1)) {
-                WORLD.health[e0] -= get_kinematic_damage(
-                    WORLD.kinematic[e1]
+                WORLD.healths[e0] -= get_kinematic_damage(
+                    WORLD.kinematics[e1]
                 );
             } else if (entity_can_be_damaged_by_bullet(e1, e0)) {
-                WORLD.health[e1] -= get_kinematic_damage(
-                    WORLD.kinematic[e0]
+                WORLD.healths[e1] -= get_kinematic_damage(
+                    WORLD.kinematics[e0]
                 );
             }
 
@@ -252,7 +252,40 @@ static void resolve_collision() {
     }
 }
 
-void update_collision() {
-    compute_collision();
-    resolve_collision();
+void update_collisions() {
+    compute_collisions();
+    resolve_collisions();
+}
+
+void render_debug_collisions() {
+    for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
+        Collision collision = COLLISIONS_ARENA.arena[i];
+        Transformation transformation0
+            = WORLD.transformations[collision.entity0];
+        Transformation transformation1
+            = WORLD.transformations[collision.entity1];
+
+        render_debug_line(
+            transformation0.position,
+            add(transformation0.position, collision.mtv),
+            MAGENTA_COLOR
+        );
+        render_debug_line(
+            transformation1.position,
+            sub(transformation1.position, collision.mtv),
+            CYAN_COLOR
+        );
+    }
+
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_can_collide(entity)) {
+            continue;
+        }
+
+        Transformation transformation = WORLD.transformations[entity];
+        Primitive primitive = WORLD.colliders[entity];
+        render_debug_primitive(
+            transformation, primitive, SKYBLUE_COLOR, LINE
+        );
+    }
 }

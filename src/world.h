@@ -8,16 +8,16 @@
 typedef struct World {
     // Components
     uint64_t components[MAX_N_ENTITIES];
-    Transformation transformation[MAX_N_ENTITIES];
-    Kinematic kinematic[MAX_N_ENTITIES];
-    Vision vision[MAX_N_ENTITIES];
-    Primitive collider[MAX_N_ENTITIES];
-    Primitive primitive[MAX_N_ENTITIES];
-    Material material[MAX_N_ENTITIES];
-    Gun gun[MAX_N_ENTITIES];
-    float ttl[MAX_N_ENTITIES];
-    float health[MAX_N_ENTITIES];
-    int owner[MAX_N_ENTITIES];
+    Transformation transformations[MAX_N_ENTITIES];
+    Kinematic kinematics[MAX_N_ENTITIES];
+    Vision visions[MAX_N_ENTITIES];
+    Primitive colliders[MAX_N_ENTITIES];
+    Primitive primitives[MAX_N_ENTITIES];
+    Material materials[MAX_N_ENTITIES];
+    Gun guns[MAX_N_ENTITIES];
+    float ttls[MAX_N_ENTITIES];
+    float healths[MAX_N_ENTITIES];
+    int owners[MAX_N_ENTITIES];
 
     // Singleton entities
     int camera;

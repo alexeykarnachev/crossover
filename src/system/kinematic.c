@@ -50,23 +50,29 @@ static float get_new_orientation(
     return new_orientation;
 }
 
-void update_kinematic(float dt) {
+void update_kinematics(float dt) {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_kinematic(entity)) {
             continue;
         }
-
-        Transformation* transformation = &WORLD.transformation[entity];
-        Kinematic kinematic = WORLD.kinematic[entity];
-        if (DEBUG.shading.orientation) {
-            render_debug_orientation(transformation, kinematic);
-        }
-
+        Transformation* transformation = &WORLD.transformations[entity];
+        Kinematic kinematic = WORLD.kinematics[entity];
         float new_orientation = get_new_orientation(
             transformation, kinematic, dt
         );
         Vec2 step = scale(kinematic.velocity, dt);
         transformation->position = add(transformation->position, step);
         transformation->orientation = new_orientation;
+    }
+}
+
+void render_debug_kinematics() {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_kinematic(entity)) {
+            continue;
+        }
+        Transformation* transformation = &WORLD.transformations[entity];
+        Kinematic kinematic = WORLD.kinematics[entity];
+        render_debug_orientation(transformation, kinematic);
     }
 }

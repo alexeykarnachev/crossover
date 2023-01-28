@@ -14,8 +14,8 @@ RayCastResult cast_ray(
             continue;
         }
         Transformation entity_transformation
-            = WORLD.transformation[entity];
-        Primitive entity_collider = WORLD.collider[entity];
+            = WORLD.transformations[entity];
+        Primitive entity_collider = WORLD.colliders[entity];
 
         Vec2 collision_position;
         int is_collided = 0;

@@ -280,7 +280,7 @@ static RenderCall prepare_primitive_render_call(
     glUseProgram(program);
     PrimitiveType type = primitive.type;
 
-    set_uniform_camera(program, WORLD.transformation[WORLD.camera]);
+    set_uniform_camera(program, WORLD.transformations[WORLD.camera]);
     set_uniform_1i(program, "type", type);
     set_uniform_3fv(
         program, "diffuse_color", (float*)&material.diffuse_color, 1
@@ -340,11 +340,11 @@ void render_world(void) {
             continue;
         }
 
-        Transformation transformation = WORLD.transformation[entity];
-        Primitive primitive = WORLD.primitive[entity];
+        Transformation transformation = WORLD.transformations[entity];
+        Primitive primitive = WORLD.primitives[entity];
         Material material = init_material(GRAY_COLOR);
         if (entity_has_component(entity, MATERIAL_COMPONENT)) {
-            material = WORLD.material[entity];
+            material = WORLD.materials[entity];
         }
 
         RenderCall render_call = prepare_primitive_render_call(

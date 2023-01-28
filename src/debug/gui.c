@@ -50,13 +50,13 @@ static void show_debug(void) {
     ImGuiIO* io = igGetIO();
     if (igBegin("Debug", NULL, 0)) {
         if (igTreeNode_Str("Shading")) {
-            igCheckbox("Material", (bool*)(&DEBUG.shading.materials));
+            igCheckbox("Player", (bool*)(&DEBUG.shading.player));
+            igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
+            igCheckbox("Collisions", (bool*)(&DEBUG.shading.collisions));
+            igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
+            igCheckbox("Kinematics", (bool*)(&DEBUG.shading.kinematics));
             igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
-            igCheckbox("Collision", (bool*)(&DEBUG.shading.collisions));
-            igCheckbox("Vision", (bool*)(&DEBUG.shading.vision));
             igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
-            igCheckbox("Look at", (bool*)(&DEBUG.shading.look_at));
-            igCheckbox("Orientation", (bool*)(&DEBUG.shading.orientation));
             igTreePop();
         }
 

@@ -26,42 +26,56 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
     return vision.n_view_rays;
 }
 
-void update_vision() {
+void update_visions() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_observe(entity)) {
             continue;
         }
 
-        Vision v = WORLD.vision[entity];
-        Transformation t0 = WORLD.transformation[entity];
+        Vision* vision = &WORLD.visions[entity];
+        Transformation t0 = WORLD.transformations[entity];
         Vec2 start = t0.position;
-        reset_vision(&v);
+        reset_vision(vision);
         int n_view_rays = get_view_rays(
-            v, t0.orientation, VIEW_RAYS_ARENA
+            *vision, t0.orientation, VIEW_RAYS_ARENA
         );
 
         for (int i = 0; i < n_view_rays; ++i) {
             RayCastResult observation = cast_ray(
                 start, VIEW_RAYS_ARENA[i], OBSERVABLE_COMPONENT, entity
             );
-            v.observations[i] = observation;
+            vision->observations[i] = observation;
+        }
+    }
+}
+
+void render_debug_visions() {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_can_observe(entity)) {
+            continue;
         }
 
-        if (DEBUG.shading.vision) {
-            for (int i = 0; i < v.n_view_rays; ++i) {
-                RayCastResult obs = v.observations[i];
-                if (obs.entity != -1) {
-                    render_debug_line(
-                        t0.position, obs.position, GREEN_COLOR
-                    );
-                    render_debug_circle(obs.position, 0.05, RED_COLOR, -1);
-                } else {
-                    render_debug_line(
-                        t0.position,
-                        add(t0.position, VIEW_RAYS_ARENA[i]),
-                        GREEN_COLOR
-                    );
-                }
+        Vision vision = WORLD.visions[entity];
+        Transformation t0 = WORLD.transformations[entity];
+        int n_view_rays = get_view_rays(
+            vision, t0.orientation, VIEW_RAYS_ARENA
+        );
+
+        for (int i = 0; i < n_view_rays; ++i) {
+            RayCastResult observation = vision.observations[i];
+            if (observation.entity != -1) {
+                render_debug_line(
+                    t0.position, observation.position, GREEN_COLOR
+                );
+                render_debug_circle(
+                    observation.position, 0.05, RED_COLOR, -1
+                );
+            } else {
+                render_debug_line(
+                    t0.position,
+                    add(t0.position, VIEW_RAYS_ARENA[i]),
+                    GREEN_COLOR
+                );
             }
         }
     }

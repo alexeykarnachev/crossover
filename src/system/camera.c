@@ -5,7 +5,7 @@
 
 void update_camera() {
     if (WORLD.camera != -1) {
-        Transformation t = WORLD.transformation[WORLD.camera];
+        Transformation t = WORLD.transformations[WORLD.camera];
         DEBUG.general.camera_position = t.position;
     }
 }

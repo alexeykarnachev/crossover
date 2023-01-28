@@ -16,9 +16,9 @@ static Vec2 screen_to_world(Vec2 screen_pos) {
 
 void update_player() {
     if (WORLD.player != -1) {
-        Kinematic* kinematic = &WORLD.kinematic[WORLD.player];
+        Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
         Transformation* transformation
-            = &WORLD.transformation[WORLD.player];
+            = &WORLD.transformations[WORLD.player];
         Vec2 velocity = {0.0, 0.0};
 
         if (!DEBUG.general.is_gui_interacted) {
@@ -32,9 +32,6 @@ void update_player() {
                 look_at.x - transformation->position.x
             );
             DEBUG.general.look_at = look_at;
-            if (DEBUG.shading.look_at) {
-                render_debug_circle(look_at, 0.1, RED_COLOR, -1);
-            }
             if (length(velocity) > EPS) {
                 velocity = scale(
                     normalize(velocity), kinematic->max_speed
@@ -47,7 +44,7 @@ void update_player() {
         if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]
             && !DEBUG.general.is_gui_interacted) {
             if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
-                Gun* gun = &WORLD.gun[WORLD.player];
+                Gun* gun = &WORLD.guns[WORLD.player];
                 float time_since_last_shoot
                     = (APP.time - gun->last_time_shoot);
                 if (gun->last_time_shoot == 0
@@ -87,5 +84,11 @@ void update_player() {
                 }
             }
         }
+    }
+}
+
+void render_debug_player() {
+    if (WORLD.player != -1) {
+        render_debug_circle(DEBUG.general.look_at, 0.1, RED_COLOR, -1);
     }
 }

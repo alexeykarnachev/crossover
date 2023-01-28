@@ -25,12 +25,12 @@ typedef struct Debug {
 
     struct shading {
         int materials;
-        int wireframe;
         int collisions;
-        int vision;
+        int kinematics;
+        int visions;
+        int player;
+        int wireframe;
         int grid;
-        int look_at;
-        int orientation;
     } shading;
 
     struct collisions {
