@@ -231,14 +231,14 @@ static void update_entities_world_counter() {
 }
 
 void update_world(float dt) {
-    dt /= 1000.0;
-
-    update_ttl(dt);
-    update_health();
-    update_player();
-    update_vision();
-    update_kinematic(dt);
-    update_collision();
+    if (DEBUG.is_playing) {
+        update_ttl(dt);
+        update_health();
+        update_player();
+        update_kinematic(dt);
+        update_vision();
+        update_collision();
+    }
 
     update_entities_world_counter();
 }

@@ -97,8 +97,12 @@ static void show_game_controls(void) {
     char* name = "Game controls";
 
     if (igBegin(name, NULL, flags)) {
-        ImVec2 buttonSize = {0, 0};
-        if (igButton("Play", buttonSize)) {}
+        ImVec2 size = {0, 0};
+        if (DEBUG.is_playing && igButton("Stop", size)) {
+            DEBUG.is_playing = 0;
+        } else if (!DEBUG.is_playing && igButton("Play", size)) {
+            DEBUG.is_playing = 1;
+        }
     }
 
     ImVec2 window_size;

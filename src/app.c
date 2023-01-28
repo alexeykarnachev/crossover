@@ -103,7 +103,7 @@ void init_app(int window_width, int window_height) {
 
 void update_window() {
     double current_time = glfwGetTime();
-    APP.dt = 1000.0 * (current_time - APP.time);
+    APP.dt = current_time - APP.time;
     APP.time = current_time;
     APP.cursor_dx = 0.0;
     APP.cursor_dy = 0.0;

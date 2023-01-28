@@ -12,6 +12,8 @@
 Debug DEBUG;
 
 void init_debug(void) {
+    DEBUG.is_playing = 0;
+
     DEBUG.shading.materials = 1;
     DEBUG.shading.collisions = 1;
     DEBUG.shading.look_at = 1;

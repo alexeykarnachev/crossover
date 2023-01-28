@@ -13,6 +13,7 @@ typedef struct DebugPrimitive {
 typedef struct Debug {
     DebugPrimitive primitives[MAX_N_DEBUG_PRIMITIVES];
     int n_primitives;
+    int is_playing;
 
     struct general {
         int is_gui_interacted;
