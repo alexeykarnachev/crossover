@@ -37,6 +37,10 @@ int entity_has_transformation(int entity) {
     return WORLD.components[entity] & TRANSFORMATION_COMPONENT;
 }
 
+int entity_has_primitive(int entity) {
+    return WORLD.components[entity] & PRIMITIVE_COMPONENT;
+}
+
 int entity_has_ttl(int entity) {
     return WORLD.components[entity] & TTL_COMPONENT;
 }
@@ -75,7 +79,8 @@ int entity_can_observe(int entity) {
 
 int entity_can_be_rendered(int entity) {
     return entity_has_component(
-        entity, PRIMITIVE_COMPONENT | TRANSFORMATION_COMPONENT
+        entity,
+        PRIMITIVE_COMPONENT | TRANSFORMATION_COMPONENT | MATERIAL_COMPONENT
     );
 }
 
@@ -239,20 +244,8 @@ void update_world(float dt) {
         update_kinematics(dt);
         update_visions();
         update_collisions();
-
         update_entities_world_counter();
-    }
-
-    if (DEBUG.shading.kinematics) {
-        render_debug_kinematics();
-    }
-    if (DEBUG.shading.collisions) {
-        render_debug_collisions();
-    }
-    if (DEBUG.shading.visions) {
-        render_debug_visions();
-    }
-    if (DEBUG.shading.player) {
-        render_debug_player();
+    } else {
+        update_cursor_picking();
     }
 }

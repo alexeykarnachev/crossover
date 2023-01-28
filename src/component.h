@@ -3,6 +3,11 @@
 #include "const.h"
 #include "math.h"
 
+typedef struct Transformation {
+    Vec2 position;
+    float orientation;
+} Transformation;
+
 typedef struct Circle {
     float radius;
 } Circle;
@@ -43,11 +48,9 @@ Primitive init_rectangle_primitive(float width, float height);
 Primitive init_triangle_primitive(Vec2 b, Vec2 c);
 Primitive init_line_primitive(Vec2 b);
 int get_primitive_vertices(Primitive primitive, Vec2* out);
-
-typedef struct Transformation {
-    Vec2 position;
-    float orientation;
-} Transformation;
+Rectangle get_primitive_bounding_rectangle(
+    Primitive primitive, Transformation transformation
+);
 
 typedef struct RayCastResult {
     Vec2 position;

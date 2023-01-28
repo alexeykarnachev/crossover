@@ -22,12 +22,22 @@ void update_kinematics(float dt);
 void update_player();
 void update_ttls(float dt);
 void update_visions();
+void update_cursor_picking();
 
 void render_debug_player();
 void render_debug_kinematics();
 void render_debug_collisions();
 void render_debug_visions();
+void render_cursor_picking();
 
+int collide_primitives(
+    Primitive primitive0,
+    Transformation transformation0,
+    Primitive primitive1,
+    Transformation transformation1,
+    Collision* collision
+);
 RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner
 );
+Vec2 get_cursor_world_pos(void);

@@ -117,3 +117,30 @@ int get_primitive_vertices(Primitive primitive, Vec2* out) {
 
     return n;
 }
+
+Rectangle get_primitive_bounding_rectangle(
+    Primitive primitive, Transformation transformation
+) {
+    Vec2 position = transformation.position;
+
+    float width;
+    float height;
+    if (primitive.type == CIRCLE_PRIMITIVE) {
+        width = 2.0 * primitive.p.circle.radius;
+        height = width;
+    } else {
+        Vec2 vertices[4];
+        int n_vertices = get_primitive_vertices(primitive, vertices);
+        transformation.orientation = 0.0;
+        apply_transformation(vertices, n_vertices, transformation);
+
+        for (int i = 0; i < n_vertices; ++i) {
+            Vec2 vertex = vertices[i];
+            width = max(width, 2.0 * fabs(position.x - vertex.x));
+            height = max(height, 2.0 * fabs(position.y - vertex.y));
+        }
+    }
+
+    Rectangle rectangle = {width, height};
+    return rectangle;
+}

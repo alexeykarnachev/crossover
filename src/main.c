@@ -61,7 +61,6 @@ int main(int argc, char* argv[]) {
         update_debug();
         update_world(APP.dt);
         render_world();
-        render_debug_gui();
         update_window();
     }
 

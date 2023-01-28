@@ -17,6 +17,7 @@ Vec3 BROWN_COLOR = {0.54509, 0.2705, 0.074509};
 Vec3 SKYBLUE_COLOR = {0.5294, 0.8078, 0.9216};
 
 Material init_material(Vec3 diffuse_color) {
-    Material m = {diffuse_color};
+    Material m;
+    m.diffuse_color = diffuse_color;
     return m;
 }

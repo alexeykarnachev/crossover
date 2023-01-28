@@ -35,6 +35,8 @@ Vec3 vec3(float x, float y, float z);
 Vec4 vec4(float x, float y, float z, float w);
 Vec2 scale(Vec2 v, float k);
 Vec2 add(Vec2 v0, Vec2 v1);
+Vec2 multiply(Vec2 v0, Vec2 v1);
+Vec2 divide(Vec2 v0, Vec2 v1);
 Vec2 add_many(Vec2 vecs[], int n);
 Vec2 sub(Vec2 v0, Vec2 v1);
 Vec2 middle(Vec2 v0, Vec2 v1);

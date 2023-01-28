@@ -116,7 +116,7 @@ static int collide_polygons(
     return 0;
 }
 
-static int collide_primitives(
+int collide_primitives(
     Primitive primitive0,
     Transformation transformation0,
     Primitive primitive1,
@@ -189,18 +189,6 @@ static void compute_collisions() {
 
             int collided = collide_primitives(p0, t0, p1, t1, c);
             COLLISIONS_ARENA.n += collided;
-            if (DEBUG.shading.collisions && collided) {
-                render_debug_line(
-                    t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
-                );
-                render_debug_line(
-                    t1.position, sub(t1.position, c->mtv), CYAN_COLOR
-                );
-            }
-        }
-
-        if (DEBUG.shading.collisions) {
-            render_debug_primitive(t0, p0, SKYBLUE_COLOR, LINE);
         }
     }
 

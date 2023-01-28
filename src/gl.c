@@ -5,6 +5,7 @@
 #include "component.h"
 #include "debug.h"
 #include "math.h"
+#include "system.h"
 #include "utils.h"
 #include "world.h"
 #include <errno.h>
@@ -342,10 +343,7 @@ void render_world(void) {
 
         Transformation transformation = WORLD.transformations[entity];
         Primitive primitive = WORLD.primitives[entity];
-        Material material = init_material(GRAY_COLOR);
-        if (entity_has_component(entity, MATERIAL_COMPONENT)) {
-            material = WORLD.materials[entity];
-        }
+        Material material = WORLD.materials[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
             transformation, primitive, material
@@ -360,12 +358,34 @@ void render_world(void) {
         }
     }
 
-    while (DEBUG.n_primitives > 0) {
-        DEBUG.n_primitives -= 1;
-        DebugPrimitive p = DEBUG.primitives[DEBUG.n_primitives];
+    // -------------------------------------------------------------------
+    // Render debug and editor-related primitives
+    if (DEBUG.shading.kinematics) {
+        render_debug_kinematics();
+    }
+    if (DEBUG.shading.collisions) {
+        render_debug_collisions();
+    }
+    if (DEBUG.shading.visions) {
+        render_debug_visions();
+    }
+    if (DEBUG.shading.player) {
+        render_debug_player();
+    }
+
+    render_cursor_picking();
+
+    for (int i = 0; i < DEBUG.n_primitives; ++i) {
+        DebugPrimitive p = DEBUG.primitives[i];
         RenderCall render_call = prepare_primitive_render_call(
             p.transformation, p.primitive, init_material(p.color)
         );
         execute_render_call(render_call, p.fill_type);
     }
+
+    DEBUG.n_primitives = 0;
+
+    // -------------------------------------------------------------------
+    // Render imgui
+    render_debug_gui();
 }

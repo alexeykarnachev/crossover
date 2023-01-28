@@ -59,6 +59,7 @@ int get_entity_owner(int entity);
 
 int entity_has_component(int entity, ComponentType component);
 int entity_has_transformation(int entity);
+int entity_has_primitive(int entity);
 int entity_has_collider(int entity);
 int entity_has_ttl(int entity);
 int entity_has_rigid_body(int entity);

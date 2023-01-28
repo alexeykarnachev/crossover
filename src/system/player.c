@@ -6,14 +6,6 @@
 #include "../world.h"
 #include <math.h>
 
-static Vec2 screen_to_world(Vec2 screen_pos) {
-    CameraFrustum frustum = get_camera_frustum();
-    Vec2 size = sub(frustum.top_right, frustum.bot_left);
-    float x = frustum.bot_left.x + size.x * screen_pos.x;
-    float y = frustum.bot_left.y + size.y * screen_pos.y;
-    return vec2(x, y);
-}
-
 void update_player() {
     if (WORLD.player != -1) {
         Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
@@ -26,7 +18,7 @@ void update_player() {
             velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
             velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
             velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
-            Vec2 look_at = screen_to_world(get_cursor_screen_pos());
+            Vec2 look_at = get_cursor_world_pos();
             kinematic->orientation = atan2(
                 look_at.y - transformation->position.y,
                 look_at.x - transformation->position.x

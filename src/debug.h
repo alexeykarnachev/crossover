@@ -14,6 +14,7 @@ typedef struct Debug {
     DebugPrimitive primitives[MAX_N_DEBUG_PRIMITIVES];
     int n_primitives;
     int is_playing;
+    int picked_entity;
 
     struct general {
         int is_gui_interacted;
@@ -60,3 +61,4 @@ void render_debug_rectangle(
 );
 
 void render_debug_gui(void);
+void render_debug_grid(void);

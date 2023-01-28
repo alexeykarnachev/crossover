@@ -93,6 +93,16 @@ Vec2 add(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+Vec2 multiply(Vec2 v0, Vec2 v1) {
+    Vec2 res = {v0.x * v1.x, v0.y * v1.y};
+    return res;
+}
+
+Vec2 divide(Vec2 v0, Vec2 v1) {
+    Vec2 res = {v0.x / v1.x, v0.y / v1.y};
+    return res;
+}
+
 Vec2 add_many(Vec2 vecs[], int n) {
     Vec2 res = {0.0, 0.0};
     for (int i = 0; i < n; ++i) {
