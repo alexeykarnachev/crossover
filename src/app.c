@@ -5,6 +5,7 @@
 #include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "debug.h"
 #include "math.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -44,6 +45,11 @@ static void cursor_position_callback(
     app->cursor_dy += y - app->cursor_y;
     app->cursor_x = x;
     app->cursor_y = y;
+
+    DEBUG.inputs.cursor_x = app->cursor_x;
+    DEBUG.inputs.cursor_y = app->cursor_y;
+    DEBUG.inputs.cursor_dx = app->cursor_dx;
+    DEBUG.inputs.cursor_dy = app->cursor_dy;
 }
 
 Vec2 get_cursor_screen_pos() {

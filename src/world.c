@@ -14,7 +14,6 @@ World WORLD;
 
 void init_world(void) {
     WORLD.n_entities = 0;
-    WORLD.n_collisions = 0;
     WORLD.player = -1;
     WORLD.camera = -1;
 }
@@ -228,6 +227,7 @@ static void update_entities_world_counter() {
         }
     }
     WORLD.n_entities = n_entities;
+    DEBUG.general.n_entities = n_entities;
 }
 
 void update_world(float dt) {

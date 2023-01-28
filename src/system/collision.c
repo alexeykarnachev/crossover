@@ -1,4 +1,5 @@
 #include "../component.h"
+#include "../const.h"
 #include "../debug.h"
 #include "../gl.h"
 #include "../math.h"
@@ -6,6 +7,9 @@
 #include "../world.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+static CollisionsArena COLLISIONS_ARENA;
 
 static void update_overlap(
     Vec2 bound0,
@@ -162,7 +166,7 @@ static int collide_primitives(
 }
 
 static void compute_collision() {
-    WORLD.n_collisions = 0;
+    COLLISIONS_ARENA.n = 0;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_collide(entity)) {
             continue;
@@ -179,12 +183,12 @@ static void compute_collision() {
 
             Primitive p1 = WORLD.collider[target];
             Transformation t1 = WORLD.transformation[target];
-            Collision* c = &WORLD.collisions[WORLD.n_collisions];
+            Collision* c = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
             c->entity0 = entity;
             c->entity1 = target;
 
             int collided = collide_primitives(p0, t0, p1, t1, c);
-            WORLD.n_collisions += collided;
+            COLLISIONS_ARENA.n += collided;
             if (DEBUG.shading.collisions && collided) {
                 render_debug_line(
                     t0.position, add(t0.position, c->mtv), MAGENTA_COLOR
@@ -199,14 +203,16 @@ static void compute_collision() {
             render_debug_primitive(t0, p0, SKYBLUE_COLOR, LINE);
         }
     }
+
+    DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 
 static void resolve_collision() {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
 
-        for (int i = 0; i < WORLD.n_collisions; ++i) {
-            Collision collision = WORLD.collisions[i];
+        for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
+            Collision collision = COLLISIONS_ARENA.arena[i];
 
             Vec2 mtv = collision.mtv;
             int e0 = collision.entity0;

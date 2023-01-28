@@ -6,9 +6,6 @@
 #include <stdint.h>
 
 typedef struct World {
-    // Collisions
-    Collision collisions[MAX_N_ENTITIES * MAX_N_ENTITIES];
-
     // Components
     uint64_t components[MAX_N_ENTITIES];
     Transformation transformation[MAX_N_ENTITIES];
@@ -27,7 +24,6 @@ typedef struct World {
     int player;
 
     // Current counters
-    size_t n_collisions;
     size_t n_entities;
 } World;
 

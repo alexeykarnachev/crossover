@@ -1,8 +1,7 @@
 #pragma once
 #include "component.h"
+#include "const.h"
 #include "math.h"
-
-// TODO: Hold the collisions array in this file, not in the world file
 
 typedef struct Collision {
     Vec2 mtv;
@@ -10,6 +9,12 @@ typedef struct Collision {
     int entity1;
 } Collision;
 
+typedef struct CollisionsArena {
+    Collision arena[MAX_N_COLLISIONS];
+    int n;
+} CollisionsArena;
+
+void update_camera();
 void update_collision();
 void update_bullet();
 void update_health();
