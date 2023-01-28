@@ -21,26 +21,31 @@ void update_player() {
             = &WORLD.transformation[WORLD.player];
         Vec2 velocity = {0.0, 0.0};
 
-        velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
-        velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
-        velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
-        velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
-        if (length(velocity) > EPS) {
-            velocity = scale(normalize(velocity), kinematic->max_speed);
+        if (!DEBUG.general.is_gui_interacted) {
+            velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
+            velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
+            velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
+            velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
+            Vec2 look_at = screen_to_world(get_cursor_screen_pos());
+            kinematic->orientation = atan2(
+                look_at.y - transformation->position.y,
+                look_at.x - transformation->position.x
+            );
+            DEBUG.general.look_at = look_at;
+            if (DEBUG.shading.look_at) {
+                render_debug_circle(look_at, 0.1, RED_COLOR, -1);
+            }
+            if (length(velocity) > EPS) {
+                velocity = scale(
+                    normalize(velocity), kinematic->max_speed
+                );
+            }
         }
+
         kinematic->velocity = velocity;
-        Vec2 look_at = screen_to_world(get_cursor_screen_pos());
-        kinematic->orientation = atan2(
-            look_at.y - transformation->position.y,
-            look_at.x - transformation->position.x
-        );
 
-        DEBUG.general.look_at = look_at;
-        if (DEBUG.shading.look_at) {
-            render_debug_circle(look_at, 0.1, RED_COLOR, -1);
-        }
-
-        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
+        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]
+            && !DEBUG.general.is_gui_interacted) {
             if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
                 Gun* gun = &WORLD.gun[WORLD.player];
                 float time_since_last_shoot

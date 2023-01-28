@@ -15,7 +15,7 @@ void init_debug(void) {
     DEBUG.shading.collisions = 1;
     DEBUG.shading.look_at = 1;
     DEBUG.shading.vision = 1;
-    // DEBUG.shading.orientation = 1;
+    DEBUG.shading.orientation = 1;
     DEBUG.collisions.resolve = 1;
 }
 
@@ -54,6 +54,13 @@ static void update_grid() {
 
 void update_debug(void) {
     DEBUG.n_primitives = 0;
+
+    ImGuiIO* io = igGetIO();
+    DEBUG.general.is_gui_interacted
+        = io->WantCaptureMouse || io->WantCaptureMouseUnlessPopupClose
+          || io->WantCaptureKeyboard || io->WantTextInput
+          || io->WantSetMousePos || io->NavActive || io->NavVisible;
+
     DEBUG.general.n_entities = WORLD.n_entities;
     DEBUG.general.n_collisions = WORLD.n_collisions;
     DEBUG.inputs.cursor_x = APP.cursor_x;

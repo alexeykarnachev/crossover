@@ -11,6 +11,7 @@ void render_debug_gui(void) {
     igNewFrame();
 
     if (igTreeNode_Str("General")) {
+        igText("GUI interacted: %d", DEBUG.general.is_gui_interacted);
         igText(
             "Average: %.3f ms/frame (%.1f FPS)",
             1000.0f / igGetIO()->Framerate,

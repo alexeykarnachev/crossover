@@ -15,8 +15,6 @@ typedef struct Application {
     double cursor_dx;
     double cursor_dy;
 
-    ImGuiIO* gui_io;
-
     int key_states[512];
     int mouse_button_states[16];
 } Application;

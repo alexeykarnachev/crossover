@@ -81,7 +81,6 @@ void init_app(int window_width, int window_height) {
     glfwSwapInterval(1);
     igCreateContext(NULL);
 
-    APP.gui_io = igGetIO();
     ImGui_ImplGlfw_InitForOpenGL(WINDOW, true);
     ImGui_ImplOpenGL3_Init("#version 460 core");
 
