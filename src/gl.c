@@ -384,8 +384,4 @@ void render_world(void) {
     }
 
     DEBUG.n_primitives = 0;
-
-    // -------------------------------------------------------------------
-    // Render imgui
-    render_debug_gui();
 }

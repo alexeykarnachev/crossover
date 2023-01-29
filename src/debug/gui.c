@@ -1,9 +1,11 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
+#include "../app.h"
 #include "../debug.h"
 #include "../math.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include <string.h>
 
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
     = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
@@ -13,7 +15,7 @@ static ImGuiWindowFlags GHOST_WINDOW_FLAGS
       | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDocking
       | ImGuiWindowFlags_NoInputs;
 
-static void show_debug_info(void) {
+static void render_debug_info(void) {
     ImGuiIO* io = igGetIO();
 
     ImVec2 position = {0, io->DisplaySize.y};
@@ -46,7 +48,7 @@ static void show_debug_info(void) {
     igEnd();
 }
 
-static void show_debug(void) {
+static void render_debug(void) {
     ImGuiIO* io = igGetIO();
     if (igBegin("Debug", NULL, 0)) {
         if (igTreeNode_Str("Shading")) {
@@ -89,7 +91,7 @@ static void show_debug(void) {
     igEnd();
 }
 
-static void show_game_controls(void) {
+static void render_game_controls(void) {
     ImGuiIO* io = igGetIO();
     ImGuiWindowFlags flags = GHOST_WINDOW_FLAGS;
     flags ^= ImGuiWindowFlags_NoInputs;
@@ -115,20 +117,27 @@ static void show_game_controls(void) {
     igEnd();
 }
 
-void render_debug_gui(void) {
+void update_debug_gui(void) {
     ImGuiIO* io = igGetIO();
-    DEBUG.general.is_gui_interacted
-        = io->WantCaptureMouse || io->WantCaptureMouseUnlessPopupClose
-          || io->WantCaptureKeyboard || io->WantTextInput
-          || io->WantSetMousePos || io->NavActive || io->NavVisible;
 
+    if (io->WantCaptureMouse) {
+        memset(
+            APP.mouse_button_states, 0, sizeof(APP.mouse_button_states)
+        );
+    }
+    if (io->WantCaptureKeyboard) {
+        memset(APP.key_states, 0, sizeof(APP.key_states));
+    }
+}
+
+void render_debug_gui(void) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
-    show_debug_info();
-    show_debug();
-    show_game_controls();
+    render_debug_info();
+    render_debug();
+    render_game_controls();
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());

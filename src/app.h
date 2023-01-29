@@ -5,18 +5,26 @@
 #include <GLFW/glfw3.h>
 
 typedef struct Application {
+    struct _inputs_accum {
+        int key_states[512];
+        int mouse_button_states[16];
+        double cursor_x;
+        double cursor_y;
+    } _inputs_accum;
+
+    int key_states[512];
+    int mouse_button_states[16];
+
     int window_width;
     int window_height;
 
     double time;
     double dt;
+
     double cursor_x;
     double cursor_y;
     double cursor_dx;
     double cursor_dy;
-
-    int key_states[512];
-    int mouse_button_states[16];
 } Application;
 
 extern Application APP;

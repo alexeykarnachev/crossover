@@ -9,6 +9,7 @@
 #include "math.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <string.h>
 
 Application APP;
 static GLFWwindow* WINDOW;
@@ -26,7 +27,7 @@ static void key_callback(
 ) {
     Application* app = (Application*)(glfwGetWindowUserPointer(window));
     if (key != GLFW_KEY_UNKNOWN) {
-        app->key_states[key] = (int)(action != GLFW_RELEASE);
+        app->_inputs_accum.key_states[key] = (int)(action != GLFW_RELEASE);
     }
 }
 
@@ -34,22 +35,16 @@ static void mouse_button_callback(
     GLFWwindow* window, int button, int action, int mods
 ) {
     Application* app = (Application*)(glfwGetWindowUserPointer(window));
-    app->mouse_button_states[button] = (int)(action != GLFW_RELEASE);
+    app->_inputs_accum.mouse_button_states[button] = (int
+    )(action != GLFW_RELEASE);
 }
 
 static void cursor_position_callback(
     GLFWwindow* window, double x, double y
 ) {
     Application* app = (Application*)(glfwGetWindowUserPointer(window));
-    app->cursor_dx += x - app->cursor_x;
-    app->cursor_dy += y - app->cursor_y;
-    app->cursor_x = x;
-    app->cursor_y = y;
-
-    DEBUG.inputs.cursor_x = app->cursor_x;
-    DEBUG.inputs.cursor_y = app->cursor_y;
-    DEBUG.inputs.cursor_dx = app->cursor_dx;
-    DEBUG.inputs.cursor_dy = app->cursor_dy;
+    app->_inputs_accum.cursor_x = x;
+    app->_inputs_accum.cursor_y = y;
 }
 
 Vec2 get_cursor_screen_pos() {
@@ -105,8 +100,26 @@ void update_window() {
     double current_time = glfwGetTime();
     APP.dt = current_time - APP.time;
     APP.time = current_time;
-    APP.cursor_dx = 0.0;
-    APP.cursor_dy = 0.0;
+
+    memcpy(
+        APP.key_states,
+        APP._inputs_accum.key_states,
+        sizeof(APP.key_states)
+    );
+    memcpy(
+        APP.mouse_button_states,
+        APP._inputs_accum.mouse_button_states,
+        sizeof(APP.mouse_button_states)
+    );
+    APP.cursor_dx = APP.cursor_x - APP._inputs_accum.cursor_x;
+    APP.cursor_dy = APP.cursor_y - APP._inputs_accum.cursor_y;
+    APP.cursor_x = APP._inputs_accum.cursor_x;
+    APP.cursor_y = APP._inputs_accum.cursor_y;
+
+    DEBUG.inputs.cursor_x = APP.cursor_x;
+    DEBUG.inputs.cursor_y = APP.cursor_y;
+    DEBUG.inputs.cursor_dx = APP.cursor_dx;
+    DEBUG.inputs.cursor_dy = APP.cursor_dy;
 
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();

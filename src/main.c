@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         init_material(vec3(0.7, 0.3, 0.2)),
         init_kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         init_vision(0.5 * PI, 10.0, 31),
-        init_gun(2.0, 100.0, 2.0),
+        init_gun(2.0, 100.0, 1.0),
         100.0,
         1
     );
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
         init_material(vec3(0.7, 0.3, 0.7)),
         init_kinematic(vec2(0.0, 0.0), 5.0, 4.0 * PI),
         init_vision(0.5 * PI, 10.0, 31),
-        init_gun(1.0, 50.0, 2.0),
+        init_gun(1.0, 50.0, 1.0),
         100.0,
         0
     );
@@ -59,8 +59,12 @@ int main(int argc, char* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         update_debug();
+        update_debug_gui();
+        render_debug_gui();
+
         update_world(APP.dt);
         render_world();
+
         update_window();
     }
 
