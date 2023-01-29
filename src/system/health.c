@@ -3,7 +3,7 @@
 
 void update_healths() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_health(entity)) {
+        if (!entity_has_component(entity, HEALTH_COMPONENT)) {
             continue;
         }
 

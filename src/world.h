@@ -56,17 +56,9 @@ void init_world(void);
 
 void destroy_entity(int entity);
 int get_entity_owner(int entity);
-
 int entity_has_component(int entity, ComponentType component);
-int entity_has_transformation(int entity);
-int entity_has_primitive(int entity);
-int entity_has_collider(int entity);
-int entity_has_ttl(int entity);
-int entity_has_rigid_body(int entity);
-int entity_has_bullet(int entity);
-int entity_has_health(int entity);
-int entity_has_kinematic(int entity);
-int entity_has_owner(int entity);
+void entity_disable_component(int entity, ComponentType type);
+void entity_enable_component(int entity, ComponentType type);
 
 int entity_can_collide(int entity);
 int entity_can_observe(int entity);

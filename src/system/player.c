@@ -13,28 +13,23 @@ void update_player() {
             = &WORLD.transformations[WORLD.player];
         Vec2 velocity = {0.0, 0.0};
 
-        if (!DEBUG.general.is_gui_interacted) {
-            velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
-            velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
-            velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
-            velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
-            Vec2 look_at = get_cursor_world_pos();
-            kinematic->orientation = atan2(
-                look_at.y - transformation->position.y,
-                look_at.x - transformation->position.x
-            );
-            DEBUG.general.look_at = look_at;
-            if (length(velocity) > EPS) {
-                velocity = scale(
-                    normalize(velocity), kinematic->max_speed
-                );
-            }
+        velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
+        velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
+        velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
+        velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
+        Vec2 look_at = get_cursor_world_pos();
+        kinematic->orientation = atan2(
+            look_at.y - transformation->position.y,
+            look_at.x - transformation->position.x
+        );
+        DEBUG.general.look_at = look_at;
+        if (length(velocity) > EPS) {
+            velocity = scale(normalize(velocity), kinematic->max_speed);
         }
 
         kinematic->velocity = velocity;
 
-        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]
-            && !DEBUG.general.is_gui_interacted) {
+        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
             if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
                 Gun* gun = &WORLD.guns[WORLD.player];
                 float time_since_last_shoot
@@ -80,7 +75,10 @@ void update_player() {
 }
 
 void render_debug_player() {
-    if (WORLD.player != -1) {
+    if (WORLD.player == -1) {
+        return;
+    }
+    if (DEBUG.is_playing) {
         render_debug_circle(DEBUG.general.look_at, 0.1, RED_COLOR, -1);
     }
 }

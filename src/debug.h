@@ -17,7 +17,6 @@ typedef struct Debug {
     int picked_entity;
 
     struct general {
-        int is_gui_interacted;
         int n_entities;
         int n_collisions;
         Vec2 camera_position;

@@ -52,7 +52,7 @@ static float get_new_orientation(
 
 void update_kinematics(float dt) {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_kinematic(entity)) {
+        if (!entity_has_component(entity, KINEMATIC_COMPONENT)) {
             continue;
         }
         Transformation* transformation = &WORLD.transformations[entity];
@@ -68,7 +68,7 @@ void update_kinematics(float dt) {
 
 void render_debug_kinematics() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_kinematic(entity)) {
+        if (!entity_has_component(entity, KINEMATIC_COMPONENT)) {
             continue;
         }
         Transformation* transformation = &WORLD.transformations[entity];

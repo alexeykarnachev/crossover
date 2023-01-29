@@ -203,38 +203,57 @@ static void resolve_collisions() {
             Collision collision = COLLISIONS_ARENA.arena[i];
 
             Vec2 mtv = collision.mtv;
-            int e0 = collision.entity0;
-            int e1 = collision.entity1;
+            int entity0 = collision.entity0;
+            int entity1 = collision.entity1;
 
-            Transformation* t0 = &WORLD.transformations[e0];
-            Transformation* t1 = &WORLD.transformations[e1];
-            if (entity_has_rigid_body(e0) && entity_has_rigid_body(e1)) {
-                int has_kinematic0 = entity_has_kinematic(e0);
-                int has_kinematic1 = entity_has_kinematic(e1);
+            Transformation* transformation0
+                = &WORLD.transformations[entity0];
+            Transformation* transformation1
+                = &WORLD.transformations[entity1];
+            if (entity_has_component(entity0, RIGID_BODY_COMPONENT)
+                && entity_has_component(entity1, RIGID_BODY_COMPONENT)) {
+                int has_kinematic0 = entity_has_component(
+                    entity0, KINEMATIC_COMPONENT
+                );
+                int has_kinematic1 = entity_has_component(
+                    entity1, KINEMATIC_COMPONENT
+                );
                 if (has_kinematic0 && has_kinematic1) {
-                    t0->position = add(t0->position, scale(mtv, 0.5));
-                    t1->position = add(t1->position, scale(mtv, -0.5));
+                    transformation0->position = add(
+                        transformation0->position, scale(mtv, 0.5)
+                    );
+                    transformation1->position = add(
+                        transformation1->position, scale(mtv, -0.5)
+                    );
                 } else if (has_kinematic0) {
-                    t0->position = add(t0->position, mtv);
+                    transformation0->position = add(
+                        transformation0->position, mtv
+                    );
                 } else if (has_kinematic1) {
-                    t1->position = add(t1->position, flip(mtv));
+                    transformation1->position = add(
+                        transformation1->position, flip(mtv)
+                    );
                 }
             }
 
-            if (entity_can_be_damaged_by_bullet(e0, e1)) {
-                WORLD.healths[e0] -= get_kinematic_damage(
-                    WORLD.kinematics[e1]
+            if (entity_can_be_damaged_by_bullet(entity0, entity1)) {
+                WORLD.healths[entity0] -= get_kinematic_damage(
+                    WORLD.kinematics[entity1]
                 );
-            } else if (entity_can_be_damaged_by_bullet(e1, e0)) {
-                WORLD.healths[e1] -= get_kinematic_damage(
-                    WORLD.kinematics[e0]
+            } else if (entity_can_be_damaged_by_bullet(entity1, entity0)) {
+                WORLD.healths[entity1] -= get_kinematic_damage(
+                    WORLD.kinematics[entity0]
                 );
             }
 
-            if (bullet_can_be_destroyed_after_collision(e1, e0)) {
-                destroy_entity(e1);
-            } else if (bullet_can_be_destroyed_after_collision(e0, e1)) {
-                destroy_entity(e0);
+            if (bullet_can_be_destroyed_after_collision(
+                    entity1, entity0
+                )) {
+                destroy_entity(entity1);
+            } else if (bullet_can_be_destroyed_after_collision(
+                           entity0, entity1
+                       )) {
+                destroy_entity(entity0);
             }
         }
     }

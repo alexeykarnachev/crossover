@@ -3,8 +3,10 @@
 #include "../app.h"
 #include "../debug.h"
 #include "../math.h"
+#include "../world.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include <float.h>
 #include <string.h>
 
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
@@ -14,6 +16,29 @@ static ImGuiWindowFlags GHOST_WINDOW_FLAGS
       | ImGuiWindowFlags_NoBackground
       | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDocking
       | ImGuiWindowFlags_NoInputs;
+
+static ImGuiColorEditFlags COLOR_PICKER_FLAGS
+    = ImGuiColorEditFlags_PickerHueWheel
+      | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs
+      | ImGuiColorEditFlags_NoAlpha;
+
+static void drag_float(
+    char* label, float* value, float min_val, float max_val, float step
+) {
+    igDragFloat(label, value, step, min_val, max_val, "%.2f", 0);
+}
+
+static void drag_float2(
+    char* label, float values[2], float min_val, float max_val, float step
+) {
+    igDragFloat2(label, values, step, min_val, max_val, "%.2f", 0);
+}
+
+static void drag_int(
+    char* label, int* value, int min_val, int max_val, int step
+) {
+    igDragInt(label, value, 1, min_val, max_val, "%d", 0);
+}
 
 static void render_debug_info(void) {
     ImGuiIO* io = igGetIO();
@@ -25,7 +50,6 @@ static void render_debug_info(void) {
     igSetNextWindowSize(size, ImGuiCond_Always);
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
-        igText("GUI interacted: %d", DEBUG.general.is_gui_interacted);
         igText(
             "Rate: %.3f ms/frame (%.1f FPS)",
             1000.0f / io->Framerate,
@@ -50,7 +74,7 @@ static void render_debug_info(void) {
 
 static void render_debug(void) {
     ImGuiIO* io = igGetIO();
-    if (igBegin("Debug", NULL, 0)) {
+    if (igCollapsingHeader_TreeNodeFlags("Debug", 0)) {
         if (igTreeNode_Str("Shading")) {
             igCheckbox("Player", (bool*)(&DEBUG.shading.player));
             igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
@@ -87,8 +111,150 @@ static void render_debug(void) {
             igTreePop();
         }
     }
+}
 
-    igEnd();
+static void render_primitive_widget(Primitive* primitive) {
+    PrimitiveType* type = &primitive->type;
+    switch (*type) {
+        case CIRCLE_PRIMITIVE: {
+            igText("Circle");
+            float* radius = &primitive->p.circle.radius;
+            drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
+            break;
+        }
+        case RECTANGLE_PRIMITIVE: {
+            igText("Rectangle");
+            float* width = &primitive->p.rectangle.width;
+            float* height = &primitive->p.rectangle.height;
+            drag_float("width", width, 0.0, FLT_MAX, 0.05);
+            drag_float("height", height, 0.0, FLT_MAX, 0.05);
+            break;
+        }
+        case TRIANGLE_PRIMITIVE: {
+            igText("Triangle");
+            float* b = (float*)&primitive->p.triangle.b;
+            float* c = (float*)&primitive->p.triangle.c;
+            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
+            drag_float2("c", c, -FLT_MAX, FLT_MAX, 0.05);
+            break;
+        }
+        case LINE_PRIMITIVE: {
+            igText("Line");
+            float* b = (float*)&primitive->p.triangle.b;
+            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
+            break;
+        }
+        default: {
+            ImVec4 color = {1.0, 0.0, 0.0, 1.0};
+            igTextColored(color, "ERROR: Unknown primitive");
+        }
+    }
+}
+
+static void render_inspector(void) {
+    ImGuiIO* io = igGetIO();
+
+    int entity = DEBUG.picked_entity;
+    int flags = 0;
+    if (entity != -1) {
+        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+    }
+
+    if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
+        && entity != -1) {
+        int flags = 0;
+        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+        if (entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
+            Transformation* transformation
+                = &WORLD.transformations[entity];
+            float* pos = (float*)&transformation->position;
+            float* orient = &transformation->orientation;
+            if (igTreeNodeEx_Str("Transformation", flags)) {
+                drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+                drag_float("orient.", orient, -PI, PI, 0.05);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, COLLIDER_COMPONENT)) {
+            if (igTreeNodeEx_Str("Collider", flags)) {
+                Primitive* collider = &WORLD.colliders[entity];
+                render_primitive_widget(collider);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, PRIMITIVE_COMPONENT)) {
+            if (igTreeNodeEx_Str("Primitive", flags)) {
+                Primitive* primitive = &WORLD.primitives[entity];
+                render_primitive_widget(primitive);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, MATERIAL_COMPONENT)) {
+            if (igTreeNodeEx_Str("Material", flags)) {
+                Material* material = &WORLD.materials[entity];
+                float* diffuse_color = (float*)&material->diffuse_color;
+                igText("Diffuse color");
+                igColorPicker3("", diffuse_color, COLOR_PICKER_FLAGS);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, KINEMATIC_COMPONENT)) {
+            if (igTreeNodeEx_Str("Kinematic", flags)) {
+                Kinematic* kinematic = &WORLD.kinematics[entity];
+                float* max_speed = &kinematic->max_speed;
+                float* rotation_speed = &kinematic->rotation_speed;
+                drag_float("max. speed", max_speed, 0.0, FLT_MAX, 1.0);
+                drag_float(
+                    "rot. speed", rotation_speed, 0.0, FLT_MAX, 0.05
+                );
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, VISION_COMPONENT)) {
+            if (igTreeNodeEx_Str("Vision", flags)) {
+                Vision* vision = &WORLD.visions[entity];
+                drag_float("fov", &vision->fov, 0.0, 2.0 * PI, 0.05);
+                drag_float(
+                    "distance", &vision->distance, 0.0, FLT_MAX, 0.1
+                );
+                drag_int(
+                    "n rays", &vision->n_view_rays, 1, MAX_N_VIEW_RAYS, 1
+                );
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, GUN_COMPONENT)) {
+            if (igTreeNodeEx_Str("Gun", flags)) {
+                Gun* gun = &WORLD.guns[entity];
+
+                if (igTreeNodeEx_Str("bullet", flags)) {
+                    drag_float("ttl", &gun->bullet.ttl, 0.0, 30.0, 1.0);
+                    drag_float(
+                        "speed", &gun->bullet.speed, 0.0, 5000.0, 5.0
+                    );
+                    igTreePop();
+                }
+
+                drag_float("fire rate", &gun->fire_rate, 0.0, 100.0, 0.1);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, HEALTH_COMPONENT)) {
+            if (igTreeNodeEx_Str("Health", flags)) {
+                float* health = &WORLD.healths[entity];
+                drag_float("health", health, 0.0, FLT_MAX, 1.0);
+                igTreePop();
+            }
+        }
+    }
 }
 
 static void render_game_controls(void) {
@@ -137,6 +303,7 @@ void render_debug_gui(void) {
 
     render_debug_info();
     render_debug();
+    render_inspector();
     render_game_controls();
 
     igRender();

@@ -67,4 +67,5 @@ void render_cursor_picking(void) {
         YELLOW_COLOR,
         LINE
     );
+    render_debug_circle(transformation.position, 0.1, YELLOW_COLOR, FILL);
 }

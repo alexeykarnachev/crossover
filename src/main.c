@@ -60,10 +60,10 @@ int main(int argc, char* argv[]) {
 
         update_debug();
         update_debug_gui();
-        render_debug_gui();
-
         update_world(APP.dt);
+
         render_world();
+        render_debug_gui();
 
         update_window();
     }

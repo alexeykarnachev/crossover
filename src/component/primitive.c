@@ -123,15 +123,14 @@ Rectangle get_primitive_bounding_rectangle(
 ) {
     Vec2 position = transformation.position;
 
-    float width;
-    float height;
+    float width = 0;
+    float height = 0;
     if (primitive.type == CIRCLE_PRIMITIVE) {
         width = 2.0 * primitive.p.circle.radius;
         height = width;
     } else {
         Vec2 vertices[4];
         int n_vertices = get_primitive_vertices(primitive, vertices);
-        transformation.orientation = 0.0;
         apply_transformation(vertices, n_vertices, transformation);
 
         for (int i = 0; i < n_vertices; ++i) {

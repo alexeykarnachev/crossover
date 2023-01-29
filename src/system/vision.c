@@ -11,16 +11,14 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
         vec2(vision.distance, 0.0), origin, orientation
     );
 
-    float step;
     if (vision.n_view_rays == 1) {
-        step = 0.0;
+        out[0] = start_ray;
     } else {
-        step = vision.fov / (vision.n_view_rays - 1);
-    }
-
-    for (int i = 0; i < vision.n_view_rays; ++i) {
-        float angle = -0.5 * vision.fov + i * step;
-        out[i] = rotate(start_ray, origin, angle);
+        float step = vision.fov / (vision.n_view_rays - 1);
+        for (int i = 0; i < vision.n_view_rays; ++i) {
+            float angle = -0.5 * vision.fov + i * step;
+            out[i] = rotate(start_ray, origin, angle);
+        }
     }
 
     return vision.n_view_rays;

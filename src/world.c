@@ -22,8 +22,16 @@ void destroy_entity(int entity) {
     WORLD.components[entity] = 0;
 }
 
+void entity_disable_component(int entity, ComponentType type) {
+    WORLD.components[entity] &= !type;
+}
+
+void entity_enable_component(int entity, ComponentType type) {
+    WORLD.components[entity] |= type;
+}
+
 int get_entity_owner(int entity) {
-    if (entity_has_owner(entity)) {
+    if (entity_has_component(entity, OWNER_COMPONENT)) {
         return WORLD.owners[entity];
     }
     return -1;
@@ -31,38 +39,6 @@ int get_entity_owner(int entity) {
 
 int entity_has_component(int entity, ComponentType type) {
     return (WORLD.components[entity] & type) == type;
-}
-
-int entity_has_transformation(int entity) {
-    return WORLD.components[entity] & TRANSFORMATION_COMPONENT;
-}
-
-int entity_has_primitive(int entity) {
-    return WORLD.components[entity] & PRIMITIVE_COMPONENT;
-}
-
-int entity_has_ttl(int entity) {
-    return WORLD.components[entity] & TTL_COMPONENT;
-}
-
-int entity_has_health(int entity) {
-    return WORLD.components[entity] & HEALTH_COMPONENT;
-}
-
-int entity_has_rigid_body(int entity) {
-    return WORLD.components[entity] & RIGID_BODY_COMPONENT;
-}
-
-int entity_has_kinematic(int entity) {
-    return WORLD.components[entity] & KINEMATIC_COMPONENT;
-}
-
-int entity_has_bullet(int entity) {
-    return WORLD.components[entity] & BULLET_COMPONENT;
-}
-
-int entity_has_owner(int entity) {
-    return WORLD.components[entity] & OWNER_COMPONENT;
 }
 
 int entity_can_collide(int entity) {
@@ -86,16 +62,21 @@ int entity_can_be_rendered(int entity) {
 
 int entity_can_be_damaged_by_bullet(int entity, int bullet) {
     int bullet_owner = get_entity_owner(bullet);
-    int bullet_is_real = entity_has_bullet(bullet);
-    int bullet_has_kinematic = entity_has_kinematic(bullet);
+    int bullet_is_real = entity_has_component(bullet, BULLET_COMPONENT);
+    int bullet_has_kinematic = entity_has_component(
+        bullet, KINEMATIC_COMPONENT
+    );
+    int entity_has_health = entity_has_component(entity, HEALTH_COMPONENT);
     return bullet_owner != entity && bullet_is_real && bullet_has_kinematic
-           && entity_has_health(entity);
+           && entity_has_health;
 }
 
 int bullet_can_be_destroyed_after_collision(int bullet, int target) {
     int bullet_owner = get_entity_owner(bullet);
-    int bullet_is_real = entity_has_bullet(bullet);
-    int target_is_not_bullet = !entity_has_bullet(target);
+    int bullet_is_real = entity_has_component(bullet, BULLET_COMPONENT);
+    int target_is_not_bullet = !entity_has_component(
+        target, BULLET_COMPONENT
+    );
     return bullet_owner != target && bullet_is_real
            && target_is_not_bullet;
 }
@@ -236,13 +217,14 @@ static void update_entities_world_counter() {
 }
 
 void update_world(float dt) {
+    update_visions();
+
     if (DEBUG.is_playing) {
         update_camera();
         update_ttls(dt);
         update_healths();
         update_player();
         update_kinematics(dt);
-        update_visions();
         update_collisions();
         update_entities_world_counter();
     } else {
