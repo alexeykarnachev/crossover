@@ -36,8 +36,9 @@ vec2 rotate(vec2 point, vec2 center, float angle) {
 }
 
 vec2 world2proj(vec2 world_pos) {
+    vec2 half_size = vec2(0.5 * vec2(camera.view_width, camera.view_height));
     vec2 view_pos = world_pos - camera.position;
-    vec2 proj_pos = (view_pos - camera.position) / (0.5 * vec2(camera.view_width, camera.view_height));
+    vec2 proj_pos = view_pos / half_size;
     return proj_pos;
 }
 

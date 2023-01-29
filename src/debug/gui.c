@@ -142,6 +142,16 @@ static void render_components_selector() {
     }
 }
 
+static void render_camera_widget() {
+    int entity = WORLD.camera;
+
+    if (igCollapsingHeader_TreeNodeFlags("Camera", 0) && entity != -1) {
+        Transformation* transformation = &WORLD.transformations[entity];
+        float* pos = (float*)&transformation->position;
+        drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+    }
+}
+
 static void render_primitive_widget(Primitive* primitive) {
     PrimitiveType* type = &primitive->type;
     switch (*type) {
@@ -338,6 +348,7 @@ void render_debug_gui(void) {
 
     render_debug_info();
     render_debug();
+    render_camera_widget();
     render_components_selector();
     render_components_inspector();
     render_game_controls();

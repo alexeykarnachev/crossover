@@ -208,13 +208,16 @@ int spawn_bullet(
 CameraFrustum get_camera_frustum() {
     CameraFrustum frustum;
     if (WORLD.camera != -1) {
-        Transformation t = WORLD.transformations[WORLD.camera];
+        Transformation transformation
+            = WORLD.transformations[WORLD.camera];
         float aspect_ratio = (float)APP.window_width / APP.window_height;
         float height = CAMERA_VIEW_WIDTH / aspect_ratio;
         Vec2 half_size = scale(vec2(CAMERA_VIEW_WIDTH, height), 0.5);
-        frustum.bot_left = sub(t.position, half_size);
-        frustum.top_right = add(t.position, half_size);
+        frustum.bot_left = sub(transformation.position, half_size);
+        frustum.top_right = add(transformation.position, half_size);
     }
+    printf("bot_left:%f,%f\n", frustum.bot_left.x, frustum.bot_left.y);
+    printf("top_right:%f,%f\n", frustum.top_right.x, frustum.top_right.y);
 
     return frustum;
 }
