@@ -7,17 +7,22 @@
 #include <math.h>
 
 void update_player() {
-    if (WORLD.player != -1) {
+    if (WORLD.player != -1 && WORLD.camera != -1) {
         Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
         Transformation* transformation
             = &WORLD.transformations[WORLD.player];
-        Vec2 velocity = {0.0, 0.0};
+        Transformation camera = WORLD.transformations[WORLD.camera];
 
+        Vec2 velocity = {0.0, 0.0};
         velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
         velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
         velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
         velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
         Vec2 look_at = get_cursor_world_pos();
+
+        look_at = rotate(look_at, camera.position, camera.orientation);
+        velocity = rotate(velocity, camera.position, camera.orientation);
+
         kinematic->orientation = atan2(
             look_at.y - transformation->position.y,
             look_at.x - transformation->position.x
