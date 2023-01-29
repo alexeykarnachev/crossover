@@ -133,7 +133,7 @@ static void render_components_selector() {
 
         for (int i = 0; i < N_COMPONENS; ++i) {
             *components ^= (-LAST_PICKED_COMPONENTS[i] ^ *components)
-                           & (1UL << i);
+                           & (1ULL << i);
         }
     }
 }
