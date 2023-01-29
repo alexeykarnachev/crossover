@@ -220,6 +220,7 @@ static void set_uniform_camera(GLuint program, Transformation camera) {
     set_uniform_2fv(
         program, "camera.position", (float*)&camera.position, 1
     );
+    set_uniform_1f(program, "camera.orientation", camera.orientation);
     set_uniform_1f(program, "camera.view_width", view_size.x);
     set_uniform_1f(program, "camera.view_height", view_size.y);
 }

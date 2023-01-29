@@ -25,6 +25,9 @@ typedef struct World {
 
     // Current counters
     size_t n_entities;
+
+    // Other configuration
+    float camera_view_width;
 } World;
 
 typedef enum ComponentType {

@@ -70,6 +70,16 @@ static void render_debug_info(void) {
             DEBUG.general.look_at.x,
             DEBUG.general.look_at.y
         );
+        igText(
+            "Cursor pos: (%g, %g)",
+            DEBUG.inputs.cursor_x,
+            DEBUG.inputs.cursor_y
+        );
+        igText(
+            "Cursor delta: (%g, %g)",
+            DEBUG.inputs.cursor_dx,
+            DEBUG.inputs.cursor_dy
+        );
     }
 
     igEnd();
@@ -97,20 +107,6 @@ static void render_debug(void) {
             if (igButton("once", buttonSize)) {
                 DEBUG.collisions.resolve_once = 1;
             }
-            igTreePop();
-        }
-
-        if (igTreeNode_Str("Inputs")) {
-            igText(
-                "Cursor pos: (%g, %g)",
-                DEBUG.inputs.cursor_x,
-                DEBUG.inputs.cursor_y
-            );
-            igText(
-                "Cursor delta: (%g, %g)",
-                DEBUG.inputs.cursor_dx,
-                DEBUG.inputs.cursor_dy
-            );
             igTreePop();
         }
     }
@@ -148,7 +144,12 @@ static void render_camera_widget() {
     if (igCollapsingHeader_TreeNodeFlags("Camera", 0) && entity != -1) {
         Transformation* transformation = &WORLD.transformations[entity];
         float* pos = (float*)&transformation->position;
+        float* orient = (float*)&transformation->orientation;
         drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+        drag_float("orient.", orient, -PI, PI, 0.05);
+        drag_float(
+            "view width", &WORLD.camera_view_width, 0.0, 1000.0, 0.2
+        );
     }
 }
 
