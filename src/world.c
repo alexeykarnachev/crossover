@@ -221,9 +221,11 @@ CameraFrustum get_camera_frustum() {
 
 static void update_entities_world_counter() {
     int n_entities = 0;
-    for (int e = 0; e < WORLD.n_entities; ++e) {
-        if (WORLD.components[e] != 0) {
-            n_entities = e + 1;
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (WORLD.components[entity] != 0) {
+            n_entities = entity + 1;
+        } else if (DEBUG.picked_entity == entity) {
+            DEBUG.picked_entity = -1;
         }
     }
     WORLD.n_entities = n_entities;

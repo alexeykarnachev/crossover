@@ -46,8 +46,8 @@ static void drag_int(
 static void render_debug_info(void) {
     ImGuiIO* io = igGetIO();
 
-    ImVec2 position = {0, io->DisplaySize.y};
-    ImVec2 pivot = {0, 1};
+    ImVec2 position = {io->DisplaySize.x, io->DisplaySize.y};
+    ImVec2 pivot = {1, 1};
     ImVec2 size = {0, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
     igSetNextWindowSize(size, ImGuiCond_Always);
@@ -257,6 +257,22 @@ static void render_components_inspector(void) {
             }
         }
 
+        if (entity_has_component(entity, TTL_COMPONENT)) {
+            if (igTreeNodeEx_Str("TTL", flags)) {
+                float* ttl = &WORLD.ttls[entity];
+                drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
+                igTreePop();
+            }
+        }
+
+        if (entity_has_component(entity, HEALTH_COMPONENT)) {
+            if (igTreeNodeEx_Str("Health", flags)) {
+                float* health = &WORLD.healths[entity];
+                drag_float("health", health, 0.0, FLT_MAX, 1.0);
+                igTreePop();
+            }
+        }
+
         if (entity_has_component(entity, GUN_COMPONENT)) {
             if (igTreeNodeEx_Str("Gun", flags)) {
                 Gun* gun = &WORLD.guns[entity];
@@ -269,15 +285,7 @@ static void render_components_inspector(void) {
                     igTreePop();
                 }
 
-                drag_float("fire rate", &gun->fire_rate, 0.0, 100.0, 0.1);
-                igTreePop();
-            }
-        }
-
-        if (entity_has_component(entity, HEALTH_COMPONENT)) {
-            if (igTreeNodeEx_Str("Health", flags)) {
-                float* health = &WORLD.healths[entity];
-                drag_float("health", health, 0.0, FLT_MAX, 1.0);
+                drag_float("fire rate", &gun->fire_rate, 0.0, 10.0, 0.01);
                 igTreePop();
             }
         }
