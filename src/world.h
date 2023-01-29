@@ -29,19 +29,22 @@ typedef struct World {
 
 typedef enum ComponentType {
     TRANSFORMATION_COMPONENT = 1 << 0,
-    KINEMATIC_COMPONENT = 1 << 1,
-    VISION_COMPONENT = 1 << 2,
-    COLLIDER_COMPONENT = 1 << 3,
-    RIGID_BODY_COMPONENT = 1 << 4,
-    PRIMITIVE_COMPONENT = 1 << 5,
-    MATERIAL_COMPONENT = 1 << 6,
+    COLLIDER_COMPONENT = 1 << 1,
+    PRIMITIVE_COMPONENT = 1 << 2,
+    MATERIAL_COMPONENT = 1 << 3,
+    KINEMATIC_COMPONENT = 1 << 4,
+    VISION_COMPONENT = 1 << 5,
+    RIGID_BODY_COMPONENT = 1 << 6,
     OBSERVABLE_COMPONENT = 1 << 7,
-    GUN_COMPONENT = 1 << 8,
-    TTL_COMPONENT = 1 << 9,
-    BULLET_COMPONENT = 1 << 10,
-    HEALTH_COMPONENT = 1 << 11,
-    OWNER_COMPONENT = 1 << 12
+    TTL_COMPONENT = 1 << 8,
+    HEALTH_COMPONENT = 1 << 9,
+    GUN_COMPONENT = 1 << 10,
+    BULLET_COMPONENT = 1 << 11,
+    OWNER_COMPONENT = 1 << 12,
 } ComponentType;
+
+#define N_COMPONENS 13
+const char* COMPONENT_NAMES[N_COMPONENS];
 
 extern World WORLD;
 

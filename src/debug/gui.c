@@ -9,6 +9,9 @@
 #include <float.h>
 #include <string.h>
 
+static int LAST_PICKED_ENTITY = -1;
+static int LAST_PICKED_COMPONENTS[N_COMPONENS];
+
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
     = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
       | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
@@ -113,6 +116,32 @@ static void render_debug(void) {
     }
 }
 
+static void render_components_selector() {
+    int entity = DEBUG.picked_entity;
+
+    if (igCollapsingHeader_TreeNodeFlags("Components", 0)
+        && entity != -1) {
+        uint64_t* components = &WORLD.components[entity];
+
+        if (entity != LAST_PICKED_ENTITY) {
+            for (int i = 0; i < N_COMPONENS; ++i) {
+                LAST_PICKED_COMPONENTS[i] = (*components & (1 << i)) != 0;
+            }
+            LAST_PICKED_ENTITY = entity;
+        }
+
+        for (int i = 0; i < N_COMPONENS; ++i) {
+            const char* name = COMPONENT_NAMES[i];
+            igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
+        }
+
+        for (int i = 0; i < N_COMPONENS; ++i) {
+            *components ^= (-LAST_PICKED_COMPONENTS[i] ^ *components)
+                           & (1UL << i);
+        }
+    }
+}
+
 static void render_primitive_widget(Primitive* primitive) {
     PrimitiveType* type = &primitive->type;
     switch (*type) {
@@ -151,9 +180,7 @@ static void render_primitive_widget(Primitive* primitive) {
     }
 }
 
-static void render_inspector(void) {
-    ImGuiIO* io = igGetIO();
-
+static void render_components_inspector(void) {
     int entity = DEBUG.picked_entity;
     int flags = 0;
     if (entity != -1) {
@@ -303,7 +330,8 @@ void render_debug_gui(void) {
 
     render_debug_info();
     render_debug();
-    render_inspector();
+    render_components_selector();
+    render_components_inspector();
     render_game_controls();
 
     igRender();

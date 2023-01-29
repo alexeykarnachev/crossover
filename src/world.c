@@ -11,6 +11,20 @@
 #include <stdlib.h>
 
 World WORLD;
+const char* COMPONENT_NAMES[N_COMPONENS] = {
+    "Transformation",
+    "Collider",
+    "Primitive",
+    "Material",
+    "Kinematic",
+    "Vision",
+    "Rigid body",
+    "Observable",
+    "TTL",
+    "Health",
+    "Gun",
+    "Bullet",
+    "Owner"};
 
 void init_world(void) {
     WORLD.n_entities = 0;
