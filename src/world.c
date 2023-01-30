@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 World WORLD;
 const char* COMPONENT_NAMES[N_COMPONENS] = {
@@ -35,6 +36,10 @@ void init_world(void) {
 
 void destroy_entity(int entity) {
     WORLD.components[entity] = 0;
+}
+
+int entity_is_alive(int entity) {
+    return WORLD.components[entity] != 0;
 }
 
 void entity_disable_component(int entity, ComponentType type) {
@@ -96,9 +101,19 @@ int bullet_can_be_destroyed_after_collision(int bullet, int target) {
            && target_is_not_bullet;
 }
 
-static int spawn_entity() {
+static int spawn_entity(const char* name) {
+    if (strlen(name) > MAX_ENTITY_NAME_SIZE) {
+        fprintf(
+            stderr,
+            "ERROR: Max. entity name can't be larget than %d\n",
+            MAX_ENTITY_NAME_SIZE
+        );
+        exit(1);
+    }
+
     for (int entity = 0; entity < MAX_N_ENTITIES; ++entity) {
         if (WORLD.components[entity] == 0) {
+            WORLD.names[entity] = name;
             WORLD.n_entities = max(WORLD.n_entities, entity + 1);
             return entity;
         }
@@ -114,7 +129,7 @@ int spawn_camera(Transformation transformation) {
         exit(1);
     }
 
-    int entity = spawn_entity();
+    int entity = spawn_entity("Camera");
     WORLD.transformations[entity] = transformation;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT;
 
@@ -134,7 +149,7 @@ int spawn_guy(
     int is_player
 ) {
 
-    int entity = spawn_entity();
+    int entity = spawn_entity("Guy");
     if (is_player) {
         if (WORLD.player != -1) {
             fprintf(stderr, "ERROR: Only one player can be spawned\n");
@@ -169,7 +184,7 @@ int spawn_obstacle(
     Primitive collider,
     Material material
 ) {
-    int entity = spawn_entity();
+    int entity = spawn_entity("Obstacle");
     WORLD.transformations[entity] = transformation;
     WORLD.primitives[entity] = primitive;
     WORLD.colliders[entity] = collider;
@@ -191,7 +206,7 @@ int spawn_bullet(
     float ttl,
     int owner
 ) {
-    int entity = spawn_entity();
+    int entity = spawn_entity("Bullet");
     WORLD.transformations[entity] = transformation;
     WORLD.primitives[entity] = primitive;
     WORLD.materials[entity] = material;

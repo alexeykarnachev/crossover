@@ -8,6 +8,7 @@
 typedef struct World {
     // Components
     uint64_t components[MAX_N_ENTITIES];
+    const char* names[MAX_N_ENTITIES];
     Transformation transformations[MAX_N_ENTITIES];
     Kinematic kinematics[MAX_N_ENTITIES];
     Vision visions[MAX_N_ENTITIES];
@@ -61,6 +62,7 @@ CameraFrustum get_camera_frustum();
 void init_world(void);
 
 void destroy_entity(int entity);
+int entity_is_alive(int entity);
 int get_entity_owner(int entity);
 int entity_has_component(int entity, ComponentType component);
 void entity_disable_component(int entity, ComponentType type);

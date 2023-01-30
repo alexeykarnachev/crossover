@@ -12,6 +12,7 @@
 static int LAST_PICKED_ENTITY = -1;
 static int LAST_PICKED_COMPONENTS[N_COMPONENS];
 static ImVec2 VEC2_ZERO = {0, 0};
+static int DEFAULT_OPEN = ImGuiTreeNodeFlags_DefaultOpen;
 
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
     = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
@@ -108,6 +109,10 @@ static void render_game_controls(void) {
 
 static void render_debug_info(void) {
     ImGuiIO* io = igGetIO();
+    ImVec2 position = {0, io->DisplaySize.y};
+    ImVec2 pivot = {0, 1};
+    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
+    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
         igText("FPS: %.1f", 1000.0f / io->Framerate, io->Framerate);
@@ -145,6 +150,11 @@ static void render_entity_editor() {
     int picked_entity = DEBUG.picked_entity;
     int camera_entity = WORLD.camera;
 
+    ImGuiIO* io = igGetIO();
+    ImVec2 position = {0.0, 0.0};
+    ImVec2 pivot = {0, 0};
+    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
+    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
     if (igBegin("Entity", NULL, 0)) {
         // Camera settings: current scene camera components editor
         {
@@ -198,15 +208,11 @@ static void render_entity_editor() {
         // Components inspector: components editor of the currently
         // picked entity
         {
-            int flags = 0;
-            if (picked_entity != -1) {
-                flags |= ImGuiTreeNodeFlags_DefaultOpen;
-            }
-
+            int flags = picked_entity != -1 ? DEFAULT_OPEN : 0;
             if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
                 && picked_entity != -1) {
                 int flags = 0;
-                flags |= ImGuiTreeNodeFlags_DefaultOpen;
+                flags |= DEFAULT_OPEN;
 
                 if (entity_has_component(
                         picked_entity, TRANSFORMATION_COMPONENT
@@ -226,9 +232,9 @@ static void render_entity_editor() {
                         picked_entity, COLLIDER_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Collider", flags)) {
-                        Primitive* collider
-                            = &WORLD.colliders[picked_entity];
-                        render_primitive_settings(collider);
+                        render_primitive_settings(
+                            &WORLD.colliders[picked_entity]
+                        );
                         igTreePop();
                     }
                 }
@@ -237,9 +243,9 @@ static void render_entity_editor() {
                         picked_entity, PRIMITIVE_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Primitive", flags)) {
-                        Primitive* primitive
-                            = &WORLD.primitives[picked_entity];
-                        render_primitive_settings(primitive);
+                        render_primitive_settings(
+                            &WORLD.primitives[picked_entity]
+                        );
                         igTreePop();
                     }
                 }
@@ -250,12 +256,9 @@ static void render_entity_editor() {
                     if (igTreeNodeEx_Str("Material", flags)) {
                         Material* material
                             = &WORLD.materials[picked_entity];
-                        float* diffuse_color
-                            = (float*)&material->diffuse_color;
+                        float* color = (float*)&material->diffuse_color;
                         igText("Diffuse color");
-                        igColorPicker3(
-                            "", diffuse_color, COLOR_PICKER_FLAGS
-                        );
+                        igColorPicker3("", color, COLOR_PICKER_FLAGS);
                         igTreePop();
                     }
                 }
@@ -267,16 +270,13 @@ static void render_entity_editor() {
                         Kinematic* kinematic
                             = &WORLD.kinematics[picked_entity];
                         float* max_speed = &kinematic->max_speed;
-                        float* rotation_speed = &kinematic->rotation_speed;
+                        float* rot_speed = &kinematic->rotation_speed;
+
                         drag_float(
                             "max. speed", max_speed, 0.0, FLT_MAX, 1.0
                         );
                         drag_float(
-                            "rot. speed",
-                            rotation_speed,
-                            0.0,
-                            FLT_MAX,
-                            0.05
+                            "rot. speed", rot_speed, 0.0, FLT_MAX, 0.05
                         );
                         igTreePop();
                     }
@@ -287,22 +287,16 @@ static void render_entity_editor() {
                     )) {
                     if (igTreeNodeEx_Str("Vision", flags)) {
                         Vision* vision = &WORLD.visions[picked_entity];
+                        int* n_view_rays = &vision->n_view_rays;
+                        float* distance = &vision->distance;
+                        float* fov = &vision->fov;
+
+                        drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
                         drag_float(
-                            "fov", &vision->fov, 0.0, 2.0 * PI, 0.05
-                        );
-                        drag_float(
-                            "distance",
-                            &vision->distance,
-                            0.0,
-                            FLT_MAX,
-                            0.1
+                            "distance", distance, 0.0, FLT_MAX, 0.1
                         );
                         drag_int(
-                            "n rays",
-                            &vision->n_view_rays,
-                            1,
-                            MAX_N_VIEW_RAYS,
-                            1
+                            "n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1
                         );
                         igTreePop();
                     }
@@ -329,23 +323,18 @@ static void render_entity_editor() {
                 if (entity_has_component(picked_entity, GUN_COMPONENT)) {
                     if (igTreeNodeEx_Str("Gun", flags)) {
                         Gun* gun = &WORLD.guns[picked_entity];
+                        float* ttl = &gun->bullet.ttl;
+                        float* speed = &gun->bullet.speed;
+                        float* fire_rate = &gun->fire_rate;
 
                         if (igTreeNodeEx_Str("bullet", flags)) {
-                            drag_float(
-                                "ttl", &gun->bullet.ttl, 0.0, 30.0, 1.0
-                            );
-                            drag_float(
-                                "speed",
-                                &gun->bullet.speed,
-                                0.0,
-                                5000.0,
-                                5.0
-                            );
+                            drag_float("ttl", ttl, 0.0, 30.0, 1.0);
+                            drag_float("speed", speed, 0.0, 5000.0, 5.0);
                             igTreePop();
                         }
 
                         drag_float(
-                            "fire rate", &gun->fire_rate, 0.0, 10.0, 0.01
+                            "fire rate", fire_rate, 0.0, 10.0, 0.01
                         );
                         igTreePop();
                     }
@@ -357,10 +346,35 @@ static void render_entity_editor() {
 }
 
 void render_scene_editor(void) {
+    ImGuiIO* io = igGetIO();
+    ImVec2 position = {io->DisplaySize.x, 0.0};
+    ImVec2 pivot = {1, 0};
+    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
+    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
+
     if (igBegin("Scene", NULL, 0)) {
         // Entities list: tree of entities and their components in
         // the current scene
-        if (igCollapsingHeader_TreeNodeFlags("Entities", 0)) {}
+        if (igCollapsingHeader_TreeNodeFlags("Entities", DEFAULT_OPEN)) {
+            for (int i = 0; i < 2; ++i) {
+                const char* label = i == 0 ? "Alive" : "Trash";
+                if (igTreeNodeEx_Str(label, DEFAULT_OPEN * (1 - i))) {
+                    for (int entity = 0; entity < WORLD.n_entities;
+                         ++entity) {
+                        const char* name = WORLD.names[entity];
+                        char str[MAX_ENTITY_NAME_SIZE + 16];
+                        sprintf(str, "%s: %d", name, entity);
+
+                        int show = entity_is_alive(entity) ^ i;
+                        if (show
+                            && igTreeNodeEx_StrStr(str, 0, "%s", str)) {
+                            igTreePop();
+                        }
+                    }
+                    igTreePop();
+                }
+            }
+        }
 
         if (igCollapsingHeader_TreeNodeFlags("Debug", 0)) {
             if (igTreeNodeEx_Str("Shading", 0)) {
@@ -401,29 +415,9 @@ void render_editor_gui(void) {
 
     render_game_controls();
 
-    {
-        ImVec2 position = {0, io->DisplaySize.y};
-        ImVec2 pivot = {0, 1};
-        igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-        igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
-        render_debug_info();
-    }
-
-    {
-        ImVec2 position = {io->DisplaySize.x, 0.0};
-        ImVec2 pivot = {1, 0};
-        igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-        igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
-        render_scene_editor();
-    }
-
-    {
-        ImVec2 position = {0.0, 0.0};
-        ImVec2 pivot = {0, 0};
-        igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-        igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
-        render_entity_editor();
-    }
+    render_entity_editor();
+    render_scene_editor();
+    render_debug_info();
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
