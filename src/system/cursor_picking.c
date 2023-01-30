@@ -1,5 +1,6 @@
 #include "../app.h"
 #include "../component.h"
+#include "../const.h"
 #include "../debug.h"
 #include "../gl.h"
 #include "../math.h"
@@ -85,5 +86,8 @@ void render_cursor_picking(void) {
         YELLOW_COLOR,
         LINE
     );
-    render_debug_circle(transformation.position, 0.1, YELLOW_COLOR, FILL);
+    float drag_handle_size = WORLD.camera_view_width * DRAG_HANDLE_SCALE;
+    render_debug_circle(
+        transformation.position, drag_handle_size, YELLOW_COLOR, FILL
+    );
 }
