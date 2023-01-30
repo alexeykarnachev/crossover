@@ -35,8 +35,15 @@ static void mouse_button_callback(
     GLFWwindow* window, int button, int action, int mods
 ) {
     Application* app = (Application*)(glfwGetWindowUserPointer(window));
-    app->_inputs_accum.mouse_button_states[button] = (int
-    )(action != GLFW_RELEASE);
+    int state = (int)(action != GLFW_RELEASE);
+    app->_inputs_accum.mouse_button_states[button] = state;
+}
+
+static void scroll_callback(
+    GLFWwindow* window, double xoffset, double yoffset
+) {
+    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    app->_inputs_accum.scroll_dy += yoffset;
 }
 
 static void cursor_position_callback(
@@ -78,6 +85,7 @@ void init_app(int window_width, int window_height) {
     glfwSetFramebufferSizeCallback(WINDOW, framebuffer_size_callback);
     glfwSetKeyCallback(WINDOW, key_callback);
     glfwSetMouseButtonCallback(WINDOW, mouse_button_callback);
+    glfwSetScrollCallback(WINDOW, scroll_callback);
     glfwSetCursorPosCallback(WINDOW, cursor_position_callback);
     glfwSwapInterval(1);
     igCreateContext(NULL);
@@ -115,11 +123,14 @@ void update_window() {
     APP.cursor_dy = APP.cursor_y - APP._inputs_accum.cursor_y;
     APP.cursor_x = APP._inputs_accum.cursor_x;
     APP.cursor_y = APP._inputs_accum.cursor_y;
+    APP.scroll_dy = APP._inputs_accum.scroll_dy;
+    APP._inputs_accum.scroll_dy = 0.0;
 
     DEBUG.inputs.cursor_x = APP.cursor_x;
     DEBUG.inputs.cursor_y = APP.cursor_y;
     DEBUG.inputs.cursor_dx = APP.cursor_dx;
     DEBUG.inputs.cursor_dy = APP.cursor_dy;
+    DEBUG.inputs.scroll_dy = APP.scroll_dy;
 
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();

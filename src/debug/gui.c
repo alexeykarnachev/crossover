@@ -80,6 +80,7 @@ static void render_debug_info(void) {
             DEBUG.inputs.cursor_dx,
             DEBUG.inputs.cursor_dy
         );
+        igText("Scroll: %g", DEBUG.inputs.scroll_dy);
     }
 
     igEnd();

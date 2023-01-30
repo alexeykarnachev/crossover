@@ -10,6 +10,7 @@ typedef struct Application {
         int mouse_button_states[16];
         double cursor_x;
         double cursor_y;
+        double scroll_dy;
     } _inputs_accum;
 
     int key_states[512];
@@ -25,6 +26,7 @@ typedef struct Application {
     double cursor_y;
     double cursor_dx;
     double cursor_dy;
+    double scroll_dy;
 } Application;
 
 extern Application APP;

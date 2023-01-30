@@ -236,9 +236,9 @@ static void update_entities_world_counter() {
 
 void update_world(float dt) {
     update_visions();
+    update_camera();
 
     if (DEBUG.is_playing) {
-        update_camera();
         update_ttls(dt);
         update_healths();
         update_player();

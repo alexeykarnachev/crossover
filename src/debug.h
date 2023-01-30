@@ -44,6 +44,7 @@ typedef struct Debug {
         float cursor_y;
         float cursor_dx;
         float cursor_dy;
+        float scroll_dy;
     } inputs;
 } Debug;
 
