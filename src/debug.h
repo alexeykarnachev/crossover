@@ -52,7 +52,7 @@ extern Debug DEBUG;
 
 void init_debug(void);
 void update_debug(void);
-void update_debug_gui(void);
+void update_editor_gui(void);
 
 void render_debug_primitive(
     Transformation t, Primitive p, Vec3 color, int fill_type
@@ -62,5 +62,5 @@ void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type);
 void render_debug_rectangle(
     Vec2 position, float width, float height, Vec3 color, int fill_type
 );
-void render_debug_gui(void);
 void render_debug_grid(void);
+void render_editor_gui(void);

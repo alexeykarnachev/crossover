@@ -30,5 +30,5 @@ void update_entity_drag() {
         }
     }
 
-    PREV_CURSOR_WORLD_POS = cursor_world_pos;
+    PREV_CURSOR_WORLD_POS = get_cursor_world_pos();
 }

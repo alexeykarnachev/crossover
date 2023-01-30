@@ -59,11 +59,11 @@ int main(int argc, char* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         update_debug();
-        update_debug_gui();
+        update_editor_gui();
         update_world(APP.dt);
 
         render_world();
-        render_debug_gui();
+        render_editor_gui();
 
         update_window();
     }
