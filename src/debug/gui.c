@@ -361,13 +361,25 @@ void render_scene_editor(void) {
                 if (igTreeNodeEx_Str(label, DEFAULT_OPEN * (1 - i))) {
                     for (int entity = 0; entity < WORLD.n_entities;
                          ++entity) {
+                        int show = entity_is_alive(entity) ^ i;
+                        if (!show) {
+                            continue;
+                        }
+
                         const char* name = WORLD.names[entity];
                         char str[MAX_ENTITY_NAME_SIZE + 16];
                         sprintf(str, "%s: %d", name, entity);
+                        int is_picked = entity == DEBUG.picked_entity;
+                        int flags = ImGuiTreeNodeFlags_Selected
+                                    * is_picked;
+                        int node = igTreeNodeEx_StrStr(
+                            str, flags, "%s", str
+                        );
+                        if (igIsItemClicked(0)) {
+                            DEBUG.picked_entity = entity;
+                        }
 
-                        int show = entity_is_alive(entity) ^ i;
-                        if (show
-                            && igTreeNodeEx_StrStr(str, 0, "%s", str)) {
+                        if (node) {
                             igTreePop();
                         }
                     }
