@@ -247,5 +247,6 @@ void update_world(float dt) {
         update_entities_world_counter();
     } else {
         update_cursor_picking();
+        update_entity_drag();
     }
 }

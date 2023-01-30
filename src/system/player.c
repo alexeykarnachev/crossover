@@ -7,73 +7,68 @@
 #include <math.h>
 
 void update_player() {
-    if (WORLD.player != -1 && WORLD.camera != -1) {
-        Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
-        Transformation* transformation
-            = &WORLD.transformations[WORLD.player];
-        Transformation camera = WORLD.transformations[WORLD.camera];
+    if (WORLD.player == -1 || WORLD.camera == -1) {
+        return;
+    }
+    Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
+    Transformation* transformation = &WORLD.transformations[WORLD.player];
+    Transformation camera = WORLD.transformations[WORLD.camera];
 
-        Vec2 velocity = {0.0, 0.0};
-        velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
-        velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
-        velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
-        velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
-        Vec2 look_at = get_cursor_world_pos();
+    Vec2 look_at = get_cursor_world_pos();
+    DEBUG.general.look_at = look_at;
 
-        look_at = rotate(look_at, camera.position, camera.orientation);
-        velocity = rotate(velocity, camera.position, camera.orientation);
+    Vec2 velocity = {0.0, 0.0};
+    velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
+    velocity.y -= 1.0 * APP.key_states[GLFW_KEY_S];
+    velocity.x -= 1.0 * APP.key_states[GLFW_KEY_A];
+    velocity.x += 1.0 * APP.key_states[GLFW_KEY_D];
+    velocity = rotate(velocity, vec2(0.0, 0.0), camera.orientation);
+    kinematic->orientation = atan2(
+        look_at.y - transformation->position.y,
+        look_at.x - transformation->position.x
+    );
+    if (length(velocity) > EPS) {
+        velocity = scale(normalize(velocity), kinematic->max_speed);
+    }
+    kinematic->velocity = velocity;
 
-        kinematic->orientation = atan2(
-            look_at.y - transformation->position.y,
-            look_at.x - transformation->position.x
-        );
-        DEBUG.general.look_at = look_at;
-        if (length(velocity) > EPS) {
-            velocity = scale(normalize(velocity), kinematic->max_speed);
-        }
+    if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
+        if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
+            Gun* gun = &WORLD.guns[WORLD.player];
+            float time_since_last_shoot
+                = (APP.time - gun->last_time_shoot);
+            if (gun->last_time_shoot == 0
+                || (time_since_last_shoot > 1.0 / gun->fire_rate)) {
+                gun->last_time_shoot = APP.time;
+                Vec2 bullet_velocity = vec2(
+                    cos(transformation->orientation),
+                    sin(transformation->orientation)
+                );
+                bullet_velocity = scale(
+                    bullet_velocity, gun->bullet.speed
+                );
+                Kinematic bullet_kinematic = {
+                    bullet_velocity,
+                    gun->bullet.speed,
+                    transformation->orientation,
+                    0.0};
+                Transformation bullet_transformation = *transformation;
+                float bullet_collider_length = gun->bullet.speed / 30.0;
+                Primitive bullet_primitive = init_circle_primitive(0.1);
+                Primitive bullet_collider = init_line_primitive(
+                    vec2(bullet_collider_length, 0.0)
+                );
+                Material bullet_material = init_material(RED_COLOR);
 
-        kinematic->velocity = velocity;
-
-        if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
-            if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
-                Gun* gun = &WORLD.guns[WORLD.player];
-                float time_since_last_shoot
-                    = (APP.time - gun->last_time_shoot);
-                if (gun->last_time_shoot == 0
-                    || (time_since_last_shoot > 1.0 / gun->fire_rate)) {
-                    gun->last_time_shoot = APP.time;
-                    Vec2 bullet_velocity = vec2(
-                        cos(transformation->orientation),
-                        sin(transformation->orientation)
-                    );
-                    bullet_velocity = scale(
-                        bullet_velocity, gun->bullet.speed
-                    );
-                    Kinematic bullet_kinematic = {
-                        bullet_velocity,
-                        gun->bullet.speed,
-                        transformation->orientation,
-                        0.0};
-                    Transformation bullet_transformation = *transformation;
-                    float bullet_collider_length = gun->bullet.speed
-                                                   / 30.0;
-                    Primitive bullet_primitive = init_circle_primitive(0.1
-                    );
-                    Primitive bullet_collider = init_line_primitive(
-                        vec2(bullet_collider_length, 0.0)
-                    );
-                    Material bullet_material = init_material(RED_COLOR);
-
-                    spawn_bullet(
-                        bullet_transformation,
-                        bullet_primitive,
-                        bullet_collider,
-                        bullet_material,
-                        bullet_kinematic,
-                        gun->bullet.ttl,
-                        WORLD.player
-                    );
-                }
+                spawn_bullet(
+                    bullet_transformation,
+                    bullet_primitive,
+                    bullet_collider,
+                    bullet_material,
+                    bullet_kinematic,
+                    gun->bullet.ttl,
+                    WORLD.player
+                );
             }
         }
     }

@@ -23,6 +23,7 @@ void update_player();
 void update_ttls(float dt);
 void update_visions();
 void update_cursor_picking();
+void update_entity_drag();
 
 void render_debug_player();
 void render_debug_kinematics();

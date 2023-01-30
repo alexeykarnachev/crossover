@@ -15,6 +15,7 @@ typedef struct Debug {
     int n_primitives;
     int is_playing;
     int picked_entity;
+    int is_dragging;
 
     struct general {
         int n_entities;

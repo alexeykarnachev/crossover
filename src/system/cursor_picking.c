@@ -2,6 +2,7 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../gl.h"
+#include "../math.h"
 #include "../system.h"
 #include "../world.h"
 
@@ -11,38 +12,55 @@ Vec2 get_cursor_world_pos(void) {
     Vec2 size = sub(frustum.top_right, frustum.bot_left);
     float x = frustum.bot_left.x + size.x * screen_pos.x;
     float y = frustum.bot_left.y + size.y * screen_pos.y;
-    return vec2(x, y);
+
+    Transformation camera = WORLD.transformations[WORLD.camera];
+    Vec2 position = rotate(vec2(x, y), vec2(0.0, 0.0), camera.orientation);
+    return position;
 }
 
-void update_cursor_picking(void) {
-    if (!APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
-        return;
-    }
-
-    DEBUG.picked_entity = -1;
+static int check_if_picked(int entity) {
     Vec2 cursor_world_pos = get_cursor_world_pos();
     Primitive cursor_primitive = init_circle_primitive(0.1);
     Transformation cursor_transformation = init_transformation(
         cursor_world_pos, 0.0
     );
+    Primitive entity_primitive = WORLD.primitives[entity];
+    Transformation entity_transformation = WORLD.transformations[entity];
+    Collision collision;
+    int is_picked = collide_primitives(
+        cursor_primitive,
+        cursor_transformation,
+        entity_primitive,
+        entity_transformation,
+        &collision
+    );
+    return is_picked;
+}
+
+void update_cursor_picking(void) {
+    // Don't update picking if mouse is not pressed or
+    // the entity dragging mode is on
+    if (!APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]
+        || DEBUG.is_dragging) {
+        return;
+    }
+
+    // Don't even try to pick another entities, if the current picked
+    // entity could be picked again
+    if (DEBUG.picked_entity != -1) {
+        if (check_if_picked(DEBUG.picked_entity)) {
+            return;
+        }
+    }
+
+    // Try to pick another entities
+    DEBUG.picked_entity = -1;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_be_rendered(entity)) {
             continue;
         }
 
-        Primitive entity_primitive = WORLD.primitives[entity];
-        Transformation entity_transformation
-            = WORLD.transformations[entity];
-        Collision collision;
-        int is_picked = collide_primitives(
-            cursor_primitive,
-            cursor_transformation,
-            entity_primitive,
-            entity_transformation,
-            &collision
-        );
-
-        if (is_picked) {
+        if (check_if_picked(entity)) {
             DEBUG.picked_entity = entity;
             break;
         }
