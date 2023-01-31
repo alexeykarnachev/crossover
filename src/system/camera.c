@@ -17,10 +17,10 @@ void update_camera() {
     WORLD.camera_view_width -= CAMERA_SCROLL_SENSITIVITY * APP.scroll_dy;
     WORLD.camera_view_width = max(EPS, WORLD.camera_view_width);
 
-    Vec2 cursor_world_pos = get_cursor_world_pos();
-
     if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_MIDDLE]) {
+        Vec2 cursor_world_pos = get_cursor_world_pos();
         Vec2 diff = sub(cursor_world_pos, PREV_CURSOR_WORLD_POS);
+        diff = rotate(diff, vec2(0.0, 0.0), -camera->orientation);
         camera->position = sub(camera->position, diff);
     }
 

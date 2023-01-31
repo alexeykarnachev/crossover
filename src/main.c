@@ -36,6 +36,12 @@ int main(int argc, char* argv[]) {
         0
     );
     spawn_obstacle(
+        init_transformation(vec2(0.0, 3.5), 0.0),
+        init_line_primitive(vec2(1.0, 1.0)),
+        init_line_primitive(vec2(1.0, 1.0)),
+        init_material(BLACK_COLOR)
+    );
+    spawn_obstacle(
         init_transformation(vec2(4.0, 4.0), 0.0),
         init_rectangle_primitive(1.0, 1.0),
         init_rectangle_primitive(1.0, 1.0),

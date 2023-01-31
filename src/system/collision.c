@@ -160,6 +160,7 @@ int collide_primitives(
         collided = collide_polygons(
             vertices0, nv0, vertices1, nv1, &collision->mtv
         );
+        collision->mtv = flip(collision->mtv);
     }
 
     return collided;

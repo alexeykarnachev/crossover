@@ -252,13 +252,13 @@ static void update_entities_world_counter() {
 void update_world(float dt) {
     update_visions();
     update_camera();
+    update_collisions();
 
     if (DEBUG.is_playing) {
         update_ttls(dt);
         update_healths();
         update_player();
         update_kinematics(dt);
-        update_collisions();
         update_entities_world_counter();
     } else {
         update_cursor_picking();

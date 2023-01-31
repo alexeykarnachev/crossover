@@ -20,6 +20,10 @@ Vec2 get_cursor_world_pos(void) {
 }
 
 static int check_if_picked(int entity) {
+    if (!entity_can_be_rendered(entity)) {
+        return 0;
+    }
+
     Vec2 cursor_world_pos = get_cursor_world_pos();
     Primitive cursor_primitive = init_circle_primitive(0.1);
     Transformation cursor_transformation = init_transformation(
@@ -57,10 +61,6 @@ void update_cursor_picking(void) {
     // Try to pick another entities
     DEBUG.picked_entity = -1;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_be_rendered(entity)) {
-            continue;
-        }
-
         if (check_if_picked(entity)) {
             DEBUG.picked_entity = entity;
             break;
@@ -69,7 +69,8 @@ void update_cursor_picking(void) {
 }
 
 void render_cursor_picking(void) {
-    if (DEBUG.picked_entity == -1) {
+    if (DEBUG.picked_entity == -1
+        || entity_can_be_rendered(!DEBUG.picked_entity)) {
         return;
     }
 

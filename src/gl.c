@@ -374,9 +374,7 @@ void render_world(void) {
         render_debug_player();
     }
 
-    if (!DEBUG.is_playing) {
-        render_cursor_picking();
-    }
+    render_cursor_picking();
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
         DebugPrimitive p = DEBUG.primitives[i];
