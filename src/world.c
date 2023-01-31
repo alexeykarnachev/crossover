@@ -241,8 +241,8 @@ static void update_entities_world_counter() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (WORLD.components[entity] != 0) {
             n_entities = entity + 1;
-        } else if (DEBUG.picked_entity == entity) {
-            DEBUG.picked_entity = -1;
+        } else if (DEBUG.picked_entity.entity == entity) {
+            DEBUG.picked_entity.entity = -1;
         }
     }
     WORLD.n_entities = n_entities;
@@ -261,7 +261,6 @@ void update_world(float dt) {
         update_kinematics(dt);
         update_entities_world_counter();
     } else {
-        update_cursor_picking();
-        update_entity_drag();
+        update_entity_picking();
     }
 }

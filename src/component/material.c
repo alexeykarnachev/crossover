@@ -4,7 +4,9 @@
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};
 Vec3 GREEN_COLOR = {0.0, 1.0, 0.0};
 Vec3 BLUE_COLOR = {0.0, 0.0, 1.0};
+Vec3 BRIGHT_BLUE_COLOR = {0.0, 0.59, 1.0};
 Vec3 YELLOW_COLOR = {1.0, 1.0, 0.0};
+Vec3 LIGHT_YELLOW_COLOR = {1.0, 1.0, 0.7};
 Vec3 MAGENTA_COLOR = {1.0, 0.0, 1.0};
 Vec3 CYAN_COLOR = {0.0, 1.0, 1.0};
 Vec3 VIOLET_COLOR = {0.5, 0.0, 1.0};

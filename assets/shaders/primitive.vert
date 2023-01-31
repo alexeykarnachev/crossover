@@ -9,20 +9,14 @@ struct Camera {
     float view_height;
 };
 
-struct Polygon {
-    vec2 a;
-    vec2 b;
-    vec2 c;
-    vec2 d;
-};
-
 struct Circle {
     vec2 position;
     float radius;
     int n_polygons;
 };
 
-uniform Polygon polygon;
+in vec2 world_pos;
+
 uniform Circle circle;
 uniform Camera camera;
 uniform int type;
@@ -59,52 +53,12 @@ vec2 get_circle_position() {
     return world_pos;
 }
 
-// Render with TRIANGLE_STRIP with 4 vertices
-vec2 get_rectangle_position() {
-    int id = gl_VertexID;
-    if (id == 0) {
-        return polygon.d;
-    } else if (id == 1) {
-        return polygon.a;
-    } else if (id == 2) {
-        return polygon.c;
-    } else if (id == 3) {
-        return polygon.b;
-    }
-}
-
-// Render with TRIANGLE_STRIP with 3 vertices
-vec2 get_triangle_position() {
-    int id = gl_VertexID;
-    if (id == 0) {
-        return polygon.a;
-    } else if (id == 1) {
-        return polygon.b;
-    } else if (id == 2) {
-        return polygon.c;
-    }
-}
-
-// Render with LINE with 2 vertices
-vec2 get_line_position() {
-    int id = gl_VertexID;
-    if (id == 0) {
-        return polygon.a;
-    } else if (id == 1) {
-        return polygon.b;
-    }
-}
-
 void main(void) {
     vec2 world_position;
     if ((type & 1 << 0) != 0) {
         world_position = get_circle_position();
-    } else if ((type & 1 << 1) != 0) {
-        world_position = get_rectangle_position();
-    } else if ((type & 1 << 2) != 0) {
-        world_position = get_triangle_position();
-    } else if ((type & 1 << 3) != 0) {
-        world_position = get_line_position();
+    } else {
+        world_position = world_pos;
     }
 
     vec2 proj_pos = world2proj(world_position); 

@@ -17,20 +17,20 @@ typedef struct Rectangle {
     float height;
 } Rectangle;
 
-typedef struct Triangle {
-    Vec2 b;
-    Vec2 c;
-} Triangle;
-
 typedef struct Line {
     Vec2 b;
 } Line;
 
+typedef struct Polygon {
+    Vec2 vertices[MAX_N_POLYGON_VERTICES];
+    int n_vertices;
+} Polygon;
+
 typedef enum PrimitiveType {
     CIRCLE_PRIMITIVE = 1 << 0,
     RECTANGLE_PRIMITIVE = 1 << 1,
-    TRIANGLE_PRIMITIVE = 1 << 2,
-    LINE_PRIMITIVE = 1 << 3
+    LINE_PRIMITIVE = 1 << 2,
+    POLYGON_PRIMITIVE = 1 << 3
 } PrimitiveType;
 
 typedef struct Primitive {
@@ -38,16 +38,21 @@ typedef struct Primitive {
     union {
         Circle circle;
         Rectangle rectangle;
-        Triangle triangle;
         Line line;
+        Polygon polygon;
     } p;
 } Primitive;
 
 Primitive init_circle_primitive(float radius);
 Primitive init_rectangle_primitive(float width, float height);
-Primitive init_triangle_primitive(Vec2 b, Vec2 c);
 Primitive init_line_primitive(Vec2 b);
+Primitive init_polygon_primitive(
+    Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices
+);
 int get_primitive_vertices(Primitive primitive, Vec2* out);
+int get_primitive_fan_vertices(
+    Primitive primitive, Vec2 out[MAX_N_POLYGON_VERTICES]
+);
 Rectangle get_primitive_bounding_rectangle(
     Primitive primitive, Transformation transformation
 );
@@ -89,7 +94,9 @@ typedef struct Material {
 extern Vec3 RED_COLOR;
 extern Vec3 GREEN_COLOR;
 extern Vec3 BLUE_COLOR;
+extern Vec3 BRIGHT_BLUE_COLOR;
 extern Vec3 YELLOW_COLOR;
+extern Vec3 LIGHT_YELLOW_COLOR;
 extern Vec3 MAGENTA_COLOR;
 extern Vec3 CYAN_COLOR;
 extern Vec3 VIOLET_COLOR;

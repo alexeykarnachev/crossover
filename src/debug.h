@@ -10,12 +10,24 @@ typedef struct DebugPrimitive {
     int fill_type;
 } DebugPrimitive;
 
+typedef enum PickedEntityMode {
+    PICK_TRANSFORMATION = 1 << 0,
+    PICK_PRIMITIVE = 1 << 1,
+    PICK_COLLIDER = 1 << 2
+} PickedEntityMode;
+
+typedef struct PickedEntity {
+    int entity;
+    int is_dragging;
+    PickedEntityMode mode;
+} PickedEntity;
+
 typedef struct Debug {
     DebugPrimitive primitives[MAX_N_DEBUG_PRIMITIVES];
+    PickedEntity picked_entity;
+
     int n_primitives;
     int is_playing;
-    int picked_entity;
-    int is_dragging;
 
     struct general {
         int n_entities;

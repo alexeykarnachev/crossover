@@ -13,7 +13,7 @@ Debug DEBUG;
 
 void init_debug(void) {
     DEBUG.is_playing = 0;
-    DEBUG.picked_entity = -1;
+    DEBUG.picked_entity.entity = -1;
 
     DEBUG.shading.materials = 1;
     DEBUG.shading.collisions = 1;

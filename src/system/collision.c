@@ -123,8 +123,8 @@ int collide_primitives(
     Transformation transformation1,
     Collision* collision
 ) {
-    Vec2 vertices0[4];
-    Vec2 vertices1[4];
+    Vec2 vertices0[MAX_N_POLYGON_VERTICES];
+    Vec2 vertices1[MAX_N_POLYGON_VERTICES];
     int nv0 = get_primitive_vertices(primitive0, vertices0);
     int nv1 = get_primitive_vertices(primitive1, vertices1);
     apply_transformation(vertices0, nv0, transformation0);

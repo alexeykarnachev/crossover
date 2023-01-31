@@ -30,7 +30,7 @@ RayCastResult cast_ray(
                 );
                 break;
             default: {
-                Vec2 vertices[4];
+                Vec2 vertices[MAX_N_POLYGON_VERTICES];
                 int nv = get_primitive_vertices(entity_collider, vertices);
                 apply_transformation(vertices, nv, entity_transformation);
                 is_collided = intersect_line_with_polygon_nearest(

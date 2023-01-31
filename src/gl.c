@@ -211,7 +211,20 @@ static int set_uniform_4fv(
     return 1;
 }
 
-static GLuint DUMMY_VAO;
+int set_attrib(
+    GLuint program, const char* name, int n_components, GLuint type
+) {
+    glUseProgram(program);
+    GLuint loc;
+    if (!get_attrib_location(program, &loc, name)) {
+        return 0;
+    }
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, n_components, type, GL_FALSE, 0, 0);
+}
+
+static GLuint POLYGON_VAO;
+static GLuint POLYGON_VBO;
 static const int N_POLYGONS_IN_CIRCLE = 32;
 
 static void set_uniform_camera(GLuint program, Transformation camera) {
@@ -235,43 +248,8 @@ static void set_uniform_circle(
     set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);
 }
 
-static int set_uniform_primitive(
-    GLuint program, Transformation transformation, Primitive primitive
-) {
-    Vec2 vertices[4];
-    int nv = get_primitive_vertices(primitive, vertices);
-    apply_transformation(vertices, nv, transformation);
-    set_uniform_2fv(program, "polygon.a", (float*)&vertices[0], 1);
-    set_uniform_2fv(program, "polygon.b", (float*)&vertices[1], 1);
-    set_uniform_2fv(program, "polygon.c", (float*)&vertices[2], 1);
-    set_uniform_2fv(program, "polygon.d", (float*)&vertices[3], 1);
-
-    return nv;
-}
-
-static GLuint get_primitive_type_draw_mode(PrimitiveType type) {
-    switch (type) {
-        case CIRCLE_PRIMITIVE:
-            return GL_TRIANGLE_FAN;
-        case RECTANGLE_PRIMITIVE:
-            return GL_TRIANGLE_STRIP;
-        case TRIANGLE_PRIMITIVE:
-            return GL_TRIANGLE_STRIP;
-        case LINE_PRIMITIVE:
-            return GL_LINE_STRIP;
-        default:
-            fprintf(
-                stderr,
-                "ERROR: can't render the primitive with type id: "
-                "%d. Needs to be implemented\n",
-                type
-            );
-            exit(1);
-    }
-}
-
 typedef struct RenderCall {
-    int n_points;
+    int n_vertices;
     GLuint draw_mode;
 } RenderCall;
 
@@ -288,19 +266,26 @@ static RenderCall prepare_primitive_render_call(
         program, "diffuse_color", (float*)&material.diffuse_color, 1
     );
 
-    GLuint draw_mode = get_primitive_type_draw_mode(type);
-    int n_points;
+    GLuint draw_mode = GL_TRIANGLE_FAN;
+    int n_vertices;
     if (type & CIRCLE_PRIMITIVE) {
         set_uniform_circle(program, transformation, primitive.p.circle);
-        n_points = N_POLYGONS_IN_CIRCLE + 2;
+        n_vertices = N_POLYGONS_IN_CIRCLE + 2;
     } else {
-        n_points = set_uniform_primitive(
-            program, transformation, primitive
+        Vec2 vertices[MAX_N_POLYGON_VERTICES];
+        n_vertices = get_primitive_fan_vertices(primitive, vertices);
+        apply_transformation(vertices, n_vertices, transformation);
+        glBufferSubData(
+            GL_ARRAY_BUFFER, 0, n_vertices * sizeof(Vec2), (float*)vertices
         );
     }
 
+    glBindVertexArray(POLYGON_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
+    set_attrib(program, "world_pos", 2, GL_FLOAT);
+
     RenderCall render_call;
-    render_call.n_points = n_points;
+    render_call.n_vertices = n_vertices;
     render_call.draw_mode = draw_mode;
 
     return render_call;
@@ -322,11 +307,31 @@ static void execute_render_call(RenderCall render_call, int fill_type) {
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, fill_type_gl);
-    glDrawArrays(render_call.draw_mode, 0, render_call.n_points);
+    glDrawArrays(render_call.draw_mode, 0, render_call.n_vertices);
+}
+
+static void init_polygon_vao() {
+    glCreateVertexArrays(1, &POLYGON_VAO);
+    glBindVertexArray(POLYGON_VAO);
+
+    glGenBuffers(1, &POLYGON_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(float) * 2 * MAX_N_POLYGON_VERTICES,
+        NULL,
+        GL_DYNAMIC_DRAW
+    );
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void init_renderer(void) {
-    glCreateVertexArrays(1, &DUMMY_VAO);
+    init_polygon_vao();
     init_all_programs();
 }
 
@@ -335,7 +340,6 @@ void render_world(void) {
     // Render primitives
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, APP.window_width, APP.window_height);
-    glBindVertexArray(DUMMY_VAO);
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_can_be_rendered(entity)) {
@@ -374,7 +378,7 @@ void render_world(void) {
         render_debug_player();
     }
 
-    render_cursor_picking();
+    render_entity_picking();
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
         DebugPrimitive p = DEBUG.primitives[i];

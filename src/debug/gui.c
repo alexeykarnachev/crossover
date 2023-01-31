@@ -12,6 +12,7 @@
 static int LAST_PICKED_ENTITY = -1;
 static int LAST_PICKED_COMPONENTS[N_COMPONENS];
 static ImVec2 VEC2_ZERO = {0, 0};
+static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 static int DEFAULT_OPEN = ImGuiTreeNodeFlags_DefaultOpen;
 
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
@@ -45,7 +46,7 @@ static void drag_int(
     igDragInt(label, value, 1, min_val, max_val, "%d", 0);
 }
 
-static void render_primitive_settings(Primitive* primitive) {
+static void render_primitive_geometry_settings(Primitive* primitive) {
     PrimitiveType* type = &primitive->type;
     switch (*type) {
         case CIRCLE_PRIMITIVE: {
@@ -62,18 +63,21 @@ static void render_primitive_settings(Primitive* primitive) {
             drag_float("height", height, 0.0, FLT_MAX, 0.05);
             break;
         }
-        case TRIANGLE_PRIMITIVE: {
-            igText("Triangle");
-            float* b = (float*)&primitive->p.triangle.b;
-            float* c = (float*)&primitive->p.triangle.c;
-            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
-            drag_float2("c", c, -FLT_MAX, FLT_MAX, 0.05);
-            break;
-        }
         case LINE_PRIMITIVE: {
             igText("Line");
-            float* b = (float*)&primitive->p.triangle.b;
+            float* b = (float*)&primitive->p.line.b;
             drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
+            break;
+        }
+        case POLYGON_PRIMITIVE: {
+            igText("Polygon");
+            Polygon* polygon = &primitive->p.polygon;
+            for (int i = 0; i < polygon->n_vertices; ++i) {
+                char label[16];
+                sprintf(label, "v: %d", i);
+                float* vertex = (float*)&polygon->vertices[i];
+                drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05);
+            }
             break;
         }
         default: {
@@ -115,7 +119,7 @@ static void render_debug_info(void) {
     igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
-        igText("FPS: %.1f", 1000.0f / io->Framerate, io->Framerate);
+        igText("FPS: %.1f", io->Framerate);
         igText("Entities: %d", DEBUG.general.n_entities);
         igText("Collisions: %d", DEBUG.general.n_collisions);
         igText(
@@ -147,7 +151,7 @@ static void render_debug_info(void) {
 static void render_debug_gui(void) {}
 
 static void render_entity_editor() {
-    int picked_entity = DEBUG.picked_entity;
+    int picked_entity = DEBUG.picked_entity.entity;
     int camera_entity = WORLD.camera;
 
     ImGuiIO* io = igGetIO();
@@ -209,14 +213,71 @@ static void render_entity_editor() {
         // picked entity
         {
             int flags = picked_entity != -1 ? DEFAULT_OPEN : 0;
+            int has_transformation = entity_has_component(
+                picked_entity, TRANSFORMATION_COMPONENT
+            );
+            int has_collider = entity_has_component(
+                picked_entity, COLLIDER_COMPONENT
+            );
+            int has_primitive = entity_has_component(
+                picked_entity, PRIMITIVE_COMPONENT
+            );
             if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
                 && picked_entity != -1) {
                 int flags = 0;
                 flags |= DEFAULT_OPEN;
 
-                if (entity_has_component(
-                        picked_entity, TRANSFORMATION_COMPONENT
-                    )) {
+                int* mode = (int*)&DEBUG.picked_entity.mode;
+                if (igTreeNodeEx_Str("Show handles", flags)) {
+                    ImGuiStyle* style = igGetStyle();
+
+                    if (has_transformation) {
+                        if (*mode == PICK_TRANSFORMATION) {
+                            igPushStyleColor_Vec4(
+                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
+                            );
+                            if (igButton("Transformation", VEC2_ZERO)) {
+                                *mode = PICK_TRANSFORMATION;
+                            }
+                            igPopStyleColor(1);
+                        } else if (igButton("Transformation", VEC2_ZERO)) {
+                            *mode = PICK_TRANSFORMATION;
+                        }
+                    }
+
+                    if (has_collider) {
+                        igSameLine(0.0, style->ItemSpacing.y);
+                        if (*mode == PICK_COLLIDER) {
+                            igPushStyleColor_Vec4(
+                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
+                            );
+                            if (igButton("Collider", VEC2_ZERO)) {
+                                *mode = PICK_COLLIDER;
+                            }
+                            igPopStyleColor(1);
+                        } else if (igButton("Collider", VEC2_ZERO)) {
+                            *mode = PICK_COLLIDER;
+                        }
+                    }
+
+                    if (has_primitive) {
+                        igSameLine(0.0, style->ItemSpacing.y);
+                        if (*mode == PICK_PRIMITIVE) {
+                            igPushStyleColor_Vec4(
+                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
+                            );
+                            if (igButton("Primitive", VEC2_ZERO)) {
+                                *mode = PICK_PRIMITIVE;
+                            }
+                            igPopStyleColor(1);
+                        } else if (igButton("Primitive", VEC2_ZERO)) {
+                            *mode = PICK_PRIMITIVE;
+                        }
+                    }
+                    igTreePop();
+                }
+
+                if (has_transformation) {
                     Transformation* transformation
                         = &WORLD.transformations[picked_entity];
                     float* pos = (float*)&transformation->position;
@@ -228,22 +289,18 @@ static void render_entity_editor() {
                     }
                 }
 
-                if (entity_has_component(
-                        picked_entity, COLLIDER_COMPONENT
-                    )) {
+                if (has_collider) {
                     if (igTreeNodeEx_Str("Collider", flags)) {
-                        render_primitive_settings(
+                        render_primitive_geometry_settings(
                             &WORLD.colliders[picked_entity]
                         );
                         igTreePop();
                     }
                 }
 
-                if (entity_has_component(
-                        picked_entity, PRIMITIVE_COMPONENT
-                    )) {
+                if (has_primitive) {
                     if (igTreeNodeEx_Str("Primitive", flags)) {
-                        render_primitive_settings(
+                        render_primitive_geometry_settings(
                             &WORLD.primitives[picked_entity]
                         );
                         igTreePop();
@@ -369,14 +426,15 @@ void render_scene_editor(void) {
                         const char* name = WORLD.names[entity];
                         char str[MAX_ENTITY_NAME_SIZE + 16];
                         sprintf(str, "%s: %d", name, entity);
-                        int is_picked = entity == DEBUG.picked_entity;
+                        int is_picked = entity
+                                        == DEBUG.picked_entity.entity;
                         int flags = ImGuiTreeNodeFlags_Selected
                                     * is_picked;
                         int node = igTreeNodeEx_StrStr(
                             str, flags, "%s", str
                         );
                         if (igIsItemClicked(0)) {
-                            DEBUG.picked_entity = entity;
+                            DEBUG.picked_entity.entity = entity;
                         }
 
                         if (node) {
@@ -407,9 +465,8 @@ void render_scene_editor(void) {
             if (igTreeNodeEx_Str("Collisions", 0)) {
                 igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
-                igSameLine(105.0, 0.0);
-                ImVec2 buttonSize = {0, 0};
-                if (igButton("once", buttonSize)) {
+                igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+                if (igButton("once", VEC2_ZERO)) {
                     DEBUG.collisions.resolve_once = 1;
                 }
                 igTreePop();
