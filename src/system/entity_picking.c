@@ -350,10 +350,9 @@ void update_entity_dragging(void) {
     int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
         Handle handle = handles[i];
-        Vec2 new_handle_position = add(handle.position, cursor_world_diff);
-        float new_handle_to_center_dist = length(
-            sub(new_handle_position, center)
-        );
+        Vec2 handle_position = add(handle.position, cursor_world_diff);
+        Vec2 center_to_handle = sub(handle_position, center);
+        float center_to_handle_length = length(center_to_handle);
         if (handle.is_dragging) {
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
@@ -366,23 +365,38 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case CIRCLE_RADIUS_HANDLE: {
-                    primitive->p.circle.radius = new_handle_to_center_dist;
+                    primitive->p.circle.radius = center_to_handle_length;
                     break;
                 }
                 case RECTANGLE_WIDTH_HANDLE: {
-                    primitive->p.rectangle.width
-                        = new_handle_to_center_dist * 2.0;
+                    primitive->p.rectangle.width = center_to_handle_length
+                                                   * 2.0;
                     break;
                 }
                 case RECTANGLE_HEIGHT_HANDLE: {
-                    primitive->p.rectangle.height
-                        = new_handle_to_center_dist * 2.0;
+                    primitive->p.rectangle.height = center_to_handle_length
+                                                    * 2.0;
                     break;
                 }
                 case RECTANGLE_VERTEX_HANDLE: {
+                    Vec2 size = rotate(
+                        center_to_handle,
+                        vec2(0.0, 0.0),
+                        -transformation->orientation
+                    );
+                    size = scale(size, 2.0);
+                    primitive->p.rectangle.width = max(0.0, size.x);
+                    primitive->p.rectangle.height = max(0.0, size.y);
                     break;
                 }
                 case LINE_VERTEX_HANDLE: {
+                    float len = length(center_to_handle) * 2.0;
+                    primitive->p.line.b = scale(
+                        normalize(primitive->p.line.b), len
+                    );
+                    break;
+                }
+                case POLYGON_VERTEX_HANDLE: {
                     break;
                 }
             }
