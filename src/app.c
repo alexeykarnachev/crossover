@@ -54,6 +54,10 @@ static void cursor_position_callback(
     app->_inputs_accum.cursor_y = y;
 }
 
+int is_lmb_pressed(void) {
+    return APP.mouse_button_states[GLFW_MOUSE_BUTTON_1];
+}
+
 Vec2 get_cursor_screen_pos() {
     float x = APP.cursor_x / APP.window_width;
     float y = (APP.window_height - APP.cursor_y) / APP.window_height;
@@ -142,4 +146,12 @@ void destroy_app() {
     igDestroyContext(NULL);
     glfwDestroyWindow(WINDOW);
     glfwTerminate();
+}
+
+void clear_mouse_button_states(void) {
+    memset(APP.mouse_button_states, 0, sizeof(APP.mouse_button_states));
+}
+
+void clear_key_states(void) {
+    memset(APP.key_states, 0, sizeof(APP.key_states));
 }

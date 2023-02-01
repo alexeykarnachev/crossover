@@ -2,6 +2,15 @@
 
 #include <math.h>
 
+float sign(float x) {
+    if (x < 0.0) {
+        return -1.0;
+    } else if (x > 0.0) {
+        return 1.0;
+    }
+    return 0.0;
+}
+
 float min(float x, float y) {
     return x < y ? x : y;
 };

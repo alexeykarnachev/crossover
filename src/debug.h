@@ -30,7 +30,6 @@ typedef struct PickedEntity {
     PickedEntityEditMode edit_mode;
     ComponentType component_type;
     int entity;
-    int is_dragging;
 } PickedEntity;
 
 typedef struct Debug {

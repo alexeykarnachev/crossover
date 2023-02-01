@@ -274,5 +274,6 @@ void update_world(float dt) {
         update_entities_world_counter();
     } else {
         update_entity_picking();
+        update_entity_dragging();
     }
 }

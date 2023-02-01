@@ -103,6 +103,7 @@ extern Vec3 VIOLET_COLOR;
 extern Vec3 WHITE_COLOR;
 extern Vec3 BLACK_COLOR;
 extern Vec3 GRAY_COLOR;
+extern Vec3 DARK_GRAY_COLOR;
 extern Vec3 ORANGE_COLOR;
 extern Vec3 SILVER_COLOR;
 extern Vec3 BROWN_COLOR;

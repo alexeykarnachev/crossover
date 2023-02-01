@@ -484,11 +484,9 @@ void update_editor_gui(void) {
     ImGuiIO* io = igGetIO();
 
     if (io->WantCaptureMouse) {
-        memset(
-            APP.mouse_button_states, 0, sizeof(APP.mouse_button_states)
-        );
+        clear_mouse_button_states();
     }
     if (io->WantCaptureKeyboard) {
-        memset(APP.key_states, 0, sizeof(APP.key_states));
+        clear_key_states();
     }
 }

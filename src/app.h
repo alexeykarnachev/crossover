@@ -36,3 +36,7 @@ Vec2 get_cursor_screen_pos(void);
 void init_app(int window_width, int window_height);
 void update_window(void);
 void destroy_app(void);
+
+int is_lmb_pressed(void);
+void clear_mouse_button_states(void);
+void clear_key_states(void);

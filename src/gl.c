@@ -378,7 +378,7 @@ void render_world(void) {
         render_debug_player();
     }
 
-    render_entity_picking();
+    render_entity_handles();
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
         DebugPrimitive p = DEBUG.primitives[i];

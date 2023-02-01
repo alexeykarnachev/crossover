@@ -8,26 +8,15 @@
 #include "../world.h"
 #include <stdlib.h>
 
-static Vec2 PREV_CURSOR_WORLD_POS;
+static int IS_DRAGGING;
+static int DRAGGING_HANDLE_IDX;
+Vec2 CURSOR_WORLD_POS;
 
-static int check_if_cursor_on_primitive(
-    Primitive primitive, Transformation transformation
-) {
+static Vec2 update_cursor_world_pos() {
     Vec2 cursor_world_pos = get_cursor_world_pos();
-    Primitive cursor_primitive = init_circle_primitive(0.1);
-    Transformation cursor_transformation = init_transformation(
-        cursor_world_pos, 0.0
-    );
-
-    Collision collision;
-    int is_picked = collide_primitives(
-        cursor_primitive,
-        cursor_transformation,
-        primitive,
-        transformation,
-        &collision
-    );
-    return is_picked;
+    Vec2 cursor_world_diff = sub(cursor_world_pos, CURSOR_WORLD_POS);
+    CURSOR_WORLD_POS = cursor_world_pos;
+    return cursor_world_diff;
 }
 
 typedef enum HandleTag {
@@ -50,6 +39,7 @@ typedef struct Handle {
     Vec2 position;
     float radius;
     int tag;
+    int is_dragging;
 } Handle;
 
 Handle init_handle(
@@ -60,17 +50,59 @@ Handle init_handle(
     handle.position = position;
     handle.radius = radius;
     handle.tag = tag;
+    handle.is_dragging = 0;
 
     return handle;
 }
 
-static int get_primitive_handles(
-    Primitive primitive,
-    Transformation transformation,
-    PickedEntityEditMode edit_mode,
-    ComponentType component_type,
-    Handle handles[MAX_N_POLYGON_VERTICES]
+static int check_if_cursor_on_primitive(
+    Primitive primitive, Transformation transformation
 ) {
+    Vec2 cursor_world_pos = get_cursor_world_pos();
+    Primitive cursor_primitive = init_circle_primitive(0.1);
+    Transformation cursor_transformation = init_transformation(
+        cursor_world_pos, 0.0
+    );
+
+    Collision collision;
+    int is_picked = collide_primitives(
+        cursor_primitive,
+        cursor_transformation,
+        primitive,
+        transformation,
+        &collision
+    );
+    return is_picked;
+}
+
+static int check_if_cursor_on_handle(Handle handle) {
+    return check_if_cursor_on_primitive(
+        init_circle_primitive(handle.radius),
+        init_transformation(handle.position, 0.0)
+    );
+}
+
+static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
+) {
+    int entity = DEBUG.picked_entity.entity;
+    if (entity == -1) {
+        return 0;
+    }
+
+    int edit_mode = DEBUG.picked_entity.edit_mode;
+    int component_type = DEBUG.picked_entity.component_type;
+    Transformation transformation = WORLD.transformations[entity];
+    Primitive primitive;
+    switch (component_type) {
+        case PRIMITIVE_COMPONENT: {
+            primitive = WORLD.primitives[entity];
+            break;
+        }
+        case COLLIDER_COMPONENT: {
+            primitive = WORLD.colliders[entity];
+            break;
+        }
+    }
     float large_handle_radius = WORLD.camera_view_width
                                 * LARGE_HANDLE_SCALE;
     float small_handle_radius = WORLD.camera_view_width
@@ -104,6 +136,7 @@ static int get_primitive_handles(
         }
     }
 
+    int n_handles = 0;
     switch (edit_mode) {
         case EDIT_TRANSFORMATION_POSITION: {
             handles[0] = init_handle(
@@ -112,16 +145,12 @@ static int get_primitive_handles(
                 radius,
                 TRANSFORMATION_POSITION_HANDLE
             );
-            return 1;
+            n_handles = 1;
+            break;
         }
         case EDIT_TRANSFORMATION_ORIENTATION: {
-            handles[0] = init_handle(
-                GRAY_COLOR,
-                transformation.position,
-                radius,
-                TRANSFORMATION_ORIENTATION_HANDLE
-            );
-            return 1;
+            n_handles = 0;
+            break;
         }
         case EDIT_CIRCLE_RADIUS: {
             Vec2 position = vec2(primitive.p.circle.radius, 0.0);
@@ -129,7 +158,8 @@ static int get_primitive_handles(
             handles[0] = init_handle(
                 color, position, radius, CIRCLE_RADIUS_HANDLE
             );
-            return 1;
+            n_handles = 1;
+            break;
         }
         case EDIT_LINE_VERTEX_POSITION: {
             Vec2 position = scale(primitive.p.line.b, 0.5);
@@ -137,7 +167,8 @@ static int get_primitive_handles(
             handles[0] = init_handle(
                 color, position, radius, LINE_VERTEX_HANDLE
             );
-            return 1;
+            n_handles = 1;
+            break;
         }
         case EDIT_RECTANGLE_SIZE: {
             Vec2 position = transformation.position;
@@ -157,11 +188,12 @@ static int get_primitive_handles(
                     color, handle_positions[i], radius, tags[i]
                 );
             }
-            return 3;
+            n_handles = 3;
+            break;
         }
         case EDIT_POLYGON_VERTEX_POSITION: {
             Vec2 handle_positions[MAX_N_POLYGON_VERTICES];
-            int n_handles = get_primitive_vertices(
+            n_handles = get_primitive_vertices(
                 primitive, handle_positions
             );
             apply_transformation(
@@ -175,7 +207,7 @@ static int get_primitive_handles(
                     POLYGON_VERTEX_HANDLE + i
                 );
             }
-            return n_handles;
+            break;
         }
         default: {
             fprintf(
@@ -187,13 +219,38 @@ static int get_primitive_handles(
             exit(1);
         }
     }
+
+    if (!is_lmb_pressed()) {
+        DRAGGING_HANDLE_IDX = -1;
+        return n_handles;
+    }
+
+    // Find the dragging handle
+    int is_dragging = 0;
+    for (int i = 0; i < n_handles; ++i) {
+        Handle* handle = &handles[i];
+        int is_handle_just_picked = !IS_DRAGGING
+                                    && check_if_cursor_on_handle(*handle);
+        int is_handle_was_picked = IS_DRAGGING && DRAGGING_HANDLE_IDX == i;
+        if (is_handle_just_picked || is_handle_was_picked) {
+            handle->color = MAGENTA_COLOR;
+            handle->is_dragging = 1;
+            is_dragging = 1;
+            DRAGGING_HANDLE_IDX = i;
+        }
+    }
+
+    IS_DRAGGING = is_dragging;
+    if (!IS_DRAGGING) {
+        DRAGGING_HANDLE_IDX = -1;
+    }
+    return n_handles;
 }
 
 void update_entity_picking(void) {
     // Don't update picking if mouse is not pressed
     // Or if it pressed, but we are in dragging mode
-    if (!APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]
-        || DEBUG.picked_entity.is_dragging) {
+    if (!is_lmb_pressed() || IS_DRAGGING) {
         return;
     }
 
@@ -222,6 +279,16 @@ void update_entity_picking(void) {
         if (has_primitive
             && check_if_cursor_on_primitive(primitive, transformation)) {
             return;
+        }
+
+        // Or check if the mouse has been pressed
+        // on the picked entity handle
+        Handle handles[MAX_N_POLYGON_VERTICES];
+        int n_handles = get_picked_entity_handles(handles);
+        for (int i = 0; i < n_handles; ++i) {
+            if (check_if_cursor_on_handle(handles[i])) {
+                return;
+            }
         }
     }
 
@@ -256,35 +323,76 @@ void update_entity_picking(void) {
             break;
         }
     }
-
-    PREV_CURSOR_WORLD_POS = get_cursor_world_pos();
 }
 
-void render_entity_picking(void) {
+void update_entity_dragging(void) {
     int entity = DEBUG.picked_entity.entity;
+    Vec2 cursor_world_diff = update_cursor_world_pos();
     if (entity == -1) {
         return;
     }
 
-    int edit_mode = DEBUG.picked_entity.edit_mode;
-    int component_type = DEBUG.picked_entity.component_type;
-    Transformation transformation = WORLD.transformations[entity];
-    Primitive primitive;
-    switch (component_type) {
+    Primitive* primitive;
+    switch (DEBUG.picked_entity.component_type) {
         case PRIMITIVE_COMPONENT: {
-            primitive = WORLD.primitives[entity];
+            primitive = &WORLD.primitives[entity];
             break;
         }
         case COLLIDER_COMPONENT: {
-            primitive = WORLD.colliders[entity];
+            primitive = &WORLD.colliders[entity];
             break;
         }
     }
 
+    Transformation* transformation = &WORLD.transformations[entity];
+    Vec2 center = transformation->position;
     Handle handles[MAX_N_POLYGON_VERTICES];
-    int n_handles = get_primitive_handles(
-        primitive, transformation, edit_mode, component_type, handles
-    );
+    int n_handles = get_picked_entity_handles(handles);
+    for (int i = 0; i < n_handles; ++i) {
+        Handle handle = handles[i];
+        Vec2 new_handle_position = add(handle.position, cursor_world_diff);
+        float new_handle_to_center_dist = length(
+            sub(new_handle_position, center)
+        );
+        if (handle.is_dragging) {
+            switch (handle.tag) {
+                case TRANSFORMATION_POSITION_HANDLE: {
+                    transformation->position = add(
+                        transformation->position, cursor_world_diff
+                    );
+                    break;
+                }
+                case TRANSFORMATION_ORIENTATION_HANDLE: {
+                    break;
+                }
+                case CIRCLE_RADIUS_HANDLE: {
+                    primitive->p.circle.radius = new_handle_to_center_dist;
+                    break;
+                }
+                case RECTANGLE_WIDTH_HANDLE: {
+                    primitive->p.rectangle.width
+                        = new_handle_to_center_dist * 2.0;
+                    break;
+                }
+                case RECTANGLE_HEIGHT_HANDLE: {
+                    primitive->p.rectangle.height
+                        = new_handle_to_center_dist * 2.0;
+                    break;
+                }
+                case RECTANGLE_VERTEX_HANDLE: {
+                    break;
+                }
+                case LINE_VERTEX_HANDLE: {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void render_entity_handles(void) {
+    Handle handles[MAX_N_POLYGON_VERTICES];
+    int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
         Handle handle = handles[i];
         render_debug_circle(

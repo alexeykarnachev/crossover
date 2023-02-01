@@ -21,6 +21,7 @@ typedef struct Vec4 {
     float w;
 } Vec4;
 
+float sign(float x);
 float min(float x, float y);
 float max(float x, float y);
 float min_n(float vals[], int n);
