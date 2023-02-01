@@ -39,17 +39,19 @@ typedef struct Handle {
     Vec2 position;
     float radius;
     int tag;
+    int vertex_idx;
     int is_dragging;
 } Handle;
 
 Handle init_handle(
-    Vec3 color, Vec2 position, float radius, HandleTag tag
+    Vec3 color, Vec2 position, float radius, HandleTag tag, int vertex_idx
 ) {
     Handle handle;
     handle.color = color;
     handle.position = position;
     handle.radius = radius;
     handle.tag = tag;
+    handle.vertex_idx = vertex_idx;
     handle.is_dragging = 0;
 
     return handle;
@@ -143,7 +145,8 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
                 color,
                 transformation.position,
                 radius,
-                TRANSFORMATION_POSITION_HANDLE
+                TRANSFORMATION_POSITION_HANDLE,
+                0
             );
             n_handles = 1;
             break;
@@ -156,7 +159,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             Vec2 position = vec2(primitive.p.circle.radius, 0.0);
             apply_transformation(&position, 1, transformation);
             handles[0] = init_handle(
-                color, position, radius, CIRCLE_RADIUS_HANDLE
+                color, position, radius, CIRCLE_RADIUS_HANDLE, 0
             );
             n_handles = 1;
             break;
@@ -165,7 +168,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             Vec2 position = scale(primitive.p.line.b, 0.5);
             apply_transformation(&position, 1, transformation);
             handles[0] = init_handle(
-                color, position, radius, LINE_VERTEX_HANDLE
+                color, position, radius, LINE_VERTEX_HANDLE, 0
             );
             n_handles = 1;
             break;
@@ -185,7 +188,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
                 RECTANGLE_VERTEX_HANDLE};
             for (int i = 0; i < 3; ++i) {
                 handles[i] = init_handle(
-                    color, handle_positions[i], radius, tags[i]
+                    color, handle_positions[i], radius, tags[i], i
                 );
             }
             n_handles = 3;
@@ -204,7 +207,8 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
                     color,
                     handle_positions[i],
                     radius,
-                    POLYGON_VERTEX_HANDLE + i
+                    POLYGON_VERTEX_HANDLE,
+                    i
                 );
             }
             break;
@@ -397,6 +401,12 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case POLYGON_VERTEX_HANDLE: {
+                    Vec2 new_vertex = handle_position;
+                    apply_inverse_transformation(
+                        &new_vertex, 1, *transformation
+                    );
+                    primitive->p.polygon.vertices[handle.vertex_idx]
+                        = new_vertex;
                     break;
                 }
             }
