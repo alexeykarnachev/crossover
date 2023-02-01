@@ -27,6 +27,18 @@ const char* COMPONENT_NAMES[N_COMPONENS] = {
     "Bullet",
     "Owner"};
 
+Vec2 get_cursor_world_pos(void) {
+    Vec2 screen_pos = get_cursor_screen_pos();
+    CameraFrustum frustum = get_camera_frustum();
+    Vec2 size = sub(frustum.top_right, frustum.bot_left);
+    float x = frustum.bot_left.x + size.x * screen_pos.x;
+    float y = frustum.bot_left.y + size.y * screen_pos.y;
+
+    Transformation camera = WORLD.transformations[WORLD.camera];
+    Vec2 position = rotate(vec2(x, y), vec2(0.0, 0.0), camera.orientation);
+    return position;
+}
+
 void init_world(void) {
     WORLD.n_entities = 0;
     WORLD.player = -1;

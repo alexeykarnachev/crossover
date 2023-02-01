@@ -46,17 +46,41 @@ static void drag_int(
     igDragInt(label, value, 1, min_val, max_val, "%d", 0);
 }
 
-static void render_primitive_geometry_settings(Primitive* primitive) {
+static void render_edit_button(
+    ComponentType component_type, PickedEntityEditMode edit_mode
+) {
+    igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+
+    char id[16];
+    sprintf(id, "%d_%d", component_type, edit_mode);
+    igPushID_Str(id);
+    if (DEBUG.picked_entity.component_type == component_type
+        && DEBUG.picked_entity.edit_mode == edit_mode) {
+        igPushStyleColor_Vec4(ImGuiCol_Button, PRESSED_BUTTON_COLOR);
+        igButton("Edit", VEC2_ZERO);
+        igPopStyleColor(1);
+    } else if (igButton("Edit", VEC2_ZERO)) {
+        DEBUG.picked_entity.component_type = component_type;
+        DEBUG.picked_entity.edit_mode = edit_mode;
+    }
+    igPopID();
+}
+
+static void render_primitive_geometry_settings(
+    Primitive* primitive, ComponentType component_type
+) {
     PrimitiveType* type = &primitive->type;
     switch (*type) {
         case CIRCLE_PRIMITIVE: {
             igText("Circle");
+            render_edit_button(component_type, EDIT_CIRCLE_RADIUS);
             float* radius = &primitive->p.circle.radius;
             drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
             break;
         }
         case RECTANGLE_PRIMITIVE: {
             igText("Rectangle");
+            render_edit_button(component_type, EDIT_RECTANGLE_SIZE);
             float* width = &primitive->p.rectangle.width;
             float* height = &primitive->p.rectangle.height;
             drag_float("width", width, 0.0, FLT_MAX, 0.05);
@@ -65,12 +89,16 @@ static void render_primitive_geometry_settings(Primitive* primitive) {
         }
         case LINE_PRIMITIVE: {
             igText("Line");
+            render_edit_button(component_type, EDIT_LINE_VERTEX_POSITION);
             float* b = (float*)&primitive->p.line.b;
             drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
             break;
         }
         case POLYGON_PRIMITIVE: {
             igText("Polygon");
+            render_edit_button(
+                component_type, EDIT_POLYGON_VERTEX_POSITION
+            );
             Polygon* polygon = &primitive->p.polygon;
             for (int i = 0; i < polygon->n_vertices; ++i) {
                 char label[16];
@@ -227,56 +255,6 @@ static void render_entity_editor() {
                 int flags = 0;
                 flags |= DEFAULT_OPEN;
 
-                int* mode = (int*)&DEBUG.picked_entity.mode;
-                if (igTreeNodeEx_Str("Show handles", flags)) {
-                    ImGuiStyle* style = igGetStyle();
-
-                    if (has_transformation) {
-                        if (*mode == PICK_TRANSFORMATION) {
-                            igPushStyleColor_Vec4(
-                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
-                            );
-                            if (igButton("Transformation", VEC2_ZERO)) {
-                                *mode = PICK_TRANSFORMATION;
-                            }
-                            igPopStyleColor(1);
-                        } else if (igButton("Transformation", VEC2_ZERO)) {
-                            *mode = PICK_TRANSFORMATION;
-                        }
-                    }
-
-                    if (has_collider) {
-                        igSameLine(0.0, style->ItemSpacing.y);
-                        if (*mode == PICK_COLLIDER) {
-                            igPushStyleColor_Vec4(
-                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
-                            );
-                            if (igButton("Collider", VEC2_ZERO)) {
-                                *mode = PICK_COLLIDER;
-                            }
-                            igPopStyleColor(1);
-                        } else if (igButton("Collider", VEC2_ZERO)) {
-                            *mode = PICK_COLLIDER;
-                        }
-                    }
-
-                    if (has_primitive) {
-                        igSameLine(0.0, style->ItemSpacing.y);
-                        if (*mode == PICK_PRIMITIVE) {
-                            igPushStyleColor_Vec4(
-                                ImGuiCol_Button, PRESSED_BUTTON_COLOR
-                            );
-                            if (igButton("Primitive", VEC2_ZERO)) {
-                                *mode = PICK_PRIMITIVE;
-                            }
-                            igPopStyleColor(1);
-                        } else if (igButton("Primitive", VEC2_ZERO)) {
-                            *mode = PICK_PRIMITIVE;
-                        }
-                    }
-                    igTreePop();
-                }
-
                 if (has_transformation) {
                     Transformation* transformation
                         = &WORLD.transformations[picked_entity];
@@ -284,7 +262,15 @@ static void render_entity_editor() {
                     float* orient = &transformation->orientation;
                     if (igTreeNodeEx_Str("Transformation", flags)) {
                         drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+                        render_edit_button(
+                            -1, EDIT_TRANSFORMATION_POSITION
+                        );
+
                         drag_float("orient.", orient, -PI, PI, 0.05);
+                        render_edit_button(
+                            -1, EDIT_TRANSFORMATION_ORIENTATION
+                        );
+
                         igTreePop();
                     }
                 }
@@ -292,7 +278,8 @@ static void render_entity_editor() {
                 if (has_collider) {
                     if (igTreeNodeEx_Str("Collider", flags)) {
                         render_primitive_geometry_settings(
-                            &WORLD.colliders[picked_entity]
+                            &WORLD.colliders[picked_entity],
+                            COLLIDER_COMPONENT
                         );
                         igTreePop();
                     }
@@ -301,7 +288,8 @@ static void render_entity_editor() {
                 if (has_primitive) {
                     if (igTreeNodeEx_Str("Primitive", flags)) {
                         render_primitive_geometry_settings(
-                            &WORLD.primitives[picked_entity]
+                            &WORLD.primitives[picked_entity],
+                            PRIMITIVE_COMPONENT
                         );
                         igTreePop();
                     }

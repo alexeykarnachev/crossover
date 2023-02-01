@@ -2,6 +2,7 @@
 #include "component.h"
 #include "const.h"
 #include "math.h"
+#include "world.h"
 
 typedef struct DebugPrimitive {
     Transformation transformation;
@@ -10,16 +11,26 @@ typedef struct DebugPrimitive {
     int fill_type;
 } DebugPrimitive;
 
-typedef enum PickedEntityMode {
-    PICK_TRANSFORMATION = 1 << 0,
-    PICK_PRIMITIVE = 1 << 1,
-    PICK_COLLIDER = 1 << 2
-} PickedEntityMode;
+typedef enum PickedEntityEditMode {
+    EDIT_TRANSFORMATION_POSITION,
+    EDIT_TRANSFORMATION_ORIENTATION,
+
+    EDIT_POLYGON_VERTEX_POSITION,
+    EDIT_POLYGON_VERTICES_POSITION,
+
+    EDIT_CIRCLE_RADIUS,
+
+    EDIT_RECTANGLE_SIZE,
+
+    EDIT_LINE_VERTEX_POSITION
+
+} PickedEntityEditMode;
 
 typedef struct PickedEntity {
+    PickedEntityEditMode edit_mode;
+    ComponentType component_type;
     int entity;
     int is_dragging;
-    PickedEntityMode mode;
 } PickedEntity;
 
 typedef struct Debug {

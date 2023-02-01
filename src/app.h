@@ -31,8 +31,8 @@ typedef struct Application {
 
 extern Application APP;
 
-Vec2 get_cursor_screen_pos();
+Vec2 get_cursor_screen_pos(void);
 
 void init_app(int window_width, int window_height);
-void update_window();
-void destroy_app();
+void update_window(void);
+void destroy_app(void);

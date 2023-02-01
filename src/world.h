@@ -59,6 +59,8 @@ typedef struct CameraFrustum {
 
 CameraFrustum get_camera_frustum();
 
+Vec2 get_cursor_world_pos(void);
+
 void init_world(void);
 
 void destroy_entity(int entity);

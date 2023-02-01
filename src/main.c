@@ -36,6 +36,12 @@ int main(int argc, char* argv[]) {
         0
     );
     spawn_obstacle(
+        init_transformation(vec2(-2.0, 4.0), 0.0),
+        init_line_primitive(vec2(4.0, 1.0)),
+        init_line_primitive(vec2(4.0, 1.0)),
+        init_material(GRAY_COLOR)
+    );
+    spawn_obstacle(
         init_transformation(vec2(4.0, 4.0), 0.0),
         init_rectangle_primitive(1.0, 1.0),
         init_rectangle_primitive(1.0, 1.0),
@@ -63,7 +69,7 @@ int main(int argc, char* argv[]) {
     );
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
-        glClearColor(0.1, 0.1, 0.1, 1.0);
+        glClearColor(0.2, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         update_debug();
