@@ -12,7 +12,7 @@
 #include <string.h>
 
 World WORLD;
-const char* COMPONENT_NAMES[N_COMPONENS] = {
+const char* COMPONENT_NAMES[N_COMPONENTS] = {
     "Transformation",
     "Collider",
     "Primitive",
@@ -71,46 +71,6 @@ int get_entity_owner(int entity) {
 
 int entity_has_component(int entity, ComponentType type) {
     return (WORLD.components[entity] & type) == type;
-}
-
-int entity_can_collide(int entity) {
-    return entity_has_component(
-        entity, TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT
-    );
-}
-
-int entity_can_observe(int entity) {
-    return entity_has_component(
-        entity, TRANSFORMATION_COMPONENT | VISION_COMPONENT
-    );
-}
-
-int entity_can_be_rendered(int entity) {
-    return entity_has_component(
-        entity,
-        PRIMITIVE_COMPONENT | TRANSFORMATION_COMPONENT | MATERIAL_COMPONENT
-    );
-}
-
-int entity_can_be_damaged_by_bullet(int entity, int bullet) {
-    int bullet_owner = get_entity_owner(bullet);
-    int bullet_is_real = entity_has_component(bullet, BULLET_COMPONENT);
-    int bullet_has_kinematic = entity_has_component(
-        bullet, KINEMATIC_COMPONENT
-    );
-    int entity_has_health = entity_has_component(entity, HEALTH_COMPONENT);
-    return bullet_owner != entity && bullet_is_real && bullet_has_kinematic
-           && entity_has_health;
-}
-
-int bullet_can_be_destroyed_after_collision(int bullet, int target) {
-    int bullet_owner = get_entity_owner(bullet);
-    int bullet_is_real = entity_has_component(bullet, BULLET_COMPONENT);
-    int target_is_not_bullet = !entity_has_component(
-        target, BULLET_COMPONENT
-    );
-    return bullet_owner != target && bullet_is_real
-           && target_is_not_bullet;
 }
 
 static int spawn_entity(const char* name) {
@@ -211,26 +171,18 @@ int spawn_obstacle(
 
 int spawn_bullet(
     Transformation transformation,
-    Primitive primitive,
-    Primitive collider,
-    Material material,
     Kinematic kinematic,
     float ttl,
     int owner
 ) {
     int entity = spawn_entity("Bullet");
     WORLD.transformations[entity] = transformation;
-    WORLD.primitives[entity] = primitive;
-    WORLD.materials[entity] = material;
     WORLD.kinematics[entity] = kinematic;
     WORLD.ttls[entity] = ttl;
-    WORLD.colliders[entity] = collider;
     WORLD.owners[entity] = owner;
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
-                               | KINEMATIC_COMPONENT | COLLIDER_COMPONENT
-                               | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
-                               | TTL_COMPONENT | BULLET_COMPONENT
-                               | OWNER_COMPONENT;
+                               | KINEMATIC_COMPONENT | TTL_COMPONENT
+                               | BULLET_COMPONENT | OWNER_COMPONENT;
 }
 
 CameraFrustum get_camera_frustum() {
@@ -269,6 +221,7 @@ void update_world(float dt) {
         update_ttls(dt);
         update_healths();
         update_player();
+        update_bullets(dt);
         update_kinematics(dt);
         update_entities_world_counter();
     } else {

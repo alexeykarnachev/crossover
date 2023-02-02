@@ -16,7 +16,7 @@ typedef struct CollisionsArena {
 
 void update_camera(void);
 void update_collisions(void);
-void update_bullets(void);
+void update_bullets(float dt);
 void update_healths(void);
 void update_kinematics(float dt);
 void update_player(void);
@@ -30,6 +30,7 @@ void render_debug_kinematics(void);
 void render_debug_collisions(void);
 void render_debug_visions(void);
 void render_entity_handles(void);
+void render_bullets(float dt);
 
 int collide_primitives(
     Primitive primitive0,

@@ -47,8 +47,21 @@ typedef enum ComponentType {
     OWNER_COMPONENT = 1 << 12,
 } ComponentType;
 
-#define N_COMPONENS 13
-const char* COMPONENT_NAMES[N_COMPONENS];
+typedef enum CompoundComponentType {
+    RENDERABLE_COMPONENT = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
+                           | MATERIAL_COMPONENT,
+    CAN_OBSERVE_COMPONENT = TRANSFORMATION_COMPONENT | VISION_COMPONENT,
+    CAN_COLLIDE_COMPONENT = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT,
+    KINEMATIC_BULLET_COMPONENT = TRANSFORMATION_COMPONENT
+                                 | BULLET_COMPONENT | KINEMATIC_COMPONENT
+                                 | TTL_COMPONENT,
+    DAMAGEABLE_BY_BULLET_COMPONENT = TRANSFORMATION_COMPONENT
+                                     | COLLIDER_COMPONENT
+                                     | RIGID_BODY_COMPONENT
+} CompoundComponentType;
+
+#define N_COMPONENTS 13
+const char* COMPONENT_NAMES[N_COMPONENTS];
 
 extern World WORLD;
 
@@ -70,12 +83,6 @@ int entity_has_component(int entity, ComponentType component);
 void entity_disable_component(int entity, ComponentType type);
 void entity_enable_component(int entity, ComponentType type);
 
-int entity_can_collide(int entity);
-int entity_can_observe(int entity);
-int entity_can_be_rendered(int entity);
-int entity_can_be_damaged_by_bullet(int entity, int bullet);
-int bullet_can_be_destroyed_after_collision(int bullet, int target);
-
 int spawn_camera(Transformation transformation);
 int spawn_guy(
     Transformation transformation,
@@ -96,9 +103,6 @@ int spawn_obstacle(
 );
 int spawn_bullet(
     Transformation transformation,
-    Primitive primitive,
-    Primitive collider,
-    Material material,
     Kinematic kinematic,
     float ttl,
     int owner

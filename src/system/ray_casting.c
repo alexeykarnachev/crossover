@@ -8,7 +8,7 @@ RayCastResult cast_ray(
     RayCastResult result;
     result.entity = -1;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_collide(entity)
+        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)
             || !entity_has_component(entity, target_components)
             || ray_owner == entity) {
             continue;

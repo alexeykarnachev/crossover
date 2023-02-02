@@ -335,14 +335,14 @@ void init_renderer(void) {
     init_all_programs();
 }
 
-void render_world(void) {
+void render_world(float dt) {
     // -------------------------------------------------------------------
     // Render primitives
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, APP.window_width, APP.window_height);
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_be_rendered(entity)) {
+        if (!entity_has_component(entity, RENDERABLE_COMPONENT)) {
             continue;
         }
 
@@ -362,6 +362,8 @@ void render_world(void) {
             execute_render_call(render_call, LINE);
         }
     }
+
+    render_bullets(dt);
 
     // -------------------------------------------------------------------
     // Render debug and editor-related primitives

@@ -53,18 +53,9 @@ void update_player() {
                     transformation->orientation,
                     0.0};
                 Transformation bullet_transformation = *transformation;
-                float bullet_collider_length = gun->bullet.speed / 30.0;
-                Primitive bullet_primitive = init_circle_primitive(0.1);
-                Primitive bullet_collider = init_line_primitive(
-                    vec2(bullet_collider_length, 0.0)
-                );
-                Material bullet_material = init_material(RED_COLOR);
 
                 spawn_bullet(
                     bullet_transformation,
-                    bullet_primitive,
-                    bullet_collider,
-                    bullet_material,
                     bullet_kinematic,
                     gun->bullet.ttl,
                     WORLD.player

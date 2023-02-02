@@ -26,7 +26,7 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
 
 void update_visions() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_observe(entity)) {
+        if (!entity_has_component(entity, CAN_OBSERVE_COMPONENT)) {
             continue;
         }
 
@@ -49,7 +49,7 @@ void update_visions() {
 
 void render_debug_visions() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_observe(entity)) {
+        if (!entity_has_component(entity, CAN_OBSERVE_COMPONENT)) {
             continue;
         }
 

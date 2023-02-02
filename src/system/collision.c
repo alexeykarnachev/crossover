@@ -169,26 +169,33 @@ int collide_primitives(
 static void compute_collisions() {
     COLLISIONS_ARENA.n = 0;
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_collide(entity)) {
+        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
             continue;
         }
 
-        Primitive p0 = WORLD.colliders[entity];
-        Transformation t0 = WORLD.transformations[entity];
+        Primitive primitive0 = WORLD.colliders[entity];
+        Transformation transformation0 = WORLD.transformations[entity];
 
         for (int target = entity + 1; target < WORLD.n_entities;
              ++target) {
-            if (!entity_can_collide(target)) {
+            if (!entity_has_component(target, CAN_COLLIDE_COMPONENT)) {
                 continue;
             }
 
-            Primitive p1 = WORLD.colliders[target];
-            Transformation t1 = WORLD.transformations[target];
-            Collision* c = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
-            c->entity0 = entity;
-            c->entity1 = target;
+            Primitive primitive1 = WORLD.colliders[target];
+            Transformation transformation1 = WORLD.transformations[target];
+            Collision* collision
+                = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
+            collision->entity0 = entity;
+            collision->entity1 = target;
 
-            int collided = collide_primitives(p0, t0, p1, t1, c);
+            int collided = collide_primitives(
+                primitive0,
+                transformation0,
+                primitive1,
+                transformation1,
+                collision
+            );
             COLLISIONS_ARENA.n += collided;
         }
     }
@@ -236,26 +243,6 @@ static void resolve_collisions() {
                     );
                 }
             }
-
-            if (entity_can_be_damaged_by_bullet(entity0, entity1)) {
-                WORLD.healths[entity0] -= get_kinematic_damage(
-                    WORLD.kinematics[entity1]
-                );
-            } else if (entity_can_be_damaged_by_bullet(entity1, entity0)) {
-                WORLD.healths[entity1] -= get_kinematic_damage(
-                    WORLD.kinematics[entity0]
-                );
-            }
-
-            if (bullet_can_be_destroyed_after_collision(
-                    entity1, entity0
-                )) {
-                destroy_entity(entity1);
-            } else if (bullet_can_be_destroyed_after_collision(
-                           entity0, entity1
-                       )) {
-                destroy_entity(entity0);
-            }
         }
     }
 }
@@ -286,7 +273,7 @@ void render_debug_collisions() {
     }
 
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_can_collide(entity)) {
+        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
             continue;
         }
 

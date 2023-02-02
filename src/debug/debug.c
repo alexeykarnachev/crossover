@@ -16,9 +16,6 @@ void init_debug(void) {
     DEBUG.picked_entity.entity = -1;
 
     DEBUG.shading.materials = 1;
-    DEBUG.shading.collisions = 1;
-    DEBUG.shading.visions = 1;
-    DEBUG.shading.kinematics = 1;
     DEBUG.shading.player = 1;
     DEBUG.collisions.resolve = 1;
 }

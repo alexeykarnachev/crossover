@@ -10,7 +10,7 @@
 #include <string.h>
 
 static int LAST_PICKED_ENTITY = -1;
-static int LAST_PICKED_COMPONENTS[N_COMPONENS];
+static int LAST_PICKED_COMPONENTS[N_COMPONENTS];
 static ImVec2 VEC2_ZERO = {0, 0};
 static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 static int DEFAULT_OPEN = ImGuiTreeNodeFlags_DefaultOpen;
@@ -218,7 +218,7 @@ static void render_entity_editor() {
                 uint64_t* components = &WORLD.components[picked_entity];
 
                 if (picked_entity != LAST_PICKED_ENTITY) {
-                    for (int i = 0; i < N_COMPONENS; ++i) {
+                    for (int i = 0; i < N_COMPONENTS; ++i) {
                         LAST_PICKED_COMPONENTS[i] = (*components & (1 << i)
                                                     )
                                                     != 0;
@@ -226,12 +226,12 @@ static void render_entity_editor() {
                     LAST_PICKED_ENTITY = picked_entity;
                 }
 
-                for (int i = 0; i < N_COMPONENS; ++i) {
+                for (int i = 0; i < N_COMPONENTS; ++i) {
                     const char* name = COMPONENT_NAMES[i];
                     igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
                 }
 
-                for (int i = 0; i < N_COMPONENS; ++i) {
+                for (int i = 0; i < N_COMPONENTS; ++i) {
                     *components ^= (-LAST_PICKED_COMPONENTS[i]
                                     ^ *components)
                                    & (1ULL << i);

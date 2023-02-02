@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
         update_editor_gui();
         update_world(APP.dt);
 
-        render_world();
+        render_world(APP.dt);
         render_editor_gui();
 
         update_window();
