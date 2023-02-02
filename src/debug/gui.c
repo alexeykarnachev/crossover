@@ -49,8 +49,6 @@ static void drag_int(
 static void render_edit_button(
     ComponentType component_type, PickedEntityEditMode edit_mode
 ) {
-    igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-
     char id[16];
     sprintf(id, "%d_%d", component_type, edit_mode);
     igPushID_Str(id);
@@ -72,14 +70,16 @@ static void render_primitive_geometry_settings(
     PrimitiveType* type = &primitive->type;
     switch (*type) {
         case CIRCLE_PRIMITIVE: {
-            igText("Circle");
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            igText("(circle)");
             render_edit_button(component_type, EDIT_CIRCLE_RADIUS);
             float* radius = &primitive->p.circle.radius;
             drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
             break;
         }
         case RECTANGLE_PRIMITIVE: {
-            igText("Rectangle");
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            igText("(rectangle)");
             render_edit_button(component_type, EDIT_RECTANGLE_SIZE);
             float* width = &primitive->p.rectangle.width;
             float* height = &primitive->p.rectangle.height;
@@ -88,14 +88,16 @@ static void render_primitive_geometry_settings(
             break;
         }
         case LINE_PRIMITIVE: {
-            igText("Line");
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            igText("(line)");
             render_edit_button(component_type, EDIT_LINE_VERTEX_POSITION);
             float* b = (float*)&primitive->p.line.b;
             drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
             break;
         }
         case POLYGON_PRIMITIVE: {
-            igText("Polygon");
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            igText("(polygon)");
             render_edit_button(
                 component_type, EDIT_POLYGON_VERTEX_POSITION
             );
@@ -261,16 +263,9 @@ static void render_entity_editor() {
                     float* pos = (float*)&transformation->position;
                     float* orient = &transformation->orientation;
                     if (igTreeNodeEx_Str("Transformation", flags)) {
+                        render_edit_button(-1, EDIT_TRANSFORMATION);
                         drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-                        render_edit_button(
-                            -1, EDIT_TRANSFORMATION_POSITION
-                        );
-
                         drag_float("orient.", orient, -PI, PI, 0.05);
-                        render_edit_button(
-                            -1, EDIT_TRANSFORMATION_ORIENTATION
-                        );
-
                         igTreePop();
                     }
                 }

@@ -63,27 +63,25 @@ void render_debug_rectangle(
 }
 
 void render_debug_grid() {
-    if (DEBUG.shading.grid && WORLD.camera != -1) {
-        CameraFrustum frustum = get_camera_frustum();
+    CameraFrustum frustum = get_camera_frustum();
 
-        float x = ceilf(frustum.bot_left.x);
-        while (x < frustum.top_right.x) {
-            render_debug_line(
-                vec2(x, frustum.bot_left.y),
-                vec2(x, frustum.top_right.y),
-                BLACK_COLOR
-            );
-            x += 1.0;
-        }
+    float x = ceilf(frustum.bot_left.x);
+    while (x < frustum.top_right.x) {
+        render_debug_line(
+            vec2(x, frustum.bot_left.y),
+            vec2(x, frustum.top_right.y),
+            BLACK_COLOR
+        );
+        x += 1.0;
+    }
 
-        float y = ceilf(frustum.bot_left.y);
-        while (y < frustum.top_right.y) {
-            render_debug_line(
-                vec2(frustum.bot_left.x, y),
-                vec2(frustum.top_right.x, y),
-                BLACK_COLOR
-            );
-            y += 1.0;
-        }
+    float y = ceilf(frustum.bot_left.y);
+    while (y < frustum.top_right.y) {
+        render_debug_line(
+            vec2(frustum.bot_left.x, y),
+            vec2(frustum.top_right.x, y),
+            BLACK_COLOR
+        );
+        y += 1.0;
     }
 }

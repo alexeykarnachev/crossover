@@ -1,10 +1,9 @@
 #include "../component.h"
+#include "../world.h"
 #include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static float LINE_WIDTH = 0.05;
 
 #define PRIMITIVE_TYPE_ERROR(fn_name, type) \
     do { \
@@ -144,11 +143,13 @@ int get_primitive_fan_vertices(
     int n_vertices;
 
     switch (type) {
-        case LINE_PRIMITIVE:
+        case LINE_PRIMITIVE: {
+            float line_width = WORLD.camera_view_width * LINE_WIDTH_SCALE;
             n_vertices = get_line_fan_vertices(
-                primitive.p.line, LINE_WIDTH, out
+                primitive.p.line, line_width, out
             );
             break;
+        }
         default:
             n_vertices = get_primitive_vertices(primitive, out);
     }

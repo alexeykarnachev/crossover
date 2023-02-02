@@ -264,7 +264,6 @@ static void update_entities_world_counter() {
 void update_world(float dt) {
     update_visions();
     update_camera();
-    update_collisions();
 
     if (DEBUG.is_playing) {
         update_ttls(dt);
@@ -276,4 +275,6 @@ void update_world(float dt) {
         update_entity_picking();
         update_entity_dragging();
     }
+
+    update_collisions();
 }

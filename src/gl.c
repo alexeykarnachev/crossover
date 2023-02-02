@@ -377,6 +377,9 @@ void render_world(void) {
     if (DEBUG.shading.player) {
         render_debug_player();
     }
+    if (DEBUG.shading.grid) {
+        render_debug_grid();
+    }
 
     render_entity_handles();
 

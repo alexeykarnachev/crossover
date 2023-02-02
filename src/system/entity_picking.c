@@ -6,6 +6,7 @@
 #include "../math.h"
 #include "../system.h"
 #include "../world.h"
+#include <math.h>
 #include <stdlib.h>
 
 static int IS_DRAGGING;
@@ -105,6 +106,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             break;
         }
     }
+
     float large_handle_radius = WORLD.camera_view_width
                                 * LARGE_HANDLE_SCALE;
     float small_handle_radius = WORLD.camera_view_width
@@ -137,10 +139,9 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             exit(1);
         }
     }
-
     int n_handles = 0;
     switch (edit_mode) {
-        case EDIT_TRANSFORMATION_POSITION: {
+        case EDIT_TRANSFORMATION: {
             handles[0] = init_handle(
                 color,
                 transformation.position,
@@ -148,11 +149,22 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
                 TRANSFORMATION_POSITION_HANDLE,
                 0
             );
-            n_handles = 1;
-            break;
-        }
-        case EDIT_TRANSFORMATION_ORIENTATION: {
-            n_handles = 0;
+
+            float orientation_lever_len
+                = WORLD.camera_view_width
+                  * TRANSFORMATION_ORIENTATION_LEVER_SCALE;
+            Vec2 orientation_handle_pos = {orientation_lever_len, 0.0};
+            apply_transformation(
+                &orientation_handle_pos, 1, transformation
+            );
+            handles[1] = init_handle(
+                YELLOW_COLOR,
+                orientation_handle_pos,
+                small_handle_radius,
+                TRANSFORMATION_ORIENTATION_HANDLE,
+                0
+            );
+            n_handles = 2;
             break;
         }
         case EDIT_CIRCLE_RADIUS: {
@@ -322,7 +334,7 @@ void update_entity_picking(void) {
 
         if (is_picked) {
             DEBUG.picked_entity.entity = entity;
-            DEBUG.picked_entity.edit_mode = EDIT_TRANSFORMATION_POSITION;
+            DEBUG.picked_entity.edit_mode = EDIT_TRANSFORMATION;
             DEBUG.picked_entity.component_type = -1;
             break;
         }
@@ -350,6 +362,8 @@ void update_entity_dragging(void) {
 
     Transformation* transformation = &WORLD.transformations[entity];
     Vec2 center = transformation->position;
+    Vec2 cursor_world_pos = get_cursor_world_pos();
+    Vec2 center_to_cursor = sub(cursor_world_pos, center);
     Handle handles[MAX_N_POLYGON_VERTICES];
     int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
@@ -366,6 +380,10 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
+                    float orientation = atan2(
+                        center_to_cursor.y, center_to_cursor.x
+                    );
+                    transformation->orientation = orientation;
                     break;
                 }
                 case CIRCLE_RADIUS_HANDLE: {
@@ -421,6 +439,12 @@ void render_entity_handles(void) {
         Handle handle = handles[i];
         render_debug_circle(
             handle.position, handle.radius, handle.color, FILL
+        );
+    }
+
+    if (DEBUG.picked_entity.edit_mode == EDIT_TRANSFORMATION) {
+        render_debug_line(
+            handles[0].position, handles[1].position, YELLOW_COLOR
         );
     }
 }

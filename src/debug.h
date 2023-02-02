@@ -12,8 +12,7 @@ typedef struct DebugPrimitive {
 } DebugPrimitive;
 
 typedef enum PickedEntityEditMode {
-    EDIT_TRANSFORMATION_POSITION,
-    EDIT_TRANSFORMATION_ORIENTATION,
+    EDIT_TRANSFORMATION,
 
     EDIT_POLYGON_VERTEX_POSITION,
     EDIT_POLYGON_VERTICES_POSITION,
