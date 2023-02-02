@@ -30,9 +30,7 @@ void update_bullets(float dt) {
             if (entity_has_component(entity, HEALTH_COMPONENT)) {
                 WORLD.healths[entity] -= get_kinematic_damage(*kinematic);
             }
-            WORLD.ttls[bullet] = 2.0;
-            kinematic->velocity = vec2(0.0, 0.0);
-            transformation->position = result.position;
+            destroy_entity(bullet);
         }
     }
 }
@@ -50,9 +48,6 @@ void render_bullets(float dt) {
             transformation.position,
             add(transformation.position, ray),
             YELLOW_COLOR
-        );
-        render_debug_circle(
-            transformation.position, 0.1, YELLOW_COLOR, FILL
         );
     }
 }

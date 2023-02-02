@@ -120,7 +120,6 @@ int spawn_guy(
     float health,
     int is_player
 ) {
-
     int entity = spawn_entity("Guy");
     if (is_player) {
         if (WORLD.player != -1) {
@@ -183,6 +182,57 @@ int spawn_bullet(
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | TTL_COMPONENT
                                | BULLET_COMPONENT | OWNER_COMPONENT;
+}
+
+int spawn_default_guy(Transformation transformation) {
+    return spawn_guy(
+        transformation,
+        init_circle_primitive(1.0),
+        init_circle_primitive(1.0),
+        init_material(REDWOOD_COLOR),
+        init_kinematic(5.0, 2.0 * PI),
+        init_vision(0.5 * PI, 10.0, 32),
+        init_gun(4.0, 50.0, 1.0),
+        1000.0,
+        0
+    );
+}
+
+int spawn_default_circle_obstacle(Transformation transformation) {
+    return spawn_obstacle(
+        transformation,
+        init_circle_primitive(2.0),
+        init_circle_primitive(2.0),
+        init_material(GRAY_COLOR)
+    );
+}
+
+int spawn_default_rectangle_obstacle(Transformation transformation) {
+    return spawn_obstacle(
+        transformation,
+        init_rectangle_primitive(4.0, 2.0),
+        init_rectangle_primitive(4.0, 2.0),
+        init_material(GRAY_COLOR)
+    );
+}
+
+int spawn_default_line_obstacle(Transformation transformation) {
+    return spawn_obstacle(
+        transformation,
+        init_line_primitive(vec2(3.0, 0.0)),
+        init_line_primitive(vec2(3.0, 0.0)),
+        init_material(GRAY_COLOR)
+    );
+}
+
+int spawn_default_polygon_obstacle(Transformation transformation) {
+    Vec2 vertices[3] = {{-2.0, 0.0}, {0.0, 3.0}, {2.0, 0.0}};
+    return spawn_obstacle(
+        transformation,
+        init_polygon_primitive(vertices, 3),
+        init_polygon_primitive(vertices, 3),
+        init_material(GRAY_COLOR)
+    );
 }
 
 CameraFrustum get_camera_frustum() {

@@ -382,8 +382,9 @@ void render_world(float dt) {
     if (DEBUG.shading.grid) {
         render_debug_grid();
     }
-
-    render_entity_handles();
+    if (!DEBUG.is_playing) {
+        render_entity_handles();
+    }
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
         DebugPrimitive p = DEBUG.primitives[i];

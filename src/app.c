@@ -148,8 +148,9 @@ void destroy_app() {
     glfwTerminate();
 }
 
-void clear_mouse_button_states(void) {
+void clear_mouse_states(void) {
     memset(APP.mouse_button_states, 0, sizeof(APP.mouse_button_states));
+    APP.scroll_dy = 0.0;
 }
 
 void clear_key_states(void) {

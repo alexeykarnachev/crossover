@@ -459,6 +459,53 @@ void render_scene_editor(void) {
     igEnd();
 }
 
+void render_context_menu(void) {
+    static Vec2 cursor_world_pos;
+    static Transformation transformation;
+
+    if (igIsMouseClicked_Bool(1, 0)) {
+        cursor_world_pos = get_cursor_world_pos();
+        transformation = init_transformation(cursor_world_pos, 0.0);
+        igOpenPopup_Str("context_menu", 0);
+    }
+
+    bool guy = 0;
+    bool line_obstacle = 0;
+    bool circle_obstacle = 0;
+    bool rectangle_obstacle = 0;
+    bool polygon_obstacle = 0;
+    if (igBeginPopup("context_menu", 0)) {
+        if (igBeginMenu("Create", 1)) {
+            igMenuItem_BoolPtr("Guy", NULL, &guy, 1);
+
+            if (igBeginMenu("Obstacle", 1)) {
+                igMenuItem_BoolPtr("Line", NULL, &line_obstacle, 1);
+                igMenuItem_BoolPtr("Circle", NULL, &circle_obstacle, 1);
+                igMenuItem_BoolPtr(
+                    "Rectangle", NULL, &rectangle_obstacle, 1
+                );
+                igMenuItem_BoolPtr("Polygon", NULL, &polygon_obstacle, 1);
+                igEndMenu();
+            }
+
+            igEndMenu();
+        }
+        igEndPopup();
+    }
+
+    if (guy) {
+        spawn_default_guy(transformation);
+    } else if (line_obstacle) {
+        spawn_default_line_obstacle(transformation);
+    } else if (circle_obstacle) {
+        spawn_default_circle_obstacle(transformation);
+    } else if (rectangle_obstacle) {
+        spawn_default_rectangle_obstacle(transformation);
+    } else if (polygon_obstacle) {
+        spawn_default_polygon_obstacle(transformation);
+    }
+}
+
 void render_editor_gui(void) {
     ImGuiIO* io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
@@ -467,9 +514,12 @@ void render_editor_gui(void) {
 
     render_game_controls();
 
-    render_entity_editor();
-    render_scene_editor();
-    render_debug_info();
+    if (!DEBUG.is_playing) {
+        render_entity_editor();
+        render_scene_editor();
+        render_debug_info();
+        render_context_menu();
+    }
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
@@ -479,7 +529,7 @@ void update_editor_gui(void) {
     ImGuiIO* io = igGetIO();
 
     if (io->WantCaptureMouse) {
-        clear_mouse_button_states();
+        clear_mouse_states();
     }
     if (io->WantCaptureKeyboard) {
         clear_key_states();

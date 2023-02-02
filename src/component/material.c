@@ -2,6 +2,7 @@
 #include "../math.h"
 
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};
+Vec3 REDWOOD_COLOR = {0.64, 0.35, 0.32};
 Vec3 GREEN_COLOR = {0.0, 1.0, 0.0};
 Vec3 BLUE_COLOR = {0.0, 0.0, 1.0};
 Vec3 BRIGHT_BLUE_COLOR = {0.0, 0.59, 1.0};

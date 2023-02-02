@@ -38,5 +38,5 @@ void update_window(void);
 void destroy_app(void);
 
 int is_lmb_pressed(void);
-void clear_mouse_button_states(void);
+void clear_mouse_states(void);
 void clear_key_states(void);

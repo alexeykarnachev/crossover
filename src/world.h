@@ -107,4 +107,9 @@ int spawn_bullet(
     float ttl,
     int owner
 );
+int spawn_default_guy(Transformation transformation);
+int spawn_default_circle_obstacle(Transformation transformation);
+int spawn_default_rectangle_obstacle(Transformation transformation);
+int spawn_default_line_obstacle(Transformation transformation);
+int spawn_default_polygon_obstacle(Transformation transformation);
 void update_world(float dt);

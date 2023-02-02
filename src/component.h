@@ -92,6 +92,7 @@ typedef struct Material {
 } Material;
 
 extern Vec3 RED_COLOR;
+extern Vec3 REDWOOD_COLOR;
 extern Vec3 GREEN_COLOR;
 extern Vec3 BLUE_COLOR;
 extern Vec3 BRIGHT_BLUE_COLOR;
@@ -109,9 +110,7 @@ extern Vec3 SILVER_COLOR;
 extern Vec3 BROWN_COLOR;
 extern Vec3 SKYBLUE_COLOR;
 
-Kinematic init_kinematic(
-    Vec2 velocity, float max_speed, float rotation_speed
-);
+Kinematic init_kinematic(float max_speed, float rotation_speed);
 float get_kinematic_damage(Kinematic kinematic);
 
 Gun init_gun(float bullet_ttl, float bullet_speed, float fire_rate);
