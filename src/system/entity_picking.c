@@ -416,10 +416,11 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case LINE_VERTEX_HANDLE: {
-                    float len = length(center_to_handle) * 2.0;
-                    primitive->p.line.b = scale(
-                        normalize(primitive->p.line.b), len
+                    Vec2 new_vertex = handle_position;
+                    apply_inverse_transformation(
+                        &new_vertex, 1, *transformation
                     );
+                    primitive->p.line.b = scale(new_vertex, 2.0);
                     break;
                 }
                 case POLYGON_VERTEX_HANDLE: {

@@ -73,11 +73,9 @@ typedef struct CameraFrustum {
 } CameraFrustum;
 
 CameraFrustum get_camera_frustum();
-
+void center_camera_on_entity(int entity);
 Vec2 get_cursor_world_pos(void);
-
 void init_world(void);
-
 void destroy_entity(int entity);
 int entity_is_alive(int entity);
 int get_entity_owner(int entity);

@@ -1,3 +1,4 @@
+#include "../debug.h"
 #include "../system.h"
 #include "../world.h"
 

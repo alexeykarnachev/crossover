@@ -27,7 +27,8 @@ void update_entity_dragging(void);
 
 void render_debug_player(void);
 void render_debug_kinematics(void);
-void render_debug_collisions(void);
+void render_collision_mtvs(void);
+void render_colliders(void);
 void render_debug_visions(void);
 void render_entity_handles(void);
 void render_bullets(float dt);

@@ -374,13 +374,14 @@ void render_world(float dt) {
     // Render debug and editor-related primitives
     if (!DEBUG.is_playing) {
         render_entity_handles();
+        render_colliders();
     }
 
     if (DEBUG.shading.kinematics) {
         render_debug_kinematics();
     }
-    if (DEBUG.shading.collisions) {
-        render_debug_collisions();
+    if (DEBUG.shading.collision_mtvs) {
+        render_collision_mtvs();
     }
     if (DEBUG.shading.visions) {
         render_debug_visions();

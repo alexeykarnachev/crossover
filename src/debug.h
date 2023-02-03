@@ -33,7 +33,7 @@ typedef struct Debug {
 
     struct shading {
         int materials;
-        int collisions;
+        int collision_mtvs;
         int kinematics;
         int visions;
         int player;

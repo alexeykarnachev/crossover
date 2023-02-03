@@ -252,7 +252,7 @@ void update_collisions() {
     resolve_collisions();
 }
 
-void render_debug_collisions() {
+void render_collision_mtvs() {
     for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
         Collision collision = COLLISIONS_ARENA.arena[i];
         Transformation transformation0
@@ -274,6 +274,24 @@ void render_debug_collisions() {
         );
     }
 
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
+            continue;
+        }
+
+        Transformation transformation = WORLD.transformations[entity];
+        Primitive primitive = WORLD.colliders[entity];
+        render_debug_primitive(
+            transformation,
+            primitive,
+            SKYBLUE_COLOR,
+            DEBUG_RENDER_LAYER,
+            LINE
+        );
+    }
+}
+
+void render_colliders() {
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
             continue;

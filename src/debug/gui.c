@@ -7,6 +7,7 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include <float.h>
+#include <stdlib.h>
 #include <string.h>
 
 static int LAST_PICKED_ENTITY = -1;
@@ -60,80 +61,114 @@ static void render_edit_button(ComponentType component_type) {
     igPopID();
 }
 
-static void render_change_primitive_button(Primitive* primitive) {
-    PrimitiveType selected_type = primitive->type;
-    const char* selected_type_name = get_primitive_type_name(selected_type
-    );
-    if (igButton(selected_type_name, VEC2_ZERO)) {
-        igOpenPopup_Str("change_primitive_menu", 0);
+static void render_primitive_header_settings(
+    Primitive* target_primitive,
+    Primitive* source_primitive,
+    ComponentType target_component_type
+) {
+    // "Copy primitive" button
+    if (source_primitive != NULL) {
+        igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+
+        char copy_primitive_button_id[16];
+        sprintf(copy_primitive_button_id, "%d", target_component_type);
+
+        char label[32];
+        switch (target_component_type) {
+            case PRIMITIVE_COMPONENT: {
+                sprintf(label, "Copy Collider");
+                break;
+            }
+            case COLLIDER_COMPONENT: {
+                sprintf(label, "Copy Primitive");
+                break;
+            }
+            default: {
+                fprintf(
+                    stderr,
+                    "ERROR: Can't render_render_copy_primitive_button for "
+                    "the component with type id: %d\n",
+                    target_component_type
+                );
+                exit(1);
+            }
+        }
+        igPushID_Str(copy_primitive_button_id);
+        if (igButton(label, VEC2_ZERO)) {
+            *target_primitive = *source_primitive;
+        }
+        igPopID();
     }
 
-    if (igBeginPopup("change_primitive_menu", 0)) {
-        int selected_types[N_PRIMITIVE_TYPES] = {0};
+    // "Change primitive" type button
+    PrimitiveType selected_type = target_primitive->type;
+    const char* selected_type_name = get_primitive_type_name(selected_type
+    );
+
+    if (igBeginCombo("Type", selected_type_name, 0)) {
         for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
             PrimitiveType type = PRIMITIVE_TYPES[i];
             const char* type_name = get_primitive_type_name(type);
-            igMenuItem_BoolPtr(
-                type_name, NULL, (bool*)&selected_types[i], 1
-            );
-        }
-        igEndMenu();
+            int is_selected = strcmp(selected_type_name, type_name) == 0;
+            if (igSelectable_Bool(type_name, is_selected, 0, VEC2_ZERO)) {
+                selected_type_name = type_name;
+                change_primitive_type(target_primitive, type);
+            }
 
-        for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
-            int is_selected = selected_types[i];
-            int type = PRIMITIVE_TYPES[i];
             if (is_selected) {
-                change_primitive_type(primitive, type);
-                break;
+                igSetItemDefaultFocus();
             }
         }
+        igEndCombo();
     }
 }
 
 static void render_primitive_geometry_settings(
-    Primitive* primitive, ComponentType component_type
+    Primitive* target_primitive,
+    Primitive* source_primitive,
+    ComponentType target_component_type
 ) {
-    PrimitiveType* type = &primitive->type;
-    switch (*type) {
+    PrimitiveType* target_primitive_type = &target_primitive->type;
+    switch (*target_primitive_type) {
         case CIRCLE_PRIMITIVE: {
-            render_edit_button(component_type);
+            render_edit_button(target_component_type);
+            render_primitive_header_settings(
+                target_primitive, source_primitive, target_component_type
+            );
 
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            render_change_primitive_button(primitive);
-
-            float* radius = &primitive->p.circle.radius;
+            float* radius = &target_primitive->p.circle.radius;
             drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
             break;
         }
         case RECTANGLE_PRIMITIVE: {
-            render_edit_button(component_type);
+            render_edit_button(target_component_type);
+            render_primitive_header_settings(
+                target_primitive, source_primitive, target_component_type
+            );
 
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            render_change_primitive_button(primitive);
-
-            float* width = &primitive->p.rectangle.width;
-            float* height = &primitive->p.rectangle.height;
+            float* width = &target_primitive->p.rectangle.width;
+            float* height = &target_primitive->p.rectangle.height;
             drag_float("width", width, 0.0, FLT_MAX, 0.05);
             drag_float("height", height, 0.0, FLT_MAX, 0.05);
             break;
         }
         case LINE_PRIMITIVE: {
-            render_edit_button(component_type);
+            render_edit_button(target_component_type);
+            render_primitive_header_settings(
+                target_primitive, source_primitive, target_component_type
+            );
 
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            render_change_primitive_button(primitive);
-
-            float* b = (float*)&primitive->p.line.b;
+            float* b = (float*)&target_primitive->p.line.b;
             drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
             break;
         }
         case POLYGON_PRIMITIVE: {
-            render_edit_button(component_type);
+            render_edit_button(target_component_type);
+            render_primitive_header_settings(
+                target_primitive, source_primitive, target_component_type
+            );
 
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            render_change_primitive_button(primitive);
-
-            Polygon* polygon = &primitive->p.polygon;
+            Polygon* polygon = &target_primitive->p.polygon;
             for (int i = 0; i < polygon->n_vertices; ++i) {
                 char label[16];
                 sprintf(label, "v: %d", i);
@@ -302,13 +337,14 @@ static void render_entity_editor() {
 
                 if (has_collider) {
                     if (igTreeNodeEx_Str("Collider", flags)) {
-                        // if (has_primitive && igButton("From primitive",
-                        // VEC2_ZERO)) {
-                        //     WORLD.colliders[picked_entity] =
-                        //     WORLD.primitives[picked_entity];
-                        // }
+                        Primitive* source_primitive = NULL;
+                        if (has_primitive) {
+                            source_primitive
+                                = &WORLD.primitives[picked_entity];
+                        }
                         render_primitive_geometry_settings(
                             &WORLD.colliders[picked_entity],
+                            source_primitive,
                             COLLIDER_COMPONENT
                         );
                         igTreePop();
@@ -317,13 +353,14 @@ static void render_entity_editor() {
 
                 if (has_primitive) {
                     if (igTreeNodeEx_Str("Primitive", flags)) {
-                        // if (has_collider && igButton("From collider",
-                        // VEC2_ZERO)) {
-                        //     WORLD.primitives[picked_entity] =
-                        //     WORLD.colliders[picked_entity];
-                        // }
+                        Primitive* source_primitive = NULL;
+                        if (has_collider) {
+                            source_primitive
+                                = &WORLD.colliders[picked_entity];
+                        }
                         render_primitive_geometry_settings(
                             &WORLD.primitives[picked_entity],
+                            source_primitive,
                             PRIMITIVE_COMPONENT
                         );
                         igTreePop();
@@ -468,6 +505,7 @@ void render_scene_editor(void) {
                         );
                         if (igIsItemClicked(0)) {
                             DEBUG.picked_entity.entity = entity;
+                            center_camera_on_entity(entity);
                         }
 
                         if (node) {
@@ -484,7 +522,8 @@ void render_scene_editor(void) {
                 igCheckbox("Player", (bool*)(&DEBUG.shading.player));
                 igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
                 igCheckbox(
-                    "Collisions", (bool*)(&DEBUG.shading.collisions)
+                    "Collision MTVs",
+                    (bool*)(&DEBUG.shading.collision_mtvs)
                 );
                 igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
                 igCheckbox(

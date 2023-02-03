@@ -49,6 +49,9 @@ void init_world(void) {
 
 void destroy_entity(int entity) {
     WORLD.components[entity] = 0;
+    if (DEBUG.picked_entity.entity == entity) {
+        DEBUG.picked_entity.entity = -1;
+    }
 }
 
 int entity_is_alive(int entity) {
@@ -261,6 +264,11 @@ CameraFrustum get_camera_frustum() {
     }
 
     return frustum;
+}
+
+void center_camera_on_entity(int entity) {
+    Vec2 entity_position = WORLD.transformations[entity].position;
+    WORLD.transformations[WORLD.camera].position = entity_position;
 }
 
 static void update_entities_world_counter() {
