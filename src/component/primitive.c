@@ -38,13 +38,15 @@ const char* get_primitive_type_name(PrimitiveType type) {
     }
 }
 
-void change_primitive_type(Primitive* primitive, PrimitiveType target_type) {
+void change_primitive_type(
+    Primitive* primitive, PrimitiveType target_type
+) {
     PrimitiveType source_type = primitive->type;
     if (source_type == target_type) {
         return;
     }
 
-    switch(target_type) {
+    switch (target_type) {
         case CIRCLE_PRIMITIVE:
             *primitive = init_default_circle_primitive();
             break;
@@ -64,6 +66,8 @@ void change_primitive_type(Primitive* primitive, PrimitiveType target_type) {
 
 Primitive init_circle_primitive(float radius) {
     Primitive primitive;
+    memset(&primitive, 0, sizeof(primitive));
+
     primitive.type = CIRCLE_PRIMITIVE;
     Circle circle = {radius};
     primitive.p.circle = circle;
@@ -72,6 +76,8 @@ Primitive init_circle_primitive(float radius) {
 
 Primitive init_rectangle_primitive(float width, float height) {
     Primitive primitive;
+    memset(&primitive, 0, sizeof(primitive));
+
     primitive.type = RECTANGLE_PRIMITIVE;
     Rectangle rectangle = {width, height};
     primitive.p.rectangle = rectangle;
@@ -80,6 +86,8 @@ Primitive init_rectangle_primitive(float width, float height) {
 
 Primitive init_line_primitive(Vec2 b) {
     Primitive primitive;
+    memset(&primitive, 0, sizeof(primitive));
+
     primitive.type = LINE_PRIMITIVE;
     Line line = {b};
     primitive.p.line = line;
@@ -90,6 +98,8 @@ Primitive init_polygon_primitive(
     Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices
 ) {
     Primitive primitive;
+    memset(&primitive, 0, sizeof(primitive));
+
     primitive.type = POLYGON_PRIMITIVE;
     Polygon polygon;
     memcpy(polygon.vertices, vertices, sizeof(Vec2) * n_vertices);

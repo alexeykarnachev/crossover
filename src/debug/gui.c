@@ -46,25 +46,24 @@ static void drag_int(
     igDragInt(label, value, 1, min_val, max_val, "%d", 0);
 }
 
-static void render_edit_button(Primitive primitive, ComponentType component_type) {
+static void render_edit_button(ComponentType component_type) {
     char id[16];
-    sprintf(id, "%d_%d", component_type, edit_mode);
+    sprintf(id, "%d", component_type);
     igPushID_Str(id);
-    if (DEBUG.picked_entity.component_type == component_type
-        && DEBUG.picked_entity.edit_mode == edit_mode) {
+    if (DEBUG.picked_entity.component_type == component_type) {
         igPushStyleColor_Vec4(ImGuiCol_Button, PRESSED_BUTTON_COLOR);
         igButton("Edit", VEC2_ZERO);
         igPopStyleColor(1);
     } else if (igButton("Edit", VEC2_ZERO)) {
         DEBUG.picked_entity.component_type = component_type;
-        DEBUG.picked_entity.edit_mode = edit_mode;
     }
     igPopID();
 }
 
 static void render_change_primitive_button(Primitive* primitive) {
     PrimitiveType selected_type = primitive->type;
-    const char* selected_type_name = get_primitive_type_name(selected_type);
+    const char* selected_type_name = get_primitive_type_name(selected_type
+    );
     if (igButton(selected_type_name, VEC2_ZERO)) {
         igOpenPopup_Str("change_primitive_menu", 0);
     }
@@ -74,7 +73,9 @@ static void render_change_primitive_button(Primitive* primitive) {
         for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
             PrimitiveType type = PRIMITIVE_TYPES[i];
             const char* type_name = get_primitive_type_name(type);
-            igMenuItem_BoolPtr(type_name, NULL, (bool*)&selected_types[i], 1);
+            igMenuItem_BoolPtr(
+                type_name, NULL, (bool*)&selected_types[i], 1
+            );
         }
         igEndMenu();
 
@@ -83,12 +84,10 @@ static void render_change_primitive_button(Primitive* primitive) {
             int type = PRIMITIVE_TYPES[i];
             if (is_selected) {
                 change_primitive_type(primitive, type);
-                DEBUG.picked_entity.edit_mode = EDIT_TRANSFORMATION;
+                break;
             }
         }
     }
-
-
 }
 
 static void render_primitive_geometry_settings(
@@ -97,9 +96,7 @@ static void render_primitive_geometry_settings(
     PrimitiveType* type = &primitive->type;
     switch (*type) {
         case CIRCLE_PRIMITIVE: {
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            igText("(circle)");
-            render_edit_button(component_type, EDIT_CIRCLE_RADIUS);
+            render_edit_button(component_type);
 
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             render_change_primitive_button(primitive);
@@ -109,9 +106,7 @@ static void render_primitive_geometry_settings(
             break;
         }
         case RECTANGLE_PRIMITIVE: {
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            igText("(rectangle)");
-            render_edit_button(component_type, EDIT_RECTANGLE_SIZE);
+            render_edit_button(component_type);
 
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             render_change_primitive_button(primitive);
@@ -123,9 +118,7 @@ static void render_primitive_geometry_settings(
             break;
         }
         case LINE_PRIMITIVE: {
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            igText("(line)");
-            render_edit_button(component_type, EDIT_LINE_VERTEX_POSITION);
+            render_edit_button(component_type);
 
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             render_change_primitive_button(primitive);
@@ -135,11 +128,7 @@ static void render_primitive_geometry_settings(
             break;
         }
         case POLYGON_PRIMITIVE: {
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-            igText("(polygon)");
-            render_edit_button(
-                component_type, EDIT_POLYGON_VERTEX_POSITION
-            );
+            render_edit_button(component_type);
 
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             render_change_primitive_button(primitive);
@@ -220,8 +209,6 @@ static void render_debug_info(void) {
 
     igEnd();
 }
-
-static void render_debug_gui(void) {}
 
 static void render_entity_editor() {
     int picked_entity = DEBUG.picked_entity.entity;
@@ -306,7 +293,7 @@ static void render_entity_editor() {
                     float* pos = (float*)&transformation->position;
                     float* orient = &transformation->orientation;
                     if (igTreeNodeEx_Str("Transformation", flags)) {
-                        render_edit_button(-1, EDIT_TRANSFORMATION);
+                        render_edit_button(TRANSFORMATION_COMPONENT);
                         drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
                         drag_float("orient.", orient, -PI, PI, 0.05);
                         igTreePop();

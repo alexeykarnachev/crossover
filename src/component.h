@@ -47,7 +47,9 @@ typedef struct Primitive {
 } Primitive;
 
 const char* get_primitive_type_name(PrimitiveType type);
-void change_primitive_type(Primitive* primitive, PrimitiveType target_type);
+void change_primitive_type(
+    Primitive* primitive, PrimitiveType target_type
+);
 Primitive init_circle_primitive(float radius);
 Primitive init_rectangle_primitive(float width, float height);
 Primitive init_line_primitive(Vec2 b);

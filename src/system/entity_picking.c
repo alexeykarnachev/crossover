@@ -92,7 +92,6 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
         return 0;
     }
 
-    int edit_mode = DEBUG.picked_entity.edit_mode;
     int component_type = DEBUG.picked_entity.component_type;
     Transformation transformation = WORLD.transformations[entity];
     Primitive primitive;
@@ -113,20 +112,24 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
                                 * SMALL_HANDLE_SCALE;
     Vec3 color;
     float radius;
+    PrimitiveType primitive_type;
     switch (component_type) {
-        case -1: {
+        case TRANSFORMATION_COMPONENT: {
             color = YELLOW_COLOR;
             radius = large_handle_radius;
+            primitive_type = -1;
             break;
         }
         case PRIMITIVE_COMPONENT: {
             color = YELLOW_COLOR;
             radius = small_handle_radius;
+            primitive_type = primitive.type;
             break;
         }
         case COLLIDER_COMPONENT: {
             color = SKYBLUE_COLOR;
             radius = small_handle_radius;
+            primitive_type = primitive.type;
             break;
         }
         default: {
@@ -139,9 +142,10 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             exit(1);
         }
     }
+
     int n_handles = 0;
-    switch (edit_mode) {
-        case EDIT_TRANSFORMATION: {
+    switch (primitive_type) {
+        case -1: {
             handles[0] = init_handle(
                 color,
                 transformation.position,
@@ -167,7 +171,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             n_handles = 2;
             break;
         }
-        case EDIT_CIRCLE_RADIUS: {
+        case CIRCLE_PRIMITIVE: {
             Vec2 position = vec2(primitive.p.circle.radius, 0.0);
             apply_transformation(&position, 1, transformation);
             handles[0] = init_handle(
@@ -176,7 +180,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             n_handles = 1;
             break;
         }
-        case EDIT_LINE_VERTEX_POSITION: {
+        case LINE_PRIMITIVE: {
             Vec2 position = scale(primitive.p.line.b, 0.5);
             apply_transformation(&position, 1, transformation);
             handles[0] = init_handle(
@@ -185,7 +189,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             n_handles = 1;
             break;
         }
-        case EDIT_RECTANGLE_SIZE: {
+        case RECTANGLE_PRIMITIVE: {
             Vec2 position = transformation.position;
             float width = primitive.p.rectangle.width;
             float height = primitive.p.rectangle.height;
@@ -206,7 +210,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             n_handles = 3;
             break;
         }
-        case EDIT_POLYGON_VERTEX_POSITION: {
+        case POLYGON_PRIMITIVE: {
             Vec2 handle_positions[MAX_N_POLYGON_VERTICES];
             n_handles = get_primitive_vertices(
                 primitive, handle_positions
@@ -228,9 +232,10 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
         default: {
             fprintf(
                 stderr,
-                "ERROR: Can't get handles for the entity edit mode id: "
+                "ERROR: Can't get handles for the entity with primitive "
+                "type: "
                 "%d\n",
-                edit_mode
+                primitive_type
             );
             exit(1);
         }
@@ -334,8 +339,7 @@ void update_entity_picking(void) {
 
         if (is_picked) {
             DEBUG.picked_entity.entity = entity;
-            DEBUG.picked_entity.edit_mode = EDIT_TRANSFORMATION;
-            DEBUG.picked_entity.component_type = -1;
+            DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
             break;
         }
     }
@@ -449,7 +453,7 @@ void render_entity_handles(void) {
         );
     }
 
-    if (DEBUG.picked_entity.edit_mode == EDIT_TRANSFORMATION) {
+    if (DEBUG.picked_entity.component_type == TRANSFORMATION_COMPONENT) {
         render_debug_line(
             handles[0].position,
             handles[1].position,

@@ -15,7 +15,7 @@ Debug DEBUG;
 void init_debug(void) {
     DEBUG.is_playing = 0;
     DEBUG.picked_entity.entity = -1;
-    DEBUG.picked_entity.component_type = -1;
+    DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
 
     DEBUG.shading.materials = 1;
     DEBUG.shading.player = 1;

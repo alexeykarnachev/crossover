@@ -13,7 +13,6 @@ typedef struct DebugPrimitive {
 } DebugPrimitive;
 
 typedef struct PickedEntity {
-    PickedEntityEditMode edit_mode;
     ComponentType component_type;
     int entity;
 } PickedEntity;
