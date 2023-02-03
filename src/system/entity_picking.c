@@ -433,18 +433,28 @@ void update_entity_dragging(void) {
 }
 
 void render_entity_handles(void) {
+    if (DEBUG.picked_entity.entity == -1) {
+        return;
+    }
     Handle handles[MAX_N_POLYGON_VERTICES];
     int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
         Handle handle = handles[i];
         render_debug_circle(
-            handle.position, handle.radius, handle.color, FILL
+            handle.position,
+            handle.radius,
+            handle.color,
+            DEBUG_RENDER_LAYER,
+            FILL
         );
     }
 
     if (DEBUG.picked_entity.edit_mode == EDIT_TRANSFORMATION) {
         render_debug_line(
-            handles[0].position, handles[1].position, YELLOW_COLOR
+            handles[0].position,
+            handles[1].position,
+            YELLOW_COLOR,
+            DEBUG_RENDER_LAYER
         );
     }
 }

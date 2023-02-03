@@ -20,6 +20,7 @@ in vec2 world_pos;
 uniform Circle circle;
 uniform Camera camera;
 uniform int type;
+uniform float render_layer;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
     vec2 p0 = point - center;
@@ -62,5 +63,5 @@ void main(void) {
     }
 
     vec2 proj_pos = world2proj(world_position); 
-    gl_Position = vec4(proj_pos, 0.0, 1.0);
+    gl_Position = vec4(proj_pos, render_layer, 1.0);
 }

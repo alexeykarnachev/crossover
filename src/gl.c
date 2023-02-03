@@ -254,7 +254,10 @@ typedef struct RenderCall {
 } RenderCall;
 
 static RenderCall prepare_primitive_render_call(
-    Transformation transformation, Primitive primitive, Material material
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    float render_layer
 ) {
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
@@ -265,6 +268,7 @@ static RenderCall prepare_primitive_render_call(
     set_uniform_3fv(
         program, "diffuse_color", (float*)&material.diffuse_color, 1
     );
+    set_uniform_1f(program, "render_layer", render_layer);
 
     GLuint draw_mode = GL_TRIANGLE_FAN;
     int n_vertices;
@@ -349,9 +353,10 @@ void render_world(float dt) {
         Transformation transformation = WORLD.transformations[entity];
         Primitive primitive = WORLD.primitives[entity];
         Material material = WORLD.materials[entity];
+        float render_layer = WORLD.render_layers[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
-            transformation, primitive, material
+            transformation, primitive, material, render_layer
         );
 
         if (DEBUG.shading.materials) {
@@ -367,6 +372,10 @@ void render_world(float dt) {
 
     // -------------------------------------------------------------------
     // Render debug and editor-related primitives
+    if (!DEBUG.is_playing) {
+        render_entity_handles();
+    }
+
     if (DEBUG.shading.kinematics) {
         render_debug_kinematics();
     }
@@ -382,16 +391,16 @@ void render_world(float dt) {
     if (DEBUG.shading.grid) {
         render_debug_grid();
     }
-    if (!DEBUG.is_playing) {
-        render_entity_handles();
-    }
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
-        DebugPrimitive p = DEBUG.primitives[i];
+        DebugPrimitive dp = DEBUG.primitives[i];
         RenderCall render_call = prepare_primitive_render_call(
-            p.transformation, p.primitive, init_material(p.color)
+            dp.transformation,
+            dp.primitive,
+            init_material(dp.color),
+            dp.render_layer
         );
-        execute_render_call(render_call, p.fill_type);
+        execute_render_call(render_call, dp.fill_type);
     }
 
     DEBUG.n_primitives = 0;

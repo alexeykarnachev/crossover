@@ -47,7 +47,8 @@ void render_bullets(float dt) {
         render_debug_line(
             transformation.position,
             add(transformation.position, ray),
-            YELLOW_COLOR
+            YELLOW_COLOR,
+            DEBUG_RENDER_LAYER
         );
     }
 }

@@ -1,5 +1,6 @@
 #include "../component.h"
 #include "../debug.h"
+#include "../gl.h"
 #include "../system.h"
 #include "../world.h"
 
@@ -63,16 +64,24 @@ void render_debug_visions() {
             RayCastResult observation = vision.observations[i];
             if (observation.entity != -1) {
                 render_debug_line(
-                    t0.position, observation.position, GREEN_COLOR
+                    t0.position,
+                    observation.position,
+                    GREEN_COLOR,
+                    DEBUG_RENDER_LAYER
                 );
                 render_debug_circle(
-                    observation.position, 0.05, RED_COLOR, -1
+                    observation.position,
+                    0.05,
+                    RED_COLOR,
+                    DEBUG_RENDER_LAYER,
+                    FILL
                 );
             } else {
                 render_debug_line(
                     t0.position,
                     add(t0.position, VIEW_RAYS_ARENA[i]),
-                    GREEN_COLOR
+                    GREEN_COLOR,
+                    DEBUG_RENDER_LAYER
                 );
             }
         }

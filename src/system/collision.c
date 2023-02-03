@@ -263,12 +263,14 @@ void render_debug_collisions() {
         render_debug_line(
             transformation0.position,
             add(transformation0.position, collision.mtv),
-            MAGENTA_COLOR
+            MAGENTA_COLOR,
+            DEBUG_RENDER_LAYER
         );
         render_debug_line(
             transformation1.position,
             sub(transformation1.position, collision.mtv),
-            CYAN_COLOR
+            CYAN_COLOR,
+            DEBUG_RENDER_LAYER
         );
     }
 
@@ -280,7 +282,11 @@ void render_debug_collisions() {
         Transformation transformation = WORLD.transformations[entity];
         Primitive primitive = WORLD.colliders[entity];
         render_debug_primitive(
-            transformation, primitive, SKYBLUE_COLOR, LINE
+            transformation,
+            primitive,
+            SKYBLUE_COLOR,
+            DEBUG_RENDER_LAYER,
+            LINE
         );
     }
 }

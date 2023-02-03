@@ -18,6 +18,7 @@ typedef struct World {
     Gun guns[MAX_N_ENTITIES];
     float ttls[MAX_N_ENTITIES];
     float healths[MAX_N_ENTITIES];
+    float render_layers[MAX_N_ENTITIES];
     int owners[MAX_N_ENTITIES];
 
     // Singleton entities
@@ -35,21 +36,22 @@ typedef enum ComponentType {
     TRANSFORMATION_COMPONENT = 1 << 0,
     COLLIDER_COMPONENT = 1 << 1,
     PRIMITIVE_COMPONENT = 1 << 2,
-    MATERIAL_COMPONENT = 1 << 3,
-    KINEMATIC_COMPONENT = 1 << 4,
-    VISION_COMPONENT = 1 << 5,
-    RIGID_BODY_COMPONENT = 1 << 6,
-    OBSERVABLE_COMPONENT = 1 << 7,
-    TTL_COMPONENT = 1 << 8,
-    HEALTH_COMPONENT = 1 << 9,
-    GUN_COMPONENT = 1 << 10,
-    BULLET_COMPONENT = 1 << 11,
-    OWNER_COMPONENT = 1 << 12,
+    RENDER_LAYER_COMPONENT = 1 << 3,
+    MATERIAL_COMPONENT = 1 << 4,
+    KINEMATIC_COMPONENT = 1 << 5,
+    VISION_COMPONENT = 1 << 6,
+    RIGID_BODY_COMPONENT = 1 << 7,
+    OBSERVABLE_COMPONENT = 1 << 8,
+    TTL_COMPONENT = 1 << 9,
+    HEALTH_COMPONENT = 1 << 10,
+    GUN_COMPONENT = 1 << 11,
+    BULLET_COMPONENT = 1 << 12,
+    OWNER_COMPONENT = 1 << 13
 } ComponentType;
 
 typedef enum CompoundComponentType {
     RENDERABLE_COMPONENT = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
-                           | MATERIAL_COMPONENT,
+                           | MATERIAL_COMPONENT | RENDER_LAYER_COMPONENT,
     CAN_OBSERVE_COMPONENT = TRANSFORMATION_COMPONENT | VISION_COMPONENT,
     CAN_COLLIDE_COMPONENT = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT,
     KINEMATIC_BULLET_COMPONENT = TRANSFORMATION_COMPONENT
@@ -60,7 +62,7 @@ typedef enum CompoundComponentType {
                                      | RIGID_BODY_COMPONENT
 } CompoundComponentType;
 
-#define N_COMPONENTS 13
+#define N_COMPONENTS 14
 const char* COMPONENT_NAMES[N_COMPONENTS];
 
 extern World WORLD;
@@ -84,22 +86,24 @@ void entity_disable_component(int entity, ComponentType type);
 void entity_enable_component(int entity, ComponentType type);
 
 int spawn_camera(Transformation transformation);
-int spawn_guy(
+int spawn_renderable_guy(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
     Material material,
+    float render_layer,
     Kinematic kinematic,
     Vision vision,
     Gun gun,
     float health,
     int is_player
 );
-int spawn_obstacle(
+int spawn_renderable_obstacle(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
-    Material material
+    Material material,
+    float render_layer
 );
 int spawn_bullet(
     Transformation transformation,
@@ -107,9 +111,13 @@ int spawn_bullet(
     float ttl,
     int owner
 );
-int spawn_default_guy(Transformation transformation);
-int spawn_default_circle_obstacle(Transformation transformation);
-int spawn_default_rectangle_obstacle(Transformation transformation);
-int spawn_default_line_obstacle(Transformation transformation);
-int spawn_default_polygon_obstacle(Transformation transformation);
+int spawn_default_renderable_guy(Transformation transformation);
+int spawn_default_renderable_circle_obstacle(Transformation transformation
+);
+int spawn_default_renderable_rectangle_obstacle(
+    Transformation transformation
+);
+int spawn_default_renderable_line_obstacle(Transformation transformation);
+int spawn_default_renderable_polygon_obstacle(Transformation transformation
+);
 void update_world(float dt);

@@ -1,6 +1,7 @@
 #include "../app.h"
 #include "../component.h"
 #include "../debug.h"
+#include "../gl.h"
 #include "../math.h"
 #include "../system.h"
 #include "../world.h"
@@ -70,6 +71,8 @@ void render_debug_player() {
         return;
     }
     if (DEBUG.is_playing) {
-        render_debug_circle(DEBUG.general.look_at, 0.1, RED_COLOR, -1);
+        render_debug_circle(
+            DEBUG.general.look_at, 0.1, RED_COLOR, DEBUG_RENDER_LAYER, FILL
+        );
     }
 }

@@ -106,6 +106,11 @@ void init_app(int window_width, int window_height) {
     APP.window_width = window_width;
     APP.window_height = window_height;
     APP.time = glfwGetTime();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glClearColor(0.2, 0.2, 0.3, 1.0);
+    glClearDepth(1.0);
 }
 
 void update_window() {
@@ -138,6 +143,8 @@ void update_window() {
 
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void destroy_app() {

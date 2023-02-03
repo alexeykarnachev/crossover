@@ -16,6 +16,7 @@ const char* COMPONENT_NAMES[N_COMPONENTS] = {
     "Transformation",
     "Collider",
     "Primitive",
+    "Render layer",
     "Material",
     "Kinematic",
     "Vision",
@@ -43,7 +44,7 @@ void init_world(void) {
     WORLD.n_entities = 0;
     WORLD.player = -1;
     WORLD.camera = -1;
-    WORLD.camera_view_width = 20.0;
+    WORLD.camera_view_width = CAMERA_VIEW_WIDTH;
 }
 
 void destroy_entity(int entity) {
@@ -109,11 +110,12 @@ int spawn_camera(Transformation transformation) {
     return entity;
 }
 
-int spawn_guy(
+int spawn_renderable_guy(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
     Material material,
+    float render_layer,
     Kinematic kinematic,
     Vision vision,
     Gun gun,
@@ -134,6 +136,7 @@ int spawn_guy(
     WORLD.primitives[entity] = primitive;
     WORLD.colliders[entity] = collider;
     WORLD.materials[entity] = material;
+    WORLD.render_layers[entity] = render_layer;
     WORLD.kinematics[entity] = kinematic;
     WORLD.visions[entity] = vision;
     WORLD.guns[entity] = gun;
@@ -144,16 +147,17 @@ int spawn_guy(
                                | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
                                | MATERIAL_COMPONENT | GUN_COMPONENT
-                               | HEALTH_COMPONENT;
+                               | HEALTH_COMPONENT | RENDER_LAYER_COMPONENT;
 
     return entity;
 }
 
-int spawn_obstacle(
+int spawn_renderable_obstacle(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
-    Material material
+    Material material,
+    float render_layer
 ) {
     int entity = spawn_entity("Obstacle");
     WORLD.transformations[entity] = transformation;
@@ -163,7 +167,8 @@ int spawn_obstacle(
     WORLD.components[entity] = TRANSFORMATION_COMPONENT
                                | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
-                               | MATERIAL_COMPONENT;
+                               | MATERIAL_COMPONENT
+                               | RENDER_LAYER_COMPONENT;
 
     return entity;
 }
@@ -184,12 +189,13 @@ int spawn_bullet(
                                | BULLET_COMPONENT | OWNER_COMPONENT;
 }
 
-int spawn_default_guy(Transformation transformation) {
-    return spawn_guy(
+int spawn_default_renderable_guy(Transformation transformation) {
+    return spawn_renderable_guy(
         transformation,
         init_circle_primitive(1.0),
         init_circle_primitive(1.0),
         init_material(REDWOOD_COLOR),
+        0.0,
         init_kinematic(5.0, 2.0 * PI),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 50.0, 1.0),
@@ -198,40 +204,48 @@ int spawn_default_guy(Transformation transformation) {
     );
 }
 
-int spawn_default_circle_obstacle(Transformation transformation) {
-    return spawn_obstacle(
+int spawn_default_renderable_circle_obstacle(Transformation transformation
+) {
+    return spawn_renderable_obstacle(
         transformation,
         init_circle_primitive(2.0),
         init_circle_primitive(2.0),
-        init_material(GRAY_COLOR)
+        init_material(GRAY_COLOR),
+        0.0
     );
 }
 
-int spawn_default_rectangle_obstacle(Transformation transformation) {
-    return spawn_obstacle(
+int spawn_default_renderable_rectangle_obstacle(
+    Transformation transformation
+) {
+    return spawn_renderable_obstacle(
         transformation,
         init_rectangle_primitive(4.0, 2.0),
         init_rectangle_primitive(4.0, 2.0),
-        init_material(GRAY_COLOR)
+        init_material(GRAY_COLOR),
+        0.0
     );
 }
 
-int spawn_default_line_obstacle(Transformation transformation) {
-    return spawn_obstacle(
+int spawn_default_renderable_line_obstacle(Transformation transformation) {
+    return spawn_renderable_obstacle(
         transformation,
         init_line_primitive(vec2(3.0, 0.0)),
         init_line_primitive(vec2(3.0, 0.0)),
-        init_material(GRAY_COLOR)
+        init_material(GRAY_COLOR),
+        0.0
     );
 }
 
-int spawn_default_polygon_obstacle(Transformation transformation) {
+int spawn_default_renderable_polygon_obstacle(Transformation transformation
+) {
     Vec2 vertices[3] = {{-2.0, 0.0}, {0.0, 3.0}, {2.0, 0.0}};
-    return spawn_obstacle(
+    return spawn_renderable_obstacle(
         transformation,
         init_polygon_primitive(vertices, 3),
         init_polygon_primitive(vertices, 3),
-        init_material(GRAY_COLOR)
+        init_material(GRAY_COLOR),
+        0.0
     );
 }
 

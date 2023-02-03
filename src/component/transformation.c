@@ -2,8 +2,10 @@
 #include "../math.h"
 
 Transformation init_transformation(Vec2 position, float orientation) {
-    Transformation t = {position, orientation};
-    return t;
+    Transformation transformation;
+    transformation.position = position;
+    transformation.orientation = orientation;
+    return transformation;
 }
 
 void apply_transformation(

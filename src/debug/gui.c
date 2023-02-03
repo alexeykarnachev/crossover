@@ -304,6 +304,17 @@ static void render_entity_editor() {
                 }
 
                 if (entity_has_component(
+                        picked_entity, RENDER_LAYER_COMPONENT
+                    )) {
+                    if (igTreeNodeEx_Str("Render layer", flags)) {
+                        float* render_layer
+                            = &WORLD.render_layers[picked_entity];
+                        drag_float("z", render_layer, -1.0, 1.0, 0.1);
+                        igTreePop();
+                    }
+                }
+
+                if (entity_has_component(
                         picked_entity, KINEMATIC_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Kinematic", flags)) {
@@ -386,8 +397,7 @@ static void render_entity_editor() {
 }
 
 void render_scene_editor(void) {
-    ImGuiIO* io = igGetIO();
-    ImVec2 position = {io->DisplaySize.x, 0.0};
+    ImVec2 position = {igGetIO()->DisplaySize.x, 0.0};
     ImVec2 pivot = {1, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
     igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
@@ -463,10 +473,10 @@ void render_context_menu(void) {
     static Vec2 cursor_world_pos;
     static Transformation transformation;
 
-    if (igIsMouseClicked_Bool(1, 0)) {
+    if (igIsMouseClicked_Bool(1, 0) && !igGetIO()->WantCaptureMouse) {
         cursor_world_pos = get_cursor_world_pos();
         transformation = init_transformation(cursor_world_pos, 0.0);
-        igOpenPopup_Str("context_menu", 0);
+        igOpenPopup_Str("editor_context_menu", 0);
     }
 
     bool guy = 0;
@@ -474,7 +484,7 @@ void render_context_menu(void) {
     bool circle_obstacle = 0;
     bool rectangle_obstacle = 0;
     bool polygon_obstacle = 0;
-    if (igBeginPopup("context_menu", 0)) {
+    if (igBeginPopup("editor_context_menu", 0)) {
         if (igBeginMenu("Create", 1)) {
             igMenuItem_BoolPtr("Guy", NULL, &guy, 1);
 
@@ -494,15 +504,15 @@ void render_context_menu(void) {
     }
 
     if (guy) {
-        spawn_default_guy(transformation);
+        spawn_default_renderable_guy(transformation);
     } else if (line_obstacle) {
-        spawn_default_line_obstacle(transformation);
+        spawn_default_renderable_line_obstacle(transformation);
     } else if (circle_obstacle) {
-        spawn_default_circle_obstacle(transformation);
+        spawn_default_renderable_circle_obstacle(transformation);
     } else if (rectangle_obstacle) {
-        spawn_default_rectangle_obstacle(transformation);
+        spawn_default_renderable_rectangle_obstacle(transformation);
     } else if (polygon_obstacle) {
-        spawn_default_polygon_obstacle(transformation);
+        spawn_default_renderable_polygon_obstacle(transformation);
     }
 }
 
@@ -513,11 +523,11 @@ void render_editor_gui(void) {
     igNewFrame();
 
     render_game_controls();
+    render_debug_info();
 
     if (!DEBUG.is_playing) {
         render_entity_editor();
         render_scene_editor();
-        render_debug_info();
         render_context_menu();
     }
 

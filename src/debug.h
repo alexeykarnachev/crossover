@@ -8,6 +8,7 @@ typedef struct DebugPrimitive {
     Transformation transformation;
     Primitive primitive;
     Vec3 color;
+    float render_layer;
     int fill_type;
 } DebugPrimitive;
 
@@ -76,12 +77,23 @@ void update_debug(void);
 void update_editor_gui(void);
 
 void render_debug_primitive(
-    Transformation t, Primitive p, Vec3 color, int fill_type
+    Transformation t,
+    Primitive p,
+    Vec3 color,
+    float render_layer,
+    int fill_type
 );
-void render_debug_line(Vec2 s, Vec2 e, Vec3 color);
-void render_debug_circle(Vec2 c, float r, Vec3 color, int fill_type);
+void render_debug_line(Vec2 s, Vec2 e, Vec3 color, float render_layer);
+void render_debug_circle(
+    Vec2 c, float r, Vec3 color, float render_layer, int fill_type
+);
 void render_debug_rectangle(
-    Vec2 position, float width, float height, Vec3 color, int fill_type
+    Vec2 position,
+    float width,
+    float height,
+    Vec3 color,
+    float render_layer,
+    int fill_type
 );
 void render_debug_grid(void);
 void render_editor_gui(void);

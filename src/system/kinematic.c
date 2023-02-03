@@ -16,12 +16,14 @@ static void render_debug_orientation(
     render_debug_line(
         transformation->position,
         add(transformation->position, d0),
-        BLUE_COLOR
+        BLUE_COLOR,
+        DEBUG_RENDER_LAYER
     );
     render_debug_line(
         transformation->position,
         add(transformation->position, d1),
-        RED_COLOR
+        RED_COLOR,
+        DEBUG_RENDER_LAYER
     );
 }
 
