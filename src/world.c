@@ -192,8 +192,8 @@ int spawn_bullet(
 int spawn_default_renderable_guy(Transformation transformation) {
     return spawn_renderable_guy(
         transformation,
-        init_circle_primitive(1.0),
-        init_circle_primitive(1.0),
+        init_default_circle_primitive(),
+        init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
         init_kinematic(5.0, 2.0 * PI),
@@ -208,8 +208,8 @@ int spawn_default_renderable_circle_obstacle(Transformation transformation
 ) {
     return spawn_renderable_obstacle(
         transformation,
-        init_circle_primitive(2.0),
-        init_circle_primitive(2.0),
+        init_default_circle_primitive(),
+        init_default_circle_primitive(),
         init_material(GRAY_COLOR),
         0.0
     );
@@ -220,8 +220,8 @@ int spawn_default_renderable_rectangle_obstacle(
 ) {
     return spawn_renderable_obstacle(
         transformation,
-        init_rectangle_primitive(4.0, 2.0),
-        init_rectangle_primitive(4.0, 2.0),
+        init_default_rectangle_primitive(),
+        init_default_rectangle_primitive(),
         init_material(GRAY_COLOR),
         0.0
     );
@@ -230,8 +230,8 @@ int spawn_default_renderable_rectangle_obstacle(
 int spawn_default_renderable_line_obstacle(Transformation transformation) {
     return spawn_renderable_obstacle(
         transformation,
-        init_line_primitive(vec2(3.0, 0.0)),
-        init_line_primitive(vec2(3.0, 0.0)),
+        init_default_line_primitive(),
+        init_default_line_primitive(),
         init_material(GRAY_COLOR),
         0.0
     );
@@ -239,11 +239,10 @@ int spawn_default_renderable_line_obstacle(Transformation transformation) {
 
 int spawn_default_renderable_polygon_obstacle(Transformation transformation
 ) {
-    Vec2 vertices[3] = {{-2.0, 0.0}, {0.0, 3.0}, {2.0, 0.0}};
     return spawn_renderable_obstacle(
         transformation,
-        init_polygon_primitive(vertices, 3),
-        init_polygon_primitive(vertices, 3),
+        init_default_polygon_primitive(),
+        init_default_polygon_primitive(),
         init_material(GRAY_COLOR),
         0.0
     );

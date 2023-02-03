@@ -33,6 +33,9 @@ typedef enum PrimitiveType {
     POLYGON_PRIMITIVE = 1 << 3
 } PrimitiveType;
 
+#define N_PRIMITIVE_TYPES 4
+extern PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES];
+
 typedef struct Primitive {
     PrimitiveType type;
     union {
@@ -43,12 +46,18 @@ typedef struct Primitive {
     } p;
 } Primitive;
 
+const char* get_primitive_type_name(PrimitiveType type);
+void change_primitive_type(Primitive* primitive, PrimitiveType target_type);
 Primitive init_circle_primitive(float radius);
 Primitive init_rectangle_primitive(float width, float height);
 Primitive init_line_primitive(Vec2 b);
 Primitive init_polygon_primitive(
     Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices
 );
+Primitive init_default_circle_primitive(void);
+Primitive init_default_rectangle_primitive(void);
+Primitive init_default_line_primitive(void);
+Primitive init_default_polygon_primitive(void);
 int get_primitive_vertices(Primitive primitive, Vec2* out);
 int get_primitive_fan_vertices(
     Primitive primitive, Vec2 out[MAX_N_POLYGON_VERTICES]

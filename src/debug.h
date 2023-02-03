@@ -12,20 +12,6 @@ typedef struct DebugPrimitive {
     int fill_type;
 } DebugPrimitive;
 
-typedef enum PickedEntityEditMode {
-    EDIT_TRANSFORMATION,
-
-    EDIT_POLYGON_VERTEX_POSITION,
-    EDIT_POLYGON_VERTICES_POSITION,
-
-    EDIT_CIRCLE_RADIUS,
-
-    EDIT_RECTANGLE_SIZE,
-
-    EDIT_LINE_VERTEX_POSITION
-
-} PickedEntityEditMode;
-
 typedef struct PickedEntity {
     PickedEntityEditMode edit_mode;
     ComponentType component_type;

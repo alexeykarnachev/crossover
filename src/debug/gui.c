@@ -46,9 +46,7 @@ static void drag_int(
     igDragInt(label, value, 1, min_val, max_val, "%d", 0);
 }
 
-static void render_edit_button(
-    ComponentType component_type, PickedEntityEditMode edit_mode
-) {
+static void render_edit_button(Primitive primitive, ComponentType component_type) {
     char id[16];
     sprintf(id, "%d_%d", component_type, edit_mode);
     igPushID_Str(id);
@@ -64,6 +62,35 @@ static void render_edit_button(
     igPopID();
 }
 
+static void render_change_primitive_button(Primitive* primitive) {
+    PrimitiveType selected_type = primitive->type;
+    const char* selected_type_name = get_primitive_type_name(selected_type);
+    if (igButton(selected_type_name, VEC2_ZERO)) {
+        igOpenPopup_Str("change_primitive_menu", 0);
+    }
+
+    if (igBeginPopup("change_primitive_menu", 0)) {
+        int selected_types[N_PRIMITIVE_TYPES] = {0};
+        for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
+            PrimitiveType type = PRIMITIVE_TYPES[i];
+            const char* type_name = get_primitive_type_name(type);
+            igMenuItem_BoolPtr(type_name, NULL, (bool*)&selected_types[i], 1);
+        }
+        igEndMenu();
+
+        for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
+            int is_selected = selected_types[i];
+            int type = PRIMITIVE_TYPES[i];
+            if (is_selected) {
+                change_primitive_type(primitive, type);
+                DEBUG.picked_entity.edit_mode = EDIT_TRANSFORMATION;
+            }
+        }
+    }
+
+
+}
+
 static void render_primitive_geometry_settings(
     Primitive* primitive, ComponentType component_type
 ) {
@@ -73,6 +100,10 @@ static void render_primitive_geometry_settings(
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             igText("(circle)");
             render_edit_button(component_type, EDIT_CIRCLE_RADIUS);
+
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            render_change_primitive_button(primitive);
+
             float* radius = &primitive->p.circle.radius;
             drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
             break;
@@ -81,6 +112,10 @@ static void render_primitive_geometry_settings(
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             igText("(rectangle)");
             render_edit_button(component_type, EDIT_RECTANGLE_SIZE);
+
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            render_change_primitive_button(primitive);
+
             float* width = &primitive->p.rectangle.width;
             float* height = &primitive->p.rectangle.height;
             drag_float("width", width, 0.0, FLT_MAX, 0.05);
@@ -91,6 +126,10 @@ static void render_primitive_geometry_settings(
             igSameLine(0.0, igGetStyle()->ItemSpacing.y);
             igText("(line)");
             render_edit_button(component_type, EDIT_LINE_VERTEX_POSITION);
+
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            render_change_primitive_button(primitive);
+
             float* b = (float*)&primitive->p.line.b;
             drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
             break;
@@ -101,6 +140,10 @@ static void render_primitive_geometry_settings(
             render_edit_button(
                 component_type, EDIT_POLYGON_VERTEX_POSITION
             );
+
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            render_change_primitive_button(primitive);
+
             Polygon* polygon = &primitive->p.polygon;
             for (int i = 0; i < polygon->n_vertices; ++i) {
                 char label[16];
@@ -272,6 +315,11 @@ static void render_entity_editor() {
 
                 if (has_collider) {
                     if (igTreeNodeEx_Str("Collider", flags)) {
+                        // if (has_primitive && igButton("From primitive",
+                        // VEC2_ZERO)) {
+                        //     WORLD.colliders[picked_entity] =
+                        //     WORLD.primitives[picked_entity];
+                        // }
                         render_primitive_geometry_settings(
                             &WORLD.colliders[picked_entity],
                             COLLIDER_COMPONENT
@@ -282,6 +330,11 @@ static void render_entity_editor() {
 
                 if (has_primitive) {
                     if (igTreeNodeEx_Str("Primitive", flags)) {
+                        // if (has_collider && igButton("From collider",
+                        // VEC2_ZERO)) {
+                        //     WORLD.primitives[picked_entity] =
+                        //     WORLD.colliders[picked_entity];
+                        // }
                         render_primitive_geometry_settings(
                             &WORLD.primitives[picked_entity],
                             PRIMITIVE_COMPONENT

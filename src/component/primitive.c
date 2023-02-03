@@ -17,6 +17,51 @@
         exit(1); \
     } while (0)
 
+PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES] = {
+    CIRCLE_PRIMITIVE,
+    RECTANGLE_PRIMITIVE,
+    LINE_PRIMITIVE,
+    POLYGON_PRIMITIVE};
+
+const char* get_primitive_type_name(PrimitiveType type) {
+    switch (type) {
+        case CIRCLE_PRIMITIVE:
+            return "Circle";
+        case RECTANGLE_PRIMITIVE:
+            return "Rectangle";
+        case LINE_PRIMITIVE:
+            return "Line";
+        case POLYGON_PRIMITIVE:
+            return "Polygon";
+        default:
+            PRIMITIVE_TYPE_ERROR("get_primitive_type_name", type);
+    }
+}
+
+void change_primitive_type(Primitive* primitive, PrimitiveType target_type) {
+    PrimitiveType source_type = primitive->type;
+    if (source_type == target_type) {
+        return;
+    }
+
+    switch(target_type) {
+        case CIRCLE_PRIMITIVE:
+            *primitive = init_default_circle_primitive();
+            break;
+        case RECTANGLE_PRIMITIVE:
+            *primitive = init_default_rectangle_primitive();
+            break;
+        case LINE_PRIMITIVE:
+            *primitive = init_default_line_primitive();
+            break;
+        case POLYGON_PRIMITIVE:
+            *primitive = init_default_polygon_primitive();
+            break;
+        default:
+            PRIMITIVE_TYPE_ERROR("get_primitive_type_name", source_type);
+    }
+}
+
 Primitive init_circle_primitive(float radius) {
     Primitive primitive;
     primitive.type = CIRCLE_PRIMITIVE;
@@ -51,6 +96,23 @@ Primitive init_polygon_primitive(
     polygon.n_vertices = n_vertices;
     primitive.p.polygon = polygon;
     return primitive;
+}
+
+Primitive init_default_circle_primitive(void) {
+    return init_circle_primitive(1.0);
+}
+
+Primitive init_default_rectangle_primitive(void) {
+    return init_rectangle_primitive(1.0, 1.0);
+}
+
+Primitive init_default_line_primitive(void) {
+    return init_line_primitive(vec2(2.0, 0.0));
+}
+
+Primitive init_default_polygon_primitive(void) {
+    Vec2 vertices[3] = {{-1.0, 1.0}, {1.0, 0.0}, {-1.0, -1.0}};
+    return init_polygon_primitive(vertices, 3);
 }
 
 static int get_rectangle_vertices(
