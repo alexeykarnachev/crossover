@@ -26,10 +26,106 @@ Vec2 get_cursor_scene_pos(void) {
 }
 
 void init_scene(void) {
+    SCENE.version = SCENE_VERSION;
     SCENE.n_entities = 0;
     SCENE.player = -1;
     SCENE.camera = -1;
     SCENE.camera_view_width = CAMERA_VIEW_WIDTH;
+}
+
+int save_scene(const char* file_path) {
+    FILE* fp = fopen(file_path, "wb");
+    if (!fp) {
+        fprintf(
+            stderr, "ERROR: Can't save Scene to the file: %s\n", file_path
+        );
+        exit(1);
+    }
+
+    fwrite(&SCENE.version, sizeof(int), 1, fp);
+    fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
+    fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
+
+    for (int i = 0; i < SCENE.n_entities; ++i) {
+        int name_len = strlen(SCENE.names[i]) + 1;
+        fwrite(&name_len, sizeof(int), 1, fp);
+        fwrite(SCENE.names[i], sizeof(char), name_len, fp);
+    }
+
+    fwrite(
+        SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
+    );
+
+    fwrite(SCENE.kinematics, sizeof(Kinematic), SCENE.n_entities, fp);
+    fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
+    fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
+    fwrite(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    fwrite(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    fwrite(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
+    fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fwrite(&SCENE.camera, sizeof(int), 1, fp);
+    fwrite(&SCENE.player, sizeof(int), 1, fp);
+    fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
+
+    fclose(fp);
+    return 1;
+}
+
+int load_scene(const char* file_path) {
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) {
+        fprintf(stderr, "ERROR: Can't load Scene file: %s\n", file_path);
+        exit(1);
+    }
+
+    fread(&SCENE.version, sizeof(int), 1, fp);
+    if (SCENE.version != SCENE_VERSION) {
+        fprintf(
+            stderr,
+            "ERROR: Scene version %d is not compatible with the engine, "
+            "expecting the version %d\n",
+            SCENE.version,
+            SCENE_VERSION
+        );
+        exit(1);
+    }
+
+    fread(&SCENE.n_entities, sizeof(int), 1, fp);
+    fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
+
+    for (int i = 0; i < SCENE.n_entities; ++i) {
+        uint32_t name_len;
+        fread(&name_len, sizeof(uint32_t), 1, fp);
+
+        char* buffer = (char*)malloc(name_len + 1);
+        fread(buffer, sizeof(char), name_len, fp);
+        buffer[name_len] = '\0';
+
+        SCENE.names[i] = buffer;
+    }
+
+    fread(
+        SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
+    );
+    fread(SCENE.kinematics, sizeof(Kinematic), SCENE.n_entities, fp);
+    fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
+    fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
+    fread(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    fread(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    fread(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
+    fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fread(&SCENE.camera, sizeof(int), 1, fp);
+    fread(&SCENE.player, sizeof(int), 1, fp);
+    fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
+
+    fclose(fp);
+    return 1;
 }
 
 void destroy_entity(int entity) {

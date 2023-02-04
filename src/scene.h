@@ -2,10 +2,12 @@
 #include "component.h"
 #include "const.h"
 #include "system.h"
-#include <stddef.h>
 #include <stdint.h>
 
 typedef struct Scene {
+    int version;
+    int n_entities;
+
     // Components
     uint64_t components[MAX_N_ENTITIES];
     const char* names[MAX_N_ENTITIES];
@@ -25,9 +27,6 @@ typedef struct Scene {
     int camera;
     int player;
 
-    // Current counters
-    size_t n_entities;
-
     // Other configuration
     float camera_view_width;
 } Scene;
@@ -43,6 +42,8 @@ CameraFrustum get_camera_frustum();
 void center_camera_on_entity(int entity);
 Vec2 get_cursor_scene_pos(void);
 void init_scene(void);
+int save_scene(const char* file_path);
+int load_scene(const char* file_path);
 void destroy_entity(int entity);
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
