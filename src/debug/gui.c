@@ -15,7 +15,6 @@ static int LAST_PICKED_ENTITY = -1;
 static int LAST_PICKED_COMPONENTS[N_COMPONENTS];
 static ImVec2 VEC2_ZERO = {0, 0};
 static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
-static int DEFAULT_OPEN = ImGuiTreeNodeFlags_DefaultOpen;
 
 static ImGuiWindowFlags GHOST_WINDOW_FLAGS
     = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
@@ -246,6 +245,83 @@ static void render_debug_info(void) {
     igEnd();
 }
 
+static void render_editor_context_menu(void) {
+    static Vec2 cursor_world_pos;
+    static Transformation transformation;
+    int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
+    int want_capture_mouse = igGetIO()->WantCaptureMouse;
+
+    if (is_rmb_clicked && !want_capture_mouse) {
+        pick_entity(get_entity_under_cursor());
+        cursor_world_pos = get_cursor_world_pos();
+        transformation = init_transformation(cursor_world_pos, 0.0);
+        igOpenPopup_Str("editor_context_menu", 0);
+    }
+
+    int spawn_guy = 0;
+    int spawn_line_obstacle = 0;
+    int spawn_circle_obstacle = 0;
+    int spawn_rectangle_obstacle = 0;
+    int spawn_polygon_obstacle = 0;
+
+    int copy = 0;
+    int paste = 0;
+    int delete = 0;
+    if (igBeginPopup("editor_context_menu", 0)) {
+        if (igBeginMenu("Spawn", 1)) {
+            igMenuItem_BoolPtr("Guy", NULL, (bool*)&spawn_guy, 1);
+
+            if (igBeginMenu("Obstacle", 1)) {
+                igMenuItem_BoolPtr(
+                    "Line", NULL, (bool*)&spawn_line_obstacle, 1
+                );
+                igMenuItem_BoolPtr(
+                    "Circle", NULL, (bool*)&spawn_circle_obstacle, 1
+                );
+                igMenuItem_BoolPtr(
+                    "Rectangle", NULL, (bool*)&spawn_rectangle_obstacle, 1
+                );
+                igMenuItem_BoolPtr(
+                    "Polygon", NULL, (bool*)&spawn_polygon_obstacle, 1
+                );
+                igEndMenu();
+            }
+
+            igEndMenu();
+        }
+
+        int can_copy = DEBUG.picked_entity.entity != -1;
+        int can_paste = DEBUG.entity_to_copy != -1;
+        int can_delete = can_copy;
+        igMenuItem_BoolPtr("Copy", NULL, (bool*)&copy, can_copy);
+        igMenuItem_BoolPtr("Paste", NULL, (bool*)&paste, can_paste);
+        igMenuItem_BoolPtr("Delete", NULL, (bool*)&delete, can_delete);
+
+        igEndPopup();
+    }
+
+    if (spawn_guy) {
+        spawn_default_renderable_guy(transformation);
+    } else if (spawn_line_obstacle) {
+        spawn_default_renderable_line_obstacle(transformation);
+    } else if (spawn_circle_obstacle) {
+        spawn_default_renderable_circle_obstacle(transformation);
+    } else if (spawn_rectangle_obstacle) {
+        spawn_default_renderable_rectangle_obstacle(transformation);
+    } else if (spawn_polygon_obstacle) {
+        spawn_default_renderable_polygon_obstacle(transformation);
+    } else if (copy) {
+        DEBUG.entity_to_copy = DEBUG.picked_entity.entity;
+    } else if (paste) {
+        int entity_copy = spawn_entity_copy(
+            DEBUG.entity_to_copy, transformation
+        );
+        pick_entity(entity_copy);
+    } else if (delete) {
+        destroy_entity(DEBUG.picked_entity.entity);
+    }
+}
+
 static void render_entity_editor() {
     int picked_entity = DEBUG.picked_entity.entity;
     int camera_entity = WORLD.camera;
@@ -310,7 +386,9 @@ static void render_entity_editor() {
         // Components inspector: components editor of the currently
         // picked entity
         {
-            int flags = picked_entity != -1 ? DEFAULT_OPEN : 0;
+            int flags = picked_entity != -1
+                            ? ImGuiTreeNodeFlags_DefaultOpen
+                            : 0;
             int has_transformation = entity_has_component(
                 picked_entity, TRANSFORMATION_COMPONENT
             );
@@ -323,7 +401,7 @@ static void render_entity_editor() {
             if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
                 && picked_entity != -1) {
                 int flags = 0;
-                flags |= DEFAULT_OPEN;
+                flags |= ImGuiTreeNodeFlags_DefaultOpen;
 
                 if (has_transformation) {
                     Transformation* transformation
@@ -476,7 +554,7 @@ static void render_entity_editor() {
     igEnd();
 }
 
-void render_scene_editor(void) {
+static void render_scene_editor(void) {
     ImVec2 position = {igGetIO()->DisplaySize.x, 0.0};
     ImVec2 pivot = {1, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
@@ -485,10 +563,14 @@ void render_scene_editor(void) {
     if (igBegin("Scene", NULL, 0)) {
         // Entities list: tree of entities and their components in
         // the current scene
-        if (igCollapsingHeader_TreeNodeFlags("Entities", DEFAULT_OPEN)) {
+        if (igCollapsingHeader_TreeNodeFlags(
+                "Entities", ImGuiTreeNodeFlags_DefaultOpen
+            )) {
             for (int i = 0; i < 2; ++i) {
                 const char* label = i == 0 ? "Alive" : "Trash";
-                if (igTreeNodeEx_Str(label, DEFAULT_OPEN * (1 - i))) {
+                if (igTreeNodeEx_Str(
+                        label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i)
+                    )) {
                     for (int entity = 0; entity < WORLD.n_entities;
                          ++entity) {
                         int show = entity_is_alive(entity) ^ i;
@@ -501,18 +583,19 @@ void render_scene_editor(void) {
                         sprintf(str, "%s: %d", name, entity);
                         int is_picked = entity
                                         == DEBUG.picked_entity.entity;
-                        int flags = ImGuiTreeNodeFlags_Selected
-                                    * is_picked;
+                        int flags = ImGuiTreeNodeFlags_Leaf;
+                        flags |= (ImGuiTreeNodeFlags_Selected * is_picked);
                         int node = igTreeNodeEx_StrStr(
                             str, flags, "%s", str
                         );
-                        if (igIsItemClicked(0)) {
-                            pick_entity(entity);
-                            center_camera_on_entity(entity);
-                        }
 
                         if (node) {
                             igTreePop();
+                        }
+
+                        if (igIsItemClicked(0)) {
+                            pick_entity(entity);
+                            center_camera_on_entity(entity);
                         }
                     }
                     igTreePop();
@@ -551,76 +634,6 @@ void render_scene_editor(void) {
     igEnd();
 }
 
-void render_context_menu(void) {
-    static Vec2 cursor_world_pos;
-    static Transformation transformation;
-
-    if (igIsMouseClicked_Bool(1, 0) && !igGetIO()->WantCaptureMouse) {
-        pick_entity(get_entity_under_cursor());
-        cursor_world_pos = get_cursor_world_pos();
-        transformation = init_transformation(cursor_world_pos, 0.0);
-        igOpenPopup_Str("editor_context_menu", 0);
-    }
-
-    int spawn_guy = 0;
-    int spawn_line_obstacle = 0;
-    int spawn_circle_obstacle = 0;
-    int spawn_rectangle_obstacle = 0;
-    int spawn_polygon_obstacle = 0;
-
-    int copy = 0;
-    int paste = 0;
-    if (igBeginPopup("editor_context_menu", 0)) {
-        if (igBeginMenu("Spawn", 1)) {
-            igMenuItem_BoolPtr("Guy", NULL, (bool*)&spawn_guy, 1);
-
-            if (igBeginMenu("Obstacle", 1)) {
-                igMenuItem_BoolPtr(
-                    "Line", NULL, (bool*)&spawn_line_obstacle, 1
-                );
-                igMenuItem_BoolPtr(
-                    "Circle", NULL, (bool*)&spawn_circle_obstacle, 1
-                );
-                igMenuItem_BoolPtr(
-                    "Rectangle", NULL, (bool*)&spawn_rectangle_obstacle, 1
-                );
-                igMenuItem_BoolPtr(
-                    "Polygon", NULL, (bool*)&spawn_polygon_obstacle, 1
-                );
-                igEndMenu();
-            }
-
-            igEndMenu();
-        }
-
-        int can_copy = DEBUG.picked_entity.entity != -1;
-        int can_paste = DEBUG.entity_to_copy != -1;
-        igMenuItem_BoolPtr("Copy", NULL, (bool*)&copy, can_copy);
-        igMenuItem_BoolPtr("Paste", NULL, (bool*)&paste, can_paste);
-
-        igEndPopup();
-    }
-
-    if (spawn_guy) {
-        spawn_default_renderable_guy(transformation);
-    } else if (spawn_line_obstacle) {
-        spawn_default_renderable_line_obstacle(transformation);
-    } else if (spawn_circle_obstacle) {
-        spawn_default_renderable_circle_obstacle(transformation);
-    } else if (spawn_rectangle_obstacle) {
-        spawn_default_renderable_rectangle_obstacle(transformation);
-    } else if (spawn_polygon_obstacle) {
-        spawn_default_renderable_polygon_obstacle(transformation);
-    } else if (copy) {
-        DEBUG.entity_to_copy = DEBUG.picked_entity.entity;
-    } else if (paste) {
-        int entity_copy = spawn_entity_copy(
-            DEBUG.entity_to_copy, transformation
-        );
-        pick_entity(entity_copy);
-    }
-}
-
 void render_editor_gui(void) {
     ImGuiIO* io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
@@ -633,7 +646,7 @@ void render_editor_gui(void) {
     if (!DEBUG.is_playing) {
         render_entity_editor();
         render_scene_editor();
-        render_context_menu();
+        render_editor_context_menu();
     }
 
     igRender();
