@@ -7,7 +7,9 @@
 #include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "nfd.h"
 #include <float.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -50,14 +52,45 @@ static void drag_int(
 static void render_main_menu_bar() {
     if (igBeginMainMenuBar()) {
         if (igBeginMenu("Scene", 1)) {
-            igMenuItem_Bool("New", "", false, false);
-            igMenuItem_Bool("Open", "", false, false);
-            igMenuItem_Bool("Save", "", false, false);
-            igMenuItem_Bool("Save As...", "", false, false);
+            int new_scene = igMenuItem_Bool("New", "", false, true);
+            int open_scene = igMenuItem_Bool("Open", "", false, true);
+            int save_scene = igMenuItem_Bool("Save", "", false, true);
+            int save_as_scene = igMenuItem_Bool(
+                "Save As...", "", false, true
+            );
             igEndMenu();
+
+            if (new_scene) {
+                reset_scene();
+            } else if (open_scene) {
+                printf("open scene\n");
+            } else if (save_scene) {
+                printf("save scene\n");
+            } else if (save_as_scene) {
+                printf("save as scene\n");
+            }
         }
         igEndMainMenuBar();
     }
+
+    // NFD_Init();
+
+    // nfdchar_t* outPath;
+    // nfdfilteritem_t filterItem[2] = {
+    //     {"Source code", "c,cpp,cc"}, {"Headers", "h,hpp"}};
+    // nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
+    // if (result == NFD_OKAY) {
+    //     puts("Success!");
+    //     puts(outPath);
+    //     NFD_FreePath(outPath);
+    // } else if (result == NFD_CANCEL) {
+    //     puts("User pressed cancel.");
+    // } else {
+    //     printf("Error: %s\n", NFD_GetError());
+    // }
+
+    // NFD_Quit();
+    // return 0;
 }
 
 static void render_edit_button(ComponentType component_type) {

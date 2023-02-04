@@ -25,12 +25,12 @@ Vec2 get_cursor_scene_pos(void) {
     return position;
 }
 
-void init_scene(void) {
+void reset_scene(void) {
     SCENE.version = SCENE_VERSION;
     SCENE.n_entities = 0;
     SCENE.player = -1;
-    SCENE.camera = -1;
-    SCENE.camera_view_width = CAMERA_VIEW_WIDTH;
+    memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
+    reset_camera();
 }
 
 int save_scene(const char* file_path) {
@@ -249,20 +249,6 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     return entity_copy;
 }
 
-int spawn_camera(Transformation transformation) {
-    if (SCENE.camera != -1) {
-        fprintf(stderr, "ERROR: Only one camera can be spawned\n");
-        exit(1);
-    }
-
-    int entity = spawn_entity("Camera");
-    SCENE.transformations[entity] = transformation;
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT;
-
-    SCENE.camera = entity;
-    return entity;
-}
-
 int spawn_renderable_guy(
     Transformation transformation,
     Primitive primitive,
@@ -421,11 +407,16 @@ void center_camera_on_entity(int entity) {
     SCENE.transformations[SCENE.camera].position = entity_position;
 }
 
-void reset_camera(void) {
+int reset_camera(void) {
+    SCENE.camera = spawn_entity("Camera");
     Transformation* transformation = &SCENE.transformations[SCENE.camera];
     transformation->position = vec2(0.0, 0.0);
     transformation->orientation = 0.0;
+
+    SCENE.components[SCENE.camera] = TRANSFORMATION_COMPONENT;
     SCENE.camera_view_width = CAMERA_VIEW_WIDTH;
+
+    return SCENE.camera;
 }
 
 static void update_entities_scene_counter() {
