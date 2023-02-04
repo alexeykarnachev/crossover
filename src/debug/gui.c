@@ -47,6 +47,20 @@ static void drag_int(
     igDragInt(label, value, 1, min_val, max_val, "%d", 0);
 }
 
+static void render_main_menu_bar() {
+    if (igBeginMainMenuBar()) {
+        if (igBeginMenu("Scene", 1)) {
+            igMenuItem_Bool("New", "", false, false);
+            igSeparator();
+            igMenuItem_Bool("Open", "", false, false);
+            igMenuItem_Bool("Save", "", false, false);
+            igMenuItem_Bool("Save As...", "", false, false);
+            igEndMenu();
+        }
+        igEndMainMenuBar();
+    }
+}
+
 static void render_edit_button(ComponentType component_type) {
     char id[16];
     sprintf(id, "%d", component_type);
@@ -210,7 +224,8 @@ static void render_game_controls(void) {
 
     ImVec2 window_size;
     igGetWindowSize(&window_size);
-    ImVec2 position = {0.5 * (io->DisplaySize.x - window_size.x), 0};
+    ImVec2 position = {
+        0.5 * (io->DisplaySize.x - window_size.x), igGetFrameHeight()};
     igSetWindowPos_Str(name, position, ImGuiCond_Always);
     igSetWindowSize_Str(name, VEC2_ZERO, ImGuiCond_Always);
 
@@ -337,7 +352,7 @@ static void render_entity_editor() {
     int camera_entity = SCENE.camera;
 
     ImGuiIO* io = igGetIO();
-    ImVec2 position = {0.0, 0.0};
+    ImVec2 position = {0.0, igGetFrameHeight()};
     ImVec2 pivot = {0, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
     igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
@@ -582,14 +597,13 @@ static void render_entity_editor() {
 }
 
 static void render_scene_editor(void) {
-    ImVec2 position = {igGetIO()->DisplaySize.x, 0.0};
+    ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};
     ImVec2 pivot = {1, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
     igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Scene", NULL, 0)) {
-        // Entities list: tree of entities and their components in
-        // the current scene
+        // List of all current Scene Entities
         if (igCollapsingHeader_TreeNodeFlags(
                 "Entities", ImGuiTreeNodeFlags_DefaultOpen
             )) {
@@ -674,6 +688,7 @@ void render_editor_gui(void) {
     render_debug_info();
 
     if (!DEBUG.is_playing) {
+        render_main_menu_bar();
         render_entity_editor();
         render_scene_editor();
         render_editor_context_menu();
