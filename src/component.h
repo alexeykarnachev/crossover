@@ -68,6 +68,9 @@ Rectangle get_primitive_bounding_rectangle(
     Primitive primitive, Transformation transformation
 );
 
+void add_polygon_vertex(Polygon* polygon);
+void delete_polygon_vertex(Polygon* polygon);
+
 typedef struct RayCastResult {
     Vec2 position;
     int entity;

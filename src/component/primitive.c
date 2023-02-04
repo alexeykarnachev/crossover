@@ -254,3 +254,46 @@ Rectangle get_primitive_bounding_rectangle(
     Rectangle rectangle = {width, height};
     return rectangle;
 }
+
+void add_polygon_vertex(Polygon* polygon) {
+    if (polygon->n_vertices == MAX_N_POLYGON_VERTICES) {
+        fprintf(stderr, "ERROR: Can't add more vertices to the polygon\n");
+        exit(1);
+    }
+
+    float max_dist = -HUGE_VAL;
+    int insert_pos;
+    Vec2 new_vertex;
+    for (int i = 0; i < polygon->n_vertices; ++i) {
+        int j = i < polygon->n_vertices - 1 ? i + 1 : 0;
+        Vec2 a = polygon->vertices[i];
+        Vec2 b = polygon->vertices[j];
+        float d = dist(a, b);
+        if (d > max_dist) {
+            insert_pos = i + 1;
+            max_dist = d;
+            new_vertex = middle(a, b);
+        }
+    }
+
+    Vec2 new_vertices[MAX_N_POLYGON_VERTICES];
+    memcpy(new_vertices, polygon->vertices, sizeof(Vec2) * insert_pos);
+    new_vertices[insert_pos] = new_vertex;
+
+    if (insert_pos < polygon->n_vertices) {
+        memcpy(
+            &new_vertices[insert_pos + 1],
+            &polygon->vertices[insert_pos],
+            sizeof(Vec2) * (polygon->n_vertices - insert_pos)
+        );
+    }
+
+    polygon->n_vertices += 1;
+    memcpy(
+        polygon->vertices, new_vertices, sizeof(Vec2) * polygon->n_vertices
+    );
+}
+
+void delete_polygon_vertex(Polygon* polygon) {
+    polygon->n_vertices -= 1;
+}

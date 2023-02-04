@@ -169,6 +169,15 @@ static void render_primitive_geometry_settings(
             );
 
             Polygon* polygon = &target_primitive->p.polygon;
+            if (igButton("Add vertex", VEC2_ZERO)) {
+                add_polygon_vertex(polygon);
+            }
+
+            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            if (igButton("Delete vertex", VEC2_ZERO)) {
+                delete_polygon_vertex(polygon);
+            }
+
             for (int i = 0; i < polygon->n_vertices; ++i) {
                 char label[16];
                 sprintf(label, "v: %d", i);
@@ -413,6 +422,7 @@ static void render_entity_editor() {
                         drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
                         drag_float("orient.", orient, -PI, PI, 0.05);
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -429,6 +439,7 @@ static void render_entity_editor() {
                             COLLIDER_COMPONENT
                         );
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -445,6 +456,7 @@ static void render_entity_editor() {
                             PRIMITIVE_COMPONENT
                         );
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -458,6 +470,7 @@ static void render_entity_editor() {
                         igText("Diffuse color");
                         igColorPicker3("", color, COLOR_PICKER_FLAGS);
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -469,6 +482,7 @@ static void render_entity_editor() {
                             = &WORLD.render_layers[picked_entity];
                         drag_float("z", render_layer, -1.0, 1.0, 0.1);
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -488,6 +502,7 @@ static void render_entity_editor() {
                             "rot. speed", rot_speed, 0.0, FLT_MAX, 0.05
                         );
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -508,6 +523,7 @@ static void render_entity_editor() {
                             "n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1
                         );
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -516,6 +532,7 @@ static void render_entity_editor() {
                         float* ttl = &WORLD.ttls[picked_entity];
                         drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -526,6 +543,7 @@ static void render_entity_editor() {
                         float* health = &WORLD.healths[picked_entity];
                         drag_float("health", health, 0.0, FLT_MAX, 1.0);
                         igTreePop();
+                        igSeparator();
                     }
                 }
 
@@ -546,6 +564,7 @@ static void render_entity_editor() {
                             "fire rate", fire_rate, 0.0, 10.0, 0.01
                         );
                         igTreePop();
+                        igSeparator();
                     }
                 }
             }
@@ -580,7 +599,7 @@ static void render_scene_editor(void) {
 
                         const char* name = WORLD.names[entity];
                         char str[MAX_ENTITY_NAME_SIZE + 16];
-                        sprintf(str, "%s: %d", name, entity);
+                        sprintf(str, "%s (%d)", name, entity);
                         int is_picked = entity
                                         == DEBUG.picked_entity.entity;
                         int flags = ImGuiTreeNodeFlags_Leaf;
@@ -600,6 +619,7 @@ static void render_scene_editor(void) {
                     }
                     igTreePop();
                 }
+                igSeparator();
             }
         }
 
@@ -618,6 +638,7 @@ static void render_scene_editor(void) {
                 igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
                 igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
                 igTreePop();
+                igSeparator();
             }
 
             if (igTreeNodeEx_Str("Collisions", 0)) {
@@ -628,6 +649,7 @@ static void render_scene_editor(void) {
                     DEBUG.collisions.resolve_once = 1;
                 }
                 igTreePop();
+                igSeparator();
             }
         }
     }
