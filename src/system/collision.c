@@ -3,8 +3,8 @@
 #include "../debug.h"
 #include "../gl.h"
 #include "../math.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,22 +168,26 @@ int collide_primitives(
 
 static void compute_collisions() {
     COLLISIONS_ARENA.n = 0;
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, CAN_COLLIDE_COMPONENT
+            )) {
             continue;
         }
 
-        Primitive primitive0 = WORLD.colliders[entity];
-        Transformation transformation0 = WORLD.transformations[entity];
+        Primitive primitive0 = SCENE.colliders[entity];
+        Transformation transformation0 = SCENE.transformations[entity];
 
-        for (int target = entity + 1; target < WORLD.n_entities;
+        for (int target = entity + 1; target < SCENE.n_entities;
              ++target) {
-            if (!entity_has_component(target, CAN_COLLIDE_COMPONENT)) {
+            if (!check_if_entity_has_component(
+                    target, CAN_COLLIDE_COMPONENT
+                )) {
                 continue;
             }
 
-            Primitive primitive1 = WORLD.colliders[target];
-            Transformation transformation1 = WORLD.transformations[target];
+            Primitive primitive1 = SCENE.colliders[target];
+            Transformation transformation1 = SCENE.transformations[target];
             Collision* collision
                 = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
             collision->entity0 = entity;
@@ -215,15 +219,19 @@ static void resolve_collisions() {
             int entity1 = collision.entity1;
 
             Transformation* transformation0
-                = &WORLD.transformations[entity0];
+                = &SCENE.transformations[entity0];
             Transformation* transformation1
-                = &WORLD.transformations[entity1];
-            if (entity_has_component(entity0, RIGID_BODY_COMPONENT)
-                && entity_has_component(entity1, RIGID_BODY_COMPONENT)) {
-                int has_kinematic0 = entity_has_component(
+                = &SCENE.transformations[entity1];
+            if (check_if_entity_has_component(
+                    entity0, RIGID_BODY_COMPONENT
+                )
+                && check_if_entity_has_component(
+                    entity1, RIGID_BODY_COMPONENT
+                )) {
+                int has_kinematic0 = check_if_entity_has_component(
                     entity0, KINEMATIC_COMPONENT
                 );
-                int has_kinematic1 = entity_has_component(
+                int has_kinematic1 = check_if_entity_has_component(
                     entity1, KINEMATIC_COMPONENT
                 );
                 if (has_kinematic0 && has_kinematic1) {
@@ -256,9 +264,9 @@ void render_collision_mtvs() {
     for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
         Collision collision = COLLISIONS_ARENA.arena[i];
         Transformation transformation0
-            = WORLD.transformations[collision.entity0];
+            = SCENE.transformations[collision.entity0];
         Transformation transformation1
-            = WORLD.transformations[collision.entity1];
+            = SCENE.transformations[collision.entity1];
 
         render_debug_line(
             transformation0.position,
@@ -274,13 +282,15 @@ void render_collision_mtvs() {
         );
     }
 
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, CAN_COLLIDE_COMPONENT
+            )) {
             continue;
         }
 
-        Transformation transformation = WORLD.transformations[entity];
-        Primitive primitive = WORLD.colliders[entity];
+        Transformation transformation = SCENE.transformations[entity];
+        Primitive primitive = SCENE.colliders[entity];
         render_debug_primitive(
             transformation,
             primitive,
@@ -292,13 +302,15 @@ void render_collision_mtvs() {
 }
 
 void render_colliders() {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, CAN_COLLIDE_COMPONENT
+            )) {
             continue;
         }
 
-        Transformation transformation = WORLD.transformations[entity];
-        Primitive primitive = WORLD.colliders[entity];
+        Transformation transformation = SCENE.transformations[entity];
+        Primitive primitive = SCENE.colliders[entity];
         render_debug_primitive(
             transformation,
             primitive,

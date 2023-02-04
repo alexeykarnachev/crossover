@@ -1,5 +1,5 @@
 #include "../component.h"
-#include "../world.h"
+#include "../scene.h"
 #include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -216,7 +216,7 @@ int get_primitive_fan_vertices(
 
     switch (type) {
         case LINE_PRIMITIVE: {
-            float line_width = WORLD.camera_view_width * LINE_WIDTH_SCALE;
+            float line_width = SCENE.camera_view_width * LINE_WIDTH_SCALE;
             n_vertices = get_line_fan_vertices(
                 primitive.p.line, line_width, out
             );

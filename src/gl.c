@@ -5,9 +5,9 @@
 #include "component.h"
 #include "debug.h"
 #include "math.h"
+#include "scene.h"
 #include "system.h"
 #include "utils.h"
-#include "world.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -263,7 +263,7 @@ static RenderCall prepare_primitive_render_call(
     glUseProgram(program);
     PrimitiveType type = primitive.type;
 
-    set_uniform_camera(program, WORLD.transformations[WORLD.camera]);
+    set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
     set_uniform_1i(program, "type", type);
     set_uniform_3fv(
         program, "diffuse_color", (float*)&material.diffuse_color, 1
@@ -339,21 +339,21 @@ void init_renderer(void) {
     init_all_programs();
 }
 
-void render_world(float dt) {
+void render_scene(float dt) {
     // -------------------------------------------------------------------
     // Render primitives
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, APP.window_width, APP.window_height);
 
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, RENDERABLE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, RENDERABLE_COMPONENT)) {
             continue;
         }
 
-        Transformation transformation = WORLD.transformations[entity];
-        Primitive primitive = WORLD.primitives[entity];
-        Material material = WORLD.materials[entity];
-        float render_layer = WORLD.render_layers[entity];
+        Transformation transformation = SCENE.transformations[entity];
+        Primitive primitive = SCENE.primitives[entity];
+        Material material = SCENE.materials[entity];
+        float render_layer = SCENE.render_layers[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
             transformation, primitive, material, render_layer

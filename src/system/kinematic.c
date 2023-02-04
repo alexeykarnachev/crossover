@@ -1,8 +1,8 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../math.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 #include <math.h>
 
 static void render_debug_orientation(
@@ -53,12 +53,12 @@ static float get_new_orientation(
 }
 
 void update_kinematics(float dt) {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, KINEMATIC_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, KINEMATIC_COMPONENT)) {
             continue;
         }
-        Transformation* transformation = &WORLD.transformations[entity];
-        Kinematic kinematic = WORLD.kinematics[entity];
+        Transformation* transformation = &SCENE.transformations[entity];
+        Kinematic kinematic = SCENE.kinematics[entity];
         float new_orientation = get_new_orientation(
             transformation, kinematic, dt
         );
@@ -69,12 +69,12 @@ void update_kinematics(float dt) {
 }
 
 void render_debug_kinematics() {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, KINEMATIC_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, KINEMATIC_COMPONENT)) {
             continue;
         }
-        Transformation* transformation = &WORLD.transformations[entity];
-        Kinematic kinematic = WORLD.kinematics[entity];
+        Transformation* transformation = &SCENE.transformations[entity];
+        Kinematic kinematic = SCENE.kinematics[entity];
         render_debug_orientation(transformation, kinematic);
     }
 }

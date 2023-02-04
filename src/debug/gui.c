@@ -4,7 +4,7 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../math.h"
-#include "../world.h"
+#include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include <float.h>
@@ -255,15 +255,15 @@ static void render_debug_info(void) {
 }
 
 static void render_editor_context_menu(void) {
-    static Vec2 cursor_world_pos;
+    static Vec2 cursor_scene_pos;
     static Transformation transformation;
     int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
     int want_capture_mouse = igGetIO()->WantCaptureMouse;
 
     if (is_rmb_clicked && !want_capture_mouse) {
         pick_entity(get_entity_under_cursor());
-        cursor_world_pos = get_cursor_world_pos();
-        transformation = init_transformation(cursor_world_pos, 0.0);
+        cursor_scene_pos = get_cursor_scene_pos();
+        transformation = init_transformation(cursor_scene_pos, 0.0);
         igOpenPopup_Str("editor_context_menu", 0);
     }
 
@@ -333,7 +333,7 @@ static void render_editor_context_menu(void) {
 
 static void render_entity_editor() {
     int picked_entity = DEBUG.picked_entity.entity;
-    int camera_entity = WORLD.camera;
+    int camera_entity = SCENE.camera;
 
     ImGuiIO* io = igGetIO();
     ImVec2 position = {0.0, 0.0};
@@ -346,14 +346,14 @@ static void render_entity_editor() {
             if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
                 && camera_entity != -1) {
                 Transformation* transformation
-                    = &WORLD.transformations[camera_entity];
+                    = &SCENE.transformations[camera_entity];
                 float* pos = (float*)&transformation->position;
                 float* orient = (float*)&transformation->orientation;
                 drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
                 drag_float("orient.", orient, -PI, PI, 0.05);
                 drag_float(
                     "view width",
-                    &WORLD.camera_view_width,
+                    &SCENE.camera_view_width,
                     0.0,
                     1000.0,
                     0.2
@@ -366,7 +366,7 @@ static void render_entity_editor() {
         {
             if (igCollapsingHeader_TreeNodeFlags("Components", 0)
                 && picked_entity != -1) {
-                uint64_t* components = &WORLD.components[picked_entity];
+                uint64_t* components = &SCENE.components[picked_entity];
 
                 if (picked_entity != LAST_PICKED_ENTITY) {
                     for (int i = 0; i < N_COMPONENTS; ++i) {
@@ -398,13 +398,13 @@ static void render_entity_editor() {
             int flags = picked_entity != -1
                             ? ImGuiTreeNodeFlags_DefaultOpen
                             : 0;
-            int has_transformation = entity_has_component(
+            int has_transformation = check_if_entity_has_component(
                 picked_entity, TRANSFORMATION_COMPONENT
             );
-            int has_collider = entity_has_component(
+            int has_collider = check_if_entity_has_component(
                 picked_entity, COLLIDER_COMPONENT
             );
-            int has_primitive = entity_has_component(
+            int has_primitive = check_if_entity_has_component(
                 picked_entity, PRIMITIVE_COMPONENT
             );
             if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
@@ -414,7 +414,7 @@ static void render_entity_editor() {
 
                 if (has_transformation) {
                     Transformation* transformation
-                        = &WORLD.transformations[picked_entity];
+                        = &SCENE.transformations[picked_entity];
                     float* pos = (float*)&transformation->position;
                     float* orient = &transformation->orientation;
                     if (igTreeNodeEx_Str("Transformation", flags)) {
@@ -431,10 +431,10 @@ static void render_entity_editor() {
                         Primitive* source_primitive = NULL;
                         if (has_primitive) {
                             source_primitive
-                                = &WORLD.primitives[picked_entity];
+                                = &SCENE.primitives[picked_entity];
                         }
                         render_primitive_geometry_settings(
-                            &WORLD.colliders[picked_entity],
+                            &SCENE.colliders[picked_entity],
                             source_primitive,
                             COLLIDER_COMPONENT
                         );
@@ -448,10 +448,10 @@ static void render_entity_editor() {
                         Primitive* source_primitive = NULL;
                         if (has_collider) {
                             source_primitive
-                                = &WORLD.colliders[picked_entity];
+                                = &SCENE.colliders[picked_entity];
                         }
                         render_primitive_geometry_settings(
-                            &WORLD.primitives[picked_entity],
+                            &SCENE.primitives[picked_entity],
                             source_primitive,
                             PRIMITIVE_COMPONENT
                         );
@@ -460,12 +460,12 @@ static void render_entity_editor() {
                     }
                 }
 
-                if (entity_has_component(
+                if (check_if_entity_has_component(
                         picked_entity, MATERIAL_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Material", flags)) {
                         Material* material
-                            = &WORLD.materials[picked_entity];
+                            = &SCENE.materials[picked_entity];
                         float* color = (float*)&material->diffuse_color;
                         igText("Diffuse color");
                         igColorPicker3("", color, COLOR_PICKER_FLAGS);
@@ -474,24 +474,24 @@ static void render_entity_editor() {
                     }
                 }
 
-                if (entity_has_component(
+                if (check_if_entity_has_component(
                         picked_entity, RENDER_LAYER_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Render layer", flags)) {
                         float* render_layer
-                            = &WORLD.render_layers[picked_entity];
+                            = &SCENE.render_layers[picked_entity];
                         drag_float("z", render_layer, -1.0, 1.0, 0.1);
                         igTreePop();
                         igSeparator();
                     }
                 }
 
-                if (entity_has_component(
+                if (check_if_entity_has_component(
                         picked_entity, KINEMATIC_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Kinematic", flags)) {
                         Kinematic* kinematic
-                            = &WORLD.kinematics[picked_entity];
+                            = &SCENE.kinematics[picked_entity];
                         float* max_speed = &kinematic->max_speed;
                         float* rot_speed = &kinematic->rotation_speed;
 
@@ -506,11 +506,11 @@ static void render_entity_editor() {
                     }
                 }
 
-                if (entity_has_component(
+                if (check_if_entity_has_component(
                         picked_entity, VISION_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Vision", flags)) {
-                        Vision* vision = &WORLD.visions[picked_entity];
+                        Vision* vision = &SCENE.visions[picked_entity];
                         int* n_view_rays = &vision->n_view_rays;
                         float* distance = &vision->distance;
                         float* fov = &vision->fov;
@@ -527,29 +527,33 @@ static void render_entity_editor() {
                     }
                 }
 
-                if (entity_has_component(picked_entity, TTL_COMPONENT)) {
+                if (check_if_entity_has_component(
+                        picked_entity, TTL_COMPONENT
+                    )) {
                     if (igTreeNodeEx_Str("TTL", flags)) {
-                        float* ttl = &WORLD.ttls[picked_entity];
+                        float* ttl = &SCENE.ttls[picked_entity];
                         drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
                         igTreePop();
                         igSeparator();
                     }
                 }
 
-                if (entity_has_component(
+                if (check_if_entity_has_component(
                         picked_entity, HEALTH_COMPONENT
                     )) {
                     if (igTreeNodeEx_Str("Health", flags)) {
-                        float* health = &WORLD.healths[picked_entity];
+                        float* health = &SCENE.healths[picked_entity];
                         drag_float("health", health, 0.0, FLT_MAX, 1.0);
                         igTreePop();
                         igSeparator();
                     }
                 }
 
-                if (entity_has_component(picked_entity, GUN_COMPONENT)) {
+                if (check_if_entity_has_component(
+                        picked_entity, GUN_COMPONENT
+                    )) {
                     if (igTreeNodeEx_Str("Gun", flags)) {
-                        Gun* gun = &WORLD.guns[picked_entity];
+                        Gun* gun = &SCENE.guns[picked_entity];
                         float* ttl = &gun->bullet.ttl;
                         float* speed = &gun->bullet.speed;
                         float* fire_rate = &gun->fire_rate;
@@ -590,14 +594,14 @@ static void render_scene_editor(void) {
                 if (igTreeNodeEx_Str(
                         label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i)
                     )) {
-                    for (int entity = 0; entity < WORLD.n_entities;
+                    for (int entity = 0; entity < SCENE.n_entities;
                          ++entity) {
-                        int show = entity_is_alive(entity) ^ i;
+                        int show = check_if_entity_alive(entity) ^ i;
                         if (!show) {
                             continue;
                         }
 
-                        const char* name = WORLD.names[entity];
+                        const char* name = SCENE.names[entity];
                         char str[MAX_ENTITY_NAME_SIZE + 16];
                         sprintf(str, "%s (%d)", name, entity);
                         int is_picked = entity

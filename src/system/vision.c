@@ -1,8 +1,8 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../gl.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 
 static Vec2 VIEW_RAYS_ARENA[MAX_N_VIEW_RAYS];
 
@@ -26,13 +26,15 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
 }
 
 void update_visions() {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_OBSERVE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, CAN_OBSERVE_COMPONENT
+            )) {
             continue;
         }
 
-        Vision* vision = &WORLD.visions[entity];
-        Transformation t0 = WORLD.transformations[entity];
+        Vision* vision = &SCENE.visions[entity];
+        Transformation t0 = SCENE.transformations[entity];
         Vec2 start = t0.position;
         reset_vision(vision);
         int n_view_rays = get_view_rays(
@@ -49,13 +51,15 @@ void update_visions() {
 }
 
 void render_debug_visions() {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_OBSERVE_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, CAN_OBSERVE_COMPONENT
+            )) {
             continue;
         }
 
-        Vision vision = WORLD.visions[entity];
-        Transformation t0 = WORLD.transformations[entity];
+        Vision vision = SCENE.visions[entity];
+        Transformation t0 = SCENE.transformations[entity];
         int n_view_rays = get_view_rays(
             vision, t0.orientation, VIEW_RAYS_ARENA
         );

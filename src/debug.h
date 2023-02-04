@@ -2,7 +2,7 @@
 #include "component.h"
 #include "const.h"
 #include "math.h"
-#include "world.h"
+#include "scene.h"
 
 typedef struct DebugPrimitive {
     Transformation transformation;

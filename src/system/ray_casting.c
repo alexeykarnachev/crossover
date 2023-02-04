@@ -1,21 +1,21 @@
 #include "../component.h"
 #include "../math.h"
-#include "../world.h"
+#include "../scene.h"
 
 RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner
 ) {
     RayCastResult result;
     result.entity = -1;
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, CAN_COLLIDE_COMPONENT)
-            || !entity_has_component(entity, target_components)
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, CAN_COLLIDE_COMPONENT)
+            || !check_if_entity_has_component(entity, target_components)
             || ray_owner == entity) {
             continue;
         }
         Transformation entity_transformation
-            = WORLD.transformations[entity];
-        Primitive entity_collider = WORLD.colliders[entity];
+            = SCENE.transformations[entity];
+        Primitive entity_collider = SCENE.colliders[entity];
 
         Vec2 collision_position;
         int is_collided = 0;

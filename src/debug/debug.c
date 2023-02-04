@@ -4,8 +4,8 @@
 #include "../component.h"
 #include "../const.h"
 #include "../gl.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct World {
+typedef struct Scene {
     // Components
     uint64_t components[MAX_N_ENTITIES];
     const char* names[MAX_N_ENTITIES];
@@ -30,9 +30,9 @@ typedef struct World {
 
     // Other configuration
     float camera_view_width;
-} World;
+} Scene;
 
-extern World WORLD;
+extern Scene SCENE;
 
 typedef struct CameraFrustum {
     Vec2 bot_left;
@@ -41,13 +41,11 @@ typedef struct CameraFrustum {
 
 CameraFrustum get_camera_frustum();
 void center_camera_on_entity(int entity);
-Vec2 get_cursor_world_pos(void);
-void init_world(void);
+Vec2 get_cursor_scene_pos(void);
+void init_scene(void);
 void destroy_entity(int entity);
-int entity_is_alive(int entity);
-int entity_has_component(int entity, ComponentType component);
-void entity_disable_component(int entity, ComponentType type);
-void entity_enable_component(int entity, ComponentType type);
+int check_if_entity_alive(int entity);
+int check_if_entity_has_component(int entity, ComponentType component);
 
 int spawn_entity_copy(int entity, Transformation transformation);
 int spawn_camera(Transformation transformation);
@@ -70,7 +68,7 @@ int spawn_renderable_obstacle(
     Material material,
     float render_layer
 );
-int spawn_bullet(
+int spawn_kinematic_bullet(
     Transformation transformation,
     Kinematic kinematic,
     float ttl,
@@ -85,4 +83,4 @@ int spawn_default_renderable_rectangle_obstacle(
 int spawn_default_renderable_line_obstacle(Transformation transformation);
 int spawn_default_renderable_polygon_obstacle(Transformation transformation
 );
-void update_world(float dt);
+void update_scene(float dt);

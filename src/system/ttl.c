@@ -1,15 +1,15 @@
 #include "../debug.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 
 void update_ttls(float dt) {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, TTL_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, TTL_COMPONENT)) {
             continue;
         }
 
-        WORLD.ttls[entity] -= dt;
-        if (WORLD.ttls[entity] < 0) {
+        SCENE.ttls[entity] -= dt;
+        if (SCENE.ttls[entity] < 0) {
             destroy_entity(entity);
         }
     }

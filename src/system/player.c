@@ -3,19 +3,19 @@
 #include "../debug.h"
 #include "../gl.h"
 #include "../math.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 #include <math.h>
 
 void update_player() {
-    if (WORLD.player == -1 || WORLD.camera == -1) {
+    if (SCENE.player == -1 || SCENE.camera == -1) {
         return;
     }
-    Kinematic* kinematic = &WORLD.kinematics[WORLD.player];
-    Transformation* transformation = &WORLD.transformations[WORLD.player];
-    Transformation camera = WORLD.transformations[WORLD.camera];
+    Kinematic* kinematic = &SCENE.kinematics[SCENE.player];
+    Transformation* transformation = &SCENE.transformations[SCENE.player];
+    Transformation camera = SCENE.transformations[SCENE.camera];
 
-    Vec2 look_at = get_cursor_world_pos();
+    Vec2 look_at = get_cursor_scene_pos();
     DEBUG.general.look_at = look_at;
 
     Vec2 velocity = {0.0, 0.0};
@@ -34,8 +34,8 @@ void update_player() {
     kinematic->velocity = velocity;
 
     if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
-        if (entity_has_component(WORLD.player, GUN_COMPONENT)) {
-            Gun* gun = &WORLD.guns[WORLD.player];
+        if (check_if_entity_has_component(SCENE.player, GUN_COMPONENT)) {
+            Gun* gun = &SCENE.guns[SCENE.player];
             float time_since_last_shoot
                 = (APP.time - gun->last_time_shoot);
             if (gun->last_time_shoot == 0
@@ -55,11 +55,11 @@ void update_player() {
                     0.0};
                 Transformation bullet_transformation = *transformation;
 
-                spawn_bullet(
+                spawn_kinematic_bullet(
                     bullet_transformation,
                     bullet_kinematic,
                     gun->bullet.ttl,
-                    WORLD.player
+                    SCENE.player
                 );
             }
         }
@@ -67,7 +67,7 @@ void update_player() {
 }
 
 void render_debug_player() {
-    if (WORLD.player == -1) {
+    if (SCENE.player == -1) {
         return;
     }
     if (DEBUG.is_playing) {

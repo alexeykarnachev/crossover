@@ -4,12 +4,12 @@
 #include "debug.h"
 #include "gl.h"
 #include "math.h"
-#include "world.h"
+#include "scene.h"
 
 int main(int argc, char* argv[]) {
     init_app(1024, 768);
     init_renderer();
-    init_world();
+    init_scene();
     init_debug();
 
     spawn_camera(init_transformation(vec2(0.0, 0.0), 0.0));
@@ -77,9 +77,9 @@ int main(int argc, char* argv[]) {
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         update_debug();
         update_editor_gui();
-        update_world(APP.dt);
+        update_scene(APP.dt);
 
-        render_world(APP.dt);
+        render_scene(APP.dt);
         render_editor_gui();
 
         update_window();

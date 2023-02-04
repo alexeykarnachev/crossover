@@ -4,18 +4,18 @@
 #include "../debug.h"
 #include "../gl.h"
 #include "../math.h"
+#include "../scene.h"
 #include "../system.h"
-#include "../world.h"
 #include <math.h>
 #include <stdlib.h>
 
-Vec2 CURSOR_WORLD_POS;
+Vec2 CURSOR_SCENE_POS;
 
-static Vec2 update_cursor_world_pos() {
-    Vec2 cursor_world_pos = get_cursor_world_pos();
-    Vec2 cursor_world_diff = sub(cursor_world_pos, CURSOR_WORLD_POS);
-    CURSOR_WORLD_POS = cursor_world_pos;
-    return cursor_world_diff;
+static Vec2 update_cursor_scene_pos() {
+    Vec2 cursor_scene_pos = get_cursor_scene_pos();
+    Vec2 cursor_scene_diff = sub(cursor_scene_pos, CURSOR_SCENE_POS);
+    CURSOR_SCENE_POS = cursor_scene_pos;
+    return cursor_scene_diff;
 }
 
 typedef enum HandleTag {
@@ -59,10 +59,10 @@ Handle init_handle(
 static int check_if_cursor_on_primitive(
     Primitive primitive, Transformation transformation
 ) {
-    Vec2 cursor_world_pos = get_cursor_world_pos();
+    Vec2 cursor_scene_pos = get_cursor_scene_pos();
     Primitive cursor_primitive = init_circle_primitive(0.1);
     Transformation cursor_transformation = init_transformation(
-        cursor_world_pos, 0.0
+        cursor_scene_pos, 0.0
     );
 
     Collision collision;
@@ -84,18 +84,19 @@ static int check_if_cursor_on_handle(Handle handle) {
 }
 
 int check_if_cursor_on_entity(int entity) {
-    Transformation transformation = WORLD.transformations[entity];
+    Transformation transformation = SCENE.transformations[entity];
 
     int is_hovered = 0;
-    if (entity_has_component(entity, PRIMITIVE_COMPONENT)) {
-        Primitive primitive = WORLD.primitives[entity];
+    if (check_if_entity_has_component(entity, PRIMITIVE_COMPONENT)) {
+        Primitive primitive = SCENE.primitives[entity];
         is_hovered |= check_if_cursor_on_primitive(
             primitive, transformation
         );
     }
 
-    if (!is_hovered && entity_has_component(entity, COLLIDER_COMPONENT)) {
-        Primitive primitive = WORLD.colliders[entity];
+    if (!is_hovered
+        && check_if_entity_has_component(entity, COLLIDER_COMPONENT)) {
+        Primitive primitive = SCENE.colliders[entity];
         is_hovered |= check_if_cursor_on_primitive(
             primitive, transformation
         );
@@ -105,8 +106,10 @@ int check_if_cursor_on_entity(int entity) {
 }
 
 int get_entity_under_cursor(void) {
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(
+                entity, TRANSFORMATION_COMPONENT
+            )) {
             continue;
         }
         if (check_if_cursor_on_entity(entity)) {
@@ -125,22 +128,22 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
     }
 
     int component_type = DEBUG.picked_entity.component_type;
-    Transformation transformation = WORLD.transformations[entity];
+    Transformation transformation = SCENE.transformations[entity];
     Primitive primitive;
     switch (component_type) {
         case PRIMITIVE_COMPONENT: {
-            primitive = WORLD.primitives[entity];
+            primitive = SCENE.primitives[entity];
             break;
         }
         case COLLIDER_COMPONENT: {
-            primitive = WORLD.colliders[entity];
+            primitive = SCENE.colliders[entity];
             break;
         }
     }
 
-    float large_handle_radius = WORLD.camera_view_width
+    float large_handle_radius = SCENE.camera_view_width
                                 * LARGE_HANDLE_SCALE;
-    float small_handle_radius = WORLD.camera_view_width
+    float small_handle_radius = SCENE.camera_view_width
                                 * SMALL_HANDLE_SCALE;
     Vec3 color;
     float radius;
@@ -187,7 +190,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             );
 
             float orientation_lever_len
-                = WORLD.camera_view_width
+                = SCENE.camera_view_width
                   * TRANSFORMATION_ORIENTATION_LEVER_SCALE;
             Vec2 orientation_handle_pos = {orientation_lever_len, 0.0};
             apply_transformation(
@@ -313,17 +316,17 @@ void update_entity_picking(void) {
     // entity could be picked again
     if (DEBUG.picked_entity.entity != -1) {
         int entity = DEBUG.picked_entity.entity;
-        Transformation transformation = WORLD.transformations[entity];
+        Transformation transformation = SCENE.transformations[entity];
 
         Primitive primitive;
         int has_primitive = 1;
         switch (DEBUG.picked_entity.component_type) {
             case PRIMITIVE_COMPONENT: {
-                primitive = WORLD.primitives[entity];
+                primitive = SCENE.primitives[entity];
                 break;
             }
             case COLLIDER_COMPONENT: {
-                primitive = WORLD.colliders[entity];
+                primitive = SCENE.colliders[entity];
                 break;
             }
             default: {
@@ -353,7 +356,7 @@ void update_entity_picking(void) {
 
 void update_entity_dragging(void) {
     int entity = DEBUG.picked_entity.entity;
-    Vec2 cursor_world_diff = update_cursor_world_pos();
+    Vec2 cursor_scene_diff = update_cursor_scene_pos();
     if (entity == -1) {
         return;
     }
@@ -361,31 +364,31 @@ void update_entity_dragging(void) {
     Primitive* primitive;
     switch (DEBUG.picked_entity.component_type) {
         case PRIMITIVE_COMPONENT: {
-            primitive = &WORLD.primitives[entity];
+            primitive = &SCENE.primitives[entity];
             break;
         }
         case COLLIDER_COMPONENT: {
-            primitive = &WORLD.colliders[entity];
+            primitive = &SCENE.colliders[entity];
             break;
         }
     }
 
-    Transformation* transformation = &WORLD.transformations[entity];
+    Transformation* transformation = &SCENE.transformations[entity];
     Vec2 center = transformation->position;
-    Vec2 cursor_world_pos = get_cursor_world_pos();
-    Vec2 center_to_cursor = sub(cursor_world_pos, center);
+    Vec2 cursor_scene_pos = get_cursor_scene_pos();
+    Vec2 center_to_cursor = sub(cursor_scene_pos, center);
     Handle handles[MAX_N_POLYGON_VERTICES];
     int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
         Handle handle = handles[i];
-        Vec2 handle_position = add(handle.position, cursor_world_diff);
+        Vec2 handle_position = add(handle.position, cursor_scene_diff);
         Vec2 center_to_handle = sub(handle_position, center);
         float center_to_handle_length = length(center_to_handle);
         if (handle.is_dragging) {
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
                     transformation->position = add(
-                        transformation->position, cursor_world_diff
+                        transformation->position, cursor_scene_diff
                     );
                     break;
                 }
