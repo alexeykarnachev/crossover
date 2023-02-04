@@ -81,6 +81,9 @@ ELSE()
   add_library(cimgui SHARED ${IMGUI_SOURCES})
 ENDIF()
 
+# nativefiledialog
+add_subdirectory(${CMAKE_BINARY_DIR}/../dependencies/nativefiledialog-extended/)
+
 # Link all
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 file(GLOB SOURCES "src/**/*.c" "src/*.c")
@@ -94,3 +97,4 @@ if (MINGW)
 endif()
 target_link_libraries(${PROJECT_NAME} ${IMGUI_SDL_LIBRARY} cimgui)
 target_link_libraries(${PROJECT_NAME} ${IMGUI_LIBRARIES} glfw)
+target_link_libraries(${PROJECT_NAME} nfd)

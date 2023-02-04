@@ -51,7 +51,6 @@ static void render_main_menu_bar() {
     if (igBeginMainMenuBar()) {
         if (igBeginMenu("Scene", 1)) {
             igMenuItem_Bool("New", "", false, false);
-            igSeparator();
             igMenuItem_Bool("Open", "", false, false);
             igMenuItem_Bool("Save", "", false, false);
             igMenuItem_Bool("Save As...", "", false, false);
