@@ -50,7 +50,7 @@ void init_world(void) {
 void destroy_entity(int entity) {
     WORLD.components[entity] = 0;
     if (DEBUG.picked_entity.entity == entity) {
-        DEBUG.picked_entity.entity = -1;
+        unpick_entity();
     }
 }
 
@@ -277,7 +277,7 @@ static void update_entities_world_counter() {
         if (WORLD.components[entity] != 0) {
             n_entities = entity + 1;
         } else if (DEBUG.picked_entity.entity == entity) {
-            DEBUG.picked_entity.entity = -1;
+            unpick_entity();
         }
     }
     WORLD.n_entities = n_entities;

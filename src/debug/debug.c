@@ -26,6 +26,17 @@ void update_debug(void) {
     DEBUG.n_primitives = 0;
 }
 
+void pick_entity(int entity) {
+    DEBUG.picked_entity.entity = entity;
+    DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
+}
+
+void unpick_entity(void) {
+    DEBUG.picked_entity.entity = -1;
+    DEBUG.picked_entity.is_dragging = 0;
+    DEBUG.picked_entity.dragging_handle_idx = -1;
+}
+
 void render_debug_primitive(
     Transformation t,
     Primitive p,

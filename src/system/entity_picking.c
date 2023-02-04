@@ -9,8 +9,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-static int IS_DRAGGING;
-static int DRAGGING_HANDLE_IDX;
 Vec2 CURSOR_WORLD_POS;
 
 static Vec2 update_cursor_world_pos() {
@@ -242,7 +240,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
     }
 
     if (!is_lmb_pressed()) {
-        DRAGGING_HANDLE_IDX = -1;
+        DEBUG.picked_entity.dragging_handle_idx = -1;
         return n_handles;
     }
 
@@ -250,20 +248,22 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
     int is_dragging = 0;
     for (int i = 0; i < n_handles; ++i) {
         Handle* handle = &handles[i];
-        int is_handle_just_picked = !IS_DRAGGING
+        int is_handle_just_picked = !DEBUG.picked_entity.is_dragging
                                     && check_if_cursor_on_handle(*handle);
-        int is_handle_was_picked = IS_DRAGGING && DRAGGING_HANDLE_IDX == i;
+        int is_handle_was_picked
+            = DEBUG.picked_entity.is_dragging
+              && DEBUG.picked_entity.dragging_handle_idx == i;
         if (is_handle_just_picked || is_handle_was_picked) {
             handle->color = MAGENTA_COLOR;
             handle->is_dragging = 1;
             is_dragging = 1;
-            DRAGGING_HANDLE_IDX = i;
+            DEBUG.picked_entity.dragging_handle_idx = i;
         }
     }
 
-    IS_DRAGGING = is_dragging;
-    if (!IS_DRAGGING) {
-        DRAGGING_HANDLE_IDX = -1;
+    DEBUG.picked_entity.is_dragging = is_dragging;
+    if (!is_dragging) {
+        DEBUG.picked_entity.dragging_handle_idx = -1;
     }
     return n_handles;
 }
@@ -271,7 +271,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
 void update_entity_picking(void) {
     // Don't update picking if mouse is not pressed
     // Or if it pressed, but we are in dragging mode
-    if (!is_lmb_pressed() || IS_DRAGGING) {
+    if (!is_lmb_pressed() || DEBUG.picked_entity.is_dragging) {
         return;
     }
 
@@ -314,7 +314,7 @@ void update_entity_picking(void) {
     }
 
     // Finally, try to pick another entities
-    DEBUG.picked_entity.entity = -1;
+    unpick_entity();
     for (int entity = 0; entity < WORLD.n_entities; ++entity) {
         if (!entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
             continue;
@@ -338,8 +338,7 @@ void update_entity_picking(void) {
         }
 
         if (is_picked) {
-            DEBUG.picked_entity.entity = entity;
-            DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
+            pick_entity(entity);
             break;
         }
     }

@@ -15,6 +15,8 @@ typedef struct DebugPrimitive {
 typedef struct PickedEntity {
     ComponentType component_type;
     int entity;
+    int is_dragging;
+    int dragging_handle_idx;
 } PickedEntity;
 
 typedef struct Debug {
@@ -56,6 +58,9 @@ typedef struct Debug {
 } Debug;
 
 extern Debug DEBUG;
+
+void pick_entity(int entity);
+void unpick_entity(void);
 
 void init_debug(void);
 void update_debug(void);

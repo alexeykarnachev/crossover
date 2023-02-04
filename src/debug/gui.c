@@ -504,7 +504,7 @@ void render_scene_editor(void) {
                             str, flags, "%s", str
                         );
                         if (igIsItemClicked(0)) {
-                            DEBUG.picked_entity.entity = entity;
+                            pick_entity(entity);
                             center_camera_on_entity(entity);
                         }
 
@@ -553,27 +553,32 @@ void render_context_menu(void) {
     static Transformation transformation;
 
     if (igIsMouseClicked_Bool(1, 0) && !igGetIO()->WantCaptureMouse) {
+        unpick_entity();
         cursor_world_pos = get_cursor_world_pos();
         transformation = init_transformation(cursor_world_pos, 0.0);
         igOpenPopup_Str("editor_context_menu", 0);
     }
 
-    bool guy = 0;
-    bool line_obstacle = 0;
-    bool circle_obstacle = 0;
-    bool rectangle_obstacle = 0;
-    bool polygon_obstacle = 0;
+    bool spawn_guy = 0;
+    bool spawn_line_obstacle = 0;
+    bool spawn_circle_obstacle = 0;
+    bool spawn_rectangle_obstacle = 0;
+    bool spawn_polygon_obstacle = 0;
     if (igBeginPopup("editor_context_menu", 0)) {
-        if (igBeginMenu("Create", 1)) {
-            igMenuItem_BoolPtr("Guy", NULL, &guy, 1);
+        if (igBeginMenu("Spawn", 1)) {
+            igMenuItem_BoolPtr("Guy", NULL, &spawn_guy, 1);
 
             if (igBeginMenu("Obstacle", 1)) {
-                igMenuItem_BoolPtr("Line", NULL, &line_obstacle, 1);
-                igMenuItem_BoolPtr("Circle", NULL, &circle_obstacle, 1);
+                igMenuItem_BoolPtr("Line", NULL, &spawn_line_obstacle, 1);
                 igMenuItem_BoolPtr(
-                    "Rectangle", NULL, &rectangle_obstacle, 1
+                    "Circle", NULL, &spawn_circle_obstacle, 1
                 );
-                igMenuItem_BoolPtr("Polygon", NULL, &polygon_obstacle, 1);
+                igMenuItem_BoolPtr(
+                    "Rectangle", NULL, &spawn_rectangle_obstacle, 1
+                );
+                igMenuItem_BoolPtr(
+                    "Polygon", NULL, &spawn_polygon_obstacle, 1
+                );
                 igEndMenu();
             }
 
@@ -582,15 +587,15 @@ void render_context_menu(void) {
         igEndPopup();
     }
 
-    if (guy) {
+    if (spawn_guy) {
         spawn_default_renderable_guy(transformation);
-    } else if (line_obstacle) {
+    } else if (spawn_line_obstacle) {
         spawn_default_renderable_line_obstacle(transformation);
-    } else if (circle_obstacle) {
+    } else if (spawn_circle_obstacle) {
         spawn_default_renderable_circle_obstacle(transformation);
-    } else if (rectangle_obstacle) {
+    } else if (spawn_rectangle_obstacle) {
         spawn_default_renderable_rectangle_obstacle(transformation);
-    } else if (polygon_obstacle) {
+    } else if (spawn_polygon_obstacle) {
         spawn_default_renderable_polygon_obstacle(transformation);
     }
 }
