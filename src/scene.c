@@ -421,6 +421,13 @@ void center_camera_on_entity(int entity) {
     SCENE.transformations[SCENE.camera].position = entity_position;
 }
 
+void reset_camera(void) {
+    Transformation* transformation = &SCENE.transformations[SCENE.camera];
+    transformation->position = vec2(0.0, 0.0);
+    transformation->orientation = 0.0;
+    SCENE.camera_view_width = CAMERA_VIEW_WIDTH;
+}
+
 static void update_entities_scene_counter() {
     int n_entities = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {

@@ -299,6 +299,7 @@ static void render_editor_context_menu(void) {
             igEndMenu();
         }
 
+        igSeparator();
         int can_copy = DEBUG.picked_entity.entity != -1;
         int can_paste = DEBUG.entity_to_copy != -1;
         int can_delete = can_copy;
@@ -345,6 +346,9 @@ static void render_entity_editor() {
         {
             if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
                 && camera_entity != -1) {
+                if (igButton("Reset", VEC2_ZERO)) {
+                    reset_camera();
+                }
                 Transformation* transformation
                     = &SCENE.transformations[camera_entity];
                 float* pos = (float*)&transformation->position;

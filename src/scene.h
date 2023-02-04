@@ -40,6 +40,7 @@ typedef struct CameraFrustum {
 
 CameraFrustum get_camera_frustum();
 void center_camera_on_entity(int entity);
+void reset_camera(void);
 Vec2 get_cursor_scene_pos(void);
 void init_scene(void);
 int save_scene(const char* file_path);
