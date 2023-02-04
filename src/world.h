@@ -32,39 +32,6 @@ typedef struct World {
     float camera_view_width;
 } World;
 
-typedef enum ComponentType {
-    TRANSFORMATION_COMPONENT = 1 << 0,
-    COLLIDER_COMPONENT = 1 << 1,
-    PRIMITIVE_COMPONENT = 1 << 2,
-    RENDER_LAYER_COMPONENT = 1 << 3,
-    MATERIAL_COMPONENT = 1 << 4,
-    KINEMATIC_COMPONENT = 1 << 5,
-    VISION_COMPONENT = 1 << 6,
-    RIGID_BODY_COMPONENT = 1 << 7,
-    OBSERVABLE_COMPONENT = 1 << 8,
-    TTL_COMPONENT = 1 << 9,
-    HEALTH_COMPONENT = 1 << 10,
-    GUN_COMPONENT = 1 << 11,
-    BULLET_COMPONENT = 1 << 12,
-    OWNER_COMPONENT = 1 << 13
-} ComponentType;
-
-typedef enum CompoundComponentType {
-    RENDERABLE_COMPONENT = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
-                           | MATERIAL_COMPONENT | RENDER_LAYER_COMPONENT,
-    CAN_OBSERVE_COMPONENT = TRANSFORMATION_COMPONENT | VISION_COMPONENT,
-    CAN_COLLIDE_COMPONENT = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT,
-    KINEMATIC_BULLET_COMPONENT = TRANSFORMATION_COMPONENT
-                                 | BULLET_COMPONENT | KINEMATIC_COMPONENT
-                                 | TTL_COMPONENT,
-    DAMAGEABLE_BY_BULLET_COMPONENT = TRANSFORMATION_COMPONENT
-                                     | COLLIDER_COMPONENT
-                                     | RIGID_BODY_COMPONENT
-} CompoundComponentType;
-
-#define N_COMPONENTS 14
-const char* COMPONENT_NAMES[N_COMPONENTS];
-
 extern World WORLD;
 
 typedef struct CameraFrustum {
@@ -78,11 +45,11 @@ Vec2 get_cursor_world_pos(void);
 void init_world(void);
 void destroy_entity(int entity);
 int entity_is_alive(int entity);
-int get_entity_owner(int entity);
 int entity_has_component(int entity, ComponentType component);
 void entity_disable_component(int entity, ComponentType type);
 void entity_enable_component(int entity, ComponentType type);
 
+int spawn_entity_copy(int entity, Transformation transformation);
 int spawn_camera(Transformation transformation);
 int spawn_renderable_guy(
     Transformation transformation,

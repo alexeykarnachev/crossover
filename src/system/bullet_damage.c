@@ -15,7 +15,10 @@ void update_bullets(float dt) {
             continue;
         }
 
-        int owner = WORLD.owners[bullet];
+        int owner = -1;
+        if (entity_has_component(bullet, OWNER_COMPONENT)) {
+            owner = WORLD.owners[bullet];
+        }
         Transformation* transformation = &WORLD.transformations[bullet];
         Kinematic* kinematic = &WORLD.kinematics[bullet];
         Vec2 ray = scale(kinematic->velocity, dt);

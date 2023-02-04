@@ -25,6 +25,7 @@ typedef struct Debug {
 
     int n_primitives;
     int is_playing;
+    int entity_to_copy;
 
     struct general {
         int n_entities;
@@ -60,7 +61,6 @@ typedef struct Debug {
 extern Debug DEBUG;
 
 void pick_entity(int entity);
-void unpick_entity(void);
 
 void init_debug(void);
 void update_debug(void);

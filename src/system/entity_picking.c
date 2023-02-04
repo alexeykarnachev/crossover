@@ -83,6 +83,40 @@ static int check_if_cursor_on_handle(Handle handle) {
     );
 }
 
+int check_if_cursor_on_entity(int entity) {
+    Transformation transformation = WORLD.transformations[entity];
+
+    int is_hovered = 0;
+    if (entity_has_component(entity, PRIMITIVE_COMPONENT)) {
+        Primitive primitive = WORLD.primitives[entity];
+        is_hovered |= check_if_cursor_on_primitive(
+            primitive, transformation
+        );
+    }
+
+    if (!is_hovered && entity_has_component(entity, COLLIDER_COMPONENT)) {
+        Primitive primitive = WORLD.colliders[entity];
+        is_hovered |= check_if_cursor_on_primitive(
+            primitive, transformation
+        );
+    }
+
+    return is_hovered;
+}
+
+int get_entity_under_cursor(void) {
+    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
+        if (!entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
+            continue;
+        }
+        if (check_if_cursor_on_entity(entity)) {
+            return entity;
+        }
+    }
+
+    return -1;
+}
+
 static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
 ) {
     int entity = DEBUG.picked_entity.entity;
@@ -314,34 +348,7 @@ void update_entity_picking(void) {
     }
 
     // Finally, try to pick another entities
-    unpick_entity();
-    for (int entity = 0; entity < WORLD.n_entities; ++entity) {
-        if (!entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
-            continue;
-        }
-        Transformation transformation = WORLD.transformations[entity];
-
-        int is_picked = 0;
-        if (entity_has_component(entity, PRIMITIVE_COMPONENT)) {
-            Primitive primitive = WORLD.primitives[entity];
-            is_picked |= check_if_cursor_on_primitive(
-                primitive, transformation
-            );
-        }
-
-        if (!is_picked
-            && entity_has_component(entity, COLLIDER_COMPONENT)) {
-            Primitive primitive = WORLD.colliders[entity];
-            is_picked |= check_if_cursor_on_primitive(
-                primitive, transformation
-            );
-        }
-
-        if (is_picked) {
-            pick_entity(entity);
-            break;
-        }
-    }
+    pick_entity(get_entity_under_cursor());
 }
 
 void update_entity_dragging(void) {

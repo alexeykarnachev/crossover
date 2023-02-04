@@ -1,6 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
 #include "../app.h"
+#include "../component.h"
 #include "../debug.h"
 #include "../math.h"
 #include "../world.h"
@@ -292,7 +293,9 @@ static void render_entity_editor() {
                 }
 
                 for (int i = 0; i < N_COMPONENTS; ++i) {
-                    const char* name = COMPONENT_NAMES[i];
+                    const char* name = get_component_type_name(
+                        COMPONENT_TYPES_LIST[i]
+                    );
                     igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
                 }
 
@@ -553,37 +556,48 @@ void render_context_menu(void) {
     static Transformation transformation;
 
     if (igIsMouseClicked_Bool(1, 0) && !igGetIO()->WantCaptureMouse) {
-        unpick_entity();
+        pick_entity(get_entity_under_cursor());
         cursor_world_pos = get_cursor_world_pos();
         transformation = init_transformation(cursor_world_pos, 0.0);
         igOpenPopup_Str("editor_context_menu", 0);
     }
 
-    bool spawn_guy = 0;
-    bool spawn_line_obstacle = 0;
-    bool spawn_circle_obstacle = 0;
-    bool spawn_rectangle_obstacle = 0;
-    bool spawn_polygon_obstacle = 0;
+    int spawn_guy = 0;
+    int spawn_line_obstacle = 0;
+    int spawn_circle_obstacle = 0;
+    int spawn_rectangle_obstacle = 0;
+    int spawn_polygon_obstacle = 0;
+
+    int copy = 0;
+    int paste = 0;
     if (igBeginPopup("editor_context_menu", 0)) {
         if (igBeginMenu("Spawn", 1)) {
-            igMenuItem_BoolPtr("Guy", NULL, &spawn_guy, 1);
+            igMenuItem_BoolPtr("Guy", NULL, (bool*)&spawn_guy, 1);
 
             if (igBeginMenu("Obstacle", 1)) {
-                igMenuItem_BoolPtr("Line", NULL, &spawn_line_obstacle, 1);
                 igMenuItem_BoolPtr(
-                    "Circle", NULL, &spawn_circle_obstacle, 1
+                    "Line", NULL, (bool*)&spawn_line_obstacle, 1
                 );
                 igMenuItem_BoolPtr(
-                    "Rectangle", NULL, &spawn_rectangle_obstacle, 1
+                    "Circle", NULL, (bool*)&spawn_circle_obstacle, 1
                 );
                 igMenuItem_BoolPtr(
-                    "Polygon", NULL, &spawn_polygon_obstacle, 1
+                    "Rectangle", NULL, (bool*)&spawn_rectangle_obstacle, 1
+                );
+                igMenuItem_BoolPtr(
+                    "Polygon", NULL, (bool*)&spawn_polygon_obstacle, 1
                 );
                 igEndMenu();
             }
 
             igEndMenu();
         }
+
+        int can_copy = DEBUG.picked_entity.entity != -1;
+        int can_paste = DEBUG.entity_to_copy != -1;
+        igMenuItem_BoolPtr("Copy", NULL, (bool*)&copy, can_copy);
+        igMenuItem_BoolPtr("Paste", NULL, (bool*)&paste, can_paste);
+
         igEndPopup();
     }
 
@@ -597,6 +611,13 @@ void render_context_menu(void) {
         spawn_default_renderable_rectangle_obstacle(transformation);
     } else if (spawn_polygon_obstacle) {
         spawn_default_renderable_polygon_obstacle(transformation);
+    } else if (copy) {
+        DEBUG.entity_to_copy = DEBUG.picked_entity.entity;
+    } else if (paste) {
+        int entity_copy = spawn_entity_copy(
+            DEBUG.entity_to_copy, transformation
+        );
+        pick_entity(entity_copy);
     }
 }
 

@@ -44,3 +44,5 @@ RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner
 );
 Vec2 get_cursor_world_pos(void);
+int check_if_cursor_on_entity(int entity);
+int get_entity_under_cursor(void);

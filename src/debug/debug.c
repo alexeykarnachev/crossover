@@ -13,9 +13,9 @@
 Debug DEBUG;
 
 void init_debug(void) {
-    DEBUG.is_playing = 0;
     DEBUG.picked_entity.entity = -1;
     DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
+    DEBUG.entity_to_copy = -1;
 
     DEBUG.shading.materials = 1;
     DEBUG.shading.player = 1;
@@ -29,10 +29,7 @@ void update_debug(void) {
 void pick_entity(int entity) {
     DEBUG.picked_entity.entity = entity;
     DEBUG.picked_entity.component_type = TRANSFORMATION_COMPONENT;
-}
 
-void unpick_entity(void) {
-    DEBUG.picked_entity.entity = -1;
     DEBUG.picked_entity.is_dragging = 0;
     DEBUG.picked_entity.dragging_handle_idx = -1;
 }

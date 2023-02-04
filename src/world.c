@@ -12,21 +12,6 @@
 #include <string.h>
 
 World WORLD;
-const char* COMPONENT_NAMES[N_COMPONENTS] = {
-    "Transformation",
-    "Collider",
-    "Primitive",
-    "Render layer",
-    "Material",
-    "Kinematic",
-    "Vision",
-    "Rigid body",
-    "Observable",
-    "TTL",
-    "Health",
-    "Gun",
-    "Bullet",
-    "Owner"};
 
 Vec2 get_cursor_world_pos(void) {
     Vec2 screen_pos = get_cursor_screen_pos();
@@ -50,7 +35,19 @@ void init_world(void) {
 void destroy_entity(int entity) {
     WORLD.components[entity] = 0;
     if (DEBUG.picked_entity.entity == entity) {
-        unpick_entity();
+        pick_entity(-1);
+    }
+
+    if (DEBUG.entity_to_copy == entity) {
+        DEBUG.entity_to_copy = -1;
+    }
+
+    // The entity is no longer the owner of any other entity
+    for (int i = 0; i < WORLD.n_entities; ++i) {
+        int owner = WORLD.owners[i];
+        if (owner == entity) {
+            WORLD.owners[i] = -1;
+        }
     }
 }
 
@@ -64,13 +61,6 @@ void entity_disable_component(int entity, ComponentType type) {
 
 void entity_enable_component(int entity, ComponentType type) {
     WORLD.components[entity] |= type;
-}
-
-int get_entity_owner(int entity) {
-    if (entity_has_component(entity, OWNER_COMPONENT)) {
-        return WORLD.owners[entity];
-    }
-    return -1;
 }
 
 int entity_has_component(int entity, ComponentType type) {
@@ -97,6 +87,78 @@ static int spawn_entity(const char* name) {
 
     fprintf(stderr, "ERROR: Can't spawn more entities\n");
     exit(1);
+}
+
+int spawn_entity_copy(int entity, Transformation transformation) {
+    const char* name = WORLD.names[entity];
+    int entity_copy = spawn_entity(name);
+    entity_enable_component(entity_copy, TRANSFORMATION_COMPONENT);
+    WORLD.transformations[entity_copy] = transformation;
+
+    for (int i = 0; i < N_COMPONENTS; ++i) {
+        ComponentType type = COMPONENT_TYPES_LIST[i];
+        if (entity_has_component(entity, type)) {
+            entity_enable_component(entity_copy, type);
+
+            switch (type) {
+                case TRANSFORMATION_COMPONENT:
+                    break;
+                case COLLIDER_COMPONENT:
+                    WORLD.colliders[entity_copy] = WORLD.colliders[entity];
+                    break;
+                case PRIMITIVE_COMPONENT:
+                    WORLD.primitives[entity_copy]
+                        = WORLD.primitives[entity];
+                    break;
+                case RENDER_LAYER_COMPONENT:
+                    WORLD.render_layers[entity_copy]
+                        = WORLD.render_layers[entity];
+                    break;
+                case MATERIAL_COMPONENT:
+                    WORLD.materials[entity_copy] = WORLD.materials[entity];
+                    break;
+                case KINEMATIC_COMPONENT:
+                    WORLD.kinematics[entity_copy]
+                        = WORLD.kinematics[entity];
+                    break;
+                case VISION_COMPONENT:
+                    WORLD.visions[entity_copy] = WORLD.visions[entity];
+                    break;
+                case RIGID_BODY_COMPONENT:
+                    break;
+                case OBSERVABLE_COMPONENT:
+                    break;
+                case TTL_COMPONENT:
+                    WORLD.ttls[entity_copy] = WORLD.ttls[entity];
+                    break;
+                case HEALTH_COMPONENT:
+                    WORLD.healths[entity_copy] = WORLD.healths[entity];
+                    break;
+                case GUN_COMPONENT:
+                    WORLD.guns[entity_copy] = WORLD.guns[entity];
+                    break;
+                case BULLET_COMPONENT:
+                    break;
+                case OWNER_COMPONENT:
+                    WORLD.owners[entity_copy] = WORLD.owners[entity];
+                    break;
+                default: {
+                    const char* component_name = get_component_type_name(
+                        type
+                    );
+                    fprintf(
+                        stderr,
+                        "ERROR: Can't copy the entity with the component: "
+                        "%s\n",
+                        component_name
+                    );
+                    exit(1);
+                }
+            }
+        }
+    }
+
+    return entity_copy;
 }
 
 int spawn_camera(Transformation transformation) {
@@ -277,7 +339,7 @@ static void update_entities_world_counter() {
         if (WORLD.components[entity] != 0) {
             n_entities = entity + 1;
         } else if (DEBUG.picked_entity.entity == entity) {
-            unpick_entity();
+            pick_entity(-1);
         }
     }
     WORLD.n_entities = n_entities;
