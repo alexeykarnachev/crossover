@@ -64,8 +64,8 @@ static void render_main_menu_bar() {
             int is_save_scene = igMenuItem_Bool(
                 "Save Scene", "", false, is_project_loaded
             );
-            int is_save_as_scene = igMenuItem_Bool(
-                "Save As Scene...", "", false, is_project_loaded
+            int is_save_scene_as = igMenuItem_Bool(
+                "Save Scene As...", "", false, is_project_loaded
             );
             igSeparator();
 
@@ -76,38 +76,20 @@ static void render_main_menu_bar() {
                 "Open Project", "", false, true
             );
             igSeparator();
-
             igEndMenu();
 
             if (is_new_scene) {
-                reset_scene();
-                EDITOR.project.scene_file_path = NULL;
-                save_project();
+                new_editor_scene();
             } else if (is_open_scene) {
-                EDITOR.project.scene_file_path = load_scene_via_nfd(
-                    EDITOR.project.default_search_path
-                );
-                save_project();
+                open_editor_scene();
             } else if (is_save_scene) {
-                if (EDITOR.project.scene_file_path != NULL) {
-                    save_scene(EDITOR.project.scene_file_path);
-                } else {
-                    EDITOR.project.scene_file_path = save_scene_via_nfd(
-                        EDITOR.project.default_search_path
-                    );
-                }
-                save_project();
-            } else if (is_save_as_scene) {
-                EDITOR.project.scene_file_path = save_scene_via_nfd(
-                    EDITOR.project.default_search_path
-                );
-                save_project();
+                save_editor_scene();
+            } else if (is_save_scene_as) {
+                save_editor_scene_as();
             } else if (is_new_project) {
-                create_project_via_nfd(NULL);
-                reset_scene();
-                EDITOR.project.scene_file_path = NULL;
+                new_editor_project();
             } else if (is_open_project) {
-                load_project_via_nfd(EDITOR.project.default_search_path);
+                open_editor_project();
             }
         }
 

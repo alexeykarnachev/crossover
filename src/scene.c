@@ -7,6 +7,7 @@
 #include "math.h"
 #include "nfd.h"
 #include "system.h"
+#include "utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,25 +35,6 @@ void reset_scene(void) {
     reset_camera();
 }
 
-const char* save_scene_via_nfd(const char* search_path) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdfilteritem_t filter_item[1] = {{"Scene", "xos"}};
-    nfdresult_t result = NFD_SaveDialogN(
-        &file_path, filter_item, 1, search_path, NULL
-    );
-    if (result == NFD_OKAY) {
-        save_scene(file_path);
-        NFD_Quit();
-        return file_path;
-    } else if (result == NFD_CANCEL) {
-        return NULL;
-    } else {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
-}
-
 int save_scene(const char* file_path) {
     FILE* fp = fopen(file_path, "wb");
     if (!fp) {
@@ -67,9 +49,7 @@ int save_scene(const char* file_path) {
     fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
 
     for (int i = 0; i < SCENE.n_entities; ++i) {
-        int name_len = strlen(SCENE.names[i]) + 1;
-        fwrite(&name_len, sizeof(int), 1, fp);
-        fwrite(SCENE.names[i], sizeof(char), name_len, fp);
+        write_str_to_file(SCENE.names[i], fp, 0);
     }
 
     fwrite(
@@ -93,23 +73,6 @@ int save_scene(const char* file_path) {
     fclose(fp);
 
     return 1;
-}
-
-const char* load_scene_via_nfd(const char* search_path) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdfilteritem_t filter_item[1] = {{"Scene", "xos"}};
-    nfdresult_t result = NFD_OpenDialog(
-        &file_path, filter_item, 1, search_path
-    );
-    if (result == NFD_OKAY) {
-        load_scene(file_path);
-        NFD_Quit();
-        return file_path;
-    } else if (result != NFD_CANCEL) {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
 }
 
 int load_scene(const char* file_path) {

@@ -6,11 +6,24 @@
 #include "../component.h"
 #include "../const.h"
 #include "../scene.h"
+#include "../utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "nfd.h"
 #include <stdlib.h>
 #include <string.h>
+
+#define ASSERT_PROJECT(fn_name) \
+    do { \
+        if (EDITOR.project.project_file_path == NULL) { \
+            fprintf( \
+                stderr, \
+                "ERROR: Can't %s with not initialized Project\n", \
+                fn_name \
+            ); \
+            exit(1); \
+        } \
+    } while (0)
 
 Editor EDITOR;
 
@@ -18,58 +31,18 @@ void init_editor(void) {
     EDITOR.picked_entity.entity = -1;
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
-
     EDITOR.project.version = PROJECT_VERSION;
-
-    load_project_via_nfd(NULL);
+    EDITOR.project.scene_file_path = NULL;
 }
 
-int load_project_via_nfd(const nfdchar_t* search_path) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdfilteritem_t filter_item[1] = {{"Project", "xop"}};
-    nfdresult_t result = NFD_OpenDialog(
-        &file_path, filter_item, 1, search_path
-    );
-    int res = 0;
-    if (result == NFD_OKAY) {
-        res = load_project(file_path);
-        NFD_FreePath(file_path);
-    } else if (result != NFD_CANCEL) {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
-    NFD_Quit();
-
-    return res;
-}
-
-int create_project_via_nfd(const nfdchar_t* search_path) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdfilteritem_t filter_item[1] = {{"Project", "xop"}};
-    nfdresult_t result = NFD_SaveDialogN(
-        &file_path, filter_item, 1, search_path, NULL
-    );
-    if (result == NFD_OKAY) {
-        EDITOR.project.project_file_path = file_path;
-        save_project();
-        NFD_Quit();
-    } else if (result != NFD_CANCEL) {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
-
-    return 1;
-}
-
-int load_project(const char* file_path) {
+int load_editor_project(const char* file_path) {
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Can't load Project file: %s\n", file_path);
         exit(1);
     }
 
+    init_editor();
     Project* project = &EDITOR.project;
     fread(&project->version, sizeof(int), 1, fp);
     if (project->version != PROJECT_VERSION) {
@@ -88,18 +61,9 @@ int load_project(const char* file_path) {
         &project->scene_file_path,
         &project->default_search_path};
 
-    for (int i = 0; i < 3; ++i) {
-        uint32_t file_path_len;
-        fread(&file_path_len, sizeof(uint32_t), 1, fp);
-        if (file_path_len > 0) {
-            char* buffer = (char*)malloc(file_path_len + 1);
-            fread(buffer, sizeof(char), file_path_len, fp);
-            buffer[file_path_len] = '\0';
-            *file_paths[i] = buffer;
-        } else {
-            *file_paths[i] = NULL;
-        }
-    }
+    read_str_from_file(&project->project_file_path, fp, 0);
+    read_str_from_file(&project->scene_file_path, fp, 1);
+    read_str_from_file(&project->default_search_path, fp, 1);
 
     fclose(fp);
 
@@ -112,7 +76,7 @@ int load_project(const char* file_path) {
     return 1;
 }
 
-int save_project(void) {
+int save_editor_project(void) {
     const char* file_path = EDITOR.project.project_file_path;
     FILE* fp = fopen(file_path, "wb");
     if (!fp) {
@@ -132,40 +96,69 @@ int save_project(void) {
 
     fwrite(&project.version, sizeof(int), 1, fp);
 
-    int project_file_path_len = strlen(project.project_file_path) + 1;
-    fwrite(&project_file_path_len, sizeof(int), 1, fp);
-    fwrite(
-        project.project_file_path, sizeof(char), project_file_path_len, fp
-    );
-
-    int scene_file_path_len = 0;
-    if (project.scene_file_path != NULL) {
-        scene_file_path_len = strlen(project.scene_file_path) + 1;
-        fwrite(&scene_file_path_len, sizeof(int), 1, fp);
-        fwrite(
-            project.scene_file_path, sizeof(char), scene_file_path_len, fp
-        );
-    } else {
-        fwrite(&scene_file_path_len, sizeof(int), 1, fp);
-    }
-
-    int default_search_path_len = 0;
-    if (project.default_search_path != NULL) {
-        default_search_path_len = strlen(project.default_search_path) + 1;
-        fwrite(&default_search_path_len, sizeof(int), 1, fp);
-        fwrite(
-            project.default_search_path,
-            sizeof(char),
-            default_search_path_len,
-            fp
-        );
-    } else {
-        fwrite(&default_search_path_len, sizeof(int), 1, fp);
-    }
+    write_str_to_file(project.project_file_path, fp, 0);
+    write_str_to_file(project.scene_file_path, fp, 1);
+    write_str_to_file(project.default_search_path, fp, 1);
 
     fclose(fp);
 
     return 1;
+}
+
+void new_editor_project(void) {
+    reset_scene();
+    init_editor();
+    create_project_via_nfd(NULL);
+}
+
+void new_editor_scene(void) {
+    ASSERT_PROJECT("new_editor_scene");
+
+    reset_scene();
+    init_editor();
+    save_editor_project();
+}
+
+void open_editor_project(void) {
+    load_project_via_nfd(EDITOR.project.default_search_path);
+}
+
+void open_editor_scene(void) {
+    ASSERT_PROJECT("open_editor_scene");
+
+    const char* file_path = load_scene_via_nfd(
+        EDITOR.project.default_search_path
+    );
+    if (file_path != NULL) {
+        init_editor();
+        EDITOR.project.scene_file_path = file_path;
+        save_editor_project();
+    }
+}
+
+void save_editor_scene(void) {
+    ASSERT_PROJECT("save_editor_scene");
+
+    if (EDITOR.project.scene_file_path != NULL) {
+        save_scene(EDITOR.project.scene_file_path);
+    } else {
+        EDITOR.project.scene_file_path = save_scene_via_nfd(
+            EDITOR.project.default_search_path
+        );
+    }
+    save_editor_project();
+}
+
+void save_editor_scene_as(void) {
+    ASSERT_PROJECT("save_editor_scene_as");
+
+    const char* file_path = save_scene_via_nfd(
+        EDITOR.project.default_search_path
+    );
+    if (file_path != NULL) {
+        EDITOR.project.scene_file_path = file_path;
+        save_editor_project();
+    }
 }
 
 void pick_entity(int entity) {
