@@ -14,3 +14,11 @@
 #define CAMERA_VIEW_WIDTH 40.0
 
 #define DEBUG_RENDER_LAYER -1.0
+
+#if defined(_WIN32) || defined(_WIN64)
+#define PATH_SEPARATOR '\\'
+#elif defined(__unix__) || defined(__APPLE__)
+#define PATH_SEPARATOR '/'
+#else
+#error "ERROR: Unknown platform. PATH_SEPARATOR is not defined."
+#endif

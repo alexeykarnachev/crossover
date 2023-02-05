@@ -234,6 +234,13 @@ static void resolve_collisions() {
                 int has_kinematic1 = check_if_entity_has_component(
                     entity1, KINEMATIC_COMPONENT
                 );
+
+                // NOTE: For now the engine doesn't simulate the propper
+                // physics. It means, that two rigid bodies can't collide
+                // Unless at least one of them has the kinematics
+                // component.
+                // TODO: Implement the propper rigid bodies collisions
+                // after 2d physics introduction
                 if (has_kinematic0 && has_kinematic1) {
                     transformation0->position = add(
                         transformation0->position, scale(mtv, 0.5)
