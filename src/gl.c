@@ -4,6 +4,7 @@
 #include "app.h"
 #include "component.h"
 #include "debug.h"
+#include "editor.h"
 #include "math.h"
 #include "scene.h"
 #include "system.h"
@@ -372,7 +373,7 @@ void render_scene(float dt) {
 
     // -------------------------------------------------------------------
     // Render debug and editor-related primitives
-    if (!DEBUG.is_playing) {
+    if (!EDITOR.is_playing) {
         render_entity_handles();
         render_colliders();
     }
@@ -385,9 +386,6 @@ void render_scene(float dt) {
     }
     if (DEBUG.shading.visions) {
         render_debug_visions();
-    }
-    if (DEBUG.shading.player) {
-        render_debug_player();
     }
     if (DEBUG.shading.grid) {
         render_debug_grid();

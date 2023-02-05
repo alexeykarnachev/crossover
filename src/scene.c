@@ -130,13 +130,6 @@ int load_scene(const char* file_path) {
 
 void destroy_entity(int entity) {
     SCENE.components[entity] = 0;
-    if (DEBUG.picked_entity.entity == entity) {
-        pick_entity(-1);
-    }
-
-    if (DEBUG.entity_to_copy == entity) {
-        DEBUG.entity_to_copy = -1;
-    }
 
     // The entity is no longer the owner of any other entity
     for (int i = 0; i < SCENE.n_entities; ++i) {
@@ -424,28 +417,23 @@ static void update_entities_scene_counter() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (SCENE.components[entity] != 0) {
             n_entities = entity + 1;
-        } else if (DEBUG.picked_entity.entity == entity) {
-            pick_entity(-1);
         }
     }
     SCENE.n_entities = n_entities;
     DEBUG.general.n_entities = n_entities;
 }
 
-void update_scene(float dt) {
+void update_scene(float dt, int is_playing) {
     update_visions();
     update_camera();
 
-    if (DEBUG.is_playing) {
+    if (is_playing) {
         update_ttls(dt);
         update_healths();
         update_player();
         update_bullets(dt);
         update_kinematics(dt);
         update_entities_scene_counter();
-    } else {
-        update_entity_picking();
-        update_entity_dragging();
     }
 
     update_collisions();

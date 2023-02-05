@@ -12,20 +12,10 @@ typedef struct DebugPrimitive {
     int fill_type;
 } DebugPrimitive;
 
-typedef struct PickedEntity {
-    ComponentType component_type;
-    int entity;
-    int is_dragging;
-    int dragging_handle_idx;
-} PickedEntity;
-
 typedef struct Debug {
     DebugPrimitive primitives[MAX_N_DEBUG_PRIMITIVES];
-    PickedEntity picked_entity;
 
     int n_primitives;
-    int is_playing;
-    int entity_to_copy;
 
     struct general {
         int n_entities;
@@ -60,11 +50,8 @@ typedef struct Debug {
 
 extern Debug DEBUG;
 
-void pick_entity(int entity);
-
 void init_debug(void);
 void update_debug(void);
-void update_editor_gui(void);
 
 void render_debug_primitive(
     Transformation t,
@@ -86,4 +73,3 @@ void render_debug_rectangle(
     int fill_type
 );
 void render_debug_grid(void);
-void render_editor_gui(void);

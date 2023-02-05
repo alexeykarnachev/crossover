@@ -65,14 +65,3 @@ void update_player() {
         }
     }
 }
-
-void render_debug_player() {
-    if (SCENE.player == -1) {
-        return;
-    }
-    if (DEBUG.is_playing) {
-        render_debug_circle(
-            DEBUG.general.look_at, 0.1, RED_COLOR, DEBUG_RENDER_LAYER, FILL
-        );
-    }
-}

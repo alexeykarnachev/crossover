@@ -2,6 +2,7 @@
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
+#include "../editor.h"
 #include "../gl.h"
 #include "../math.h"
 #include "../scene.h"
@@ -122,12 +123,12 @@ int get_entity_under_cursor(void) {
 
 static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
 ) {
-    int entity = DEBUG.picked_entity.entity;
+    int entity = EDITOR.picked_entity.entity;
     if (entity == -1) {
         return 0;
     }
 
-    int component_type = DEBUG.picked_entity.component_type;
+    int component_type = EDITOR.picked_entity.component_type;
     Transformation transformation = SCENE.transformations[entity];
     Primitive primitive;
     switch (component_type) {
@@ -277,7 +278,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
     }
 
     if (!is_lmb_pressed()) {
-        DEBUG.picked_entity.dragging_handle_idx = -1;
+        EDITOR.picked_entity.dragging_handle_idx = -1;
         return n_handles;
     }
 
@@ -285,22 +286,22 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
     int is_dragging = 0;
     for (int i = 0; i < n_handles; ++i) {
         Handle* handle = &handles[i];
-        int is_handle_just_picked = !DEBUG.picked_entity.is_dragging
+        int is_handle_just_picked = !EDITOR.picked_entity.is_dragging
                                     && check_if_cursor_on_handle(*handle);
         int is_handle_was_picked
-            = DEBUG.picked_entity.is_dragging
-              && DEBUG.picked_entity.dragging_handle_idx == i;
+            = EDITOR.picked_entity.is_dragging
+              && EDITOR.picked_entity.dragging_handle_idx == i;
         if (is_handle_just_picked || is_handle_was_picked) {
             handle->color = MAGENTA_COLOR;
             handle->is_dragging = 1;
             is_dragging = 1;
-            DEBUG.picked_entity.dragging_handle_idx = i;
+            EDITOR.picked_entity.dragging_handle_idx = i;
         }
     }
 
-    DEBUG.picked_entity.is_dragging = is_dragging;
+    EDITOR.picked_entity.is_dragging = is_dragging;
     if (!is_dragging) {
-        DEBUG.picked_entity.dragging_handle_idx = -1;
+        EDITOR.picked_entity.dragging_handle_idx = -1;
     }
     return n_handles;
 }
@@ -308,19 +309,19 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
 void update_entity_picking(void) {
     // Don't update picking if mouse is not pressed
     // Or if it pressed, but we are in dragging mode
-    if (!is_lmb_pressed() || DEBUG.picked_entity.is_dragging) {
+    if (!is_lmb_pressed() || EDITOR.picked_entity.is_dragging) {
         return;
     }
 
     // Don't even try to pick another entities, if the current picked
     // entity could be picked again
-    if (DEBUG.picked_entity.entity != -1) {
-        int entity = DEBUG.picked_entity.entity;
+    if (EDITOR.picked_entity.entity != -1) {
+        int entity = EDITOR.picked_entity.entity;
         Transformation transformation = SCENE.transformations[entity];
 
         Primitive primitive;
         int has_primitive = 1;
-        switch (DEBUG.picked_entity.component_type) {
+        switch (EDITOR.picked_entity.component_type) {
             case PRIMITIVE_COMPONENT: {
                 primitive = SCENE.primitives[entity];
                 break;
@@ -355,14 +356,14 @@ void update_entity_picking(void) {
 }
 
 void update_entity_dragging(void) {
-    int entity = DEBUG.picked_entity.entity;
+    int entity = EDITOR.picked_entity.entity;
     Vec2 cursor_scene_diff = update_cursor_scene_pos();
     if (entity == -1) {
         return;
     }
 
     Primitive* primitive;
-    switch (DEBUG.picked_entity.component_type) {
+    switch (EDITOR.picked_entity.component_type) {
         case PRIMITIVE_COMPONENT: {
             primitive = &SCENE.primitives[entity];
             break;
@@ -447,7 +448,7 @@ void update_entity_dragging(void) {
 }
 
 void render_entity_handles(void) {
-    if (DEBUG.picked_entity.entity == -1) {
+    if (EDITOR.picked_entity.entity == -1) {
         return;
     }
     Handle handles[MAX_N_POLYGON_VERTICES];
@@ -463,7 +464,7 @@ void render_entity_handles(void) {
         );
     }
 
-    if (DEBUG.picked_entity.component_type == TRANSFORMATION_COMPONENT) {
+    if (EDITOR.picked_entity.component_type == TRANSFORMATION_COMPONENT) {
         render_debug_line(
             handles[0].position,
             handles[1].position,

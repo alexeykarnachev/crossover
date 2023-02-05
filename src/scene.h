@@ -85,4 +85,4 @@ int spawn_default_renderable_rectangle_obstacle(
 int spawn_default_renderable_line_obstacle(Transformation transformation);
 int spawn_default_renderable_polygon_obstacle(Transformation transformation
 );
-void update_scene(float dt);
+void update_scene(float dt, int is_playing);

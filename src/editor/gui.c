@@ -3,6 +3,7 @@
 #include "../app.h"
 #include "../component.h"
 #include "../debug.h"
+#include "../editor.h"
 #include "../math.h"
 #include "../scene.h"
 #include "cimgui.h"
@@ -63,7 +64,21 @@ static void render_main_menu_bar() {
             if (new_scene) {
                 reset_scene();
             } else if (open_scene) {
-                printf("open scene\n");
+                NFD_Init();
+                nfdchar_t* file_path;
+                nfdfilteritem_t filter_item[2] = {{"Scene", "xos"}};
+                nfdresult_t result = NFD_OpenDialog(
+                    &file_path, filter_item, 1, NULL
+                );
+                if (result == NFD_OKAY) {
+                    load_scene(file_path);
+                    NFD_FreePath(file_path);
+                } else if (result == NFD_CANCEL) {
+                    puts("User pressed cancel.");
+                } else {
+                    fprintf(stderr, "ERROR: %s\n", NFD_GetError());
+                }
+                NFD_Quit();
             } else if (save_scene) {
                 printf("save scene\n");
             } else if (save_as_scene) {
@@ -72,37 +87,18 @@ static void render_main_menu_bar() {
         }
         igEndMainMenuBar();
     }
-
-    // NFD_Init();
-
-    // nfdchar_t* outPath;
-    // nfdfilteritem_t filterItem[2] = {
-    //     {"Source code", "c,cpp,cc"}, {"Headers", "h,hpp"}};
-    // nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
-    // if (result == NFD_OKAY) {
-    //     puts("Success!");
-    //     puts(outPath);
-    //     NFD_FreePath(outPath);
-    // } else if (result == NFD_CANCEL) {
-    //     puts("User pressed cancel.");
-    // } else {
-    //     printf("Error: %s\n", NFD_GetError());
-    // }
-
-    // NFD_Quit();
-    // return 0;
 }
 
 static void render_edit_button(ComponentType component_type) {
     char id[16];
     sprintf(id, "%d", component_type);
     igPushID_Str(id);
-    if (DEBUG.picked_entity.component_type == component_type) {
+    if (EDITOR.picked_entity.component_type == component_type) {
         igPushStyleColor_Vec4(ImGuiCol_Button, PRESSED_BUTTON_COLOR);
         igButton("Edit", VEC2_ZERO);
         igPopStyleColor(1);
     } else if (igButton("Edit", VEC2_ZERO)) {
-        DEBUG.picked_entity.component_type = component_type;
+        EDITOR.picked_entity.component_type = component_type;
     }
     igPopID();
 }
@@ -247,10 +243,10 @@ static void render_game_controls(void) {
     char* name = "Game controls";
 
     if (igBegin(name, NULL, flags)) {
-        if (DEBUG.is_playing && igButton("Stop", VEC2_ZERO)) {
-            DEBUG.is_playing = 0;
-        } else if (!DEBUG.is_playing && igButton("Play", VEC2_ZERO)) {
-            DEBUG.is_playing = 1;
+        if (EDITOR.is_playing && igButton("Stop", VEC2_ZERO)) {
+            EDITOR.is_playing = 0;
+        } else if (!EDITOR.is_playing && igButton("Play", VEC2_ZERO)) {
+            EDITOR.is_playing = 1;
         }
     }
 
@@ -347,8 +343,8 @@ static void render_editor_context_menu(void) {
         }
 
         igSeparator();
-        int can_copy = DEBUG.picked_entity.entity != -1;
-        int can_paste = DEBUG.entity_to_copy != -1;
+        int can_copy = EDITOR.picked_entity.entity != -1;
+        int can_paste = EDITOR.entity_to_copy != -1;
         int can_delete = can_copy;
         igMenuItem_BoolPtr("Copy", NULL, (bool*)&copy, can_copy);
         igMenuItem_BoolPtr("Paste", NULL, (bool*)&paste, can_paste);
@@ -368,19 +364,19 @@ static void render_editor_context_menu(void) {
     } else if (spawn_polygon_obstacle) {
         spawn_default_renderable_polygon_obstacle(transformation);
     } else if (copy) {
-        DEBUG.entity_to_copy = DEBUG.picked_entity.entity;
+        EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     } else if (paste) {
         int entity_copy = spawn_entity_copy(
-            DEBUG.entity_to_copy, transformation
+            EDITOR.entity_to_copy, transformation
         );
         pick_entity(entity_copy);
     } else if (delete) {
-        destroy_entity(DEBUG.picked_entity.entity);
+        destroy_entity(EDITOR.picked_entity.entity);
     }
 }
 
 static void render_entity_editor() {
-    int picked_entity = DEBUG.picked_entity.entity;
+    int picked_entity = EDITOR.picked_entity.entity;
     int camera_entity = SCENE.camera;
 
     ImGuiIO* io = igGetIO();
@@ -655,7 +651,7 @@ static void render_scene_editor(void) {
                         char str[MAX_ENTITY_NAME_SIZE + 16];
                         sprintf(str, "%s (%d)", name, entity);
                         int is_picked = entity
-                                        == DEBUG.picked_entity.entity;
+                                        == EDITOR.picked_entity.entity;
                         int flags = ImGuiTreeNodeFlags_Leaf;
                         flags |= (ImGuiTreeNodeFlags_Selected * is_picked);
                         int node = igTreeNodeEx_StrStr(
@@ -710,7 +706,7 @@ static void render_scene_editor(void) {
     igEnd();
 }
 
-void render_editor_gui(void) {
+void render_editor(void) {
     ImGuiIO* io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -719,7 +715,7 @@ void render_editor_gui(void) {
     render_game_controls();
     render_debug_info();
 
-    if (!DEBUG.is_playing) {
+    if (!EDITOR.is_playing) {
         render_main_menu_bar();
         render_entity_editor();
         render_scene_editor();
@@ -728,15 +724,4 @@ void render_editor_gui(void) {
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-}
-
-void update_editor_gui(void) {
-    ImGuiIO* io = igGetIO();
-
-    if (io->WantCaptureMouse) {
-        clear_mouse_states();
-    }
-    if (io->WantCaptureKeyboard) {
-        clear_key_states();
-    }
 }
