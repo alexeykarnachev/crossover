@@ -52,39 +52,65 @@ static void drag_int(
 
 static void render_main_menu_bar() {
     if (igBeginMainMenuBar()) {
-        if (igBeginMenu("Scene", 1)) {
-            int new_scene = igMenuItem_Bool("New", "", false, true);
-            int open_scene = igMenuItem_Bool("Open", "", false, true);
-            int save_scene = igMenuItem_Bool("Save", "", false, true);
-            int save_as_scene = igMenuItem_Bool(
-                "Save As...", "", false, true
+        if (igBeginMenu("File", 1)) {
+            int is_project_loaded = EDITOR.project.project_file_path
+                                    != NULL;
+            int is_new_scene = igMenuItem_Bool(
+                "New Scene", "", false, is_project_loaded
             );
+            int is_open_scene = igMenuItem_Bool(
+                "Open Scene", "", false, is_project_loaded
+            );
+            int is_save_scene = igMenuItem_Bool(
+                "Save Scene", "", false, is_project_loaded
+            );
+            int is_save_as_scene = igMenuItem_Bool(
+                "Save As Scene...", "", false, is_project_loaded
+            );
+            igSeparator();
+
+            int is_new_project = igMenuItem_Bool(
+                "New Project", "", false, true
+            );
+            int is_open_project = igMenuItem_Bool(
+                "Open Project", "", false, true
+            );
+            igSeparator();
+
             igEndMenu();
 
-            if (new_scene) {
+            if (is_new_scene) {
                 reset_scene();
-            } else if (open_scene) {
-                NFD_Init();
-                nfdchar_t* file_path;
-                nfdfilteritem_t filter_item[2] = {{"Scene", "xos"}};
-                nfdresult_t result = NFD_OpenDialog(
-                    &file_path, filter_item, 1, NULL
+                EDITOR.project.scene_file_path = NULL;
+                save_project();
+            } else if (is_open_scene) {
+                EDITOR.project.scene_file_path = load_scene_via_nfd(
+                    EDITOR.project.default_search_path
                 );
-                if (result == NFD_OKAY) {
-                    load_scene(file_path);
-                    NFD_FreePath(file_path);
-                } else if (result == NFD_CANCEL) {
-                    puts("User pressed cancel.");
+                save_project();
+            } else if (is_save_scene) {
+                if (EDITOR.project.scene_file_path != NULL) {
+                    save_scene(EDITOR.project.scene_file_path);
                 } else {
-                    fprintf(stderr, "ERROR: %s\n", NFD_GetError());
+                    EDITOR.project.scene_file_path = save_scene_via_nfd(
+                        EDITOR.project.default_search_path
+                    );
                 }
-                NFD_Quit();
-            } else if (save_scene) {
-                printf("save scene\n");
-            } else if (save_as_scene) {
-                printf("save as scene\n");
+                save_project();
+            } else if (is_save_as_scene) {
+                EDITOR.project.scene_file_path = save_scene_via_nfd(
+                    EDITOR.project.default_search_path
+                );
+                save_project();
+            } else if (is_new_project) {
+                create_project_via_nfd(NULL);
+                reset_scene();
+                EDITOR.project.scene_file_path = NULL;
+            } else if (is_open_project) {
+                load_project_via_nfd(EDITOR.project.default_search_path);
             }
         }
+
         igEndMainMenuBar();
     }
 }
@@ -292,6 +318,9 @@ static void render_debug_info(void) {
             DEBUG.inputs.cursor_dy
         );
         igText("Scroll: %.2f", DEBUG.inputs.scroll_dy);
+        igText("Project: %s", EDITOR.project.project_file_path);
+        igText("Scene: %s", EDITOR.project.scene_file_path);
+        igText("Search path: %s", EDITOR.project.default_search_path);
     }
 
     igEnd();
@@ -712,14 +741,18 @@ void render_editor(void) {
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
-    render_game_controls();
-    render_debug_info();
+    if (EDITOR.project.project_file_path != NULL) {
+        render_game_controls();
+        render_debug_info();
 
-    if (!EDITOR.is_playing) {
+        if (!EDITOR.is_playing) {
+            render_main_menu_bar();
+            render_entity_editor();
+            render_scene_editor();
+            render_editor_context_menu();
+        }
+    } else {
         render_main_menu_bar();
-        render_entity_editor();
-        render_scene_editor();
-        render_editor_context_menu();
     }
 
     igRender();

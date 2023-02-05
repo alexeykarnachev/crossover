@@ -8,12 +8,11 @@
 #include "scene.h"
 
 int main(int argc, char* argv[]) {
-    load_scene("./assets/scenes/test.xos");
+    init_editor();
 
     init_app(1024, 768);
     init_renderer();
     init_debug();
-    init_editor();
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         update_debug();

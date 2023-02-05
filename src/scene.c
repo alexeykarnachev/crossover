@@ -5,6 +5,7 @@
 #include "const.h"
 #include "debug.h"
 #include "math.h"
+#include "nfd.h"
 #include "system.h"
 #include <math.h>
 #include <stdio.h>
@@ -31,6 +32,25 @@ void reset_scene(void) {
     SCENE.player = -1;
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     reset_camera();
+}
+
+const char* save_scene_via_nfd(const char* search_path) {
+    NFD_Init();
+    nfdchar_t* file_path;
+    nfdfilteritem_t filter_item[1] = {{"Scene", "xos"}};
+    nfdresult_t result = NFD_SaveDialogN(
+        &file_path, filter_item, 1, search_path, NULL
+    );
+    if (result == NFD_OKAY) {
+        save_scene(file_path);
+        NFD_Quit();
+        return file_path;
+    } else if (result == NFD_CANCEL) {
+        return NULL;
+    } else {
+        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
+        exit(1);
+    }
 }
 
 int save_scene(const char* file_path) {
@@ -71,7 +91,25 @@ int save_scene(const char* file_path) {
     fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
+
     return 1;
+}
+
+const char* load_scene_via_nfd(const char* search_path) {
+    NFD_Init();
+    nfdchar_t* file_path;
+    nfdfilteritem_t filter_item[1] = {{"Scene", "xos"}};
+    nfdresult_t result = NFD_OpenDialog(
+        &file_path, filter_item, 1, search_path
+    );
+    if (result == NFD_OKAY) {
+        load_scene(file_path);
+        NFD_Quit();
+        return file_path;
+    } else if (result != NFD_CANCEL) {
+        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
+        exit(1);
+    }
 }
 
 int load_scene(const char* file_path) {
@@ -125,6 +163,7 @@ int load_scene(const char* file_path) {
     fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
+
     return 1;
 }
 
