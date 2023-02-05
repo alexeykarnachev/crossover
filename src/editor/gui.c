@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define menu_item igMenuItem_Bool
+#define menu_item_ptr igMenuItem_BoolPtr
+
 static int LAST_PICKED_ENTITY = -1;
 static int LAST_PICKED_COMPONENTS[N_COMPONENTS];
 static ImVec2 VEC2_ZERO = {0, 0};
@@ -51,49 +54,61 @@ static void drag_int(
 }
 
 static void render_main_menu_bar() {
+    int proj_loaded = EDITOR.project.project_file_path != NULL;
+
     if (igBeginMainMenuBar()) {
         if (igBeginMenu("File", 1)) {
-            int is_project_loaded = EDITOR.project.project_file_path
-                                    != NULL;
-            int is_new_scene = igMenuItem_Bool(
-                "New Scene", "", false, is_project_loaded
-            );
-            int is_open_scene = igMenuItem_Bool(
-                "Open Scene", "", false, is_project_loaded
-            );
-            int is_save_scene = igMenuItem_Bool(
-                "Save Scene", "", false, is_project_loaded
-            );
-            int is_save_scene_as = igMenuItem_Bool(
-                "Save Scene As...", "", false, is_project_loaded
-            );
-            igSeparator();
-
-            int is_new_project = igMenuItem_Bool(
-                "New Project", "", false, true
-            );
-            int is_open_project = igMenuItem_Bool(
-                "Open Project", "", false, true
-            );
-            igSeparator();
-            igEndMenu();
-
-            if (is_new_scene) {
+            if (menu_item("New Scene", "Ctrl+N", false, proj_loaded)) {
                 new_editor_scene();
-            } else if (is_open_scene) {
+            }
+            if (menu_item("Open Scene", "Ctrl+O", false, proj_loaded)) {
                 open_editor_scene();
-            } else if (is_save_scene) {
+            }
+            if (menu_item("Save Scene", "Ctrl+S", false, proj_loaded)) {
                 save_editor_scene();
-            } else if (is_save_scene_as) {
+            }
+            if (menu_item("Save Scene As", "", false, proj_loaded)) {
                 save_editor_scene_as();
-            } else if (is_new_project) {
+            }
+            igSeparator();
+
+            if (menu_item("New Project", "", false, true)) {
                 new_editor_project();
-            } else if (is_open_project) {
+            }
+            if (menu_item("Open Project", "", false, true)) {
                 open_editor_project();
             }
+            igSeparator();
+
+            igEndMenu();
+        }
+
+        if (igBeginMenu("Edit", 1)) {
+            if (menu_item("Project", "", false, proj_loaded)) {}
+            igEndMenu();
         }
 
         igEndMainMenuBar();
+    }
+
+    int key_ctrl = igGetIO()->KeyCtrl;
+    int key_o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
+    int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
+    int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
+    if (key_o && key_ctrl) {
+        if (proj_loaded) {
+            open_editor_scene();
+        } else {
+            open_editor_project();
+        }
+    } else if (key_n && key_ctrl) {
+        if (proj_loaded) {
+            new_editor_scene();
+        } else {
+            new_editor_project();
+        }
+    } else if (proj_loaded && key_s && key_ctrl) {
+        save_editor_scene();
     }
 }
 
@@ -332,19 +347,19 @@ static void render_editor_context_menu(void) {
     int delete = 0;
     if (igBeginPopup("editor_context_menu", 0)) {
         if (igBeginMenu("Spawn", 1)) {
-            igMenuItem_BoolPtr("Guy", NULL, (bool*)&spawn_guy, 1);
+            menu_item_ptr("Guy", NULL, (bool*)&spawn_guy, 1);
 
             if (igBeginMenu("Obstacle", 1)) {
-                igMenuItem_BoolPtr(
+                menu_item_ptr(
                     "Line", NULL, (bool*)&spawn_line_obstacle, 1
                 );
-                igMenuItem_BoolPtr(
+                menu_item_ptr(
                     "Circle", NULL, (bool*)&spawn_circle_obstacle, 1
                 );
-                igMenuItem_BoolPtr(
+                menu_item_ptr(
                     "Rectangle", NULL, (bool*)&spawn_rectangle_obstacle, 1
                 );
-                igMenuItem_BoolPtr(
+                menu_item_ptr(
                     "Polygon", NULL, (bool*)&spawn_polygon_obstacle, 1
                 );
                 igEndMenu();
@@ -357,9 +372,9 @@ static void render_editor_context_menu(void) {
         int can_copy = EDITOR.picked_entity.entity != -1;
         int can_paste = EDITOR.entity_to_copy != -1;
         int can_delete = can_copy;
-        igMenuItem_BoolPtr("Copy", NULL, (bool*)&copy, can_copy);
-        igMenuItem_BoolPtr("Paste", NULL, (bool*)&paste, can_paste);
-        igMenuItem_BoolPtr("Delete", NULL, (bool*)&delete, can_delete);
+        menu_item_ptr("Copy", NULL, (bool*)&copy, can_copy);
+        menu_item_ptr("Paste", NULL, (bool*)&paste, can_paste);
+        menu_item_ptr("Delete", NULL, (bool*)&delete, can_delete);
 
         igEndPopup();
     }
