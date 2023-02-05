@@ -67,10 +67,9 @@ int load_editor_project(const char* file_path) {
 
     fclose(fp);
 
-    if (project->scene_file_path != NULL) {
-        load_scene(project->scene_file_path);
-    } else {
+    if (!load_scene(project->scene_file_path)) {
         reset_scene();
+        project->scene_file_path = NULL;
     }
 
     return 1;

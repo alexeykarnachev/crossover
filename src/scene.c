@@ -79,7 +79,7 @@ int load_scene(const char* file_path) {
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Can't load Scene file: %s\n", file_path);
-        exit(1);
+        return 0;
     }
 
     fread(&SCENE.version, sizeof(int), 1, fp);
@@ -91,7 +91,7 @@ int load_scene(const char* file_path) {
             SCENE.version,
             SCENE_VERSION
         );
-        exit(1);
+        return 0;
     }
 
     fread(&SCENE.n_entities, sizeof(int), 1, fp);
