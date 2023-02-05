@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
+
 #define ASSERT_PROJECT(fn_name) \
     do { \
         if (EDITOR.project.project_file_path == NULL) { \
@@ -28,11 +30,27 @@
 Editor EDITOR;
 
 void init_editor(void) {
+    reset_editor();
+    FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "rb");
+    if (fp) {
+        const char* file_path;
+        read_str_from_file(&file_path, fp, 0);
+        load_editor_project(file_path);
+    }
+}
+
+void reset_editor(void) {
     EDITOR.picked_entity.entity = -1;
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
     EDITOR.project.version = PROJECT_VERSION;
     EDITOR.project.scene_file_path = NULL;
+}
+
+static void update_recent_project(const char* recent_project_file_path) {
+    FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "wb");
+    write_str_to_file(recent_project_file_path, fp, 0);
+    fclose(fp);
 }
 
 int load_editor_project(const char* file_path) {
@@ -42,7 +60,7 @@ int load_editor_project(const char* file_path) {
         exit(1);
     }
 
-    init_editor();
+    reset_editor();
     Project* project = &EDITOR.project;
     fread(&project->version, sizeof(int), 1, fp);
     if (project->version != PROJECT_VERSION) {
@@ -64,7 +82,6 @@ int load_editor_project(const char* file_path) {
     read_str_from_file(&project->project_file_path, fp, 0);
     read_str_from_file(&project->scene_file_path, fp, 1);
     read_str_from_file(&project->default_search_path, fp, 1);
-
     fclose(fp);
 
     if (!load_scene(project->scene_file_path)) {
@@ -72,6 +89,7 @@ int load_editor_project(const char* file_path) {
         project->scene_file_path = NULL;
     }
 
+    update_recent_project(project->project_file_path);
     return 1;
 }
 
@@ -106,20 +124,22 @@ int save_editor_project(void) {
 
 void new_editor_project(void) {
     reset_scene();
-    init_editor();
+    reset_editor();
     create_project_via_nfd(NULL);
+    update_recent_project(EDITOR.project.project_file_path);
 }
 
 void new_editor_scene(void) {
     ASSERT_PROJECT("new_editor_scene");
 
     reset_scene();
-    init_editor();
+    reset_editor();
     save_editor_project();
 }
 
 void open_editor_project(void) {
     load_project_via_nfd(EDITOR.project.default_search_path);
+    update_recent_project(EDITOR.project.project_file_path);
 }
 
 void open_editor_scene(void) {
@@ -129,7 +149,7 @@ void open_editor_scene(void) {
         EDITOR.project.default_search_path
     );
     if (file_path != NULL) {
-        init_editor();
+        reset_editor();
         EDITOR.project.scene_file_path = file_path;
         save_editor_project();
     }

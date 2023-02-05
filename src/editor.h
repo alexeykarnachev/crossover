@@ -29,6 +29,7 @@ extern Editor EDITOR;
 Vec2 get_cursor_scene_pos(void);
 
 void init_editor(void);
+void reset_editor(void);
 
 void create_project_via_nfd(const nfdchar_t* search_path);
 void load_project_via_nfd(const nfdchar_t* search_path);
