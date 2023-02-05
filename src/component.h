@@ -3,6 +3,26 @@
 #include "const.h"
 #include "math.h"
 
+extern Vec3 RED_COLOR;
+extern Vec3 REDWOOD_COLOR;
+extern Vec3 GREEN_COLOR;
+extern Vec3 FOREST_GREEN_COLOR;
+extern Vec3 BLUE_COLOR;
+extern Vec3 BRIGHT_BLUE_COLOR;
+extern Vec3 YELLOW_COLOR;
+extern Vec3 LIGHT_YELLOW_COLOR;
+extern Vec3 MAGENTA_COLOR;
+extern Vec3 CYAN_COLOR;
+extern Vec3 VIOLET_COLOR;
+extern Vec3 WHITE_COLOR;
+extern Vec3 BLACK_COLOR;
+extern Vec3 GRAY_COLOR;
+extern Vec3 DARK_GRAY_COLOR;
+extern Vec3 ORANGE_COLOR;
+extern Vec3 SILVER_COLOR;
+extern Vec3 BROWN_COLOR;
+extern Vec3 SKYBLUE_COLOR;
+
 typedef struct Transformation {
     Vec2 position;
     float orientation;
@@ -105,24 +125,34 @@ typedef struct Material {
     Vec3 diffuse_color;
 } Material;
 
-extern Vec3 RED_COLOR;
-extern Vec3 REDWOOD_COLOR;
-extern Vec3 GREEN_COLOR;
-extern Vec3 BLUE_COLOR;
-extern Vec3 BRIGHT_BLUE_COLOR;
-extern Vec3 YELLOW_COLOR;
-extern Vec3 LIGHT_YELLOW_COLOR;
-extern Vec3 MAGENTA_COLOR;
-extern Vec3 CYAN_COLOR;
-extern Vec3 VIOLET_COLOR;
-extern Vec3 WHITE_COLOR;
-extern Vec3 BLACK_COLOR;
-extern Vec3 GRAY_COLOR;
-extern Vec3 DARK_GRAY_COLOR;
-extern Vec3 ORANGE_COLOR;
-extern Vec3 SILVER_COLOR;
-extern Vec3 BROWN_COLOR;
-extern Vec3 SKYBLUE_COLOR;
+typedef enum ControllerType {
+    PLAYER_KEYBOARD_CONTROLLER = 1 << 0,
+    DUMMY_AI_CONTROLLER = 1 << 1
+} ControllerType;
+
+#define N_CONTROLLER_TYPES 2
+extern ControllerType CONTROLLER_TYPES[N_CONTROLLER_TYPES];
+
+typedef struct PlayerKeyboardController {
+} PlayerKeyboardController;
+
+typedef struct DummyAIController {
+} DummyAIController;
+
+typedef struct Controller {
+    ControllerType type;
+    union {
+        PlayerKeyboardController player_keyboard;
+        DummyAIController dummy_ai;
+    } c;
+} Controller;
+
+const char* get_controller_type_name(ControllerType type);
+void change_controller_type(
+    Controller* controller, ControllerType target_type
+);
+Controller init_dummy_ai_controller();
+Controller init_player_keyboard_controller();
 
 typedef enum ComponentType {
     TRANSFORMATION_COMPONENT = 1 << 0,
@@ -138,10 +168,11 @@ typedef enum ComponentType {
     HEALTH_COMPONENT = 1 << 10,
     GUN_COMPONENT = 1 << 11,
     BULLET_COMPONENT = 1 << 12,
-    OWNER_COMPONENT = 1 << 13
+    OWNER_COMPONENT = 1 << 13,
+    CONTROLLER_COMPONENT = 1 << 14
 } ComponentType;
 
-#define N_COMPONENTS 14
+#define N_COMPONENTS 15
 ComponentType COMPONENT_TYPES_LIST[N_COMPONENTS];
 const char* get_component_type_name(ComponentType type);
 

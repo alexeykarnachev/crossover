@@ -30,7 +30,6 @@ Vec2 get_cursor_scene_pos(void) {
 void reset_scene(void) {
     SCENE.version = SCENE_VERSION;
     SCENE.n_entities = 0;
-    SCENE.player = -1;
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     reset_camera();
 }
@@ -66,8 +65,8 @@ int save_scene(const char* file_path) {
     fwrite(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
     fwrite(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
     fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fwrite(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
     fwrite(&SCENE.camera, sizeof(int), 1, fp);
-    fwrite(&SCENE.player, sizeof(int), 1, fp);
     fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
@@ -121,8 +120,8 @@ int load_scene(const char* file_path) {
     fread(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
     fread(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
     fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fread(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
     fread(&SCENE.camera, sizeof(int), 1, fp);
-    fread(&SCENE.player, sizeof(int), 1, fp);
     fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
@@ -225,6 +224,10 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                 case OWNER_COMPONENT:
                     SCENE.owners[entity_copy] = SCENE.owners[entity];
                     break;
+                case CONTROLLER_COMPONENT:
+                    SCENE.controllers[entity_copy]
+                        = SCENE.controllers[entity];
+                    break;
                 default: {
                     const char* component_name = get_component_type_name(
                         type
@@ -244,7 +247,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     return entity_copy;
 }
 
-int spawn_renderable_guy(
+int spawn_guy(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
@@ -253,18 +256,10 @@ int spawn_renderable_guy(
     Kinematic kinematic,
     Vision vision,
     Gun gun,
-    float health,
-    int is_player
+    Controller controller,
+    float health
 ) {
     int entity = spawn_entity("Guy");
-    if (is_player) {
-        if (SCENE.player != -1) {
-            fprintf(stderr, "ERROR: Only one player can be spawned\n");
-            exit(1);
-        }
-
-        SCENE.player = entity;
-    }
 
     SCENE.transformations[entity] = transformation;
     SCENE.primitives[entity] = primitive;
@@ -275,18 +270,20 @@ int spawn_renderable_guy(
     SCENE.visions[entity] = vision;
     SCENE.guns[entity] = gun;
     SCENE.healths[entity] = health;
+    SCENE.controllers[entity] = controller;
 
     SCENE.components[entity] = TRANSFORMATION_COMPONENT
                                | KINEMATIC_COMPONENT | VISION_COMPONENT
                                | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
                                | MATERIAL_COMPONENT | GUN_COMPONENT
-                               | HEALTH_COMPONENT | RENDER_LAYER_COMPONENT;
+                               | HEALTH_COMPONENT | CONTROLLER_COMPONENT
+                               | RENDER_LAYER_COMPONENT;
 
     return entity;
 }
 
-int spawn_renderable_obstacle(
+int spawn_obstacle(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
@@ -307,7 +304,7 @@ int spawn_renderable_obstacle(
     return entity;
 }
 
-int spawn_kinematic_bullet(
+int spawn_bullet(
     Transformation transformation,
     Kinematic kinematic,
     float ttl,
@@ -323,8 +320,8 @@ int spawn_kinematic_bullet(
                                | BULLET_COMPONENT | OWNER_COMPONENT;
 }
 
-int spawn_default_renderable_guy(Transformation transformation) {
-    return spawn_renderable_guy(
+int spawn_default_dummy_ai_guy(Transformation transformation) {
+    return spawn_guy(
         transformation,
         init_default_circle_primitive(),
         init_default_circle_primitive(),
@@ -332,15 +329,29 @@ int spawn_default_renderable_guy(Transformation transformation) {
         0.0,
         init_kinematic(5.0, 2.0 * PI),
         init_vision(0.5 * PI, 10.0, 32),
-        init_gun(4.0, 50.0, 1.0),
-        1000.0,
-        0
+        init_gun(4.0, 100.0, 5.0),
+        init_dummy_ai_controller(),
+        1000.0
     );
 }
 
-int spawn_default_renderable_circle_obstacle(Transformation transformation
-) {
-    return spawn_renderable_obstacle(
+int spawn_default_player_keyboard_guy(Transformation transformation) {
+    return spawn_guy(
+        transformation,
+        init_default_circle_primitive(),
+        init_default_circle_primitive(),
+        init_material(FOREST_GREEN_COLOR),
+        0.0,
+        init_kinematic(5.0, 2.0 * PI),
+        init_vision(0.5 * PI, 10.0, 32),
+        init_gun(4.0, 100.0, 5.0),
+        init_player_keyboard_controller(),
+        1000.0
+    );
+}
+
+int spawn_default_circle_obstacle(Transformation transformation) {
+    return spawn_obstacle(
         transformation,
         init_default_circle_primitive(),
         init_default_circle_primitive(),
@@ -349,10 +360,8 @@ int spawn_default_renderable_circle_obstacle(Transformation transformation
     );
 }
 
-int spawn_default_renderable_rectangle_obstacle(
-    Transformation transformation
-) {
-    return spawn_renderable_obstacle(
+int spawn_default_rectangle_obstacle(Transformation transformation) {
+    return spawn_obstacle(
         transformation,
         init_default_rectangle_primitive(),
         init_default_rectangle_primitive(),
@@ -361,8 +370,8 @@ int spawn_default_renderable_rectangle_obstacle(
     );
 }
 
-int spawn_default_renderable_line_obstacle(Transformation transformation) {
-    return spawn_renderable_obstacle(
+int spawn_default_line_obstacle(Transformation transformation) {
+    return spawn_obstacle(
         transformation,
         init_default_line_primitive(),
         init_default_line_primitive(),
@@ -371,9 +380,8 @@ int spawn_default_renderable_line_obstacle(Transformation transformation) {
     );
 }
 
-int spawn_default_renderable_polygon_obstacle(Transformation transformation
-) {
-    return spawn_renderable_obstacle(
+int spawn_default_polygon_obstacle(Transformation transformation) {
+    return spawn_obstacle(
         transformation,
         init_default_polygon_primitive(),
         init_default_polygon_primitive(),
@@ -432,7 +440,7 @@ void update_scene(float dt, int is_playing) {
     if (is_playing) {
         update_ttls(dt);
         update_healths();
-        update_player();
+        update_controllers();
         update_bullets(dt);
         update_kinematics(dt);
         update_entities_scene_counter();

@@ -7,16 +7,21 @@
 #include "../system.h"
 #include <math.h>
 
-void update_player() {
-    if (SCENE.player == -1 || SCENE.camera == -1) {
+static void update_player_keyboard_controller(int entity) {
+    if (SCENE.camera == -1) {
         return;
     }
-    Kinematic* kinematic = &SCENE.kinematics[SCENE.player];
-    Transformation* transformation = &SCENE.transformations[SCENE.player];
+
+    int components = TRANSFORMATION_COMPONENT | KINEMATIC_COMPONENT;
+    if (!check_if_entity_has_component(entity, components)) {
+        return;
+    }
+
+    Kinematic* kinematic = &SCENE.kinematics[entity];
+    Transformation* transformation = &SCENE.transformations[entity];
     Transformation camera = SCENE.transformations[SCENE.camera];
 
     Vec2 look_at = get_cursor_scene_pos();
-    DEBUG.general.look_at = look_at;
 
     Vec2 velocity = {0.0, 0.0};
     velocity.y += 1.0 * APP.key_states[GLFW_KEY_W];
@@ -34,8 +39,8 @@ void update_player() {
     kinematic->velocity = velocity;
 
     if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
-        if (check_if_entity_has_component(SCENE.player, GUN_COMPONENT)) {
-            Gun* gun = &SCENE.guns[SCENE.player];
+        if (check_if_entity_has_component(entity, GUN_COMPONENT)) {
+            Gun* gun = &SCENE.guns[entity];
             float time_since_last_shoot
                 = (APP.time - gun->last_time_shoot);
             if (gun->last_time_shoot == 0
@@ -55,12 +60,34 @@ void update_player() {
                     0.0};
                 Transformation bullet_transformation = *transformation;
 
-                spawn_kinematic_bullet(
+                spawn_bullet(
                     bullet_transformation,
                     bullet_kinematic,
                     gun->bullet.ttl,
-                    SCENE.player
+                    entity
                 );
+            }
+        }
+    }
+}
+
+static void update_dummy_ai_controller(int entity) {}
+
+void update_controllers() {
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, CONTROLLER_COMPONENT)) {
+            continue;
+        }
+
+        ControllerType type = SCENE.controllers[entity].type;
+        switch (type) {
+            case PLAYER_KEYBOARD_CONTROLLER: {
+                update_player_keyboard_controller(entity);
+                break;
+            }
+            case DUMMY_AI_CONTROLLER: {
+                update_dummy_ai_controller(entity);
+                break;
             }
         }
     }

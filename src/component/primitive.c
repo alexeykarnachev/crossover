@@ -65,8 +65,7 @@ void change_primitive_type(
 }
 
 Primitive init_circle_primitive(float radius) {
-    Primitive primitive;
-    memset(&primitive, 0, sizeof(primitive));
+    Primitive primitive = {0};
 
     primitive.type = CIRCLE_PRIMITIVE;
     Circle circle = {radius};
@@ -75,8 +74,7 @@ Primitive init_circle_primitive(float radius) {
 }
 
 Primitive init_rectangle_primitive(float width, float height) {
-    Primitive primitive;
-    memset(&primitive, 0, sizeof(primitive));
+    Primitive primitive = {0};
 
     primitive.type = RECTANGLE_PRIMITIVE;
     Rectangle rectangle = {width, height};
@@ -85,8 +83,7 @@ Primitive init_rectangle_primitive(float width, float height) {
 }
 
 Primitive init_line_primitive(Vec2 b) {
-    Primitive primitive;
-    memset(&primitive, 0, sizeof(primitive));
+    Primitive primitive = {0};
 
     primitive.type = LINE_PRIMITIVE;
     Line line = {b};
@@ -97,8 +94,7 @@ Primitive init_line_primitive(Vec2 b) {
 Primitive init_polygon_primitive(
     Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices
 ) {
-    Primitive primitive;
-    memset(&primitive, 0, sizeof(primitive));
+    Primitive primitive = {0};
 
     primitive.type = POLYGON_PRIMITIVE;
     Polygon polygon;

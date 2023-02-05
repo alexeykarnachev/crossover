@@ -166,21 +166,20 @@ static void render_primitive_header_settings(
     }
 
     // "Change primitive" type button
-    PrimitiveType selected_type = target_primitive->type;
-    const char* selected_type_name = get_primitive_type_name(selected_type
-    );
+    PrimitiveType picked_type = target_primitive->type;
+    const char* picked_type_name = get_primitive_type_name(picked_type);
 
-    if (igBeginCombo("Type", selected_type_name, 0)) {
+    if (igBeginCombo("Type", picked_type_name, 0)) {
         for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
             PrimitiveType type = PRIMITIVE_TYPES[i];
             const char* type_name = get_primitive_type_name(type);
-            int is_selected = strcmp(selected_type_name, type_name) == 0;
-            if (igSelectable_Bool(type_name, is_selected, 0, VEC2_ZERO)) {
-                selected_type_name = type_name;
+            int is_picked = strcmp(picked_type_name, type_name) == 0;
+            if (igSelectable_Bool(type_name, is_picked, 0, VEC2_ZERO)) {
+                picked_type_name = type_name;
                 change_primitive_type(target_primitive, type);
             }
 
-            if (is_selected) {
+            if (is_picked) {
                 igSetItemDefaultFocus();
             }
         }
@@ -300,11 +299,6 @@ static void render_debug_info(void) {
             DEBUG.general.camera_position.y
         );
         igText(
-            "Player look-at: (%.2f, %.2f)",
-            DEBUG.general.look_at.x,
-            DEBUG.general.look_at.y
-        );
-        igText(
             "Cursor pos: (%.2f, %.2f)",
             DEBUG.inputs.cursor_x,
             DEBUG.inputs.cursor_y
@@ -336,7 +330,8 @@ static void render_editor_context_menu(void) {
         igOpenPopup_Str("editor_context_menu", 0);
     }
 
-    int spawn_guy = 0;
+    int spawn_player_keyboard_guy = 0;
+    int spawn_dummy_ai_guy = 0;
     int spawn_line_obstacle = 0;
     int spawn_circle_obstacle = 0;
     int spawn_rectangle_obstacle = 0;
@@ -347,7 +342,18 @@ static void render_editor_context_menu(void) {
     int delete = 0;
     if (igBeginPopup("editor_context_menu", 0)) {
         if (igBeginMenu("Spawn", 1)) {
-            menu_item_ptr("Guy", NULL, (bool*)&spawn_guy, 1);
+            if (igBeginMenu("Guy", 1)) {
+                menu_item_ptr(
+                    "Player Keyboard",
+                    NULL,
+                    (bool*)&spawn_player_keyboard_guy,
+                    1
+                );
+                menu_item_ptr(
+                    "Dummy AI", NULL, (bool*)&spawn_dummy_ai_guy, 1
+                );
+                igEndMenu();
+            }
 
             if (igBeginMenu("Obstacle", 1)) {
                 menu_item_ptr(
@@ -379,16 +385,18 @@ static void render_editor_context_menu(void) {
         igEndPopup();
     }
 
-    if (spawn_guy) {
-        spawn_default_renderable_guy(transformation);
+    if (spawn_player_keyboard_guy) {
+        spawn_default_player_keyboard_guy(transformation);
+    } else if (spawn_dummy_ai_guy) {
+        spawn_default_dummy_ai_guy(transformation);
     } else if (spawn_line_obstacle) {
-        spawn_default_renderable_line_obstacle(transformation);
+        spawn_default_line_obstacle(transformation);
     } else if (spawn_circle_obstacle) {
-        spawn_default_renderable_circle_obstacle(transformation);
+        spawn_default_circle_obstacle(transformation);
     } else if (spawn_rectangle_obstacle) {
-        spawn_default_renderable_rectangle_obstacle(transformation);
+        spawn_default_rectangle_obstacle(transformation);
     } else if (spawn_polygon_obstacle) {
-        spawn_default_renderable_polygon_obstacle(transformation);
+        spawn_default_polygon_obstacle(transformation);
     } else if (copy) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     } else if (paste) {
@@ -479,6 +487,9 @@ static void render_entity_editor() {
             );
             int has_primitive = check_if_entity_has_component(
                 picked_entity, PRIMITIVE_COMPONENT
+            );
+            int has_controller = check_if_entity_has_component(
+                picked_entity, CONTROLLER_COMPONENT
             );
             if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
                 && picked_entity != -1) {
@@ -600,6 +611,42 @@ static void render_entity_editor() {
                     }
                 }
 
+                if (has_controller) {
+                    if (igTreeNodeEx_Str("Controller", flags)) {
+                        Controller* controller
+                            = &SCENE.controllers[picked_entity];
+                        ControllerType picked_type = controller->type;
+                        const char* picked_type_name
+                            = get_controller_type_name(picked_type);
+
+                        if (igBeginCombo("Type", picked_type_name, 0)) {
+                            for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
+                                PrimitiveType type = CONTROLLER_TYPES[i];
+                                const char* type_name
+                                    = get_controller_type_name(type);
+                                int is_picked
+                                    = strcmp(picked_type_name, type_name)
+                                      == 0;
+                                if (igSelectable_Bool(
+                                        type_name, is_picked, 0, VEC2_ZERO
+                                    )) {
+                                    picked_type_name = type_name;
+                                    change_controller_type(
+                                        controller, type
+                                    );
+                                }
+
+                                if (is_picked) {
+                                    igSetItemDefaultFocus();
+                                }
+                            }
+                            igEndCombo();
+                        }
+                        igTreePop();
+                        igSeparator();
+                    }
+                }
+
                 if (check_if_entity_has_component(
                         picked_entity, TTL_COMPONENT
                     )) {
@@ -701,7 +748,6 @@ static void render_scene_editor(void) {
 
         if (igCollapsingHeader_TreeNodeFlags("Debug", 0)) {
             if (igTreeNodeEx_Str("Shading", 0)) {
-                igCheckbox("Player", (bool*)(&DEBUG.shading.player));
                 igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
                 igCheckbox(
                     "Collision MTVs",

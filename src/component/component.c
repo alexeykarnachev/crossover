@@ -17,7 +17,8 @@ ComponentType COMPONENT_TYPES_LIST[N_COMPONENTS] = {
     HEALTH_COMPONENT,
     GUN_COMPONENT,
     BULLET_COMPONENT,
-    OWNER_COMPONENT};
+    OWNER_COMPONENT,
+    CONTROLLER_COMPONENT};
 
 const char* get_component_type_name(ComponentType type) {
     switch (type) {
@@ -49,6 +50,8 @@ const char* get_component_type_name(ComponentType type) {
             return "Bullet";
         case OWNER_COMPONENT:
             return "Owner";
+        case CONTROLLER_COMPONENT:
+            return "Controller";
         default: {
             fprintf(
                 stderr,

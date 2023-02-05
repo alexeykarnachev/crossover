@@ -19,9 +19,9 @@ void update_collisions(void);
 void update_bullets(float dt);
 void update_healths(void);
 void update_kinematics(float dt);
-void update_player(void);
 void update_ttls(float dt);
 void update_visions(void);
+void update_controllers(void);
 
 void render_debug_player(void);
 void render_debug_kinematics(void);

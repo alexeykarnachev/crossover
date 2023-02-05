@@ -57,7 +57,7 @@ int load_editor_project(const char* file_path) {
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: Can't load Project file: %s\n", file_path);
-        exit(1);
+        return 0;
     }
 
     reset_editor();
@@ -71,7 +71,7 @@ int load_editor_project(const char* file_path) {
             project->version,
             PROJECT_VERSION
         );
-        exit(1);
+        return 0;
     }
 
     const char** file_paths[3] = {

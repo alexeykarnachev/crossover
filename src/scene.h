@@ -22,12 +22,10 @@ typedef struct Scene {
     float healths[MAX_N_ENTITIES];
     float render_layers[MAX_N_ENTITIES];
     int owners[MAX_N_ENTITIES];
+    Controller controllers[MAX_N_ENTITIES];
 
     // Singleton entities
     int camera;
-    int player;
-
-    // Other configuration
     float camera_view_width;
 } Scene;
 
@@ -51,7 +49,7 @@ int check_if_entity_has_component(int entity, ComponentType component);
 
 int spawn_entity_copy(int entity, Transformation transformation);
 int spawn_camera(Transformation transformation);
-int spawn_renderable_guy(
+int spawn_guy(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
@@ -60,29 +58,26 @@ int spawn_renderable_guy(
     Kinematic kinematic,
     Vision vision,
     Gun gun,
-    float health,
-    int is_player
+    Controller controller,
+    float health
 );
-int spawn_renderable_obstacle(
+int spawn_obstacle(
     Transformation transformation,
     Primitive primitive,
     Primitive collider,
     Material material,
     float render_layer
 );
-int spawn_kinematic_bullet(
+int spawn_bullet(
     Transformation transformation,
     Kinematic kinematic,
     float ttl,
     int owner
 );
-int spawn_default_renderable_guy(Transformation transformation);
-int spawn_default_renderable_circle_obstacle(Transformation transformation
-);
-int spawn_default_renderable_rectangle_obstacle(
-    Transformation transformation
-);
-int spawn_default_renderable_line_obstacle(Transformation transformation);
-int spawn_default_renderable_polygon_obstacle(Transformation transformation
-);
+int spawn_default_player_keyboard_guy(Transformation transformation);
+int spawn_default_dummy_ai_guy(Transformation transformation);
+int spawn_default_circle_obstacle(Transformation transformation);
+int spawn_default_rectangle_obstacle(Transformation transformation);
+int spawn_default_line_obstacle(Transformation transformation);
+int spawn_default_polygon_obstacle(Transformation transformation);
 void update_scene(float dt, int is_playing);
