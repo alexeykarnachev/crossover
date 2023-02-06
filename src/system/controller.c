@@ -25,7 +25,6 @@ static void try_shoot(int entity) {
         velocity = scale(velocity, gun->bullet.speed);
         Kinematic kinematic = {
             velocity, gun->bullet.speed, transformation.orientation, 0.0};
-
         spawn_bullet(transformation, kinematic, gun->bullet.ttl, entity);
     }
 }
@@ -68,7 +67,37 @@ static void update_player_keyboard_controller(int entity) {
     }
 }
 
-static void update_dummy_ai_controller(int entity) {}
+static void update_dummy_ai_controller(int entity) {
+    Vision vision = SCENE.visions[entity];
+    Vec2 position = SCENE.transformations[entity].position;
+    Kinematic* kinematic = &SCENE.kinematics[entity];
+
+    for (int i = 0; i < vision.n_view_rays; ++i) {
+        RayCastResult observation = vision.observations[i];
+        int target = observation.entity;
+        float nearest_dist = HUGE_VAL;
+        Vec2 nearest_target_position;
+
+        if (target != -1
+            && check_if_entity_has_component(
+                target, CONTROLLER_COMPONENT
+            )) {
+            Vec2 target_position = observation.position;
+            float d = dist(position, target_position);
+            if (d < nearest_dist) {
+                nearest_dist = d;
+                nearest_target_position = target_position;
+            }
+        }
+
+        if (nearest_dist < HUGE_VAL) {
+            kinematic->orientation = get_vec_orientation(
+                sub(nearest_target_position, position)
+            );
+            try_shoot(entity);
+        }
+    }
+}
 
 void update_controllers() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {

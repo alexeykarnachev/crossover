@@ -98,6 +98,7 @@ Vec4 vec4(float x, float y, float z, float w) {
 
 Vec2 get_orientation_vec(float orientation) {
     Vec2 vec = vec2(cos(orientation), sin(orientation));
+    return vec;
 }
 
 Vec2 scale(Vec2 v, float k) {
