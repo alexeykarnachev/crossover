@@ -1,5 +1,4 @@
-#include "../component.h"
-#include "../math.h"
+#include "gun.h"
 
 Gun init_gun(float bullet_ttl, float bullet_speed, float fire_rate) {
     Gun g;

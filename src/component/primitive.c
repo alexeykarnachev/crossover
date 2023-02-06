@@ -1,4 +1,5 @@
-#include "../component.h"
+#include "primitive.h"
+// TODO: decouple scene and primitive (almost don't need it here)
 #include "../scene.h"
 #include "math.h"
 #include <stdio.h>

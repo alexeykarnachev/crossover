@@ -1,4 +1,5 @@
-#include "../component.h"
+#include "controller.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 

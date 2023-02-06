@@ -1,4 +1,5 @@
-#include "../component.h"
+#include "transformation.h"
+
 #include "../math.h"
 
 Transformation init_transformation(Vec2 position, float orientation) {

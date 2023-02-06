@@ -177,7 +177,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     SCENE.components[entity_copy] |= TRANSFORMATION_COMPONENT;
     SCENE.transformations[entity_copy] = transformation;
 
-    for (int i = 0; i < N_COMPONENTS; ++i) {
+    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
         ComponentType type = COMPONENT_TYPES_LIST[i];
         if (check_if_entity_has_component(entity, type)) {
             SCENE.components[entity_copy] |= type;

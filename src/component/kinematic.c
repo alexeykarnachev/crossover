@@ -1,4 +1,5 @@
-#include "../component.h"
+#include "kinematic.h"
+
 #include "../math.h"
 
 Kinematic init_kinematic(float max_speed, float rotation_speed) {

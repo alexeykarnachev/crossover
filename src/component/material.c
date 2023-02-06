@@ -1,4 +1,5 @@
-#include "../component.h"
+#include "material.h"
+
 #include "../math.h"
 
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};

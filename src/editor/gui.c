@@ -18,7 +18,7 @@
 #define menu_item_ptr igMenuItem_BoolPtr
 
 static int LAST_PICKED_ENTITY = -1;
-static int LAST_PICKED_COMPONENTS[N_COMPONENTS];
+static int LAST_PICKED_COMPONENTS[N_COMPONENT_TYPES];
 static ImVec2 VEC2_ZERO = {0, 0};
 static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 
@@ -450,7 +450,7 @@ static void render_entity_editor() {
                 uint64_t* components = &SCENE.components[picked_entity];
 
                 if (picked_entity != LAST_PICKED_ENTITY) {
-                    for (int i = 0; i < N_COMPONENTS; ++i) {
+                    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
                         LAST_PICKED_COMPONENTS[i] = (*components & (1 << i)
                                                     )
                                                     != 0;
@@ -458,14 +458,14 @@ static void render_entity_editor() {
                     LAST_PICKED_ENTITY = picked_entity;
                 }
 
-                for (int i = 0; i < N_COMPONENTS; ++i) {
+                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
                     const char* name = get_component_type_name(
                         COMPONENT_TYPES_LIST[i]
                     );
                     igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
                 }
 
-                for (int i = 0; i < N_COMPONENTS; ++i) {
+                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
                     *components ^= (-LAST_PICKED_COMPONENTS[i]
                                     ^ *components)
                                    & (1ULL << i);
