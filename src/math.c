@@ -77,6 +77,10 @@ float get_orientations_diff(float r0, float r1) {
     return diff;
 }
 
+float get_vec_orientation(Vec2 v) {
+    return atan2(v.y, v.x);
+}
+
 Vec2 vec2(float x, float y) {
     Vec2 res = {x, y};
     return res;
@@ -90,6 +94,10 @@ Vec3 vec3(float x, float y, float z) {
 Vec4 vec4(float x, float y, float z, float w) {
     Vec4 res = {x, y, z, w};
     return res;
+}
+
+Vec2 get_orientation_vec(float orientation) {
+    Vec2 vec = vec2(cos(orientation), sin(orientation));
 }
 
 Vec2 scale(Vec2 v, float k) {
@@ -163,6 +171,20 @@ Vec2 point_to_axis(Vec2 p, Vec2 axis) {
     Vec2 axis_p = scale(axis, k);
     Vec2 res = sub(axis_p, p);
     return res;
+}
+
+float dist(Vec2 v0, Vec2 v1) {
+    float res = length(sub(v1, v0));
+    return res;
+}
+
+float dot(Vec2 v0, Vec2 v1) {
+    float res = v0.x * v1.x + v0.y * v1.y;
+    return res;
+}
+
+float length(Vec2 v) {
+    return sqrt(v.x * v.x + v.y * v.y);
 }
 
 void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2* out) {
@@ -338,18 +360,4 @@ int intersect_line_with_polygon_nearest(
     }
 
     return 0;
-}
-
-float dist(Vec2 v0, Vec2 v1) {
-    float res = length(sub(v1, v0));
-    return res;
-}
-
-float dot(Vec2 v0, Vec2 v1) {
-    float res = v0.x * v1.x + v0.y * v1.y;
-    return res;
-}
-
-float length(Vec2 v) {
-    return sqrt(v.x * v.x + v.y * v.y);
 }
