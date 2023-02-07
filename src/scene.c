@@ -44,6 +44,7 @@ int save_scene(const char* file_path) {
     }
 
     fwrite(&SCENE.version, sizeof(int), 1, fp);
+    fwrite(&SCENE.time, sizeof(float), 1, fp);
     fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
     fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
 
@@ -98,6 +99,7 @@ int load_scene(const char* file_path) {
         return 0;
     }
 
+    fread(&SCENE.time, sizeof(float), 1, fp);
     fread(&SCENE.n_entities, sizeof(int), 1, fp);
     fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
 
@@ -467,7 +469,6 @@ static void update_entities_scene_counter() {
         }
     }
     SCENE.n_entities = n_entities;
-    DEBUG.general.n_entities = n_entities;
 }
 
 void update_scene(float dt, int is_playing) {
@@ -475,6 +476,7 @@ void update_scene(float dt, int is_playing) {
     update_camera();
 
     if (is_playing) {
+        SCENE.time += dt;
         update_ttls(dt);
         update_healths();
         update_controllers();

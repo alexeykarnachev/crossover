@@ -16,7 +16,6 @@ typedef struct PlayerKeyboardController {
 
 typedef struct DummyAIController {
     int is_shooting;
-    int is_walking;
 } DummyAIController;
 
 typedef struct Brain {

@@ -295,24 +295,17 @@ static void render_debug_info(void) {
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
         igText("FPS: %.1f", io->Framerate);
-        igText("Entities: %d", DEBUG.general.n_entities);
+        igText("Scene time: %.1f", SCENE.time);
+        igText("Entities: %d", SCENE.n_entities);
         igText("Collisions: %d", DEBUG.general.n_collisions);
         igText(
             "Camera pos: (%.2f, %.2f)",
             DEBUG.general.camera_position.x,
             DEBUG.general.camera_position.y
         );
-        igText(
-            "Cursor pos: (%.2f, %.2f)",
-            DEBUG.inputs.cursor_x,
-            DEBUG.inputs.cursor_y
-        );
-        igText(
-            "Cursor delta: (%.2f, %.2f)",
-            DEBUG.inputs.cursor_dx,
-            DEBUG.inputs.cursor_dy
-        );
-        igText("Scroll: %.2f", DEBUG.inputs.scroll_dy);
+        igText("Cursor pos: (%.2f, %.2f)", APP.cursor_x, APP.cursor_y);
+        igText("Cursor delta: (%.2f, %.2f)", APP.cursor_dx, APP.cursor_dy);
+        igText("Scroll: %.2f", APP.scroll_dy);
         igText("Project: %s", EDITOR.project.project_file_path);
         igText("Scene: %s", EDITOR.project.scene_file_path);
         igText("Search path: %s", EDITOR.project.default_search_path);
@@ -418,274 +411,194 @@ static void render_editor_context_menu(void) {
     }
 }
 
-static void render_transformation_inspector(int entity) {
-    ComponentType type = TRANSFORMATION_COMPONENT;
+static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
+    TRANSFORMATION_COMPONENT,
+    RIGID_BODY_COMPONENT,
+    COLLIDER_COMPONENT,
+    PRIMITIVE_COMPONENT,
+    MATERIAL_COMPONENT,
+    RENDER_LAYER_COMPONENT,
+    KINEMATIC_MOVEMENT_COMPONENT,
+    VISION_COMPONENT,
+    CONTROLLER_COMPONENT,
+    TTL_COMPONENT,
+    HEALTH_COMPONENT,
+    GUN_COMPONENT};
+
+static void render_component_inspector(int entity, ComponentType type) {
     if (!check_if_entity_has_component(entity, type)) {
         return;
     }
     const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Transformation* transformation = &SCENE.transformations[entity];
-        float* pos = (float*)&transformation->position;
-        float* orient = &transformation->orientation;
-        render_edit_button(TRANSFORMATION_COMPONENT);
-        drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-        drag_float("orient.", orient, -PI, PI, 0.05);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_rigid_body_inspector(int entity) {
-    ComponentType type = RIGID_BODY_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
+    int node = igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen);
+    if (!node) {
         return;
     }
-    const char* name = get_component_type_name(type);
 
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
-        RigidBodyType picked_type = rigid_body->type;
-        const char* picked_type_name = get_rigid_body_type_name(picked_type
-        );
+    switch (type) {
+        case TRANSFORMATION_COMPONENT: {
+            Transformation* transformation
+                = &SCENE.transformations[entity];
+            float* pos = (float*)&transformation->position;
+            float* orient = &transformation->orientation;
+            render_edit_button(TRANSFORMATION_COMPONENT);
+            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+            drag_float("orient.", orient, -PI, PI, 0.05);
+            break;
+        }
+        case RIGID_BODY_COMPONENT: {
+            RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
+            RigidBodyType picked_type = rigid_body->type;
+            const char* picked_type_name = get_rigid_body_type_name(
+                picked_type
+            );
 
-        if (igBeginCombo("Type", picked_type_name, 0)) {
-            for (int i = 0; i < N_RIGID_BODY_TYPES; ++i) {
-                RigidBodyType type = RIGID_BODY_TYPES[i];
-                const char* type_name = get_rigid_body_type_name(type);
-                int is_picked = strcmp(picked_type_name, type_name) == 0;
-                if (igSelectable_Bool(
-                        type_name, is_picked, 0, VEC2_ZERO
-                    )) {
-                    picked_type_name = type_name;
-                    change_rigid_body_type(rigid_body, type);
+            if (igBeginCombo("Type", picked_type_name, 0)) {
+                for (int i = 0; i < N_RIGID_BODY_TYPES; ++i) {
+                    RigidBodyType type = RIGID_BODY_TYPES[i];
+                    const char* type_name = get_rigid_body_type_name(type);
+                    int is_picked = strcmp(picked_type_name, type_name)
+                                    == 0;
+                    if (igSelectable_Bool(
+                            type_name, is_picked, 0, VEC2_ZERO
+                        )) {
+                        picked_type_name = type_name;
+                        change_rigid_body_type(rigid_body, type);
+                    }
+
+                    if (is_picked) {
+                        igSetItemDefaultFocus();
+                    }
                 }
-
-                if (is_picked) {
-                    igSetItemDefaultFocus();
-                }
+                igEndCombo();
             }
-            igEndCombo();
+            break;
         }
-
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_collider_inspector(int entity) {
-    ComponentType type = COLLIDER_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Primitive* source_primitive = NULL;
-        if (check_if_entity_has_component(entity, PRIMITIVE_COMPONENT)) {
-            source_primitive = &SCENE.primitives[entity];
-        }
-        render_primitive_geometry_settings(
-            &SCENE.colliders[entity], source_primitive, COLLIDER_COMPONENT
-        );
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_primitive_inspector(int entity) {
-    ComponentType type = PRIMITIVE_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Primitive* source_primitive = NULL;
-        if (check_if_entity_has_component(entity, COLLIDER_COMPONENT)) {
-            source_primitive = &SCENE.colliders[entity];
-        }
-        render_primitive_geometry_settings(
-            &SCENE.primitives[entity],
-            source_primitive,
-            PRIMITIVE_COMPONENT
-        );
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_material_inspector(int entity) {
-    ComponentType type = MATERIAL_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Material* material = &SCENE.materials[entity];
-        float* color = (float*)&material->diffuse_color;
-        igText("Diffuse color");
-        igColorPicker3("", color, COLOR_PICKER_FLAGS);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_render_layer_inspector(int entity) {
-    ComponentType type = RENDER_LAYER_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        float* render_layer = &SCENE.render_layers[entity];
-        drag_float("z", render_layer, -1.0, 1.0, 0.1);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_kinematic_movement_inspector(int entity) {
-    ComponentType type = KINEMATIC_MOVEMENT_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-
-        igCheckbox("is moving", (bool*)(&movement->is_moving));
-        drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0);
-        drag_float(
-            "orient.", &movement->target_orientation, -PI, PI, 0.05
-        );
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_vision_inspector(int entity) {
-    ComponentType type = VISION_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Vision* vision = &SCENE.visions[entity];
-        int* n_view_rays = &vision->n_view_rays;
-        float* distance = &vision->distance;
-        float* fov = &vision->fov;
-
-        drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
-        drag_float("distance", distance, 0.0, FLT_MAX, 0.1);
-        drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_controller_inspector(int entity) {
-    ComponentType type = CONTROLLER_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Controller* controller = &SCENE.controllers[entity];
-        ControllerType picked_type = controller->type;
-        const char* picked_type_name = get_controller_type_name(picked_type
-        );
-
-        if (igBeginCombo("Type", picked_type_name, 0)) {
-            for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
-                PrimitiveType type = CONTROLLER_TYPES[i];
-                const char* type_name = get_controller_type_name(type);
-                int is_picked = strcmp(picked_type_name, type_name) == 0;
-                if (igSelectable_Bool(
-                        type_name, is_picked, 0, VEC2_ZERO
-                    )) {
-                    picked_type_name = type_name;
-                    change_controller_type(controller, type);
-                }
-
-                if (is_picked) {
-                    igSetItemDefaultFocus();
-                }
+        case COLLIDER_COMPONENT: {
+            Primitive* source_primitive = NULL;
+            if (check_if_entity_has_component(
+                    entity, PRIMITIVE_COMPONENT
+                )) {
+                source_primitive = &SCENE.primitives[entity];
             }
-            igEndCombo();
+            render_primitive_geometry_settings(
+                &SCENE.colliders[entity],
+                source_primitive,
+                COLLIDER_COMPONENT
+            );
+            break;
         }
-
-        if (picked_type == DUMMY_AI_CONTROLLER) {
-            DummyAIController* dummy_ai = &controller->c.dummy_ai;
-            igCheckbox("Shoot", (bool*)(&dummy_ai->is_shooting));
-            same_line();
-            igCheckbox("Walk", (bool*)(&dummy_ai->is_walking));
+        case PRIMITIVE_COMPONENT: {
+            Primitive* source_primitive = NULL;
+            if (check_if_entity_has_component(
+                    entity, COLLIDER_COMPONENT
+                )) {
+                source_primitive = &SCENE.colliders[entity];
+            }
+            render_primitive_geometry_settings(
+                &SCENE.primitives[entity],
+                source_primitive,
+                PRIMITIVE_COMPONENT
+            );
+            break;
         }
-
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_ttl_inspector(int entity) {
-    ComponentType type = TTL_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        float* ttl = &SCENE.ttls[entity];
-        drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_health_inspector(int entity) {
-    ComponentType type = HEALTH_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        float* health = &SCENE.healths[entity];
-        drag_float("health", health, 0.0, FLT_MAX, 1.0);
-        igTreePop();
-        igSeparator();
-    }
-}
-
-static void render_gun_inspector(int entity) {
-    ComponentType type = GUN_COMPONENT;
-    if (!check_if_entity_has_component(entity, type)) {
-        return;
-    }
-    const char* name = get_component_type_name(type);
-
-    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
-        Gun* gun = &SCENE.guns[entity];
-        float* ttl = &gun->bullet.ttl;
-        float* speed = &gun->bullet.speed;
-        float* fire_rate = &gun->fire_rate;
-
-        if (igTreeNodeEx_Str("bullet", ImGuiTreeNodeFlags_DefaultOpen)) {
-            drag_float("ttl", ttl, 0.0, 30.0, 1.0);
-            drag_float("speed", speed, 0.0, 5000.0, 5.0);
-            igTreePop();
+        case MATERIAL_COMPONENT: {
+            Material* material = &SCENE.materials[entity];
+            float* color = (float*)&material->diffuse_color;
+            igText("Diffuse color");
+            igColorPicker3("", color, COLOR_PICKER_FLAGS);
+            break;
         }
+        case RENDER_LAYER_COMPONENT: {
+            float* render_layer = &SCENE.render_layers[entity];
+            drag_float("z", render_layer, -1.0, 1.0, 0.1);
+            break;
+        }
+        case KINEMATIC_MOVEMENT_COMPONENT: {
+            KinematicMovement* movement
+                = &SCENE.kinematic_movements[entity];
 
-        drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01);
-        igTreePop();
-        igSeparator();
+            igCheckbox("is moving", (bool*)(&movement->is_moving));
+            drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0);
+            drag_float(
+                "orient.", &movement->target_orientation, -PI, PI, 0.05
+            );
+            break;
+        }
+        case VISION_COMPONENT: {
+            Vision* vision = &SCENE.visions[entity];
+            int* n_view_rays = &vision->n_view_rays;
+            float* distance = &vision->distance;
+            float* fov = &vision->fov;
+
+            drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
+            drag_float("distance", distance, 0.0, FLT_MAX, 0.1);
+            drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1);
+            break;
+        }
+        case CONTROLLER_COMPONENT: {
+            Controller* controller = &SCENE.controllers[entity];
+            ControllerType picked_type = controller->type;
+            const char* picked_type_name = get_controller_type_name(
+                picked_type
+            );
+
+            if (igBeginCombo("Type", picked_type_name, 0)) {
+                for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
+                    PrimitiveType type = CONTROLLER_TYPES[i];
+                    const char* type_name = get_controller_type_name(type);
+                    int is_picked = strcmp(picked_type_name, type_name)
+                                    == 0;
+                    if (igSelectable_Bool(
+                            type_name, is_picked, 0, VEC2_ZERO
+                        )) {
+                        picked_type_name = type_name;
+                        change_controller_type(controller, type);
+                    }
+
+                    if (is_picked) {
+                        igSetItemDefaultFocus();
+                    }
+                }
+                igEndCombo();
+            }
+            if (picked_type == DUMMY_AI_CONTROLLER) {
+                DummyAIController* dummy_ai = &controller->c.dummy_ai;
+                igCheckbox("Shoot", (bool*)(&dummy_ai->is_shooting));
+            }
+            break;
+        }
+        case TTL_COMPONENT: {
+            float* ttl = &SCENE.ttls[entity];
+            drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
+            break;
+        }
+        case HEALTH_COMPONENT: {
+            float* health = &SCENE.healths[entity];
+            drag_float("health", health, 0.0, FLT_MAX, 1.0);
+            break;
+        }
+        case GUN_COMPONENT: {
+            Gun* gun = &SCENE.guns[entity];
+            float* ttl = &gun->bullet.ttl;
+            float* speed = &gun->bullet.speed;
+            float* fire_rate = &gun->fire_rate;
+
+            if (igTreeNodeEx_Str(
+                    "bullet", ImGuiTreeNodeFlags_DefaultOpen
+                )) {
+                drag_float("ttl", ttl, 0.0, 30.0, 1.0);
+                drag_float("speed", speed, 0.0, 5000.0, 5.0);
+                igTreePop();
+            }
+
+            drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01);
+            break;
+        }
     }
+
+    igTreePop();
+    igSeparator();
 }
 
 static void render_entity_editor() {
@@ -748,18 +661,12 @@ static void render_entity_editor() {
                 "Inspector", ImGuiTreeNodeFlags_DefaultOpen
             )
             && picked_entity != -1) {
-            render_transformation_inspector(picked_entity);
-            render_rigid_body_inspector(picked_entity);
-            render_collider_inspector(picked_entity);
-            render_primitive_inspector(picked_entity);
-            render_material_inspector(picked_entity);
-            render_render_layer_inspector(picked_entity);
-            render_kinematic_movement_inspector(picked_entity);
-            render_vision_inspector(picked_entity);
-            render_controller_inspector(picked_entity);
-            render_ttl_inspector(picked_entity);
-            render_health_inspector(picked_entity);
-            render_gun_inspector(picked_entity);
+            int n_types = sizeof(INSPECTABLE_COMPONENT_TYPES)
+                          / sizeof(INSPECTABLE_COMPONENT_TYPES[0]);
+            for (int i = 0; i < n_types; ++i) {
+                ComponentType type = INSPECTABLE_COMPONENT_TYPES[i];
+                render_component_inspector(picked_entity, type);
+            }
         }
     }
     igEnd();

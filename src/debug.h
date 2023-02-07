@@ -18,9 +18,8 @@ typedef struct Debug {
     int n_primitives;
 
     struct general {
-        int n_entities;
-        int n_collisions;
         Vec2 camera_position;
+        int n_collisions;
     } general;
 
     struct shading {
@@ -36,14 +35,6 @@ typedef struct Debug {
         int resolve;
         int resolve_once;
     } collisions;
-
-    struct inputs {
-        float cursor_x;
-        float cursor_y;
-        float cursor_dx;
-        float cursor_dy;
-        float scroll_dy;
-    } inputs;
 } Debug;
 
 extern Debug DEBUG;

@@ -135,12 +135,6 @@ void update_window() {
     APP.scroll_dy = APP._inputs_accum.scroll_dy;
     APP._inputs_accum.scroll_dy = 0.0;
 
-    DEBUG.inputs.cursor_x = APP.cursor_x;
-    DEBUG.inputs.cursor_y = APP.cursor_y;
-    DEBUG.inputs.cursor_dx = APP.cursor_dx;
-    DEBUG.inputs.cursor_dy = APP.cursor_dy;
-    DEBUG.inputs.scroll_dy = APP.scroll_dy;
-
     glfwSwapBuffers(WINDOW);
     glfwPollEvents();
 

@@ -6,6 +6,7 @@
 
 typedef struct Scene {
     int version;
+    float time;
     int n_entities;
 
     // Components

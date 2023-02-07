@@ -15,12 +15,12 @@ static void try_shoot(int entity) {
     Gun* gun = &SCENE.guns[entity];
     Transformation transformation = SCENE.transformations[entity];
 
-    float time_since_last_shoot = (APP.time - gun->last_time_shoot);
+    float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
     float shoot_period = 1.0 / gun->fire_rate;
     int can_shoot = gun->last_time_shoot == 0
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
-        gun->last_time_shoot = APP.time;
+        gun->last_time_shoot = SCENE.time;
         Vec2 move_dir = get_orientation_vec(transformation.orientation);
         KinematicMovement movement = init_kinematic_movement(
             move_dir, gun->bullet.speed, transformation.orientation, 1
