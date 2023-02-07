@@ -20,9 +20,11 @@ typedef struct DummyAIController {
 } DummyAIController;
 
 typedef struct Brain {
-    Vec2 layer_sizes[MAX_N_BRAIN_LAYERS];
+    int hidden_sizes[MAX_N_BRAIN_HIDDENS];
+    int inp_size;
+    int out_size;
     float* weights;
-    int n_layers;
+    int n_hiddens;
 } Brain;
 
 typedef struct BrainAIController {

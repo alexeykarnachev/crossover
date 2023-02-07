@@ -40,21 +40,31 @@ static void same_line(void) {
 }
 
 static void drag_float(
-    char* label, float* value, float min_val, float max_val, float step
+    char* label,
+    float* value,
+    float min_val,
+    float max_val,
+    float step,
+    int flags
 ) {
-    igDragFloat(label, value, step, min_val, max_val, "%.2f", 0);
+    igDragFloat(label, value, step, min_val, max_val, "%.2f", flags);
 }
 
 static void drag_float2(
-    char* label, float values[2], float min_val, float max_val, float step
+    char* label,
+    float values[2],
+    float min_val,
+    float max_val,
+    float step,
+    int flags
 ) {
-    igDragFloat2(label, values, step, min_val, max_val, "%.2f", 0);
+    igDragFloat2(label, values, step, min_val, max_val, "%.2f", flags);
 }
 
 static void drag_int(
-    char* label, int* value, int min_val, int max_val, int step
+    char* label, int* value, int min_val, int max_val, int step, int flags
 ) {
-    igDragInt(label, value, 1, min_val, max_val, "%d", 0);
+    igDragInt(label, value, 1, min_val, max_val, "%d", flags);
 }
 
 static void render_main_menu_bar() {
@@ -218,7 +228,7 @@ static void render_primitive_geometry_settings(
             );
 
             float* radius = &target_primitive->p.circle.radius;
-            drag_float("radius", radius, 0.0, FLT_MAX, 0.05);
+            drag_float("radius", radius, 0.0, FLT_MAX, 0.05, 0);
             break;
         }
         case RECTANGLE_PRIMITIVE: {
@@ -229,8 +239,8 @@ static void render_primitive_geometry_settings(
 
             float* width = &target_primitive->p.rectangle.width;
             float* height = &target_primitive->p.rectangle.height;
-            drag_float("width", width, 0.0, FLT_MAX, 0.05);
-            drag_float("height", height, 0.0, FLT_MAX, 0.05);
+            drag_float("width", width, 0.0, FLT_MAX, 0.05, 0);
+            drag_float("height", height, 0.0, FLT_MAX, 0.05, 0);
             break;
         }
         case LINE_PRIMITIVE: {
@@ -240,7 +250,7 @@ static void render_primitive_geometry_settings(
             );
 
             float* b = (float*)&target_primitive->p.line.b;
-            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05);
+            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05, 0);
             break;
         }
         case POLYGON_PRIMITIVE: {
@@ -263,7 +273,7 @@ static void render_primitive_geometry_settings(
                 char label[16];
                 sprintf(label, "v: %d", i);
                 float* vertex = (float*)&polygon->vertices[i];
-                drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05);
+                drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05, 0);
             }
             break;
         }
@@ -455,8 +465,8 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* pos = (float*)&transformation->position;
             float* orient = &transformation->orientation;
             render_edit_button(TRANSFORMATION_COMPONENT);
-            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-            drag_float("orient.", orient, -PI, PI, 0.05);
+            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+            drag_float("orient.", orient, -PI, PI, 0.05, 0);
             break;
         }
         case RIGID_BODY_COMPONENT: {
@@ -507,7 +517,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case RENDER_LAYER_COMPONENT: {
             float* render_layer = &SCENE.render_layers[entity];
-            drag_float("z", render_layer, -1.0, 1.0, 0.1);
+            drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
             break;
         }
         case KINEMATIC_MOVEMENT_COMPONENT: {
@@ -515,9 +525,9 @@ static void render_component_inspector(int entity, ComponentType type) {
                 = &SCENE.kinematic_movements[entity];
 
             igCheckbox("is moving", (bool*)(&movement->is_moving));
-            drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0);
+            drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0, 0);
             drag_float(
-                "orient.", &movement->target_orientation, -PI, PI, 0.05
+                "orient.", &movement->target_orientation, -PI, PI, 0.05, 0
             );
             break;
         }
@@ -527,9 +537,9 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* distance = &vision->distance;
             float* fov = &vision->fov;
 
-            drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
-            drag_float("distance", distance, 0.0, FLT_MAX, 0.1);
-            drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1);
+            drag_float("fov", fov, 0.0, 2.0 * PI, 0.05, 0);
+            drag_float("distance", distance, 0.0, FLT_MAX, 0.1, 0);
+            drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1, 0);
             break;
         }
         case CONTROLLER_COMPONENT: {
@@ -543,19 +553,79 @@ static void render_component_inspector(int entity, ComponentType type) {
             change_controller_type(controller, type);
 
             if (type == DUMMY_AI_CONTROLLER) {
-                DummyAIController* dummy_ai = &controller->c.dummy_ai;
-                igCheckbox("Shoot", (bool*)(&dummy_ai->is_shooting));
+                DummyAIController* ai = &controller->c.dummy_ai;
+                igCheckbox("Shoot", (bool*)(&ai->is_shooting));
+            } else if (type == BRAIN_AI_CONTROLLER) {
+                BrainAIController* ai = &controller->c.brain_ai;
+                Brain* brain = &ai->brain;
+
+                if (igButton("Add layer", VEC2_ZERO)) {
+                    if (brain->n_hiddens < MAX_N_BRAIN_HIDDENS) {
+                        brain->hidden_sizes[brain->n_hiddens++]
+                            = DEFAULT_BRAIN_HIDDEN_SIZE;
+                    }
+                }
+
+                same_line();
+                if (igButton("Delete layer", VEC2_ZERO)) {
+                    if (brain->n_hiddens > 0) {
+                        brain->n_hiddens -= 1;
+                    }
+                }
+
+                // if (igBeginMenu("Brain", 1)) {
+                //     if (menu_item("Save", "", false, 1)) {
+                //         puts("Save brain");
+                //     }
+                //     if (menu_item("Save As", "", false, 1)) {
+                //         puts("Save brain as");
+                //     }
+                //     igEndMenu();
+                // }
+
+                int input_size = 228;
+                int output_size = 69;
+                if (brain->weights == NULL) {
+                    drag_int(
+                        "input",
+                        &input_size,
+                        1,
+                        MAX_BRAIN_HIDDEN_SIZE,
+                        1,
+                        ImGuiSliderFlags_ReadOnly
+                    );
+                    for (int i = 0; i < brain->n_hiddens; ++i) {
+                        char label[16];
+                        sprintf(label, "hidden: %d", i);
+                        drag_int(
+                            label,
+                            &brain->hidden_sizes[i],
+                            1,
+                            MAX_BRAIN_HIDDEN_SIZE,
+                            1,
+                            0
+                        );
+                    }
+                    drag_int(
+                        "output",
+                        &output_size,
+                        1,
+                        MAX_BRAIN_HIDDEN_SIZE,
+                        1,
+                        ImGuiSliderFlags_ReadOnly
+                    );
+                }
             }
             break;
         }
         case TTL_COMPONENT: {
             float* ttl = &SCENE.ttls[entity];
-            drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
+            drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case HEALTH_COMPONENT: {
             float* health = &SCENE.healths[entity];
-            drag_float("health", health, 0.0, FLT_MAX, 1.0);
+            drag_float("health", health, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case GUN_COMPONENT: {
@@ -567,12 +637,12 @@ static void render_component_inspector(int entity, ComponentType type) {
             if (igTreeNodeEx_Str(
                     "bullet", ImGuiTreeNodeFlags_DefaultOpen
                 )) {
-                drag_float("ttl", ttl, 0.0, 30.0, 1.0);
-                drag_float("speed", speed, 0.0, 5000.0, 5.0);
+                drag_float("ttl", ttl, 0.0, 30.0, 1.0, 0);
+                drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
                 igTreePop();
             }
 
-            drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01);
+            drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01, 0);
             break;
         }
     }
@@ -601,10 +671,10 @@ static void render_entity_editor() {
                 = &SCENE.transformations[camera_entity];
             float* pos = (float*)&transformation->position;
             float* orient = (float*)&transformation->orientation;
-            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-            drag_float("orient.", orient, -PI, PI, 0.05);
+            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+            drag_float("orient.", orient, -PI, PI, 0.05, 0);
             drag_float(
-                "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2
+                "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
             );
         }
 
