@@ -16,7 +16,7 @@
     } while (0)
 
 ControllerType CONTROLLER_TYPES[N_CONTROLLER_TYPES] = {
-    PLAYER_KEYBOARD_CONTROLLER, DUMMY_AI_CONTROLLER};
+    PLAYER_KEYBOARD_CONTROLLER, DUMMY_AI_CONTROLLER, BRAIN_AI_CONTROLLER};
 
 const char* get_controller_type_name(ControllerType type) {
     switch (type) {
@@ -24,6 +24,8 @@ const char* get_controller_type_name(ControllerType type) {
             return "Player Keyboard";
         case DUMMY_AI_CONTROLLER:
             return "Dummy AI";
+        case BRAIN_AI_CONTROLLER:
+            return "Brain AI";
         default:
             CONTROLLER_TYPE_ERROR("get_controller_type_name", type);
     }
@@ -44,6 +46,9 @@ void change_controller_type(
         case DUMMY_AI_CONTROLLER:
             *controller = init_dummy_ai_controller();
             break;
+        case BRAIN_AI_CONTROLLER:
+            *controller = init_brain_ai_controller();
+            break;
         default:
             CONTROLLER_TYPE_ERROR("change_controller_type", source_type);
     }
@@ -62,7 +67,16 @@ Controller init_dummy_ai_controller() {
     Controller controller = {0};
 
     controller.type = DUMMY_AI_CONTROLLER;
-    DummyAIController dummy_ai_controller;
+    DummyAIController dummy_ai_controller = {0};
     controller.c.dummy_ai = dummy_ai_controller;
+    return controller;
+}
+
+Controller init_brain_ai_controller() {
+    Controller controller = {0};
+
+    controller.type = BRAIN_AI_CONTROLLER;
+    BrainAIController brain_ai_controller;
+    controller.c.brain_ai = brain_ai_controller;
     return controller;
 }

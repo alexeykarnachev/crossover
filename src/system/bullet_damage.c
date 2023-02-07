@@ -10,10 +10,11 @@
 #include <stdlib.h>
 
 void update_bullets(float dt) {
+    int required_component = TRANSFORMATION_COMPONENT
+                             | KINEMATIC_MOVEMENT_COMPONENT
+                             | BULLET_COMPONENT;
     for (int bullet = 0; bullet < SCENE.n_entities; ++bullet) {
-        if (!check_if_entity_has_component(
-                bullet, KINEMATIC_BULLET_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(bullet, required_component)) {
             continue;
         }
 
@@ -21,19 +22,19 @@ void update_bullets(float dt) {
         if (check_if_entity_has_component(bullet, OWNER_COMPONENT)) {
             owner = SCENE.owners[bullet];
         }
-        Transformation* transformation = &SCENE.transformations[bullet];
-        Kinematic* kinematic = &SCENE.kinematics[bullet];
-        Vec2 ray = scale(kinematic->velocity, dt);
+        Transformation transformation = SCENE.transformations[bullet];
+        KinematicMovement movement = SCENE.kinematic_movements[bullet];
+        Vec2 ray = scale(get_kinematic_velocity(movement), dt);
+        int target_required_component = TRANSFORMATION_COMPONENT
+                                        | COLLIDER_COMPONENT
+                                        | RIGID_BODY_COMPONENT;
         RayCastResult result = cast_ray(
-            transformation->position,
-            ray,
-            DAMAGEABLE_BY_BULLET_COMPONENT,
-            owner
+            transformation.position, ray, target_required_component, owner
         );
         int entity = result.entity;
         if (entity != -1) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
-                SCENE.healths[entity] -= get_kinematic_damage(*kinematic);
+                SCENE.healths[entity] -= movement.speed;
             }
             destroy_entity(bullet);
         }
@@ -41,16 +42,17 @@ void update_bullets(float dt) {
 }
 
 void render_bullets(float dt) {
+    int required_component = TRANSFORMATION_COMPONENT
+                             | KINEMATIC_MOVEMENT_COMPONENT
+                             | BULLET_COMPONENT;
     for (int bullet = 0; bullet < SCENE.n_entities; ++bullet) {
-        if (!check_if_entity_has_component(
-                bullet, KINEMATIC_BULLET_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(bullet, required_component)) {
             continue;
         }
 
         Transformation transformation = SCENE.transformations[bullet];
-        Kinematic kinematic = SCENE.kinematics[bullet];
-        Vec2 ray = scale(kinematic.velocity, dt);
+        KinematicMovement movement = SCENE.kinematic_movements[bullet];
+        Vec2 ray = scale(get_kinematic_velocity(movement), dt);
         render_debug_line(
             transformation.position,
             add(transformation.position, ray),

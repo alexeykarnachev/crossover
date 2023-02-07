@@ -5,13 +5,13 @@
 
 ComponentType COMPONENT_TYPES_LIST[N_COMPONENT_TYPES] = {
     TRANSFORMATION_COMPONENT,
+    RIGID_BODY_COMPONENT,
     COLLIDER_COMPONENT,
     PRIMITIVE_COMPONENT,
     RENDER_LAYER_COMPONENT,
     MATERIAL_COMPONENT,
-    KINEMATIC_COMPONENT,
+    KINEMATIC_MOVEMENT_COMPONENT,
     VISION_COMPONENT,
-    RIGID_BODY_COMPONENT,
     OBSERVABLE_COMPONENT,
     TTL_COMPONENT,
     HEALTH_COMPONENT,
@@ -32,8 +32,8 @@ const char* get_component_type_name(ComponentType type) {
             return "Render layer";
         case MATERIAL_COMPONENT:
             return "Material";
-        case KINEMATIC_COMPONENT:
-            return "Kinematic";
+        case KINEMATIC_MOVEMENT_COMPONENT:
+            return "Kinematic movement";
         case VISION_COMPONENT:
             return "Vision";
         case RIGID_BODY_COMPONENT:

@@ -346,8 +346,10 @@ void render_scene(float dt) {
     glDisable(GL_CULL_FACE);
     glViewport(0, 0, APP.window_width, APP.window_height);
 
+    int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
+                             | MATERIAL_COMPONENT | RENDER_LAYER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(entity, RENDERABLE_COMPONENT)) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
@@ -378,8 +380,8 @@ void render_scene(float dt) {
         render_colliders();
     }
 
-    if (DEBUG.shading.kinematics) {
-        render_debug_kinematics();
+    if (DEBUG.shading.kinematic_movements) {
+        render_debug_kinematic_movements();
     }
     if (DEBUG.shading.collision_mtvs) {
         render_collision_mtvs();

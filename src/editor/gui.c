@@ -35,6 +35,10 @@ static ImGuiColorEditFlags COLOR_PICKER_FLAGS
       | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs
       | ImGuiColorEditFlags_NoAlpha;
 
+static void same_line(void) {
+    igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+}
+
 static void drag_float(
     char* label, float* value, float min_val, float max_val, float step
 ) {
@@ -133,7 +137,7 @@ static void render_primitive_header_settings(
 ) {
     // "Copy primitive" button
     if (source_primitive != NULL) {
-        igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+        same_line();
 
         char copy_primitive_button_id[16];
         sprintf(copy_primitive_button_id, "%d", target_component_type);
@@ -237,7 +241,7 @@ static void render_primitive_geometry_settings(
                 add_polygon_vertex(polygon);
             }
 
-            igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+            same_line();
             if (igButton("Delete vertex", VEC2_ZERO)) {
                 delete_polygon_vertex(polygon);
             }
@@ -332,6 +336,7 @@ static void render_editor_context_menu(void) {
 
     int spawn_player_keyboard_guy = 0;
     int spawn_dummy_ai_guy = 0;
+    int spawn_brain_ai_guy = 0;
     int spawn_line_obstacle = 0;
     int spawn_circle_obstacle = 0;
     int spawn_rectangle_obstacle = 0;
@@ -351,6 +356,9 @@ static void render_editor_context_menu(void) {
                 );
                 menu_item_ptr(
                     "Dummy AI", NULL, (bool*)&spawn_dummy_ai_guy, 1
+                );
+                menu_item_ptr(
+                    "Brain AI", NULL, (bool*)&spawn_brain_ai_guy, 1
                 );
                 igEndMenu();
             }
@@ -386,26 +394,297 @@ static void render_editor_context_menu(void) {
     }
 
     if (spawn_player_keyboard_guy) {
-        spawn_default_player_keyboard_guy(transformation);
+        pick_entity(spawn_default_player_keyboard_guy(transformation));
     } else if (spawn_dummy_ai_guy) {
-        spawn_default_dummy_ai_guy(transformation);
+        pick_entity(spawn_default_dummy_ai_guy(transformation));
+    } else if (spawn_brain_ai_guy) {
+        pick_entity(spawn_default_brain_ai_guy(transformation));
     } else if (spawn_line_obstacle) {
-        spawn_default_line_obstacle(transformation);
+        pick_entity(spawn_default_line_obstacle(transformation));
     } else if (spawn_circle_obstacle) {
-        spawn_default_circle_obstacle(transformation);
+        pick_entity(spawn_default_circle_obstacle(transformation));
     } else if (spawn_rectangle_obstacle) {
-        spawn_default_rectangle_obstacle(transformation);
+        pick_entity(spawn_default_rectangle_obstacle(transformation));
     } else if (spawn_polygon_obstacle) {
-        spawn_default_polygon_obstacle(transformation);
+        pick_entity(spawn_default_polygon_obstacle(transformation));
     } else if (copy) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     } else if (paste) {
-        int entity_copy = spawn_entity_copy(
-            EDITOR.entity_to_copy, transformation
+        pick_entity(
+            spawn_entity_copy(EDITOR.entity_to_copy, transformation)
         );
-        pick_entity(entity_copy);
     } else if (delete) {
         destroy_entity(EDITOR.picked_entity.entity);
+    }
+}
+
+static void render_transformation_inspector(int entity) {
+    ComponentType type = TRANSFORMATION_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Transformation* transformation = &SCENE.transformations[entity];
+        float* pos = (float*)&transformation->position;
+        float* orient = &transformation->orientation;
+        render_edit_button(TRANSFORMATION_COMPONENT);
+        drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+        drag_float("orient.", orient, -PI, PI, 0.05);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_rigid_body_inspector(int entity) {
+    ComponentType type = RIGID_BODY_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
+        RigidBodyType picked_type = rigid_body->type;
+        const char* picked_type_name = get_rigid_body_type_name(picked_type
+        );
+
+        if (igBeginCombo("Type", picked_type_name, 0)) {
+            for (int i = 0; i < N_RIGID_BODY_TYPES; ++i) {
+                RigidBodyType type = RIGID_BODY_TYPES[i];
+                const char* type_name = get_rigid_body_type_name(type);
+                int is_picked = strcmp(picked_type_name, type_name) == 0;
+                if (igSelectable_Bool(
+                        type_name, is_picked, 0, VEC2_ZERO
+                    )) {
+                    picked_type_name = type_name;
+                    change_rigid_body_type(rigid_body, type);
+                }
+
+                if (is_picked) {
+                    igSetItemDefaultFocus();
+                }
+            }
+            igEndCombo();
+        }
+
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_collider_inspector(int entity) {
+    ComponentType type = COLLIDER_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Primitive* source_primitive = NULL;
+        if (check_if_entity_has_component(entity, PRIMITIVE_COMPONENT)) {
+            source_primitive = &SCENE.primitives[entity];
+        }
+        render_primitive_geometry_settings(
+            &SCENE.colliders[entity], source_primitive, COLLIDER_COMPONENT
+        );
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_primitive_inspector(int entity) {
+    ComponentType type = PRIMITIVE_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Primitive* source_primitive = NULL;
+        if (check_if_entity_has_component(entity, COLLIDER_COMPONENT)) {
+            source_primitive = &SCENE.colliders[entity];
+        }
+        render_primitive_geometry_settings(
+            &SCENE.primitives[entity],
+            source_primitive,
+            PRIMITIVE_COMPONENT
+        );
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_material_inspector(int entity) {
+    ComponentType type = MATERIAL_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Material* material = &SCENE.materials[entity];
+        float* color = (float*)&material->diffuse_color;
+        igText("Diffuse color");
+        igColorPicker3("", color, COLOR_PICKER_FLAGS);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_render_layer_inspector(int entity) {
+    ComponentType type = RENDER_LAYER_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        float* render_layer = &SCENE.render_layers[entity];
+        drag_float("z", render_layer, -1.0, 1.0, 0.1);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_kinematic_movement_inspector(int entity) {
+    ComponentType type = KINEMATIC_MOVEMENT_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+
+        igCheckbox("is moving", (bool*)(&movement->is_moving));
+        drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0);
+        drag_float(
+            "orient.", &movement->target_orientation, -PI, PI, 0.05
+        );
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_vision_inspector(int entity) {
+    ComponentType type = VISION_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Vision* vision = &SCENE.visions[entity];
+        int* n_view_rays = &vision->n_view_rays;
+        float* distance = &vision->distance;
+        float* fov = &vision->fov;
+
+        drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
+        drag_float("distance", distance, 0.0, FLT_MAX, 0.1);
+        drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_controller_inspector(int entity) {
+    ComponentType type = CONTROLLER_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Controller* controller = &SCENE.controllers[entity];
+        ControllerType picked_type = controller->type;
+        const char* picked_type_name = get_controller_type_name(picked_type
+        );
+
+        if (igBeginCombo("Type", picked_type_name, 0)) {
+            for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
+                PrimitiveType type = CONTROLLER_TYPES[i];
+                const char* type_name = get_controller_type_name(type);
+                int is_picked = strcmp(picked_type_name, type_name) == 0;
+                if (igSelectable_Bool(
+                        type_name, is_picked, 0, VEC2_ZERO
+                    )) {
+                    picked_type_name = type_name;
+                    change_controller_type(controller, type);
+                }
+
+                if (is_picked) {
+                    igSetItemDefaultFocus();
+                }
+            }
+            igEndCombo();
+        }
+
+        if (picked_type == DUMMY_AI_CONTROLLER) {
+            DummyAIController* dummy_ai = &controller->c.dummy_ai;
+            igCheckbox("Shoot", (bool*)(&dummy_ai->is_shooting));
+            same_line();
+            igCheckbox("Walk", (bool*)(&dummy_ai->is_walking));
+        }
+
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_ttl_inspector(int entity) {
+    ComponentType type = TTL_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        float* ttl = &SCENE.ttls[entity];
+        drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_health_inspector(int entity) {
+    ComponentType type = HEALTH_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        float* health = &SCENE.healths[entity];
+        drag_float("health", health, 0.0, FLT_MAX, 1.0);
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_gun_inspector(int entity) {
+    ComponentType type = GUN_COMPONENT;
+    if (!check_if_entity_has_component(entity, type)) {
+        return;
+    }
+    const char* name = get_component_type_name(type);
+
+    if (igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen)) {
+        Gun* gun = &SCENE.guns[entity];
+        float* ttl = &gun->bullet.ttl;
+        float* speed = &gun->bullet.speed;
+        float* fire_rate = &gun->fire_rate;
+
+        if (igTreeNodeEx_Str("bullet", ImGuiTreeNodeFlags_DefaultOpen)) {
+            drag_float("ttl", ttl, 0.0, 30.0, 1.0);
+            drag_float("speed", speed, 0.0, 5000.0, 5.0);
+            igTreePop();
+        }
+
+        drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01);
+        igTreePop();
+        igSeparator();
     }
 }
 
@@ -420,278 +699,67 @@ static void render_entity_editor() {
     igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
     if (igBegin("Entity", NULL, 0)) {
         // Camera settings: current scene camera components editor
-        {
-            if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
-                && camera_entity != -1) {
-                if (igButton("Reset", VEC2_ZERO)) {
-                    reset_camera();
-                }
-                Transformation* transformation
-                    = &SCENE.transformations[camera_entity];
-                float* pos = (float*)&transformation->position;
-                float* orient = (float*)&transformation->orientation;
-                drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-                drag_float("orient.", orient, -PI, PI, 0.05);
-                drag_float(
-                    "view width",
-                    &SCENE.camera_view_width,
-                    0.0,
-                    1000.0,
-                    0.2
-                );
+        if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
+            && camera_entity != -1) {
+            if (igButton("Reset", VEC2_ZERO)) {
+                reset_camera();
             }
+            Transformation* transformation
+                = &SCENE.transformations[camera_entity];
+            float* pos = (float*)&transformation->position;
+            float* orient = (float*)&transformation->orientation;
+            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
+            drag_float("orient.", orient, -PI, PI, 0.05);
+            drag_float(
+                "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2
+            );
         }
 
         // Components selector: checkboxes for enabling/disabling
         // components of the currently picked entity
-        {
-            if (igCollapsingHeader_TreeNodeFlags("Components", 0)
-                && picked_entity != -1) {
-                uint64_t* components = &SCENE.components[picked_entity];
+        if (igCollapsingHeader_TreeNodeFlags("Components", 0)
+            && picked_entity != -1) {
+            uint64_t* components = &SCENE.components[picked_entity];
 
-                if (picked_entity != LAST_PICKED_ENTITY) {
-                    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                        LAST_PICKED_COMPONENTS[i] = (*components & (1 << i)
-                                                    )
-                                                    != 0;
-                    }
-                    LAST_PICKED_ENTITY = picked_entity;
-                }
-
+            if (picked_entity != LAST_PICKED_ENTITY) {
                 for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                    const char* name = get_component_type_name(
-                        COMPONENT_TYPES_LIST[i]
-                    );
-                    igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
+                    LAST_PICKED_COMPONENTS[i] = (*components & (1 << i))
+                                                != 0;
                 }
+                LAST_PICKED_ENTITY = picked_entity;
+            }
 
-                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                    *components ^= (-LAST_PICKED_COMPONENTS[i]
-                                    ^ *components)
-                                   & (1ULL << i);
-                }
+            for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+                const char* name = get_component_type_name(
+                    COMPONENT_TYPES_LIST[i]
+                );
+                igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
+            }
+
+            for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+                *components ^= (-LAST_PICKED_COMPONENTS[i] ^ *components)
+                               & (1ULL << i);
             }
         }
 
         // Components inspector: components editor of the currently
         // picked entity
-        {
-            int flags = picked_entity != -1
-                            ? ImGuiTreeNodeFlags_DefaultOpen
-                            : 0;
-            int has_transformation = check_if_entity_has_component(
-                picked_entity, TRANSFORMATION_COMPONENT
-            );
-            int has_collider = check_if_entity_has_component(
-                picked_entity, COLLIDER_COMPONENT
-            );
-            int has_primitive = check_if_entity_has_component(
-                picked_entity, PRIMITIVE_COMPONENT
-            );
-            int has_controller = check_if_entity_has_component(
-                picked_entity, CONTROLLER_COMPONENT
-            );
-            if (igCollapsingHeader_TreeNodeFlags("Inspector", flags)
-                && picked_entity != -1) {
-                int flags = 0;
-                flags |= ImGuiTreeNodeFlags_DefaultOpen;
-
-                if (has_transformation) {
-                    Transformation* transformation
-                        = &SCENE.transformations[picked_entity];
-                    float* pos = (float*)&transformation->position;
-                    float* orient = &transformation->orientation;
-                    if (igTreeNodeEx_Str("Transformation", flags)) {
-                        render_edit_button(TRANSFORMATION_COMPONENT);
-                        drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05);
-                        drag_float("orient.", orient, -PI, PI, 0.05);
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (has_collider) {
-                    if (igTreeNodeEx_Str("Collider", flags)) {
-                        Primitive* source_primitive = NULL;
-                        if (has_primitive) {
-                            source_primitive
-                                = &SCENE.primitives[picked_entity];
-                        }
-                        render_primitive_geometry_settings(
-                            &SCENE.colliders[picked_entity],
-                            source_primitive,
-                            COLLIDER_COMPONENT
-                        );
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (has_primitive) {
-                    if (igTreeNodeEx_Str("Primitive", flags)) {
-                        Primitive* source_primitive = NULL;
-                        if (has_collider) {
-                            source_primitive
-                                = &SCENE.colliders[picked_entity];
-                        }
-                        render_primitive_geometry_settings(
-                            &SCENE.primitives[picked_entity],
-                            source_primitive,
-                            PRIMITIVE_COMPONENT
-                        );
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, MATERIAL_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Material", flags)) {
-                        Material* material
-                            = &SCENE.materials[picked_entity];
-                        float* color = (float*)&material->diffuse_color;
-                        igText("Diffuse color");
-                        igColorPicker3("", color, COLOR_PICKER_FLAGS);
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, RENDER_LAYER_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Render layer", flags)) {
-                        float* render_layer
-                            = &SCENE.render_layers[picked_entity];
-                        drag_float("z", render_layer, -1.0, 1.0, 0.1);
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, KINEMATIC_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Kinematic", flags)) {
-                        Kinematic* kinematic
-                            = &SCENE.kinematics[picked_entity];
-                        float* max_speed = &kinematic->max_speed;
-                        float* rot_speed = &kinematic->rotation_speed;
-
-                        drag_float(
-                            "max. speed", max_speed, 0.0, FLT_MAX, 1.0
-                        );
-                        drag_float(
-                            "rot. speed", rot_speed, 0.0, FLT_MAX, 0.05
-                        );
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, VISION_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Vision", flags)) {
-                        Vision* vision = &SCENE.visions[picked_entity];
-                        int* n_view_rays = &vision->n_view_rays;
-                        float* distance = &vision->distance;
-                        float* fov = &vision->fov;
-
-                        drag_float("fov", fov, 0.0, 2.0 * PI, 0.05);
-                        drag_float(
-                            "distance", distance, 0.0, FLT_MAX, 0.1
-                        );
-                        drag_int(
-                            "n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1
-                        );
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (has_controller) {
-                    if (igTreeNodeEx_Str("Controller", flags)) {
-                        Controller* controller
-                            = &SCENE.controllers[picked_entity];
-                        ControllerType picked_type = controller->type;
-                        const char* picked_type_name
-                            = get_controller_type_name(picked_type);
-
-                        if (igBeginCombo("Type", picked_type_name, 0)) {
-                            for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
-                                PrimitiveType type = CONTROLLER_TYPES[i];
-                                const char* type_name
-                                    = get_controller_type_name(type);
-                                int is_picked
-                                    = strcmp(picked_type_name, type_name)
-                                      == 0;
-                                if (igSelectable_Bool(
-                                        type_name, is_picked, 0, VEC2_ZERO
-                                    )) {
-                                    picked_type_name = type_name;
-                                    change_controller_type(
-                                        controller, type
-                                    );
-                                }
-
-                                if (is_picked) {
-                                    igSetItemDefaultFocus();
-                                }
-                            }
-                            igEndCombo();
-                        }
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, TTL_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("TTL", flags)) {
-                        float* ttl = &SCENE.ttls[picked_entity];
-                        drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0);
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, HEALTH_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Health", flags)) {
-                        float* health = &SCENE.healths[picked_entity];
-                        drag_float("health", health, 0.0, FLT_MAX, 1.0);
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-
-                if (check_if_entity_has_component(
-                        picked_entity, GUN_COMPONENT
-                    )) {
-                    if (igTreeNodeEx_Str("Gun", flags)) {
-                        Gun* gun = &SCENE.guns[picked_entity];
-                        float* ttl = &gun->bullet.ttl;
-                        float* speed = &gun->bullet.speed;
-                        float* fire_rate = &gun->fire_rate;
-
-                        if (igTreeNodeEx_Str("bullet", flags)) {
-                            drag_float("ttl", ttl, 0.0, 30.0, 1.0);
-                            drag_float("speed", speed, 0.0, 5000.0, 5.0);
-                            igTreePop();
-                        }
-
-                        drag_float(
-                            "fire rate", fire_rate, 0.0, 10.0, 0.01
-                        );
-                        igTreePop();
-                        igSeparator();
-                    }
-                }
-            }
+        if (igCollapsingHeader_TreeNodeFlags(
+                "Inspector", ImGuiTreeNodeFlags_DefaultOpen
+            )
+            && picked_entity != -1) {
+            render_transformation_inspector(picked_entity);
+            render_rigid_body_inspector(picked_entity);
+            render_collider_inspector(picked_entity);
+            render_primitive_inspector(picked_entity);
+            render_material_inspector(picked_entity);
+            render_render_layer_inspector(picked_entity);
+            render_kinematic_movement_inspector(picked_entity);
+            render_vision_inspector(picked_entity);
+            render_controller_inspector(picked_entity);
+            render_ttl_inspector(picked_entity);
+            render_health_inspector(picked_entity);
+            render_gun_inspector(picked_entity);
         }
     }
     igEnd();
@@ -755,7 +823,8 @@ static void render_scene_editor(void) {
                 );
                 igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
                 igCheckbox(
-                    "Kinematics", (bool*)(&DEBUG.shading.kinematics)
+                    "Kinematic movements",
+                    (bool*)(&DEBUG.shading.kinematic_movements)
                 );
                 igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
                 igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
@@ -766,7 +835,7 @@ static void render_scene_editor(void) {
             if (igTreeNodeEx_Str("Collisions", 0)) {
                 igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
-                igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+                same_line();
                 if (igButton("once", VEC2_ZERO)) {
                     DEBUG.collisions.resolve_once = 1;
                 }

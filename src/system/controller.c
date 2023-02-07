@@ -21,29 +21,30 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = APP.time;
-        Vec2 velocity = get_orientation_vec(transformation.orientation);
-        velocity = scale(velocity, gun->bullet.speed);
-        Kinematic kinematic = {
-            velocity, gun->bullet.speed, transformation.orientation, 0.0};
-        spawn_bullet(transformation, kinematic, gun->bullet.ttl, entity);
+        Vec2 move_dir = get_orientation_vec(transformation.orientation);
+        KinematicMovement movement = init_kinematic_movement(
+            move_dir, gun->bullet.speed, transformation.orientation, 1
+        );
+        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
     }
 }
 
 static void update_player_keyboard_controller(int entity) {
-    if (SCENE.camera == -1) {
+    int required_component = TRANSFORMATION_COMPONENT
+                             | KINEMATIC_MOVEMENT_COMPONENT;
+    if (!check_if_entity_has_component(entity, required_component)
+        || SCENE.camera == -1) {
         return;
     }
 
-    int components = TRANSFORMATION_COMPONENT | KINEMATIC_COMPONENT;
-    if (!check_if_entity_has_component(entity, components)) {
-        return;
-    }
-
-    Kinematic* kinematic = &SCENE.kinematics[entity];
+    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
     Transformation* transformation = &SCENE.transformations[entity];
     Transformation camera = SCENE.transformations[SCENE.camera];
 
     Vec2 look_at = get_cursor_scene_pos();
+    movement->target_orientation = get_vec_orientation(
+        sub(look_at, transformation->position)
+    );
 
     Vec2 move_dir = {0.0, 0.0};
     move_dir.y += 1.0 * APP.key_states[GLFW_KEY_W];
@@ -51,16 +52,7 @@ static void update_player_keyboard_controller(int entity) {
     move_dir.x -= 1.0 * APP.key_states[GLFW_KEY_A];
     move_dir.x += 1.0 * APP.key_states[GLFW_KEY_D];
     move_dir = rotate(move_dir, vec2(0.0, 0.0), camera.orientation);
-
-    kinematic->orientation = get_vec_orientation(
-        sub(look_at, transformation->position)
-    );
-    Vec2 velocity = {0.0};
-    if (length(move_dir) > EPS) {
-        move_dir = normalize(move_dir);
-        velocity = scale(move_dir, kinematic->max_speed);
-    }
-    kinematic->velocity = velocity;
+    movement->move_dir = move_dir;
 
     if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
         try_shoot(entity);
@@ -68,15 +60,24 @@ static void update_player_keyboard_controller(int entity) {
 }
 
 static void update_dummy_ai_controller(int entity) {
+    int required_component = TRANSFORMATION_COMPONENT
+                             | KINEMATIC_MOVEMENT_COMPONENT
+                             | VISION_COMPONENT;
+    if (!check_if_entity_has_component(entity, required_component)) {
+        return;
+    }
+
+    DummyAIController dummy_ai = SCENE.controllers[entity].c.dummy_ai;
     Vision vision = SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
-    Kinematic* kinematic = &SCENE.kinematics[entity];
+    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+    movement->move_dir = vec2(0.0, 0.0);
 
+    Vec2 nearest_target_position;
+    float nearest_dist = HUGE_VAL;
     for (int i = 0; i < vision.n_view_rays; ++i) {
         RayCastResult observation = vision.observations[i];
         int target = observation.entity;
-        float nearest_dist = HUGE_VAL;
-        Vec2 nearest_target_position;
 
         if (target != -1
             && check_if_entity_has_component(
@@ -89,14 +90,31 @@ static void update_dummy_ai_controller(int entity) {
                 nearest_target_position = target_position;
             }
         }
+    }
 
-        if (nearest_dist < HUGE_VAL) {
-            kinematic->orientation = get_vec_orientation(
-                sub(nearest_target_position, position)
-            );
+    if (nearest_dist < HUGE_VAL) {
+        movement->move_dir = sub(nearest_target_position, position);
+        movement->target_orientation = get_vec_orientation(
+            movement->move_dir
+        );
+
+        if (dummy_ai.is_shooting) {
             try_shoot(entity);
         }
     }
+}
+
+static void update_brain_ai_controller(int entity) {
+    int required_component = TRANSFORMATION_COMPONENT
+                             | KINEMATIC_MOVEMENT_COMPONENT
+                             | VISION_COMPONENT;
+    if (!check_if_entity_has_component(entity, required_component)) {
+        return;
+    }
+    Vision vision = SCENE.visions[entity];
+    Vec2 position = SCENE.transformations[entity].position;
+    Controller controller = SCENE.controllers[entity];
+    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
 }
 
 void update_controllers() {
@@ -115,6 +133,10 @@ void update_controllers() {
                 update_dummy_ai_controller(entity);
                 break;
             }
+                // case BRAIN_AI_CONTROLLER: {
+                //     update_brain_ai_controller(entity);
+                //     break;
+                // }
         }
     }
 }

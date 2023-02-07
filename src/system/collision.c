@@ -168,10 +168,9 @@ int collide_primitives(
 
 static void compute_collisions() {
     COLLISIONS_ARENA.n = 0;
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(
-                entity, CAN_COLLIDE_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
@@ -181,7 +180,7 @@ static void compute_collisions() {
         for (int target = entity + 1; target < SCENE.n_entities;
              ++target) {
             if (!check_if_entity_has_component(
-                    target, CAN_COLLIDE_COMPONENT
+                    target, required_component
                 )) {
                 continue;
             }
@@ -217,42 +216,34 @@ static void resolve_collisions() {
             Vec2 mtv = collision.mtv;
             int entity0 = collision.entity0;
             int entity1 = collision.entity1;
-
+            int has_rb0 = check_if_entity_has_component(
+                entity0, RIGID_BODY_COMPONENT
+            );
+            int has_rb1 = check_if_entity_has_component(
+                entity1, RIGID_BODY_COMPONENT
+            );
             Transformation* transformation0
                 = &SCENE.transformations[entity0];
             Transformation* transformation1
                 = &SCENE.transformations[entity1];
-            if (check_if_entity_has_component(
-                    entity0, RIGID_BODY_COMPONENT
-                )
-                && check_if_entity_has_component(
-                    entity1, RIGID_BODY_COMPONENT
-                )) {
-                int has_kinematic0 = check_if_entity_has_component(
-                    entity0, KINEMATIC_COMPONENT
-                );
-                int has_kinematic1 = check_if_entity_has_component(
-                    entity1, KINEMATIC_COMPONENT
-                );
 
-                // NOTE: For now the engine doesn't simulate the propper
-                // physics. It means, that two rigid bodies can't collide
-                // Unless at least one of them has the kinematics
-                // component.
-                // TODO: Implement the propper rigid bodies collisions
-                // after 2d physics introduction
-                if (has_kinematic0 && has_kinematic1) {
+            if (has_rb0 && has_rb1) {
+                RigidBody rb0 = SCENE.rigid_bodies[entity0];
+                RigidBody rb1 = SCENE.rigid_bodies[entity1];
+
+                if (rb0.type == KINEMATIC_BODY
+                    && rb1.type == KINEMATIC_BODY) {
                     transformation0->position = add(
                         transformation0->position, scale(mtv, 0.5)
                     );
                     transformation1->position = add(
                         transformation1->position, scale(mtv, -0.5)
                     );
-                } else if (has_kinematic0) {
+                } else if (rb0.type == KINEMATIC_BODY) {
                     transformation0->position = add(
                         transformation0->position, mtv
                     );
-                } else if (has_kinematic1) {
+                } else if (rb1.type == KINEMATIC_BODY) {
                     transformation1->position = add(
                         transformation1->position, flip(mtv)
                     );
@@ -288,31 +279,12 @@ void render_collision_mtvs() {
             DEBUG_RENDER_LAYER
         );
     }
-
-    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(
-                entity, CAN_COLLIDE_COMPONENT
-            )) {
-            continue;
-        }
-
-        Transformation transformation = SCENE.transformations[entity];
-        Primitive primitive = SCENE.colliders[entity];
-        render_debug_primitive(
-            transformation,
-            primitive,
-            SKYBLUE_COLOR,
-            DEBUG_RENDER_LAYER,
-            LINE
-        );
-    }
 }
 
 void render_colliders() {
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(
-                entity, CAN_COLLIDE_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 

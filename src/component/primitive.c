@@ -10,7 +10,7 @@
     do { \
         fprintf( \
             stderr, \
-            "ERROR: can't %s for the primitive with type id: %d. Needs " \
+            "ERROR: can't %s for the Primitive with type id: %d. Needs " \
             "to be implemented\n", \
             fn_name, \
             type \
@@ -61,7 +61,7 @@ void change_primitive_type(
             *primitive = init_default_polygon_primitive();
             break;
         default:
-            PRIMITIVE_TYPE_ERROR("get_primitive_type_name", source_type);
+            PRIMITIVE_TYPE_ERROR("change_primitive_type", source_type);
     }
 }
 

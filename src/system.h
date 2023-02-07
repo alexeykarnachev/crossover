@@ -18,13 +18,13 @@ void update_camera(void);
 void update_collisions(void);
 void update_bullets(float dt);
 void update_healths(void);
-void update_kinematics(float dt);
+void update_kinematic_movements(float dt);
 void update_ttls(float dt);
 void update_visions(void);
 void update_controllers(void);
 
 void render_debug_player(void);
-void render_debug_kinematics(void);
+void render_debug_kinematic_movements(void);
 void render_collision_mtvs(void);
 void render_colliders(void);
 void render_debug_visions(void);

@@ -26,10 +26,9 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
 }
 
 void update_visions() {
+    int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(
-                entity, CAN_OBSERVE_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
@@ -51,10 +50,9 @@ void update_visions() {
 }
 
 void render_debug_visions() {
+    int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(
-                entity, CAN_OBSERVE_COMPONENT
-            )) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
