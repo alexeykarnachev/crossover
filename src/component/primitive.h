@@ -4,14 +4,15 @@
 #include "transformation.h"
 
 typedef enum PrimitiveType {
-    CIRCLE_PRIMITIVE = 1 << 0,
-    RECTANGLE_PRIMITIVE = 1 << 1,
-    LINE_PRIMITIVE = 1 << 2,
-    POLYGON_PRIMITIVE = 1 << 3
+    CIRCLE_PRIMITIVE,
+    RECTANGLE_PRIMITIVE,
+    LINE_PRIMITIVE,
+    POLYGON_PRIMITIVE
 } PrimitiveType;
 
 #define N_PRIMITIVE_TYPES 4
 extern PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES];
+const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES];
 
 typedef struct Circle {
     float radius;
@@ -41,7 +42,6 @@ typedef struct Primitive {
     } p;
 } Primitive;
 
-const char* get_primitive_type_name(PrimitiveType type);
 void change_primitive_type(
     Primitive* primitive, PrimitiveType target_type
 );

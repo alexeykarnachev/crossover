@@ -56,7 +56,7 @@ vec2 get_circle_position() {
 
 void main(void) {
     vec2 world_position;
-    if ((type & 1 << 0) != 0) {
+    if (type == 0) {
         world_position = get_circle_position();
     } else {
         world_position = world_pos;

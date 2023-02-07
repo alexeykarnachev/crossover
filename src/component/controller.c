@@ -17,19 +17,8 @@
 
 ControllerType CONTROLLER_TYPES[N_CONTROLLER_TYPES] = {
     PLAYER_KEYBOARD_CONTROLLER, DUMMY_AI_CONTROLLER, BRAIN_AI_CONTROLLER};
-
-const char* get_controller_type_name(ControllerType type) {
-    switch (type) {
-        case PLAYER_KEYBOARD_CONTROLLER:
-            return "Player Keyboard";
-        case DUMMY_AI_CONTROLLER:
-            return "Dummy AI";
-        case BRAIN_AI_CONTROLLER:
-            return "Brain AI";
-        default:
-            CONTROLLER_TYPE_ERROR("get_controller_type_name", type);
-    }
-}
+const char* CONTROLLER_TYPE_NAMES[N_CONTROLLER_TYPES] = {
+    "Player keyboard", "Dummy AI", "Brain AI"};
 
 void change_controller_type(
     Controller* controller, ControllerType target_type

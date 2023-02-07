@@ -130,6 +130,32 @@ static void render_edit_button(ComponentType component_type) {
     igPopID();
 }
 
+int render_component_type_picker(
+    int picked_type, int* types, int n_types, const char* type_names[]
+) {
+    const char* picked_type_name = type_names[picked_type];
+    int new_type = picked_type;
+
+    if (igBeginCombo("Type", picked_type_name, 0)) {
+        for (int i = 0; i < n_types; ++i) {
+            PrimitiveType type = types[i];
+            const char* type_name = type_names[type];
+            int is_picked = strcmp(picked_type_name, type_name) == 0;
+            if (igSelectable_Bool(type_name, is_picked, 0, VEC2_ZERO)) {
+                picked_type_name = type_name;
+                new_type = type;
+            }
+
+            if (is_picked) {
+                igSetItemDefaultFocus();
+            }
+        }
+        igEndCombo();
+    }
+
+    return new_type;
+}
+
 static void render_primitive_header_settings(
     Primitive* target_primitive,
     Primitive* source_primitive,
@@ -155,7 +181,7 @@ static void render_primitive_header_settings(
             default: {
                 fprintf(
                     stderr,
-                    "ERROR: Can't render_render_copy_primitive_button for "
+                    "ERROR: Can't render_primitive_header_settings for "
                     "the component with type id: %d\n",
                     target_component_type
                 );
@@ -169,26 +195,13 @@ static void render_primitive_header_settings(
         igPopID();
     }
 
-    // "Change primitive" type button
-    PrimitiveType picked_type = target_primitive->type;
-    const char* picked_type_name = get_primitive_type_name(picked_type);
-
-    if (igBeginCombo("Type", picked_type_name, 0)) {
-        for (int i = 0; i < N_PRIMITIVE_TYPES; ++i) {
-            PrimitiveType type = PRIMITIVE_TYPES[i];
-            const char* type_name = get_primitive_type_name(type);
-            int is_picked = strcmp(picked_type_name, type_name) == 0;
-            if (igSelectable_Bool(type_name, is_picked, 0, VEC2_ZERO)) {
-                picked_type_name = type_name;
-                change_primitive_type(target_primitive, type);
-            }
-
-            if (is_picked) {
-                igSetItemDefaultFocus();
-            }
-        }
-        igEndCombo();
-    }
+    int type = render_component_type_picker(
+        target_primitive->type,
+        (int*)PRIMITIVE_TYPES,
+        N_PRIMITIVE_TYPES,
+        PRIMITIVE_TYPE_NAMES
+    );
+    change_primitive_type(target_primitive, type);
 }
 
 static void render_primitive_geometry_settings(
@@ -448,30 +461,13 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case RIGID_BODY_COMPONENT: {
             RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
-            RigidBodyType picked_type = rigid_body->type;
-            const char* picked_type_name = get_rigid_body_type_name(
-                picked_type
+            int type = render_component_type_picker(
+                rigid_body->type,
+                (int*)RIGID_BODY_TYPES,
+                N_RIGID_BODY_TYPES,
+                RIGID_BODY_TYPE_NAMES
             );
-
-            if (igBeginCombo("Type", picked_type_name, 0)) {
-                for (int i = 0; i < N_RIGID_BODY_TYPES; ++i) {
-                    RigidBodyType type = RIGID_BODY_TYPES[i];
-                    const char* type_name = get_rigid_body_type_name(type);
-                    int is_picked = strcmp(picked_type_name, type_name)
-                                    == 0;
-                    if (igSelectable_Bool(
-                            type_name, is_picked, 0, VEC2_ZERO
-                        )) {
-                        picked_type_name = type_name;
-                        change_rigid_body_type(rigid_body, type);
-                    }
-
-                    if (is_picked) {
-                        igSetItemDefaultFocus();
-                    }
-                }
-                igEndCombo();
-            }
+            change_rigid_body_type(rigid_body, type);
             break;
         }
         case COLLIDER_COMPONENT: {
@@ -538,31 +534,15 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case CONTROLLER_COMPONENT: {
             Controller* controller = &SCENE.controllers[entity];
-            ControllerType picked_type = controller->type;
-            const char* picked_type_name = get_controller_type_name(
-                picked_type
+            int type = render_component_type_picker(
+                controller->type,
+                (int*)CONTROLLER_TYPES,
+                N_CONTROLLER_TYPES,
+                CONTROLLER_TYPE_NAMES
             );
+            change_controller_type(controller, type);
 
-            if (igBeginCombo("Type", picked_type_name, 0)) {
-                for (int i = 0; i < N_CONTROLLER_TYPES; ++i) {
-                    PrimitiveType type = CONTROLLER_TYPES[i];
-                    const char* type_name = get_controller_type_name(type);
-                    int is_picked = strcmp(picked_type_name, type_name)
-                                    == 0;
-                    if (igSelectable_Bool(
-                            type_name, is_picked, 0, VEC2_ZERO
-                        )) {
-                        picked_type_name = type_name;
-                        change_controller_type(controller, type);
-                    }
-
-                    if (is_picked) {
-                        igSetItemDefaultFocus();
-                    }
-                }
-                igEndCombo();
-            }
-            if (picked_type == DUMMY_AI_CONTROLLER) {
+            if (type == DUMMY_AI_CONTROLLER) {
                 DummyAIController* dummy_ai = &controller->c.dummy_ai;
                 igCheckbox("Shoot", (bool*)(&dummy_ai->is_shooting));
             }

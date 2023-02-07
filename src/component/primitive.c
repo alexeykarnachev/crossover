@@ -23,21 +23,8 @@ PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES] = {
     RECTANGLE_PRIMITIVE,
     LINE_PRIMITIVE,
     POLYGON_PRIMITIVE};
-
-const char* get_primitive_type_name(PrimitiveType type) {
-    switch (type) {
-        case CIRCLE_PRIMITIVE:
-            return "Circle";
-        case RECTANGLE_PRIMITIVE:
-            return "Rectangle";
-        case LINE_PRIMITIVE:
-            return "Line";
-        case POLYGON_PRIMITIVE:
-            return "Polygon";
-        default:
-            PRIMITIVE_TYPE_ERROR("get_primitive_type_name", type);
-    }
-}
+const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES] = {
+    "Circle", "Rectangle", "Line", "Polygon"};
 
 void change_primitive_type(
     Primitive* primitive, PrimitiveType target_type

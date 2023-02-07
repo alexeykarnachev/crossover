@@ -17,17 +17,8 @@
 
 RigidBodyType RIGID_BODY_TYPES[N_RIGID_BODY_TYPES] = {
     STATIC_BODY, KINEMATIC_BODY};
-
-const char* get_rigid_body_type_name(RigidBodyType type) {
-    switch (type) {
-        case STATIC_BODY:
-            return "Static";
-        case KINEMATIC_BODY:
-            return "Kinematic";
-        default:
-            RIGID_BODY_TYPE_ERROR("get_rigid_body_type_name", type);
-    }
-}
+const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES] = {
+    "Static", "Kinematic"};
 
 void change_rigid_body_type(
     RigidBody* rigid_body, RigidBodyType target_type

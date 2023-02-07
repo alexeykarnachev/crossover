@@ -4,12 +4,13 @@
 
 #define N_CONTROLLER_TYPES 3
 typedef enum ControllerType {
-    PLAYER_KEYBOARD_CONTROLLER = 1 << 0,
-    DUMMY_AI_CONTROLLER = 1 << 1,
-    BRAIN_AI_CONTROLLER = 1 << 2
+    PLAYER_KEYBOARD_CONTROLLER,
+    DUMMY_AI_CONTROLLER,
+    BRAIN_AI_CONTROLLER
 } ControllerType;
 
 extern ControllerType CONTROLLER_TYPES[N_CONTROLLER_TYPES];
+extern const char* CONTROLLER_TYPE_NAMES[N_CONTROLLER_TYPES];
 
 typedef struct PlayerKeyboardController {
 } PlayerKeyboardController;
@@ -37,7 +38,6 @@ typedef struct Controller {
     } c;
 } Controller;
 
-const char* get_controller_type_name(ControllerType type);
 void change_controller_type(
     Controller* controller, ControllerType target_type
 );

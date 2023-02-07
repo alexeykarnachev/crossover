@@ -273,7 +273,7 @@ static RenderCall prepare_primitive_render_call(
 
     GLuint draw_mode = GL_TRIANGLE_FAN;
     int n_vertices;
-    if (type & CIRCLE_PRIMITIVE) {
+    if (type == CIRCLE_PRIMITIVE) {
         set_uniform_circle(program, transformation, primitive.p.circle);
         n_vertices = N_POLYGONS_IN_CIRCLE + 2;
     } else {
