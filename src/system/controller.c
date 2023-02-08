@@ -8,6 +8,30 @@
 #include <math.h>
 #include <stdlib.h>
 
+static void try_shoot(int entity) {
+    if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
+        return;
+    }
+
+    Gun* gun = &SCENE.guns[entity];
+    Transformation transformation = SCENE.transformations[entity];
+
+    float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
+    float shoot_period = 1.0 / gun->fire_rate;
+    int can_shoot = gun->last_time_shoot == 0
+                    || time_since_last_shoot > shoot_period;
+    if (can_shoot) {
+        gun->last_time_shoot = SCENE.time;
+        KinematicMovement movement = init_kinematic_movement(
+            gun->bullet.speed,
+            transformation.orientation,
+            transformation.orientation,
+            1
+        );
+        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
+    }
+}
+
 typedef struct ControllerAction {
     float watch_orientation;
     float move_orientation;
@@ -73,7 +97,7 @@ static ControllerAction get_dummy_ai_action(int entity) {
     }
 
     ControllerAction action = {0};
-    DummyAIController dummy_ai = SCENE.controllers[entity].c.dummy_ai;
+    DummyAIController ai = SCENE.controllers[entity].c.dummy_ai;
     Vision vision = SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
     action.is_moving = 0;
@@ -103,48 +127,29 @@ static ControllerAction get_dummy_ai_action(int entity) {
             sub(nearest_target_position, position)
         );
         action.watch_orientation = action.move_orientation;
-        action.is_shooting = dummy_ai.is_shooting;
+        action.is_shooting = ai.is_shooting;
     }
 
     return action;
 }
 
-static void try_shoot(int entity) {
-    if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
-        return;
-    }
-
-    Gun* gun = &SCENE.guns[entity];
-    Transformation transformation = SCENE.transformations[entity];
-
-    float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
-    float shoot_period = 1.0 / gun->fire_rate;
-    int can_shoot = gun->last_time_shoot == 0
-                    || time_since_last_shoot > shoot_period;
-    if (can_shoot) {
-        gun->last_time_shoot = SCENE.time;
-        KinematicMovement movement = init_kinematic_movement(
-            gun->bullet.speed,
-            transformation.orientation,
-            transformation.orientation,
-            1
+static ControllerAction get_brain_ai_action(int entity) {
+    int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
+    if (!check_if_entity_has_component(entity, required_component)) {
+        fprintf(
+            stderr,
+            "ERROR: Can't get the brain ai controller action. The entity "
+            "doesn't have Transformation or Vision component\n"
         );
-        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
+        exit(1);
     }
-}
 
-// static void update_brain_ai_controller(int entity) {
-//     int required_component = TRANSFORMATION_COMPONENT
-//                              | KINEMATIC_MOVEMENT_COMPONENT
-//                              | VISION_COMPONENT;
-//     if (!check_if_entity_has_component(entity, required_component)) {
-//         return;
-//     }
-//     Vision vision = SCENE.visions[entity];
-//     Vec2 position = SCENE.transformations[entity].position;
-//     Controller controller = SCENE.controllers[entity];
-//     KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-// }
+    ControllerAction action = {0};
+    BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
+    Brain brain = ai.brain;
+
+    return action;
+}
 
 void update_controllers() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
@@ -166,10 +171,10 @@ void update_controllers() {
                 action = get_dummy_ai_action(entity);
                 break;
             }
-                // case BRAIN_AI_CONTROLLER: {
-                //     update_brain_ai_controller(entity);
-                //     break;
-                // }
+            case BRAIN_AI_CONTROLLER: {
+                action = get_brain_ai_action(entity);
+                break;
+            }
         }
 
         KinematicMovement* movement = &SCENE.kinematic_movements[entity];

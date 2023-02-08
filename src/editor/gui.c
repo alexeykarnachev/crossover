@@ -17,6 +17,8 @@
 #define menu_item igMenuItem_Bool
 #define menu_item_ptr igMenuItem_BoolPtr
 
+static ImVec4 IM_RED_COLOR = {1.0, 0.0, 0.0, 1.0};
+
 static int LAST_PICKED_ENTITY = -1;
 static int LAST_PICKED_COMPONENTS[N_COMPONENT_TYPES];
 static ImVec2 VEC2_ZERO = {0, 0};
@@ -37,6 +39,13 @@ static ImGuiColorEditFlags COLOR_PICKER_FLAGS
 
 static void same_line(void) {
     igSameLine(0.0, igGetStyle()->ItemSpacing.y);
+}
+
+static void center_next_window(void) {
+    ImVec2 center;
+    ImVec2 pivot = {0.5f, 0.5f};
+    ImGuiViewport_GetCenter(&center, igGetMainViewport());
+    igSetNextWindowPos(center, ImGuiCond_Appearing, pivot);
 }
 
 static void drag_float(
@@ -141,12 +150,16 @@ static void render_edit_button(ComponentType component_type) {
 }
 
 int render_component_type_picker(
-    int picked_type, int* types, int n_types, const char* type_names[]
+    const char* combo_name,
+    int picked_type,
+    int* types,
+    int n_types,
+    const char* type_names[]
 ) {
     const char* picked_type_name = type_names[picked_type];
     int new_type = picked_type;
 
-    if (igBeginCombo("Type", picked_type_name, 0)) {
+    if (igBeginCombo(combo_name, picked_type_name, 0)) {
         for (int i = 0; i < n_types; ++i) {
             PrimitiveType type = types[i];
             const char* type_name = type_names[type];
@@ -206,6 +219,7 @@ static void render_primitive_header_settings(
     }
 
     int type = render_component_type_picker(
+        "Type",
         target_primitive->type,
         (int*)PRIMITIVE_TYPES,
         N_PRIMITIVE_TYPES,
@@ -278,8 +292,7 @@ static void render_primitive_geometry_settings(
             break;
         }
         default: {
-            ImVec4 color = {1.0, 0.0, 0.0, 1.0};
-            igTextColored(color, "ERROR: Unknown primitive");
+            igTextColored(IM_RED_COLOR, "ERROR: Unknown primitive");
         }
     }
 }
@@ -472,6 +485,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         case RIGID_BODY_COMPONENT: {
             RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
             int type = render_component_type_picker(
+                "Type",
                 rigid_body->type,
                 (int*)RIGID_BODY_TYPES,
                 N_RIGID_BODY_TYPES,
@@ -545,6 +559,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         case CONTROLLER_COMPONENT: {
             Controller* controller = &SCENE.controllers[entity];
             int type = render_component_type_picker(
+                "Type",
                 controller->type,
                 (int*)CONTROLLER_TYPES,
                 N_CONTROLLER_TYPES,
@@ -553,25 +568,98 @@ static void render_component_inspector(int entity, ComponentType type) {
             change_controller_type(controller, type);
 
             if (type == DUMMY_AI_CONTROLLER) {
-                // DummyAIController* ai = &controller->c.dummy_ai;
-                // igCheckbox("Shoot", (bool*)(&ai->is_shooting));
+                DummyAIController* ai = &controller->c.dummy_ai;
+                igCheckbox("Shoot", (bool*)(&ai->is_shooting));
             } else if (type == BRAIN_AI_CONTROLLER) {
-                // BrainAIController* ai = &controller->c.brain_ai;
-                // Brain* brain = &ai->brain;
+                BrainAIController* ai = &controller->c.brain_ai;
+                Brain* brain = &ai->brain;
 
-                // if (igButton("Add layer", VEC2_ZERO)) {
-                //     if (brain->n_hiddens < MAX_N_BRAIN_HIDDENS) {
-                //         brain->hidden_sizes[brain->n_hiddens++]
-                //             = DEFAULT_BRAIN_HIDDEN_SIZE;
-                //     }
-                // }
+                if (brain->weights == NULL) {
+                    igTextColored(IM_RED_COLOR, "Brain is missing");
+                }
 
-                // same_line();
-                // if (igButton("Delete layer", VEC2_ZERO)) {
-                //     if (brain->n_hiddens > 0) {
-                //         brain->n_hiddens -= 1;
-                //     }
-                // }
+                if (igButton("Create", VEC2_ZERO)) {
+                    igOpenPopup_Str("brain_editor", 0);
+                }
+
+                center_next_window();
+                if (igBeginPopup("brain_editor", 0)) {
+                    igText("Inputs");
+                    igPushID_Str("Inputs");
+                    if (igButton("Add", VEC2_ZERO)) {
+                        if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
+                            brain->n_inputs += 1;
+                        }
+                    }
+                    same_line();
+                    if (igButton("Delete", VEC2_ZERO)) {
+                        if (brain->n_inputs > 0) {
+                            brain->n_inputs -= 1;
+                        }
+                    }
+                    // if (igBeginCombo("Type", picked_type_name, 0)) {
+                    //     for (int i = 0; i < n_types; ++i) {
+                    //         PrimitiveType type = types[i];
+                    //         const char* type_name = type_names[type];
+                    //         int is_picked = strcmp(picked_type_name,
+                    //         type_name) == 0; if
+                    //         (igSelectable_Bool(type_name, is_picked, 0,
+                    //         VEC2_ZERO)) {
+                    //             picked_type_name = type_name;
+                    //             new_type = type;
+                    //         }
+
+                    //         if (is_picked) {
+                    //             igSetItemDefaultFocus();
+                    //         }
+                    //     }
+                    //     igEndCombo();
+                    // }
+
+                    for (int i = 0; i < brain->n_inputs; ++i) {
+                        BrainInput* picked_input = &brain->inputs[i];
+                        char label[MAX_ENTITY_NAME_SIZE + 16];
+                        sprintf(label, "Input: %d", i);
+                        int type = render_component_type_picker(
+                            label,
+                            picked_input->type,
+                            (int*)BRAIN_INPUT_TYPES,
+                            N_BRAIN_INPUT_TYPES,
+                            BRAIN_INPUT_TYPE_NAMES
+                        );
+                        change_brain_input_type(picked_input, type);
+                    }
+                    igPopID();
+                    igSeparator();
+
+                    igText("Layers");
+                    igPushID_Str("Layers");
+                    if (igButton("Add", VEC2_ZERO)) {
+                        if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
+                            brain->layer_sizes[brain->n_layers++]
+                                = DEFAULT_BRAIN_LAYER_SIZE;
+                        }
+                    }
+                    same_line();
+                    if (igButton("Delete", VEC2_ZERO)) {
+                        if (brain->n_layers > 0) {
+                            brain->n_layers -= 1;
+                        }
+                    }
+                    for (int i = 0; i < brain->n_layers; ++i) {
+                        char label[16];
+                        sprintf(label, "hidden: %d", i);
+                        int* size = &brain->layer_sizes[i];
+                        drag_int(
+                            label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0
+                        );
+                    }
+                    igPopID();
+                    igSeparator();
+
+                    igText("Output");
+                    igEndPopup();
+                }
 
                 // if (igBeginMenu("Brain", 1)) {
                 //     if (menu_item("Save", "", false, 1)) {
@@ -581,6 +669,14 @@ static void render_component_inspector(int entity, ComponentType type) {
                 //         puts("Save brain as");
                 //     }
                 //     igEndMenu();
+                // }
+
+                // for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+                //     const char* name = get_component_type_name(
+                //         COMPONENT_TYPES[i]
+                //     );
+                //     igCheckbox(name,
+                //     (bool*)(&LAST_PICKED_COMPONENTS[i]));
                 // }
 
                 // int input_size = 228;
