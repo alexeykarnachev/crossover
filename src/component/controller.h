@@ -1,6 +1,7 @@
 #pragma once
 #include "../const.h"
 #include "../math.h"
+#include "brain.h"
 
 #define N_CONTROLLER_TYPES 3
 typedef enum ControllerType {
@@ -18,14 +19,6 @@ typedef struct PlayerKeyboardController {
 typedef struct DummyAIController {
     int is_shooting;
 } DummyAIController;
-
-typedef struct Brain {
-    int hidden_sizes[MAX_N_BRAIN_HIDDENS];
-    int inp_size;
-    int out_size;
-    float* weights;
-    int n_hiddens;
-} Brain;
 
 typedef struct BrainAIController {
     Brain brain;

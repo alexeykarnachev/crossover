@@ -191,7 +191,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     SCENE.transformations[entity_copy] = transformation;
 
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        ComponentType type = COMPONENT_TYPES_LIST[i];
+        ComponentType type = COMPONENT_TYPES[i];
         if (check_if_entity_has_component(entity, type)) {
             SCENE.components[entity_copy] |= type;
 
@@ -351,7 +351,7 @@ int spawn_default_ai_guy(
         init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
-        init_kinematic_movement(vec2(0.0, 0.0), 5.0, 0.0, 1),
+        init_kinematic_movement(5.0, 0.0, 0.0, 0),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
@@ -377,7 +377,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_circle_primitive(),
         init_material(FOREST_GREEN_COLOR),
         0.0,
-        init_kinematic_movement(vec2(0.0, 0.0), 5.0, 0.0, 1),
+        init_kinematic_movement(5.0, 0.0, 0.0, 0),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         init_player_keyboard_controller(),

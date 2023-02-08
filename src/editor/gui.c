@@ -527,7 +527,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             igCheckbox("is moving", (bool*)(&movement->is_moving));
             drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0, 0);
             drag_float(
-                "orient.", &movement->target_orientation, -PI, PI, 0.05, 0
+                "orient.", &movement->watch_orientation, -PI, PI, 0.05, 0
             );
             break;
         }
@@ -553,25 +553,25 @@ static void render_component_inspector(int entity, ComponentType type) {
             change_controller_type(controller, type);
 
             if (type == DUMMY_AI_CONTROLLER) {
-                DummyAIController* ai = &controller->c.dummy_ai;
-                igCheckbox("Shoot", (bool*)(&ai->is_shooting));
+                // DummyAIController* ai = &controller->c.dummy_ai;
+                // igCheckbox("Shoot", (bool*)(&ai->is_shooting));
             } else if (type == BRAIN_AI_CONTROLLER) {
-                BrainAIController* ai = &controller->c.brain_ai;
-                Brain* brain = &ai->brain;
+                // BrainAIController* ai = &controller->c.brain_ai;
+                // Brain* brain = &ai->brain;
 
-                if (igButton("Add layer", VEC2_ZERO)) {
-                    if (brain->n_hiddens < MAX_N_BRAIN_HIDDENS) {
-                        brain->hidden_sizes[brain->n_hiddens++]
-                            = DEFAULT_BRAIN_HIDDEN_SIZE;
-                    }
-                }
+                // if (igButton("Add layer", VEC2_ZERO)) {
+                //     if (brain->n_hiddens < MAX_N_BRAIN_HIDDENS) {
+                //         brain->hidden_sizes[brain->n_hiddens++]
+                //             = DEFAULT_BRAIN_HIDDEN_SIZE;
+                //     }
+                // }
 
-                same_line();
-                if (igButton("Delete layer", VEC2_ZERO)) {
-                    if (brain->n_hiddens > 0) {
-                        brain->n_hiddens -= 1;
-                    }
-                }
+                // same_line();
+                // if (igButton("Delete layer", VEC2_ZERO)) {
+                //     if (brain->n_hiddens > 0) {
+                //         brain->n_hiddens -= 1;
+                //     }
+                // }
 
                 // if (igBeginMenu("Brain", 1)) {
                 //     if (menu_item("Save", "", false, 1)) {
@@ -583,38 +583,38 @@ static void render_component_inspector(int entity, ComponentType type) {
                 //     igEndMenu();
                 // }
 
-                int input_size = 228;
-                int output_size = 69;
-                if (brain->weights == NULL) {
-                    drag_int(
-                        "input",
-                        &input_size,
-                        1,
-                        MAX_BRAIN_HIDDEN_SIZE,
-                        1,
-                        ImGuiSliderFlags_ReadOnly
-                    );
-                    for (int i = 0; i < brain->n_hiddens; ++i) {
-                        char label[16];
-                        sprintf(label, "hidden: %d", i);
-                        drag_int(
-                            label,
-                            &brain->hidden_sizes[i],
-                            1,
-                            MAX_BRAIN_HIDDEN_SIZE,
-                            1,
-                            0
-                        );
-                    }
-                    drag_int(
-                        "output",
-                        &output_size,
-                        1,
-                        MAX_BRAIN_HIDDEN_SIZE,
-                        1,
-                        ImGuiSliderFlags_ReadOnly
-                    );
-                }
+                // int input_size = 228;
+                // int output_size = 69;
+                // if (brain->weights == NULL) {
+                //     drag_int(
+                //         "input",
+                //         &input_size,
+                //         1,
+                //         MAX_BRAIN_HIDDEN_SIZE,
+                //         1,
+                //         ImGuiSliderFlags_ReadOnly
+                //     );
+                //     for (int i = 0; i < brain->n_hiddens; ++i) {
+                //         char label[16];
+                //         sprintf(label, "hidden: %d", i);
+                //         drag_int(
+                //             label,
+                //             &brain->hidden_sizes[i],
+                //             1,
+                //             MAX_BRAIN_HIDDEN_SIZE,
+                //             1,
+                //             0
+                //         );
+                //     }
+                //     drag_int(
+                //         "output",
+                //         &output_size,
+                //         1,
+                //         MAX_BRAIN_HIDDEN_SIZE,
+                //         1,
+                //         ImGuiSliderFlags_ReadOnly
+                //     );
+                // }
             }
             break;
         }
@@ -694,7 +694,7 @@ static void render_entity_editor() {
 
             for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
                 const char* name = get_component_type_name(
-                    COMPONENT_TYPES_LIST[i]
+                    COMPONENT_TYPES[i]
                 );
                 igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
             }

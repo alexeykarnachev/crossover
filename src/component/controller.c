@@ -57,6 +57,7 @@ Controller init_dummy_ai_controller() {
 
     controller.type = DUMMY_AI_CONTROLLER;
     DummyAIController dummy_ai_controller = {0};
+    dummy_ai_controller.is_shooting = 1;
     controller.c.dummy_ai = dummy_ai_controller;
     return controller;
 }

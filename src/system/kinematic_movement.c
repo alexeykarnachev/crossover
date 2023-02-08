@@ -9,7 +9,7 @@ static void render_debug_orientation(
     Transformation transformation, KinematicMovement movement
 ) {
     Vec2 current_vec = get_orientation_vec(transformation.orientation);
-    Vec2 target_vec = get_orientation_vec(movement.target_orientation);
+    Vec2 target_vec = get_orientation_vec(movement.watch_orientation);
 
     render_debug_line(
         transformation.position,
@@ -34,12 +34,10 @@ void update_kinematic_movements(float dt) {
         }
         Transformation* transformation = &SCENE.transformations[entity];
         KinematicMovement movement = SCENE.kinematic_movements[entity];
-        transformation->orientation = movement.target_orientation;
+        transformation->orientation = movement.watch_orientation;
 
-        if (movement.is_moving && length(movement.move_dir) > EPS) {
-            Vec2 step = scale(
-                normalize(movement.move_dir), dt * movement.speed
-            );
+        if (movement.is_moving) {
+            Vec2 step = scale(get_kinematic_velocity(movement), dt);
             transformation->position = add(transformation->position, step);
         }
     }

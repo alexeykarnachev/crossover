@@ -6,43 +6,40 @@
 #include "../scene.h"
 #include "../system.h"
 #include <math.h>
+#include <stdlib.h>
 
-static void try_shoot(int entity) {
-    if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
-        return;
-    }
+typedef struct ControllerAction {
+    float watch_orientation;
+    float move_orientation;
+    int is_shooting;
+    int is_moving;
+} ControllerAction;
 
-    Gun* gun = &SCENE.guns[entity];
-    Transformation transformation = SCENE.transformations[entity];
-
-    float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
-    float shoot_period = 1.0 / gun->fire_rate;
-    int can_shoot = gun->last_time_shoot == 0
-                    || time_since_last_shoot > shoot_period;
-    if (can_shoot) {
-        gun->last_time_shoot = SCENE.time;
-        Vec2 move_dir = get_orientation_vec(transformation.orientation);
-        KinematicMovement movement = init_kinematic_movement(
-            move_dir, gun->bullet.speed, transformation.orientation, 1
-        );
-        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
-    }
-}
-
-static void update_player_keyboard_controller(int entity) {
+static ControllerAction get_player_keyboard_action(int entity) {
     int required_component = TRANSFORMATION_COMPONENT
                              | KINEMATIC_MOVEMENT_COMPONENT;
-    if (!check_if_entity_has_component(entity, required_component)
-        || SCENE.camera == -1) {
-        return;
+    if (!check_if_entity_has_component(entity, required_component)) {
+        fprintf(
+            stderr,
+            "ERROR: Can't get the player keyboard action. The entity "
+            "doesn't have Transformation or KinematicMovement component\n"
+        );
+        exit(1);
+    }
+    if (SCENE.camera == -1) {
+        fprintf(
+            stderr,
+            "ERROR: Can't get the player keyboard action. The Scene "
+            "doesn't have the Camera entity\n"
+        );
+        exit(1);
     }
 
-    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+    ControllerAction action = {0};
     Transformation* transformation = &SCENE.transformations[entity];
-    Transformation camera = SCENE.transformations[SCENE.camera];
 
     Vec2 look_at = get_cursor_scene_pos();
-    movement->target_orientation = get_vec_orientation(
+    action.watch_orientation = get_vec_orientation(
         sub(look_at, transformation->position)
     );
 
@@ -51,27 +48,35 @@ static void update_player_keyboard_controller(int entity) {
     move_dir.y -= 1.0 * APP.key_states[GLFW_KEY_S];
     move_dir.x -= 1.0 * APP.key_states[GLFW_KEY_A];
     move_dir.x += 1.0 * APP.key_states[GLFW_KEY_D];
-    move_dir = rotate(move_dir, vec2(0.0, 0.0), camera.orientation);
-    movement->move_dir = move_dir;
 
-    if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_1]) {
-        try_shoot(entity);
+    if (length(move_dir) > EPS) {
+        Transformation camera = SCENE.transformations[SCENE.camera];
+        move_dir = rotate(move_dir, vec2(0.0, 0.0), camera.orientation);
+        action.move_orientation = get_vec_orientation(move_dir);
+        action.is_moving = 1;
     }
+
+    action.is_shooting = APP.mouse_button_states[GLFW_MOUSE_BUTTON_1];
+
+    return action;
 }
 
-static void update_dummy_ai_controller(int entity) {
-    int required_component = TRANSFORMATION_COMPONENT
-                             | KINEMATIC_MOVEMENT_COMPONENT
-                             | VISION_COMPONENT;
+static ControllerAction get_dummy_ai_action(int entity) {
+    int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
     if (!check_if_entity_has_component(entity, required_component)) {
-        return;
+        fprintf(
+            stderr,
+            "ERROR: Can't get the dummy ai controller action. The entity "
+            "doesn't have Transformation or Vision component\n"
+        );
+        exit(1);
     }
 
+    ControllerAction action = {0};
     DummyAIController dummy_ai = SCENE.controllers[entity].c.dummy_ai;
     Vision vision = SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
-    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-    movement->move_dir = vec2(0.0, 0.0);
+    action.is_moving = 0;
 
     Vec2 nearest_target_position;
     float nearest_dist = HUGE_VAL;
@@ -93,50 +98,86 @@ static void update_dummy_ai_controller(int entity) {
     }
 
     if (nearest_dist < HUGE_VAL) {
-        movement->move_dir = sub(nearest_target_position, position);
-        movement->target_orientation = get_vec_orientation(
-            movement->move_dir
+        action.is_moving = 1;
+        action.move_orientation = get_vec_orientation(
+            sub(nearest_target_position, position)
         );
-
-        if (dummy_ai.is_shooting) {
-            try_shoot(entity);
-        }
+        action.watch_orientation = action.move_orientation;
+        action.is_shooting = dummy_ai.is_shooting;
     }
+
+    return action;
 }
 
-static void update_brain_ai_controller(int entity) {
-    int required_component = TRANSFORMATION_COMPONENT
-                             | KINEMATIC_MOVEMENT_COMPONENT
-                             | VISION_COMPONENT;
-    if (!check_if_entity_has_component(entity, required_component)) {
+static void try_shoot(int entity) {
+    if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
         return;
     }
-    Vision vision = SCENE.visions[entity];
-    Vec2 position = SCENE.transformations[entity].position;
-    Controller controller = SCENE.controllers[entity];
-    KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+
+    Gun* gun = &SCENE.guns[entity];
+    Transformation transformation = SCENE.transformations[entity];
+
+    float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
+    float shoot_period = 1.0 / gun->fire_rate;
+    int can_shoot = gun->last_time_shoot == 0
+                    || time_since_last_shoot > shoot_period;
+    if (can_shoot) {
+        gun->last_time_shoot = SCENE.time;
+        KinematicMovement movement = init_kinematic_movement(
+            gun->bullet.speed,
+            transformation.orientation,
+            transformation.orientation,
+            1
+        );
+        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
+    }
 }
+
+// static void update_brain_ai_controller(int entity) {
+//     int required_component = TRANSFORMATION_COMPONENT
+//                              | KINEMATIC_MOVEMENT_COMPONENT
+//                              | VISION_COMPONENT;
+//     if (!check_if_entity_has_component(entity, required_component)) {
+//         return;
+//     }
+//     Vision vision = SCENE.visions[entity];
+//     Vec2 position = SCENE.transformations[entity].position;
+//     Controller controller = SCENE.controllers[entity];
+//     KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+// }
 
 void update_controllers() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(entity, CONTROLLER_COMPONENT)) {
+        int required_component = TRANSFORMATION_COMPONENT
+                                 | KINEMATIC_MOVEMENT_COMPONENT
+                                 | CONTROLLER_COMPONENT;
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
         ControllerType type = SCENE.controllers[entity].type;
+        ControllerAction action;
         switch (type) {
             case PLAYER_KEYBOARD_CONTROLLER: {
-                update_player_keyboard_controller(entity);
+                action = get_player_keyboard_action(entity);
                 break;
             }
             case DUMMY_AI_CONTROLLER: {
-                update_dummy_ai_controller(entity);
+                action = get_dummy_ai_action(entity);
                 break;
             }
                 // case BRAIN_AI_CONTROLLER: {
                 //     update_brain_ai_controller(entity);
                 //     break;
                 // }
+        }
+
+        KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+        movement->watch_orientation = action.watch_orientation;
+        movement->move_orientation = action.move_orientation;
+        movement->is_moving = action.is_moving;
+        if (action.is_shooting) {
+            try_shoot(entity);
         }
     }
 }

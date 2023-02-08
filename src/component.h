@@ -28,5 +28,5 @@ typedef enum ComponentType {
     CONTROLLER_COMPONENT = 1 << 14
 } ComponentType;
 
-ComponentType COMPONENT_TYPES_LIST[N_COMPONENT_TYPES];
+ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES];
 const char* get_component_type_name(ComponentType type);
