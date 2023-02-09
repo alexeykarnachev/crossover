@@ -20,7 +20,6 @@
 static ImVec4 IM_RED_COLOR = {1.0, 0.0, 0.0, 1.0};
 
 static int LAST_PICKED_ENTITY = -1;
-static int LAST_PICKED_COMPONENTS[N_COMPONENT_TYPES];
 static ImVec2 VEC2_ZERO = {0, 0};
 static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 
@@ -147,6 +146,22 @@ static void render_edit_button(ComponentType component_type) {
         EDITOR.picked_entity.component_type = component_type;
     }
     igPopID();
+}
+
+void render_component_checkboxes(uint64_t* components) {
+    int flags[N_COMPONENT_TYPES] = {0};
+    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+        flags[i] = (*components & (1 << i)) != 0;
+    }
+
+    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+        const char* name = get_component_type_name(COMPONENT_TYPES[i]);
+        igCheckbox(name, (bool*)(&flags[i]));
+    }
+
+    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+        *components ^= (-flags[i] ^ *components) & (1ULL << i);
+    }
 }
 
 int render_component_type_picker(
@@ -461,6 +476,88 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     HEALTH_COMPONENT,
     GUN_COMPONENT};
 
+static void render_brain_editor(Brain* brain, int n_view_rays) {
+    igText("Inputs");
+    igPushID_Str("Inputs");
+    if (igButton("Add", VEC2_ZERO)) {
+        if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
+            brain->n_inputs += 1;
+        }
+    }
+
+    same_line();
+    if (igButton("Delete", VEC2_ZERO)) {
+        if (brain->n_inputs > 0) {
+            brain->n_inputs -= 1;
+        }
+    }
+
+    same_line();
+    char size_str[MAX_ENTITY_NAME_SIZE + 16];
+    int size = get_brain_input_size(*brain, n_view_rays);
+    sprintf(size_str, "Size: %d", size);
+    igText(size_str);
+
+    for (int i = 0; i < brain->n_inputs; ++i) {
+        BrainInput* picked_input = &brain->inputs[i];
+        char label[MAX_ENTITY_NAME_SIZE + 16];
+        sprintf(label, "Input: %d", i);
+
+        int type = render_component_type_picker(
+            label,
+            picked_input->type,
+            (int*)BRAIN_INPUT_TYPES,
+            N_BRAIN_INPUT_TYPES,
+            BRAIN_INPUT_TYPE_NAMES
+        );
+        change_brain_input_type(picked_input, type);
+
+        if (type == TARGET_ENTITY_INPUT) {
+            char label[MAX_ENTITY_NAME_SIZE + 32];
+            sprintf(label, "Components: %d", i);
+            igPushID_Str(label);
+            same_line();
+
+            if (igBeginMenu("", 1)) {
+                uint64_t* components
+                    = &picked_input->i.target_entity.components;
+                render_component_checkboxes(components);
+                igEndMenu();
+            }
+
+            igPopID();
+        }
+    }
+    igPopID();
+    igSeparator();
+
+    igText("Layers");
+    igPushID_Str("Layers");
+    if (igButton("Add", VEC2_ZERO)) {
+        if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
+            brain->layer_sizes[brain->n_layers++]
+                = DEFAULT_BRAIN_LAYER_SIZE;
+        }
+    }
+    same_line();
+    if (igButton("Delete", VEC2_ZERO)) {
+        if (brain->n_layers > 0) {
+            brain->n_layers -= 1;
+        }
+    }
+    for (int i = 0; i < brain->n_layers; ++i) {
+        char label[16];
+        sprintf(label, "Hidden: %d", i);
+        int* size = &brain->layer_sizes[i];
+        drag_int(label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
+    }
+    igPopID();
+    igSeparator();
+
+    igText("Output");
+    igEndPopup();
+}
+
 static void render_component_inspector(int entity, ComponentType type) {
     if (!check_if_entity_has_component(entity, type)) {
         return;
@@ -571,11 +668,28 @@ static void render_component_inspector(int entity, ComponentType type) {
                 DummyAIController* ai = &controller->c.dummy_ai;
                 igCheckbox("Shoot", (bool*)(&ai->is_shooting));
             } else if (type == BRAIN_AI_CONTROLLER) {
+                int n_view_rays = SCENE.visions[entity].n_view_rays;
                 BrainAIController* ai = &controller->c.brain_ai;
                 Brain* brain = &ai->brain;
 
                 if (brain->weights == NULL) {
-                    igTextColored(IM_RED_COLOR, "Brain is missing");
+                    igTextColored(IM_RED_COLOR, "Not finalized");
+                }
+
+                uint64_t required_types
+                    = get_brain_required_component_types(*brain);
+                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
+                    ComponentType type = COMPONENT_TYPES[i];
+                    int is_required = required_types & (1 << i);
+                    int has_component = check_if_entity_has_component(
+                        entity, type
+                    );
+                    if (is_required && !has_component) {
+                        const char* name = get_component_type_name(type);
+                        char str[64];
+                        sprintf(str, "Requires: %s", name);
+                        igTextColored(IM_RED_COLOR, str);
+                    }
                 }
 
                 if (igButton("Create", VEC2_ZERO)) {
@@ -584,133 +698,8 @@ static void render_component_inspector(int entity, ComponentType type) {
 
                 center_next_window();
                 if (igBeginPopup("brain_editor", 0)) {
-                    igText("Inputs");
-                    igPushID_Str("Inputs");
-                    if (igButton("Add", VEC2_ZERO)) {
-                        if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
-                            brain->n_inputs += 1;
-                        }
-                    }
-                    same_line();
-                    if (igButton("Delete", VEC2_ZERO)) {
-                        if (brain->n_inputs > 0) {
-                            brain->n_inputs -= 1;
-                        }
-                    }
-                    // if (igBeginCombo("Type", picked_type_name, 0)) {
-                    //     for (int i = 0; i < n_types; ++i) {
-                    //         PrimitiveType type = types[i];
-                    //         const char* type_name = type_names[type];
-                    //         int is_picked = strcmp(picked_type_name,
-                    //         type_name) == 0; if
-                    //         (igSelectable_Bool(type_name, is_picked, 0,
-                    //         VEC2_ZERO)) {
-                    //             picked_type_name = type_name;
-                    //             new_type = type;
-                    //         }
-
-                    //         if (is_picked) {
-                    //             igSetItemDefaultFocus();
-                    //         }
-                    //     }
-                    //     igEndCombo();
-                    // }
-
-                    for (int i = 0; i < brain->n_inputs; ++i) {
-                        BrainInput* picked_input = &brain->inputs[i];
-                        char label[MAX_ENTITY_NAME_SIZE + 16];
-                        sprintf(label, "Input: %d", i);
-                        int type = render_component_type_picker(
-                            label,
-                            picked_input->type,
-                            (int*)BRAIN_INPUT_TYPES,
-                            N_BRAIN_INPUT_TYPES,
-                            BRAIN_INPUT_TYPE_NAMES
-                        );
-                        change_brain_input_type(picked_input, type);
-                    }
-                    igPopID();
-                    igSeparator();
-
-                    igText("Layers");
-                    igPushID_Str("Layers");
-                    if (igButton("Add", VEC2_ZERO)) {
-                        if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
-                            brain->layer_sizes[brain->n_layers++]
-                                = DEFAULT_BRAIN_LAYER_SIZE;
-                        }
-                    }
-                    same_line();
-                    if (igButton("Delete", VEC2_ZERO)) {
-                        if (brain->n_layers > 0) {
-                            brain->n_layers -= 1;
-                        }
-                    }
-                    for (int i = 0; i < brain->n_layers; ++i) {
-                        char label[16];
-                        sprintf(label, "hidden: %d", i);
-                        int* size = &brain->layer_sizes[i];
-                        drag_int(
-                            label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0
-                        );
-                    }
-                    igPopID();
-                    igSeparator();
-
-                    igText("Output");
-                    igEndPopup();
+                    render_brain_editor(brain, n_view_rays);
                 }
-
-                // if (igBeginMenu("Brain", 1)) {
-                //     if (menu_item("Save", "", false, 1)) {
-                //         puts("Save brain");
-                //     }
-                //     if (menu_item("Save As", "", false, 1)) {
-                //         puts("Save brain as");
-                //     }
-                //     igEndMenu();
-                // }
-
-                // for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                //     const char* name = get_component_type_name(
-                //         COMPONENT_TYPES[i]
-                //     );
-                //     igCheckbox(name,
-                //     (bool*)(&LAST_PICKED_COMPONENTS[i]));
-                // }
-
-                // int input_size = 228;
-                // int output_size = 69;
-                // if (brain->weights == NULL) {
-                //     drag_int(
-                //         "input",
-                //         &input_size,
-                //         1,
-                //         MAX_BRAIN_HIDDEN_SIZE,
-                //         1,
-                //         ImGuiSliderFlags_ReadOnly
-                //     );
-                //     for (int i = 0; i < brain->n_hiddens; ++i) {
-                //         char label[16];
-                //         sprintf(label, "hidden: %d", i);
-                //         drag_int(
-                //             label,
-                //             &brain->hidden_sizes[i],
-                //             1,
-                //             MAX_BRAIN_HIDDEN_SIZE,
-                //             1,
-                //             0
-                //         );
-                //     }
-                //     drag_int(
-                //         "output",
-                //         &output_size,
-                //         1,
-                //         MAX_BRAIN_HIDDEN_SIZE,
-                //         1,
-                //         ImGuiSliderFlags_ReadOnly
-                //     );
-                // }
             }
             break;
         }
@@ -779,26 +768,8 @@ static void render_entity_editor() {
         if (igCollapsingHeader_TreeNodeFlags("Components", 0)
             && picked_entity != -1) {
             uint64_t* components = &SCENE.components[picked_entity];
-
-            if (picked_entity != LAST_PICKED_ENTITY) {
-                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                    LAST_PICKED_COMPONENTS[i] = (*components & (1 << i))
-                                                != 0;
-                }
-                LAST_PICKED_ENTITY = picked_entity;
-            }
-
-            for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                const char* name = get_component_type_name(
-                    COMPONENT_TYPES[i]
-                );
-                igCheckbox(name, (bool*)(&LAST_PICKED_COMPONENTS[i]));
-            }
-
-            for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                *components ^= (-LAST_PICKED_COMPONENTS[i] ^ *components)
-                               & (1ULL << i);
-            }
+            LAST_PICKED_ENTITY = picked_entity;
+            render_component_checkboxes(components);
         }
 
         // Components inspector: components editor of the currently

@@ -20,15 +20,9 @@
     } while (0)
 
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES] = {
-    TARGET_ENTITY_INPUT,
-    TARGET_DISTANCE_INPUT,
-    TARGET_HEALTH_INPUT,
-    SELF_HEALTH_INPUT};
+    TARGET_ENTITY_INPUT, TARGET_DISTANCE_INPUT, SELF_HEALTH_INPUT};
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES] = {
-    "Entity (target)",
-    "Distance (target)",
-    "Health (target)",
-    "Health (self)"};
+    "Entity (target)", "Distance (target)", "Health (self)"};
 
 BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES] = {
     MOVE_DIRECTION_OUTPUT, IS_SHOOT_OUTPUT};
@@ -48,15 +42,6 @@ BrainInput init_target_distance_brain_input(void) {
 
     TargetDistanceBrainInput target_distance;
     input.i.target_distance = target_distance;
-    return input;
-}
-
-BrainInput init_target_health_brain_input(void) {
-    BrainInput input;
-    input.type = TARGET_HEALTH_INPUT;
-
-    TargetHealthBrainInput target_health;
-    input.i.target_health = target_health;
     return input;
 }
 
@@ -84,9 +69,6 @@ void change_brain_input_type(
         case TARGET_DISTANCE_INPUT:
             *brain_input = init_target_distance_brain_input();
             break;
-        case TARGET_HEALTH_INPUT:
-            *brain_input = init_target_health_brain_input();
-            break;
         case SELF_HEALTH_INPUT:
             *brain_input = init_self_health_brain_input();
             break;
@@ -95,33 +77,54 @@ void change_brain_input_type(
     }
 }
 
-static int get_brain_input_size(int entity, uint64_t input_types) {
-    return 69;
-    // int has_vision = check_if_entity_has_component(
-    //     entity, VISION_COMPONENT
-    // );
-    // if ((input_types & VISION_INPUT_TYPES) && !has_vision) {
-    //     fprintf(
-    //         stderr,
-    //         "ERROR: Can't initialize brain. One of the input features "
-    //         "requires Vision component, but the entity doesn't have
-    //         it\n"
-    //     );
-    //     exit(1);
-    // }
+int get_brain_input_size(Brain brain, int n_view_rays) {
+    int input_size = 0;
+    for (int i = 0; i < brain.n_inputs; ++i) {
+        BrainInput input = brain.inputs[i];
+        BrainOutputType type = input.type;
+        switch (type) {
+            case TARGET_ENTITY_INPUT:
+                input_size += n_view_rays;
+                break;
+            case TARGET_DISTANCE_INPUT:
+                input_size += n_view_rays;
+                break;
+            case SELF_HEALTH_INPUT:
+                input_size += 1;
+                break;
+            default:
+                BRAIN_INPUT_TYPE_ERROR("get_input_size", type);
+        }
+    }
 
-    // int input_size = 0;
-    // Vision vision = SCENE.visions[entity];
-    // for (int i = 0; i < N_BRAIN_INPUT_TYPES; ++i) {
-    //     BrainInputType type = BRAIN_INPUT_TYPES[i];
-    //     if (type & input_types == 0) {
-    //         continue;
-    //     } else if (type & VISION_INPUT_TYPES) {
-    //         input_size += vision.n_view_rays;
-    //     }
-    // }
+    return input_size;
+}
 
-    // return input_size;
+uint64_t get_brain_required_component_types(Brain brain) {
+    uint64_t components = 0;
+    for (int i = 0; i < brain.n_inputs; ++i) {
+        BrainInputType type = brain.inputs[i].type;
+        switch (type) {
+            case TARGET_ENTITY_INPUT: {
+                components |= VISION_COMPONENT;
+                break;
+            }
+            case TARGET_DISTANCE_INPUT: {
+                components |= VISION_COMPONENT;
+                break;
+            }
+            case SELF_HEALTH_INPUT: {
+                components |= HEALTH_COMPONENT;
+                break;
+            }
+            default:
+                BRAIN_INPUT_TYPE_ERROR(
+                    "get_brain_required_components", type
+                );
+        }
+    }
+
+    return components;
 }
 
 static int get_brain_output_size(int entity, uint64_t output_types) {

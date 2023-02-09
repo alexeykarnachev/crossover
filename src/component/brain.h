@@ -5,12 +5,11 @@
 typedef enum BrainInputType {
     TARGET_ENTITY_INPUT,
     TARGET_DISTANCE_INPUT,
-    TARGET_HEALTH_INPUT,
     SELF_HEALTH_INPUT
 } BrainInputType;
 
 typedef struct TargetEntityBrainInput {
-    int components;
+    uint64_t components;
 } TargetEntityBrainInput;
 
 typedef struct TargetDistanceBrainInput {
@@ -36,7 +35,7 @@ void change_brain_input_type(
     BrainInput* brain_input, BrainInputType target_type
 );
 
-#define N_BRAIN_INPUT_TYPES 4
+#define N_BRAIN_INPUT_TYPES 3
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
 
@@ -59,6 +58,9 @@ typedef struct Brain {
     int output_size;
     float* weights;
 } Brain;
+
+int get_brain_input_size(Brain brain, int n_view_rays);
+uint64_t get_brain_required_component_types(Brain brain);
 
 BrainInput init_target_entity_brain_input(void);
 BrainInput init_target_distance_brain_input(void);
