@@ -40,6 +40,15 @@ static void same_line(void) {
     igSameLine(0.0, igGetStyle()->ItemSpacing.y);
 }
 
+static void same_line_float_right(void) {
+    ImVec2 window_size;
+    igGetWindowSize(&window_size);
+    ImVec2 item_size;
+    igGetItemRectSize(&item_size);
+    float x_offset = window_size.x - item_size.x;
+    igSameLine(x_offset, igGetStyle()->ItemSpacing.y);
+}
+
 static void center_next_window(void) {
     ImVec2 center;
     ImVec2 pivot = {0.5f, 0.5f};
@@ -477,8 +486,16 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     GUN_COMPONENT};
 
 static void render_brain_editor(Brain* brain, int n_view_rays) {
+    igText("Brain Editor");
+    igSeparator();
+    igSeparator();
+
+    char size_str[32];
+    int size;
+    // ----------------------------------------------------
+    // Brain inputs
     igText("Inputs");
-    igPushID_Str("Inputs");
+    igPushID_Str("inputs");
     if (igButton("Add", VEC2_ZERO)) {
         if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
             brain->n_inputs += 1;
@@ -493,15 +510,14 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     }
 
     same_line();
-    char size_str[MAX_ENTITY_NAME_SIZE + 16];
-    int size = get_brain_input_size(*brain, n_view_rays);
+    size = get_brain_input_size(*brain, n_view_rays);
     sprintf(size_str, "Size: %d", size);
     igText(size_str);
 
     for (int i = 0; i < brain->n_inputs; ++i) {
         BrainInput* picked_input = &brain->inputs[i];
-        char label[MAX_ENTITY_NAME_SIZE + 16];
-        sprintf(label, "Input: %d", i);
+        char label[16];
+        sprintf(label, ": %d", i);
 
         int type = render_component_type_picker(
             label,
@@ -513,8 +529,8 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
         change_brain_input_type(picked_input, type);
 
         if (type == TARGET_ENTITY_INPUT) {
-            char label[MAX_ENTITY_NAME_SIZE + 32];
-            sprintf(label, "Components: %d", i);
+            char label[32];
+            sprintf(label, "components: %d", i);
             igPushID_Str(label);
             same_line();
 
@@ -531,8 +547,10 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     igPopID();
     igSeparator();
 
+    // ----------------------------------------------------
+    // Brain layers
     igText("Layers");
-    igPushID_Str("Layers");
+    igPushID_Str("layers");
     if (igButton("Add", VEC2_ZERO)) {
         if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
             brain->layer_sizes[brain->n_layers++]
@@ -547,14 +565,79 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     }
     for (int i = 0; i < brain->n_layers; ++i) {
         char label[16];
-        sprintf(label, "Hidden: %d", i);
+        sprintf(label, ": %d", i);
         int* size = &brain->layer_sizes[i];
         drag_int(label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
     }
     igPopID();
     igSeparator();
 
-    igText("Output");
+    // ----------------------------------------------------
+    // Brain outputs
+    igText("Outputs");
+    igPushID_Str("outputs");
+    if (igButton("Add", VEC2_ZERO)) {
+        if (brain->n_outputs < MAX_N_BRAIN_OUTPUTS) {
+            brain->n_outputs += 1;
+        }
+    }
+
+    same_line();
+    if (igButton("Delete", VEC2_ZERO)) {
+        if (brain->n_outputs > 0) {
+            brain->n_outputs -= 1;
+        }
+    }
+
+    same_line();
+    size = get_brain_output_size(*brain, n_view_rays);
+    sprintf(size_str, "Size: %d", size);
+    igText(size_str);
+
+    for (int i = 0; i < brain->n_outputs; ++i) {
+        BrainOutput* picked_output = &brain->outputs[i];
+        char label[16];
+        sprintf(label, ": %d", i);
+
+        int type = render_component_type_picker(
+            label,
+            picked_output->type,
+            (int*)BRAIN_OUTPUT_TYPES,
+            N_BRAIN_OUTPUT_TYPES,
+            BRAIN_OUTPUT_TYPE_NAMES
+        );
+        change_brain_output_type(picked_output, type);
+
+        if (type == MOVE_ORIENTATION_OUTPUT) {
+            char label[32];
+            sprintf(label, "n_directions: %d", i);
+            igPushID_Str(label);
+            same_line();
+
+            if (igBeginMenu("", 1)) {
+                int* value
+                    = &picked_output->o.move_orientation.n_directions;
+                igText("n directions");
+                drag_int("##n_directions", value, 4, 32, 1, 0);
+                igEndMenu();
+            }
+
+            igPopID();
+        }
+    }
+    igPopID();
+    igSeparator();
+
+    // ----------------------------------------------------
+    // Brain general
+    igSeparator();
+    size = get_brain_size(*brain, n_view_rays);
+    sprintf(size_str, "N weights: %d", size);
+    igText(size_str);
+    same_line_float_right();
+
+    if (igButton("Finalize", VEC2_ZERO)) {}
+
     igEndPopup();
 }
 
@@ -689,6 +772,10 @@ static void render_component_inspector(int entity, ComponentType type) {
                         char str[64];
                         sprintf(str, "Requires: %s", name);
                         igTextColored(IM_RED_COLOR, str);
+                        same_line();
+                        if (igButton("Add", VEC2_ZERO)) {
+                            SCENE.components[entity] |= type;
+                        }
                     }
                 }
 
