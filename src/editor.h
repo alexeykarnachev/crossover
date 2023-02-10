@@ -22,8 +22,10 @@ typedef struct Editor {
     PickedEntity picked_entity;
     int is_playing;
     int entity_to_copy;
+    int is_editing_brain;
 } Editor;
 
+extern int UNIQUE_ID;
 extern Editor EDITOR;
 
 Vec2 get_cursor_scene_pos(void);
@@ -56,4 +58,7 @@ void update_entity_picking(void);
 void update_entity_dragging(void);
 
 void render_editor(void);
+void render_main_menu_bar(void);
+void render_scene_editor(void);
+void render_brain_editor(void);
 void render_entity_handles(void);

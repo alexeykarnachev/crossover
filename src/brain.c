@@ -1,10 +1,13 @@
 #include "brain.h"
 
-#include "../scene.h"
+#include "component.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+Brain BRAINS[MAX_N_BRAINS] = {0};
+int N_BRAINS = 0;
 
 // --------------------------------------------------------
 // Brain inputs

@@ -9,10 +9,12 @@
 #include "../utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "common.h"
 #include "nfd.h"
 #include <stdlib.h>
 #include <string.h>
 
+int UNIQUE_ID = 0;
 const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
 #define ASSERT_PROJECT(fn_name) \
@@ -214,4 +216,29 @@ void update_editor(void) {
         update_entity_picking();
         update_entity_dragging();
     }
+}
+
+void render_editor(void) {
+    UNIQUE_ID = 0;
+    ImGuiIO* io = igGetIO();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    igNewFrame();
+
+    render_main_menu_bar();
+
+    if (EDITOR.project.project_file_path != NULL) {
+        render_scene_editor();
+    }
+    if (EDITOR.is_editing_brain) {
+        center_next_window();
+        igOpenPopup_Str("render_brain_editor", 0);
+        if (igBeginPopup("render_brain_editor", ImGuiWindowFlags_Modal)) {
+            render_brain_editor();
+            igEndPopup();
+        }
+    }
+
+    igRender();
+    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }

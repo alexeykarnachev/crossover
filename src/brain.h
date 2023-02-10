@@ -1,5 +1,5 @@
 #pragma once
-#include "../const.h"
+#include "const.h"
 #include <stdint.h>
 
 typedef enum BrainInputType {
@@ -83,7 +83,11 @@ typedef struct Brain {
     int input_size;
     int output_size;
     float* weights;
+    const char* file_path;
 } Brain;
+
+extern Brain BRAINS[MAX_N_BRAINS];
+extern int N_BRAINS;
 
 void init_brain_weights(Brain* brain);
 int get_brain_input_size(Brain brain);

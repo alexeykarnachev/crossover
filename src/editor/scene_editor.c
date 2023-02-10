@@ -8,160 +8,28 @@
 #include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "common.h"
 #include "nfd.h"
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define menu_item igMenuItem_Bool
-#define menu_item_ptr igMenuItem_BoolPtr
-static int UNIQUE_ID = 0;
-static ImVec4 IM_RED_COLOR = {1.0, 0.0, 0.0, 1.0};
-static ImVec4 IM_GREEN_COLOR = {0.0, 1.0, 0.0, 1.0};
+static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
+    TRANSFORMATION_COMPONENT,
+    RIGID_BODY_COMPONENT,
+    COLLIDER_COMPONENT,
+    PRIMITIVE_COMPONENT,
+    MATERIAL_COMPONENT,
+    RENDER_LAYER_COMPONENT,
+    KINEMATIC_MOVEMENT_COMPONENT,
+    VISION_COMPONENT,
+    CONTROLLER_COMPONENT,
+    TTL_COMPONENT,
+    HEALTH_COMPONENT,
+    GUN_COMPONENT};
 
 static int LAST_PICKED_ENTITY = -1;
-static ImVec2 VEC2_ZERO = {0, 0};
-static ImVec4 PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
-
-static ImGuiWindowFlags GHOST_WINDOW_FLAGS
-    = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
-      | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
-      | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav
-      | ImGuiWindowFlags_NoBackground
-      | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDocking
-      | ImGuiWindowFlags_NoInputs;
-
-static ImGuiColorEditFlags COLOR_PICKER_FLAGS
-    = ImGuiColorEditFlags_PickerHueWheel
-      | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs
-      | ImGuiColorEditFlags_NoAlpha;
-
-static void same_line(void) {
-    igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-}
-
-static void center_next_window(void) {
-    ImVec2 center;
-    ImVec2 pivot = {0.5f, 0.5f};
-    ImGuiViewport_GetCenter(&center, igGetMainViewport());
-    igSetNextWindowPos(center, ImGuiCond_Appearing, pivot);
-}
-
-static void drag_float(
-    char* label,
-    float* value,
-    float min_val,
-    float max_val,
-    float step,
-    int flags
-) {
-    igDragFloat(label, value, step, min_val, max_val, "%.2f", flags);
-}
-
-static void drag_float2(
-    char* label,
-    float values[2],
-    float min_val,
-    float max_val,
-    float step,
-    int flags
-) {
-    igDragFloat2(label, values, step, min_val, max_val, "%.2f", flags);
-}
-
-static void drag_int(
-    char* label, int* value, int min_val, int max_val, int step, int flags
-) {
-    igDragInt(label, value, 1, min_val, max_val, "%d", flags);
-}
-
-static void render_main_menu_bar() {
-    int proj_loaded = EDITOR.project.project_file_path != NULL;
-
-    if (igBeginMainMenuBar()) {
-        if (igBeginMenu("File", 1)) {
-            if (menu_item("New Scene", "Ctrl+N", false, proj_loaded)) {
-                new_editor_scene();
-            }
-            if (menu_item("Open Scene", "Ctrl+O", false, proj_loaded)) {
-                open_editor_scene();
-            }
-            if (menu_item("Save Scene", "Ctrl+S", false, proj_loaded)) {
-                save_editor_scene();
-            }
-            if (menu_item("Save Scene As", "", false, proj_loaded)) {
-                save_editor_scene_as();
-            }
-            igSeparator();
-
-            if (menu_item("New Project", "", false, true)) {
-                new_editor_project();
-            }
-            if (menu_item("Open Project", "", false, true)) {
-                open_editor_project();
-            }
-            igSeparator();
-
-            igEndMenu();
-        }
-
-        if (igBeginMenu("Edit", 1)) {
-            if (menu_item("Project", "", false, proj_loaded)) {}
-            igEndMenu();
-        }
-
-        igEndMainMenuBar();
-    }
-
-    int key_ctrl = igGetIO()->KeyCtrl;
-    int key_o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
-    int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
-    int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
-    if (key_o && key_ctrl) {
-        if (proj_loaded) {
-            open_editor_scene();
-        } else {
-            open_editor_project();
-        }
-    } else if (key_n && key_ctrl) {
-        if (proj_loaded) {
-            new_editor_scene();
-        } else {
-            new_editor_project();
-        }
-    } else if (proj_loaded && key_s && key_ctrl) {
-        save_editor_scene();
-    }
-}
-
-static void render_edit_button(ComponentType component_type) {
-    igPushID_Int(UNIQUE_ID++);
-    if (EDITOR.picked_entity.component_type == component_type) {
-        igPushStyleColor_Vec4(ImGuiCol_Button, PRESSED_BUTTON_COLOR);
-        igButton("Edit", VEC2_ZERO);
-        igPopStyleColor(1);
-    } else if (igButton("Edit", VEC2_ZERO)) {
-        EDITOR.picked_entity.component_type = component_type;
-    }
-    igPopID();
-}
-
-void render_component_checkboxes(uint64_t* components) {
-    int flags[N_COMPONENT_TYPES] = {0};
-    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        flags[i] = (*components & (1 << i)) != 0;
-    }
-
-    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        const char* name = get_component_type_name(COMPONENT_TYPES[i]);
-        igCheckbox(name, (bool*)(&flags[i]));
-    }
-
-    for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        *components ^= (-flags[i] ^ *components) & (1ULL << i);
-    }
-}
 
 int render_component_type_picker(
     const char* combo_name,
@@ -178,7 +46,7 @@ int render_component_type_picker(
             PrimitiveType type = types[i];
             const char* type_name = type_names[type];
             int is_picked = strcmp(picked_type_name, type_name) == 0;
-            if (igSelectable_Bool(type_name, is_picked, 0, VEC2_ZERO)) {
+            if (igSelectable_Bool(type_name, is_picked, 0, IM_VEC2_ZERO)) {
                 picked_type_name = type_name;
                 new_type = type;
             }
@@ -191,6 +59,18 @@ int render_component_type_picker(
     }
 
     return new_type;
+}
+
+static void render_edit_button(ComponentType component_type) {
+    igPushID_Int(UNIQUE_ID++);
+    if (EDITOR.picked_entity.component_type == component_type) {
+        igPushStyleColor_Vec4(ImGuiCol_Button, IM_PRESSED_BUTTON_COLOR);
+        igButton("Edit", IM_VEC2_ZERO);
+        igPopStyleColor(1);
+    } else if (igButton("Edit", IM_VEC2_ZERO)) {
+        EDITOR.picked_entity.component_type = component_type;
+    }
+    igPopID();
 }
 
 static void render_primitive_header_settings(
@@ -223,7 +103,7 @@ static void render_primitive_header_settings(
             }
         }
         igPushID_Int(UNIQUE_ID++);
-        if (igButton(label, VEC2_ZERO)) {
+        if (igButton(label, IM_VEC2_ZERO)) {
             *target_primitive = *source_primitive;
         }
         igPopID();
@@ -285,12 +165,12 @@ static void render_primitive_geometry_settings(
             );
 
             Polygon* polygon = &target_primitive->p.polygon;
-            if (igButton("Add vertex", VEC2_ZERO)) {
+            if (igButton("Add vertex", IM_VEC2_ZERO)) {
                 add_polygon_vertex(polygon);
             }
 
             same_line();
-            if (igButton("Delete vertex", VEC2_ZERO)) {
+            if (igButton("Delete vertex", IM_VEC2_ZERO)) {
                 delete_polygon_vertex(polygon);
             }
 
@@ -316,9 +196,9 @@ static void render_game_controls(void) {
     char* name = "Game controls";
 
     if (igBegin(name, NULL, flags)) {
-        if (EDITOR.is_playing && igButton("Stop", VEC2_ZERO)) {
+        if (EDITOR.is_playing && igButton("Stop", IM_VEC2_ZERO)) {
             EDITOR.is_playing = 0;
-        } else if (!EDITOR.is_playing && igButton("Play", VEC2_ZERO)) {
+        } else if (!EDITOR.is_playing && igButton("Play", IM_VEC2_ZERO)) {
             EDITOR.is_playing = 1;
         }
     }
@@ -328,7 +208,7 @@ static void render_game_controls(void) {
     ImVec2 position = {
         0.5 * (io->DisplaySize.x - window_size.x), igGetFrameHeight()};
     igSetWindowPos_Str(name, position, ImGuiCond_Always);
-    igSetWindowSize_Str(name, VEC2_ZERO, ImGuiCond_Always);
+    igSetWindowSize_Str(name, IM_VEC2_ZERO, ImGuiCond_Always);
 
     igEnd();
 }
@@ -338,7 +218,7 @@ static void render_debug_info(void) {
     ImVec2 position = {0, io->DisplaySize.y};
     ImVec2 pivot = {0, 1};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
         igText("FPS: %.1f", io->Framerate);
@@ -361,7 +241,7 @@ static void render_debug_info(void) {
     igEnd();
 }
 
-static void render_editor_context_menu(void) {
+static void render_context_menu(void) {
     static Vec2 cursor_scene_pos;
     static Transformation transformation;
     int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
@@ -371,7 +251,7 @@ static void render_editor_context_menu(void) {
         pick_entity(get_entity_under_cursor());
         cursor_scene_pos = get_cursor_scene_pos();
         transformation = init_transformation(cursor_scene_pos, 0.0);
-        igOpenPopup_Str("editor_context_menu", 0);
+        igOpenPopup_Str("context_menu", 0);
     }
 
     int spawn_player_keyboard_guy = 0;
@@ -385,7 +265,7 @@ static void render_editor_context_menu(void) {
     int copy = 0;
     int paste = 0;
     int delete = 0;
-    if (igBeginPopup("editor_context_menu", 0)) {
+    if (igBeginPopup("context_menu", 0)) {
         if (igBeginMenu("Spawn", 1)) {
             if (igBeginMenu("Guy", 1)) {
                 menu_item_ptr(
@@ -456,170 +336,6 @@ static void render_editor_context_menu(void) {
     } else if (delete) {
         destroy_entity(EDITOR.picked_entity.entity);
     }
-}
-
-static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
-    TRANSFORMATION_COMPONENT,
-    RIGID_BODY_COMPONENT,
-    COLLIDER_COMPONENT,
-    PRIMITIVE_COMPONENT,
-    MATERIAL_COMPONENT,
-    RENDER_LAYER_COMPONENT,
-    KINEMATIC_MOVEMENT_COMPONENT,
-    VISION_COMPONENT,
-    CONTROLLER_COMPONENT,
-    TTL_COMPONENT,
-    HEALTH_COMPONENT,
-    GUN_COMPONENT};
-
-static void render_brain_editor(Brain* brain, int n_view_rays) {
-    igText("Brain Editor");
-    igSeparator();
-    igSeparator();
-
-    char size_str[32];
-    int size;
-    // ----------------------------------------------------
-    // Brain inputs
-    igText("Inputs");
-    drag_int("N view rays", &brain->n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0);
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
-            brain->n_inputs += 1;
-        }
-    }
-
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain->n_inputs > 0) {
-            brain->n_inputs -= 1;
-        }
-    }
-
-    same_line();
-    size = get_brain_input_size(*brain);
-    sprintf(size_str, "Size: %d", size);
-    igText(size_str);
-
-    for (int i = 0; i < brain->n_inputs; ++i) {
-        BrainInput* picked_input = &brain->inputs[i];
-        char label[16];
-        sprintf(label, ": %d", i);
-
-        int type = render_component_type_picker(
-            label,
-            picked_input->type,
-            (int*)BRAIN_INPUT_TYPES,
-            N_BRAIN_INPUT_TYPES,
-            BRAIN_INPUT_TYPE_NAMES
-        );
-        change_brain_input_type(picked_input, type);
-
-        if (type == TARGET_ENTITY_INPUT) {
-            igPushID_Int(UNIQUE_ID++);
-            same_line();
-
-            if (igBeginMenu("", 1)) {
-                uint64_t* components
-                    = &picked_input->i.target_entity.components;
-                render_component_checkboxes(components);
-                igEndMenu();
-            }
-
-            igPopID();
-        }
-    }
-    igPopID();
-    igSeparator();
-
-    // ----------------------------------------------------
-    // Brain layers
-    igText("Layers");
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
-            brain->layer_sizes[brain->n_layers++]
-                = DEFAULT_BRAIN_LAYER_SIZE;
-        }
-    }
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain->n_layers > 0) {
-            brain->n_layers -= 1;
-        }
-    }
-    for (int i = 0; i < brain->n_layers; ++i) {
-        char label[16];
-        sprintf(label, ": %d", i);
-        int* size = &brain->layer_sizes[i];
-        drag_int(label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
-    }
-    igPopID();
-    igSeparator();
-
-    // ----------------------------------------------------
-    // Brain outputs
-    igText("Outputs");
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain->n_outputs < MAX_N_BRAIN_OUTPUTS) {
-            brain->n_outputs += 1;
-        }
-    }
-
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain->n_outputs > 0) {
-            brain->n_outputs -= 1;
-        }
-    }
-
-    same_line();
-    size = get_brain_output_size(*brain);
-    sprintf(size_str, "Size: %d", size);
-    igText(size_str);
-
-    for (int i = 0; i < brain->n_outputs; ++i) {
-        BrainOutput* picked_output = &brain->outputs[i];
-        char label[16];
-        sprintf(label, ": %d", i);
-
-        int type = render_component_type_picker(
-            label,
-            picked_output->type,
-            (int*)BRAIN_OUTPUT_TYPES,
-            N_BRAIN_OUTPUT_TYPES,
-            BRAIN_OUTPUT_TYPE_NAMES
-        );
-        change_brain_output_type(picked_output, type);
-
-        if (type == MOVE_ORIENTATION_OUTPUT) {
-            igPushID_Int(UNIQUE_ID++);
-            same_line();
-
-            if (igBeginMenu("", 1)) {
-                int* value
-                    = &picked_output->o.move_orientation.n_directions;
-                igText("n directions");
-                drag_int("##n_directions", value, 4, 32, 1, 0);
-                igEndMenu();
-            }
-
-            igPopID();
-        }
-    }
-    igPopID();
-    igSeparator();
-
-    // ----------------------------------------------------
-    // Brain general
-    igSeparator();
-    size = get_brain_size(*brain);
-    sprintf(size_str, "N weights: %d", size);
-    igText(size_str);
-
-    igEndPopup();
 }
 
 static void render_component_inspector(int entity, ComponentType type) {
@@ -728,111 +444,32 @@ static void render_component_inspector(int entity, ComponentType type) {
             );
             change_controller_type(controller, type);
 
-            if (type == DUMMY_AI_CONTROLLER) {
-                DummyAIController* ai = &controller->c.dummy_ai;
-                igCheckbox("Shoot", (bool*)(&ai->is_shooting));
-            } else if (type == BRAIN_AI_CONTROLLER) {
-                int n_view_rays = 0;
-                if (check_if_entity_has_component(
-                        entity, VISION_COMPONENT
-                    )) {
-                    n_view_rays = SCENE.visions[entity].n_view_rays;
+            switch (type) {
+                case PLAYER_KEYBOARD_CONTROLLER: {
+                    break;
                 }
-
-                BrainAIController* ai = &controller->c.brain_ai;
-                Brain* brain = &ai->brain;
-
-                if (igButton("Edit", VEC2_ZERO)) {
-                    igOpenPopup_Str("brain_editor", 0);
+                case DUMMY_AI_CONTROLLER: {
+                    DummyAIController* ai = &controller->c.dummy_ai;
+                    igCheckbox("Shoot", (bool*)(&ai->is_shooting));
+                    break;
                 }
-
-                int can_initialize = 1;
-                if (brain->n_view_rays != n_view_rays) {
-                    can_initialize &= 0;
-                    igSeparator();
+                case BRAIN_AI_CONTROLLER: {
+                    igTextColored(
+                        IM_YELLOW_COLOR, "TODO: Connect with brain"
+                    );
+                    break;
+                }
+                default: {
                     char str[128];
                     sprintf(
                         str,
-                        "ERROR: Brain n_view_rays (%d) \n       != Vision "
-                        "n_view_rays (%d)",
-                        brain->n_view_rays,
-                        n_view_rays
+                        "ERROR: Unknown Controller type: %s",
+                        CONTROLLER_TYPE_NAMES[type]
                     );
                     igTextColored(IM_RED_COLOR, str);
-
-                    same_line();
-                    if (igButton("Fix", VEC2_ZERO)) {
-                        brain->n_view_rays = n_view_rays;
-                    }
-                }
-
-                uint64_t required_input_types
-                    = get_brain_required_input_types(*brain);
-                for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-                    ComponentType type = COMPONENT_TYPES[i];
-                    int is_required = required_input_types & (1 << i);
-                    int has_component = check_if_entity_has_component(
-                        entity, type
-                    );
-                    if (is_required && !has_component) {
-                        can_initialize &= 0;
-                        igSeparator();
-                        const char* name = get_component_type_name(type);
-                        char str[64];
-                        sprintf(str, "ERROR: %s input is missing", name);
-                        igTextColored(IM_RED_COLOR, str);
-                        same_line();
-                        igPushID_Int(UNIQUE_ID++);
-                        if (igButton("Fix", VEC2_ZERO)) {
-                            SCENE.components[entity] |= type;
-                        }
-                        igPopID();
-                    }
-                }
-
-                int n_weights = get_brain_size(*brain);
-                if (n_weights == 0) {
-                    can_initialize &= 0;
-                    igSeparator();
-                    igTextColored(
-                        IM_RED_COLOR, "ERROR: Brain has no weights"
-                    );
-                }
-
-                igSeparator();
-                if (brain->weights == NULL) {
-                    igTextColored(
-                        IM_RED_COLOR, "ERROR: Brain is NOT initialized"
-                    );
-
-                    if (can_initialize) {
-                        same_line();
-                        igPushID_Int(UNIQUE_ID++);
-                        if (igButton("Fix", VEC2_ZERO)) {
-                            init_brain_weights(brain);
-                        }
-                        igPopID();
-                    }
-                } else {
-                    igTextColored(
-                        IM_GREEN_COLOR, "INFO: Brain is initialized"
-                    );
-                }
-
-                // if (igButton("Finalize", VEC2_ZERO)) {
-                //     nfdfilteritem_t filter_items[1] = {{"Brain",
-                //     "xbrain"}}; const char* file_path =
-                //     save_file_path_via_nfd(EDITOR.project.default_search_path,
-                //     filter_items, 1); if (file_path != NULL) {
-
-                //     }
-                // }
-
-                center_next_window();
-                if (igBeginPopup("brain_editor", 0)) {
-                    render_brain_editor(brain, n_view_rays);
                 }
             }
+
             break;
         }
         case TTL_COMPONENT: {
@@ -868,7 +505,7 @@ static void render_component_inspector(int entity, ComponentType type) {
     igTreePop();
 }
 
-static void render_entity_editor() {
+static void render_entity_inspector() {
     int picked_entity = EDITOR.picked_entity.entity;
     int camera_entity = SCENE.camera;
 
@@ -876,12 +513,12 @@ static void render_entity_editor() {
     ImVec2 position = {0.0, igGetFrameHeight()};
     ImVec2 pivot = {0, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
     if (igBegin("Entity", NULL, 0)) {
         // Camera settings: current scene camera components editor
         if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
             && camera_entity != -1) {
-            if (igButton("Reset", VEC2_ZERO)) {
+            if (igButton("Reset", IM_VEC2_ZERO)) {
                 reset_camera();
             }
             Transformation* transformation
@@ -921,11 +558,11 @@ static void render_entity_editor() {
     igEnd();
 }
 
-static void render_scene_editor(void) {
+static void render_scene_inspector(void) {
     ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};
     ImVec2 pivot = {1, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Scene", NULL, 0)) {
         // List of all current Scene Entities
@@ -992,7 +629,7 @@ static void render_scene_editor(void) {
                 igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
                 same_line();
-                if (igButton("once", VEC2_ZERO)) {
+                if (igButton("once", IM_VEC2_ZERO)) {
                     DEBUG.collisions.resolve_once = 1;
                 }
                 igTreePop();
@@ -1003,27 +640,12 @@ static void render_scene_editor(void) {
     igEnd();
 }
 
-void render_editor(void) {
-    UNIQUE_ID = 0;
-    ImGuiIO* io = igGetIO();
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    igNewFrame();
-
-    if (EDITOR.project.project_file_path != NULL) {
-        render_game_controls();
-        render_debug_info();
-
-        if (!EDITOR.is_playing) {
-            render_main_menu_bar();
-            render_entity_editor();
-            render_scene_editor();
-            render_editor_context_menu();
-        }
-    } else {
-        render_main_menu_bar();
+void render_scene_editor(void) {
+    render_game_controls();
+    render_debug_info();
+    if (!EDITOR.is_playing) {
+        render_entity_inspector();
+        render_scene_inspector();
+        render_context_menu();
     }
-
-    igRender();
-    ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 }

@@ -46,7 +46,7 @@ static ControllerAction get_player_keyboard_action(int entity) {
         fprintf(
             stderr,
             "ERROR: Can't get the player keyboard action. The entity "
-            "doesn't have Transformation or KinematicMovement component\n"
+            "doesn't have Transformation | KinematicMovement component\n"
         );
         exit(1);
     }
@@ -91,7 +91,7 @@ static ControllerAction get_dummy_ai_action(int entity) {
         fprintf(
             stderr,
             "ERROR: Can't get the dummy ai controller action. The entity "
-            "doesn't have Transformation or Vision component\n"
+            "doesn't have Transformation | Vision component\n"
         );
         exit(1);
     }
@@ -139,14 +139,13 @@ static ControllerAction get_brain_ai_action(int entity) {
         fprintf(
             stderr,
             "ERROR: Can't get the brain ai controller action. The entity "
-            "doesn't have Transformation or Vision component\n"
+            "doesn't have Transformation | Vision | Brain component\n"
         );
         exit(1);
     }
 
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
-    Brain brain = ai.brain;
 
     return action;
 }

@@ -66,7 +66,7 @@ Controller init_brain_ai_controller() {
     Controller controller = {0};
 
     controller.type = BRAIN_AI_CONTROLLER;
-    BrainAIController brain_ai_controller = {0};
+    BrainAIController brain_ai_controller;
     controller.c.brain_ai = brain_ai_controller;
     return controller;
 }

@@ -1,7 +1,7 @@
 #pragma once
+#include "../brain.h"
 #include "../const.h"
 #include "../math.h"
-#include "brain.h"
 
 #define N_CONTROLLER_TYPES 3
 typedef enum ControllerType {
@@ -21,7 +21,6 @@ typedef struct DummyAIController {
 } DummyAIController;
 
 typedef struct BrainAIController {
-    Brain brain;
 } BrainAIController;
 
 typedef struct Controller {
