@@ -76,7 +76,8 @@ void change_brain_input_type(
     }
 }
 
-int get_brain_input_size(Brain brain, int n_view_rays) {
+int get_brain_input_size(Brain brain) {
+    int n_view_rays = brain.n_view_rays;
     int input_size = 0;
     for (int i = 0; i < brain.n_inputs; ++i) {
         BrainInput input = brain.inputs[i];
@@ -173,7 +174,8 @@ void change_brain_output_type(
     }
 }
 
-int get_brain_output_size(Brain brain, int n_view_rays) {
+int get_brain_output_size(Brain brain) {
+    int n_view_rays = brain.n_view_rays;
     int output_size = 0;
     for (int i = 0; i < brain.n_outputs; ++i) {
         BrainOutput output = brain.outputs[i];
@@ -198,8 +200,7 @@ int get_brain_output_size(Brain brain, int n_view_rays) {
 
 // --------------------------------------------------------
 // Brain general
-
-uint64_t get_brain_required_component_types(Brain brain) {
+uint64_t get_brain_required_input_types(Brain brain) {
     uint64_t components = 0;
     for (int i = 0; i < brain.n_inputs; ++i) {
         BrainInputType type = brain.inputs[i].type;
@@ -226,9 +227,9 @@ uint64_t get_brain_required_component_types(Brain brain) {
     return components;
 }
 
-int get_brain_size(Brain brain, int n_view_rays) {
-    int input_size = get_brain_input_size(brain, n_view_rays);
-    int output_size = get_brain_output_size(brain, n_view_rays);
+int get_brain_size(Brain brain) {
+    int input_size = get_brain_input_size(brain);
+    int output_size = get_brain_output_size(brain);
     if (!input_size || !output_size) {
         return 0;
     }
@@ -247,20 +248,8 @@ int get_brain_size(Brain brain, int n_view_rays) {
     return n_weights;
 }
 
-// Brain init_brain(
-//     int entity,
-//     int layer_sizes[MAX_N_BRAIN_LAYERS],
-//     int n_layers,
-//     uint64_t input_types,
-//     uint64_t output_types
-// ) {
-//     Brain brain = {0};
-//     memcpy(brain.layer_sizes, layer_sizes, sizeof(int) * n_layers);
-//     brain.n_layers = n_layers;
-//     brain.input_size = get_brain_input_size(entity, input_types);
-//     brain.output_size = get_brain_output_size(entity, output_types);
-//     float* weights = (float*)malloc(sizeof(float) * n_weights);
-//     brain.weights = init_brain_weights(
-//         layer_sizes, n_layers, brain.input_size, brain.output_size
-//     );
-// }
+void init_brain_weights(Brain* brain) {
+    int n_weights = get_brain_size(*brain);
+    float* weights = (float*)malloc(sizeof(float) * n_weights);
+    brain->weights = weights;
+}

@@ -16,8 +16,9 @@
 
 #define menu_item igMenuItem_Bool
 #define menu_item_ptr igMenuItem_BoolPtr
-
+static int UNIQUE_ID = 0;
 static ImVec4 IM_RED_COLOR = {1.0, 0.0, 0.0, 1.0};
+static ImVec4 IM_GREEN_COLOR = {0.0, 1.0, 0.0, 1.0};
 
 static int LAST_PICKED_ENTITY = -1;
 static ImVec2 VEC2_ZERO = {0, 0};
@@ -38,15 +39,6 @@ static ImGuiColorEditFlags COLOR_PICKER_FLAGS
 
 static void same_line(void) {
     igSameLine(0.0, igGetStyle()->ItemSpacing.y);
-}
-
-static void same_line_float_right(void) {
-    ImVec2 window_size;
-    igGetWindowSize(&window_size);
-    ImVec2 item_size;
-    igGetItemRectSize(&item_size);
-    float x_offset = window_size.x - item_size.x;
-    igSameLine(x_offset, igGetStyle()->ItemSpacing.y);
 }
 
 static void center_next_window(void) {
@@ -144,9 +136,7 @@ static void render_main_menu_bar() {
 }
 
 static void render_edit_button(ComponentType component_type) {
-    char id[16];
-    sprintf(id, "%d", component_type);
-    igPushID_Str(id);
+    igPushID_Int(UNIQUE_ID++);
     if (EDITOR.picked_entity.component_type == component_type) {
         igPushStyleColor_Vec4(ImGuiCol_Button, PRESSED_BUTTON_COLOR);
         igButton("Edit", VEC2_ZERO);
@@ -212,9 +202,6 @@ static void render_primitive_header_settings(
     if (source_primitive != NULL) {
         same_line();
 
-        char copy_primitive_button_id[16];
-        sprintf(copy_primitive_button_id, "%d", target_component_type);
-
         char label[32];
         switch (target_component_type) {
             case PRIMITIVE_COMPONENT: {
@@ -235,7 +222,7 @@ static void render_primitive_header_settings(
                 exit(1);
             }
         }
-        igPushID_Str(copy_primitive_button_id);
+        igPushID_Int(UNIQUE_ID++);
         if (igButton(label, VEC2_ZERO)) {
             *target_primitive = *source_primitive;
         }
@@ -495,7 +482,8 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     // ----------------------------------------------------
     // Brain inputs
     igText("Inputs");
-    igPushID_Str("inputs");
+    drag_int("N view rays", &brain->n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0);
+    igPushID_Int(UNIQUE_ID++);
     if (igButton("Add", VEC2_ZERO)) {
         if (brain->n_inputs < MAX_N_BRAIN_INPUTS) {
             brain->n_inputs += 1;
@@ -510,7 +498,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     }
 
     same_line();
-    size = get_brain_input_size(*brain, n_view_rays);
+    size = get_brain_input_size(*brain);
     sprintf(size_str, "Size: %d", size);
     igText(size_str);
 
@@ -529,9 +517,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
         change_brain_input_type(picked_input, type);
 
         if (type == TARGET_ENTITY_INPUT) {
-            char label[32];
-            sprintf(label, "components: %d", i);
-            igPushID_Str(label);
+            igPushID_Int(UNIQUE_ID++);
             same_line();
 
             if (igBeginMenu("", 1)) {
@@ -550,7 +536,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     // ----------------------------------------------------
     // Brain layers
     igText("Layers");
-    igPushID_Str("layers");
+    igPushID_Int(UNIQUE_ID++);
     if (igButton("Add", VEC2_ZERO)) {
         if (brain->n_layers < MAX_N_BRAIN_LAYERS) {
             brain->layer_sizes[brain->n_layers++]
@@ -575,7 +561,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     // ----------------------------------------------------
     // Brain outputs
     igText("Outputs");
-    igPushID_Str("outputs");
+    igPushID_Int(UNIQUE_ID++);
     if (igButton("Add", VEC2_ZERO)) {
         if (brain->n_outputs < MAX_N_BRAIN_OUTPUTS) {
             brain->n_outputs += 1;
@@ -590,7 +576,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     }
 
     same_line();
-    size = get_brain_output_size(*brain, n_view_rays);
+    size = get_brain_output_size(*brain);
     sprintf(size_str, "Size: %d", size);
     igText(size_str);
 
@@ -609,9 +595,7 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
         change_brain_output_type(picked_output, type);
 
         if (type == MOVE_ORIENTATION_OUTPUT) {
-            char label[32];
-            sprintf(label, "n_directions: %d", i);
-            igPushID_Str(label);
+            igPushID_Int(UNIQUE_ID++);
             same_line();
 
             if (igBeginMenu("", 1)) {
@@ -631,12 +615,9 @@ static void render_brain_editor(Brain* brain, int n_view_rays) {
     // ----------------------------------------------------
     // Brain general
     igSeparator();
-    size = get_brain_size(*brain, n_view_rays);
+    size = get_brain_size(*brain);
     sprintf(size_str, "N weights: %d", size);
     igText(size_str);
-    same_line_float_right();
-
-    if (igButton("Finalize", VEC2_ZERO)) {}
 
     igEndPopup();
 }
@@ -751,37 +732,101 @@ static void render_component_inspector(int entity, ComponentType type) {
                 DummyAIController* ai = &controller->c.dummy_ai;
                 igCheckbox("Shoot", (bool*)(&ai->is_shooting));
             } else if (type == BRAIN_AI_CONTROLLER) {
-                int n_view_rays = SCENE.visions[entity].n_view_rays;
+                int n_view_rays = 0;
+                if (check_if_entity_has_component(
+                        entity, VISION_COMPONENT
+                    )) {
+                    n_view_rays = SCENE.visions[entity].n_view_rays;
+                }
+
                 BrainAIController* ai = &controller->c.brain_ai;
                 Brain* brain = &ai->brain;
 
-                if (brain->weights == NULL) {
-                    igTextColored(IM_RED_COLOR, "Not finalized");
+                if (igButton("Edit", VEC2_ZERO)) {
+                    igOpenPopup_Str("brain_editor", 0);
                 }
 
-                uint64_t required_types
-                    = get_brain_required_component_types(*brain);
+                int can_initialize = 1;
+                if (brain->n_view_rays != n_view_rays) {
+                    can_initialize &= 0;
+                    igSeparator();
+                    char str[128];
+                    sprintf(
+                        str,
+                        "ERROR: Brain n_view_rays (%d) \n       != Vision "
+                        "n_view_rays (%d)",
+                        brain->n_view_rays,
+                        n_view_rays
+                    );
+                    igTextColored(IM_RED_COLOR, str);
+
+                    same_line();
+                    if (igButton("Fix", VEC2_ZERO)) {
+                        brain->n_view_rays = n_view_rays;
+                    }
+                }
+
+                uint64_t required_input_types
+                    = get_brain_required_input_types(*brain);
                 for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
                     ComponentType type = COMPONENT_TYPES[i];
-                    int is_required = required_types & (1 << i);
+                    int is_required = required_input_types & (1 << i);
                     int has_component = check_if_entity_has_component(
                         entity, type
                     );
                     if (is_required && !has_component) {
+                        can_initialize &= 0;
+                        igSeparator();
                         const char* name = get_component_type_name(type);
                         char str[64];
-                        sprintf(str, "Requires: %s", name);
+                        sprintf(str, "ERROR: %s input is missing", name);
                         igTextColored(IM_RED_COLOR, str);
                         same_line();
-                        if (igButton("Add", VEC2_ZERO)) {
+                        igPushID_Int(UNIQUE_ID++);
+                        if (igButton("Fix", VEC2_ZERO)) {
                             SCENE.components[entity] |= type;
                         }
+                        igPopID();
                     }
                 }
 
-                if (igButton("Create", VEC2_ZERO)) {
-                    igOpenPopup_Str("brain_editor", 0);
+                int n_weights = get_brain_size(*brain);
+                if (n_weights == 0) {
+                    can_initialize &= 0;
+                    igSeparator();
+                    igTextColored(
+                        IM_RED_COLOR, "ERROR: Brain has no weights"
+                    );
                 }
+
+                igSeparator();
+                if (brain->weights == NULL) {
+                    igTextColored(
+                        IM_RED_COLOR, "ERROR: Brain is NOT initialized"
+                    );
+
+                    if (can_initialize) {
+                        same_line();
+                        igPushID_Int(UNIQUE_ID++);
+                        if (igButton("Fix", VEC2_ZERO)) {
+                            init_brain_weights(brain);
+                        }
+                        igPopID();
+                    }
+                } else {
+                    igTextColored(
+                        IM_GREEN_COLOR, "INFO: Brain is initialized"
+                    );
+                }
+
+                // if (igButton("Finalize", VEC2_ZERO)) {
+                //     nfdfilteritem_t filter_items[1] = {{"Brain",
+                //     "xbrain"}}; const char* file_path =
+                //     save_file_path_via_nfd(EDITOR.project.default_search_path,
+                //     filter_items, 1); if (file_path != NULL) {
+
+                //     }
+                // }
 
                 center_next_window();
                 if (igBeginPopup("brain_editor", 0)) {
@@ -819,8 +864,8 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
     }
 
-    igTreePop();
     igSeparator();
+    igTreePop();
 }
 
 static void render_entity_editor() {
@@ -959,6 +1004,7 @@ static void render_scene_editor(void) {
 }
 
 void render_editor(void) {
+    UNIQUE_ID = 0;
     ImGuiIO* io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();

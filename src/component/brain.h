@@ -76,6 +76,7 @@ typedef struct Brain {
     BrainInput inputs[MAX_N_BRAIN_INPUTS];
     BrainOutput outputs[MAX_N_BRAIN_OUTPUTS];
     int layer_sizes[MAX_N_BRAIN_LAYERS];
+    int n_view_rays;
     int n_inputs;
     int n_outputs;
     int n_layers;
@@ -84,10 +85,12 @@ typedef struct Brain {
     float* weights;
 } Brain;
 
-int get_brain_input_size(Brain brain, int n_view_rays);
-int get_brain_output_size(Brain brain, int n_view_rays);
-int get_brain_size(Brain brain, int n_view_rays);
-uint64_t get_brain_required_component_types(Brain brain);
+void init_brain_weights(Brain* brain);
+int get_brain_input_size(Brain brain);
+int get_brain_output_size(Brain brain);
+int get_brain_size(Brain brain);
+uint64_t get_brain_required_input_types(Brain brain);
+uint64_t get_brain_required_output_types(Brain brain);
 
 BrainInput init_target_entity_brain_input(void);
 BrainInput init_target_distance_brain_input(void);
