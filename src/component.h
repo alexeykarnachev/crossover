@@ -9,7 +9,7 @@
 #include "./component/transformation.h"
 #include "./component/vision.h"
 
-#define N_COMPONENT_TYPES 16
+#define N_COMPONENT_TYPES 15
 typedef enum ComponentType {
     TRANSFORMATION_COMPONENT = 1 << 0,
     RIGID_BODY_COMPONENT = 1 << 1,

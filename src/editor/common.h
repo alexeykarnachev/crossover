@@ -7,18 +7,20 @@
 #define menu_item igMenuItem_Bool
 #define menu_item_ptr igMenuItem_BoolPtr
 
-extern ImVec2 IM_VEC2_ZERO;
-extern ImVec4 IM_RED_COLOR;
-extern ImVec4 IM_GREEN_COLOR;
-extern ImVec4 IM_YELLOW_COLOR;
-extern ImVec4 IM_PRESSED_BUTTON_COLOR;
+extern int IG_UNIQUE_ID;
+
+extern ImVec2 IG_VEC2_ZERO;
+extern ImVec4 IG_RED_COLOR;
+extern ImVec4 IG_GREEN_COLOR;
+extern ImVec4 IG_YELLOW_COLOR;
+extern ImVec4 IG_PRESSED_BUTTON_COLOR;
 
 extern ImGuiWindowFlags GHOST_WINDOW_FLAGS;
 extern ImGuiColorEditFlags COLOR_PICKER_FLAGS;
 
-void same_line(void);
-void center_next_window(void);
-void drag_float(
+void ig_same_line(void);
+void ig_center_next_window(void);
+void ig_drag_float(
     char* label,
     float* value,
     float min_val,
@@ -26,7 +28,7 @@ void drag_float(
     float step,
     int flags
 );
-void drag_float2(
+void ig_drag_float2(
     char* label,
     float values[2],
     float min_val,
@@ -34,7 +36,18 @@ void drag_float2(
     float step,
     int flags
 );
-void drag_int(
+void ig_drag_int(
     char* label, int* value, int min_val, int max_val, int step, int flags
 );
+void ig_add_button(const char* label, int* val, int add, int max_val);
+void ig_sub_button(const char* label, int* val, int sub, int min_val);
+void ig_set_button(const char* label, int* val, int set);
+
 void render_component_checkboxes(uint64_t* components);
+int render_component_type_picker(
+    const char* combo_name,
+    int picked_type,
+    int* types,
+    int n_types,
+    const char* type_names[]
+);

@@ -55,7 +55,7 @@ const char* get_component_type_name(ComponentType type) {
         default: {
             fprintf(
                 stderr,
-                "ERROR: Can't get the name of the compnent type with id: "
+                "ERROR: Can't get the name of the component type with id: "
                 "%d\n",
                 type
             );

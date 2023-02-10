@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int UNIQUE_ID = 0;
 const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
 #define ASSERT_PROJECT(fn_name) \
@@ -219,7 +218,7 @@ void update_editor(void) {
 }
 
 void render_editor(void) {
-    UNIQUE_ID = 0;
+    IG_UNIQUE_ID = 0;
     ImGuiIO* io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -231,7 +230,7 @@ void render_editor(void) {
         render_scene_editor();
     }
     if (EDITOR.is_editing_brain) {
-        center_next_window();
+        ig_center_next_window();
         igOpenPopup_Str("render_brain_editor", 0);
         if (igBeginPopup("render_brain_editor", ImGuiWindowFlags_Modal)) {
             render_brain_editor();

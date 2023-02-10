@@ -25,7 +25,6 @@ typedef struct Editor {
     int is_editing_brain;
 } Editor;
 
-extern int UNIQUE_ID;
 extern Editor EDITOR;
 
 Vec2 get_cursor_scene_pos(void);

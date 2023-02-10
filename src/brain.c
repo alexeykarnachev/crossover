@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-Brain BRAINS[MAX_N_BRAINS] = {0};
-int N_BRAINS = 0;
-
 // --------------------------------------------------------
 // Brain inputs
 #define BRAIN_INPUT_TYPE_ERROR(fn_name, type) \

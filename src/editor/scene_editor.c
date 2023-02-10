@@ -13,7 +13,6 @@
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     TRANSFORMATION_COMPONENT,
@@ -31,43 +30,13 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
 
 static int LAST_PICKED_ENTITY = -1;
 
-int render_component_type_picker(
-    const char* combo_name,
-    int picked_type,
-    int* types,
-    int n_types,
-    const char* type_names[]
-) {
-    const char* picked_type_name = type_names[picked_type];
-    int new_type = picked_type;
-
-    if (igBeginCombo(combo_name, picked_type_name, 0)) {
-        for (int i = 0; i < n_types; ++i) {
-            PrimitiveType type = types[i];
-            const char* type_name = type_names[type];
-            int is_picked = strcmp(picked_type_name, type_name) == 0;
-            if (igSelectable_Bool(type_name, is_picked, 0, IM_VEC2_ZERO)) {
-                picked_type_name = type_name;
-                new_type = type;
-            }
-
-            if (is_picked) {
-                igSetItemDefaultFocus();
-            }
-        }
-        igEndCombo();
-    }
-
-    return new_type;
-}
-
 static void render_edit_button(ComponentType component_type) {
-    igPushID_Int(UNIQUE_ID++);
+    igPushID_Int(IG_UNIQUE_ID++);
     if (EDITOR.picked_entity.component_type == component_type) {
-        igPushStyleColor_Vec4(ImGuiCol_Button, IM_PRESSED_BUTTON_COLOR);
-        igButton("Edit", IM_VEC2_ZERO);
+        igPushStyleColor_Vec4(ImGuiCol_Button, IG_PRESSED_BUTTON_COLOR);
+        igButton("Edit", IG_VEC2_ZERO);
         igPopStyleColor(1);
-    } else if (igButton("Edit", IM_VEC2_ZERO)) {
+    } else if (igButton("Edit", IG_VEC2_ZERO)) {
         EDITOR.picked_entity.component_type = component_type;
     }
     igPopID();
@@ -80,7 +49,7 @@ static void render_primitive_header_settings(
 ) {
     // "Copy primitive" button
     if (source_primitive != NULL) {
-        same_line();
+        ig_same_line();
 
         char label[32];
         switch (target_component_type) {
@@ -102,8 +71,8 @@ static void render_primitive_header_settings(
                 exit(1);
             }
         }
-        igPushID_Int(UNIQUE_ID++);
-        if (igButton(label, IM_VEC2_ZERO)) {
+        igPushID_Int(IG_UNIQUE_ID++);
+        if (igButton(label, IG_VEC2_ZERO)) {
             *target_primitive = *source_primitive;
         }
         igPopID();
@@ -133,7 +102,7 @@ static void render_primitive_geometry_settings(
             );
 
             float* radius = &target_primitive->p.circle.radius;
-            drag_float("radius", radius, 0.0, FLT_MAX, 0.05, 0);
+            ig_drag_float("radius", radius, 0.0, FLT_MAX, 0.05, 0);
             break;
         }
         case RECTANGLE_PRIMITIVE: {
@@ -144,8 +113,8 @@ static void render_primitive_geometry_settings(
 
             float* width = &target_primitive->p.rectangle.width;
             float* height = &target_primitive->p.rectangle.height;
-            drag_float("width", width, 0.0, FLT_MAX, 0.05, 0);
-            drag_float("height", height, 0.0, FLT_MAX, 0.05, 0);
+            ig_drag_float("width", width, 0.0, FLT_MAX, 0.05, 0);
+            ig_drag_float("height", height, 0.0, FLT_MAX, 0.05, 0);
             break;
         }
         case LINE_PRIMITIVE: {
@@ -155,7 +124,7 @@ static void render_primitive_geometry_settings(
             );
 
             float* b = (float*)&target_primitive->p.line.b;
-            drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05, 0);
+            ig_drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05, 0);
             break;
         }
         case POLYGON_PRIMITIVE: {
@@ -165,12 +134,12 @@ static void render_primitive_geometry_settings(
             );
 
             Polygon* polygon = &target_primitive->p.polygon;
-            if (igButton("Add vertex", IM_VEC2_ZERO)) {
+            if (igButton("Add vertex", IG_VEC2_ZERO)) {
                 add_polygon_vertex(polygon);
             }
 
-            same_line();
-            if (igButton("Delete vertex", IM_VEC2_ZERO)) {
+            ig_same_line();
+            if (igButton("Delete vertex", IG_VEC2_ZERO)) {
                 delete_polygon_vertex(polygon);
             }
 
@@ -178,12 +147,12 @@ static void render_primitive_geometry_settings(
                 char label[16];
                 sprintf(label, "v: %d", i);
                 float* vertex = (float*)&polygon->vertices[i];
-                drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05, 0);
+                ig_drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05, 0);
             }
             break;
         }
         default: {
-            igTextColored(IM_RED_COLOR, "ERROR: Unknown primitive");
+            igTextColored(IG_RED_COLOR, "ERROR: Unknown primitive");
         }
     }
 }
@@ -196,9 +165,9 @@ static void render_game_controls(void) {
     char* name = "Game controls";
 
     if (igBegin(name, NULL, flags)) {
-        if (EDITOR.is_playing && igButton("Stop", IM_VEC2_ZERO)) {
+        if (EDITOR.is_playing && igButton("Stop", IG_VEC2_ZERO)) {
             EDITOR.is_playing = 0;
-        } else if (!EDITOR.is_playing && igButton("Play", IM_VEC2_ZERO)) {
+        } else if (!EDITOR.is_playing && igButton("Play", IG_VEC2_ZERO)) {
             EDITOR.is_playing = 1;
         }
     }
@@ -208,7 +177,7 @@ static void render_game_controls(void) {
     ImVec2 position = {
         0.5 * (io->DisplaySize.x - window_size.x), igGetFrameHeight()};
     igSetWindowPos_Str(name, position, ImGuiCond_Always);
-    igSetWindowSize_Str(name, IM_VEC2_ZERO, ImGuiCond_Always);
+    igSetWindowSize_Str(name, IG_VEC2_ZERO, ImGuiCond_Always);
 
     igEnd();
 }
@@ -218,7 +187,7 @@ static void render_debug_info(void) {
     ImVec2 position = {0, io->DisplaySize.y};
     ImVec2 pivot = {0, 1};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
         igText("FPS: %.1f", io->Framerate);
@@ -355,8 +324,8 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* pos = (float*)&transformation->position;
             float* orient = &transformation->orientation;
             render_edit_button(TRANSFORMATION_COMPONENT);
-            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
-            drag_float("orient.", orient, -PI, PI, 0.05, 0);
+            ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+            ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
             break;
         }
         case RIGID_BODY_COMPONENT: {
@@ -408,7 +377,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case RENDER_LAYER_COMPONENT: {
             float* render_layer = &SCENE.render_layers[entity];
-            drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
+            ig_drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
             break;
         }
         case KINEMATIC_MOVEMENT_COMPONENT: {
@@ -416,8 +385,8 @@ static void render_component_inspector(int entity, ComponentType type) {
                 = &SCENE.kinematic_movements[entity];
 
             igCheckbox("is moving", (bool*)(&movement->is_moving));
-            drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0, 0);
-            drag_float(
+            ig_drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0, 0);
+            ig_drag_float(
                 "orient.", &movement->watch_orientation, -PI, PI, 0.05, 0
             );
             break;
@@ -428,9 +397,9 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* distance = &vision->distance;
             float* fov = &vision->fov;
 
-            drag_float("fov", fov, 0.0, 2.0 * PI, 0.05, 0);
-            drag_float("distance", distance, 0.0, FLT_MAX, 0.1, 0);
-            drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1, 0);
+            ig_drag_float("fov", fov, 0.0, 2.0 * PI, 0.05, 0);
+            ig_drag_float("distance", distance, 0.0, FLT_MAX, 0.1, 0);
+            ig_drag_int("n rays", n_view_rays, 1, MAX_N_VIEW_RAYS, 1, 0);
             break;
         }
         case CONTROLLER_COMPONENT: {
@@ -455,7 +424,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 }
                 case BRAIN_AI_CONTROLLER: {
                     igTextColored(
-                        IM_YELLOW_COLOR, "TODO: Connect with brain"
+                        IG_YELLOW_COLOR, "TODO: Connect with brain"
                     );
                     break;
                 }
@@ -466,7 +435,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                         "ERROR: Unknown Controller type: %s",
                         CONTROLLER_TYPE_NAMES[type]
                     );
-                    igTextColored(IM_RED_COLOR, str);
+                    igTextColored(IG_RED_COLOR, str);
                 }
             }
 
@@ -474,12 +443,12 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case TTL_COMPONENT: {
             float* ttl = &SCENE.ttls[entity];
-            drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0, 0);
+            ig_drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case HEALTH_COMPONENT: {
             float* health = &SCENE.healths[entity];
-            drag_float("health", health, 0.0, FLT_MAX, 1.0, 0);
+            ig_drag_float("health", health, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case GUN_COMPONENT: {
@@ -491,12 +460,12 @@ static void render_component_inspector(int entity, ComponentType type) {
             if (igTreeNodeEx_Str(
                     "bullet", ImGuiTreeNodeFlags_DefaultOpen
                 )) {
-                drag_float("ttl", ttl, 0.0, 30.0, 1.0, 0);
-                drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
+                ig_drag_float("ttl", ttl, 0.0, 30.0, 1.0, 0);
+                ig_drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
                 igTreePop();
             }
 
-            drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01, 0);
+            ig_drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01, 0);
             break;
         }
     }
@@ -513,21 +482,21 @@ static void render_entity_inspector() {
     ImVec2 position = {0.0, igGetFrameHeight()};
     ImVec2 pivot = {0, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
     if (igBegin("Entity", NULL, 0)) {
         // Camera settings: current scene camera components editor
         if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
             && camera_entity != -1) {
-            if (igButton("Reset", IM_VEC2_ZERO)) {
+            if (igButton("Reset", IG_VEC2_ZERO)) {
                 reset_camera();
             }
             Transformation* transformation
                 = &SCENE.transformations[camera_entity];
             float* pos = (float*)&transformation->position;
             float* orient = (float*)&transformation->orientation;
-            drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
-            drag_float("orient.", orient, -PI, PI, 0.05, 0);
-            drag_float(
+            ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+            ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
+            ig_drag_float(
                 "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
             );
         }
@@ -562,7 +531,7 @@ static void render_scene_inspector(void) {
     ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};
     ImVec2 pivot = {1, 0};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IM_VEC2_ZERO, ImGuiCond_Always);
+    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
 
     if (igBegin("Scene", NULL, 0)) {
         // List of all current Scene Entities
@@ -628,8 +597,8 @@ static void render_scene_inspector(void) {
             if (igTreeNodeEx_Str("Collisions", 0)) {
                 igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
-                same_line();
-                if (igButton("once", IM_VEC2_ZERO)) {
+                ig_same_line();
+                if (igButton("once", IG_VEC2_ZERO)) {
                     DEBUG.collisions.resolve_once = 1;
                 }
                 igTreePop();

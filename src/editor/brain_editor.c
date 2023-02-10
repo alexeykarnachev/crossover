@@ -1,50 +1,32 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../brain.h"
+#include "../editor.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
 
-void render_brain_editor(void) {
-    Brain* brain = &BRAINS[N_BRAINS];
+static char STR_BUFFER[8];
+static Brain BRAIN;
 
-    igText("Brain Editor");
-    igSeparator();
-    igSeparator();
-
-    char size_str[32];
-    int size;
-}
-#if 0
-    // ----------------------------------------------------
-    // Brain inputs
+static void render_brain_inputs() {
     igText("Inputs");
-    drag_int("N view rays", &brain.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0);
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain.n_inputs < MAX_N_BRAIN_INPUTS) {
-            brain.n_inputs += 1;
-        }
-    }
 
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain.n_inputs > 0) {
-            brain.n_inputs -= 1;
-        }
-    }
+    ig_drag_int(
+        "N view rays", &BRAIN.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0
+    );
 
-    same_line();
-    size = get_brain_input_size(brain);
-    sprintf(size_str, "Size: %d", size);
-    igText(size_str);
+    ig_add_button("Add", &BRAIN.n_inputs, 1, MAX_N_BRAIN_INPUTS);
+    ig_same_line();
+    ig_sub_button("Delete", &BRAIN.n_inputs, 1, 0);
+    ig_same_line();
+    igText("Size: %d", get_brain_input_size(BRAIN));
 
-    for (int i = 0; i < brain.n_inputs; ++i) {
-        BrainInput* picked_input = &brain.inputs[i];
-        char label[16];
-        sprintf(label, ": %d", i);
+    for (int i = 0; i < BRAIN.n_inputs; ++i) {
+        BrainInput* picked_input = &BRAIN.inputs[i];
 
+        sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
-            label,
+            STR_BUFFER,
             picked_input->type,
             (int*)BRAIN_INPUT_TYPES,
             N_BRAIN_INPUT_TYPES,
@@ -53,76 +35,50 @@ void render_brain_editor(void) {
         change_brain_input_type(picked_input, type);
 
         if (type == TARGET_ENTITY_INPUT) {
-            igPushID_Int(UNIQUE_ID++);
-            same_line();
+            ig_same_line();
 
+            igPushID_Int(IG_UNIQUE_ID++);
             if (igBeginMenu("", 1)) {
                 uint64_t* components
                     = &picked_input->i.target_entity.components;
                 render_component_checkboxes(components);
                 igEndMenu();
             }
-
             igPopID();
         }
     }
-    igPopID();
-    igSeparator();
+}
 
-    // ----------------------------------------------------
-    // Brain layers
+static void render_brain_layers(void) {
     igText("Layers");
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain.n_layers < MAX_N_BRAIN_LAYERS) {
-            brain.layer_sizes[brain.n_layers++]
-                = DEFAULT_BRAIN_LAYER_SIZE;
-        }
-    }
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain.n_layers > 0) {
-            brain.n_layers -= 1;
-        }
-    }
-    for (int i = 0; i < brain.n_layers; ++i) {
-        char label[16];
-        sprintf(label, ": %d", i);
-        int* size = &brain.layer_sizes[i];
-        drag_int(label, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
-    }
-    igPopID();
-    igSeparator();
 
-    // ----------------------------------------------------
-    // Brain outputs
+    ig_add_button("Add", &BRAIN.n_layers, 1, MAX_N_BRAIN_LAYERS);
+    ig_same_line();
+    ig_sub_button("Delete", &BRAIN.n_layers, 1, 0);
+
+    for (int i = 0; i < BRAIN.n_layers; ++i) {
+        int* size = &BRAIN.layer_sizes[i];
+        sprintf(STR_BUFFER, ": %d", i);
+        ig_drag_int(STR_BUFFER, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
+    }
+}
+
+static void render_brain_outputs() {
     igText("Outputs");
-    igPushID_Int(UNIQUE_ID++);
-    if (igButton("Add", VEC2_ZERO)) {
-        if (brain.n_outputs < MAX_N_BRAIN_OUTPUTS) {
-            brain.n_outputs += 1;
-        }
-    }
 
-    same_line();
-    if (igButton("Delete", VEC2_ZERO)) {
-        if (brain.n_outputs > 0) {
-            brain.n_outputs -= 1;
-        }
-    }
+    ig_add_button("Add", &BRAIN.n_outputs, 1, MAX_N_BRAIN_OUTPUTS);
+    ig_same_line();
+    ig_sub_button("Delete", &BRAIN.n_outputs, 1, 0);
 
-    same_line();
-    size = get_brain_output_size(brain);
-    sprintf(size_str, "Size: %d", size);
-    igText(size_str);
+    ig_same_line();
+    igText("Size: %d", get_brain_output_size(BRAIN));
 
-    for (int i = 0; i < brain.n_outputs; ++i) {
-        BrainOutput* picked_output = &brain.outputs[i];
-        char label[16];
-        sprintf(label, ": %d", i);
+    for (int i = 0; i < BRAIN.n_outputs; ++i) {
+        BrainOutput* picked_output = &BRAIN.outputs[i];
 
+        sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
-            label,
+            STR_BUFFER,
             picked_output->type,
             (int*)BRAIN_OUTPUT_TYPES,
             N_BRAIN_OUTPUT_TYPES,
@@ -131,29 +87,55 @@ void render_brain_editor(void) {
         change_brain_output_type(picked_output, type);
 
         if (type == MOVE_ORIENTATION_OUTPUT) {
-            igPushID_Int(UNIQUE_ID++);
-            same_line();
-
+            igPushID_Int(IG_UNIQUE_ID++);
+            ig_same_line();
             if (igBeginMenu("", 1)) {
                 int* value
                     = &picked_output->o.move_orientation.n_directions;
                 igText("n directions");
-                drag_int("##n_directions", value, 4, 32, 1, 0);
+                ig_drag_int(
+                    "##", value, MIN_N_DIRECTIONS, MAX_N_DIRECTIONS, 1, 0
+                );
                 igEndMenu();
             }
-
             igPopID();
         }
     }
+}
+
+static void render_brain_footer(void) {
+    igText("N weights: %d", get_brain_size(BRAIN));
+    ig_set_button("Cancel", &EDITOR.is_editing_brain, 0);
+}
+
+void render_brain_editor(void) {
+    igText("Brain Editor");
+    igSeparator();
+
+    render_brain_inputs();
+    igSeparator();
+    render_brain_layers();
+    igSeparator();
+    render_brain_outputs();
+    igSeparator();
+    render_brain_footer();
+}
+
+#if 0
+    igPopID();
+    igSeparator();
+
+    // ----------------------------------------------------
+    // Brain layers
+
+    // ----------------------------------------------------
+    // Brain outputs
     igPopID();
     igSeparator();
 
     // ----------------------------------------------------
     // Brain general
     igSeparator();
-    size = get_brain_size(brain);
-    sprintf(size_str, "N weights: %d", size);
-    igText(size_str);
 
     igEndPopup();
 
@@ -177,21 +159,21 @@ static void render_brains_editor(void) {
             // }
 
             // int can_initialize = 1;
-            // if (brain->n_view_rays != n_view_rays) {
+            // if (BRAIN.n_view_rays != n_view_rays) {
             //     can_initialize &= 0;
             //     char str[128];
             //     sprintf(
             //         str,
             //         "ERROR: Brain n_view_rays (%d) \n       != Vision "
             //         "n_view_rays (%d)",
-            //         brain->n_view_rays,
+            //         BRAIN.n_view_rays,
             //         n_view_rays
             //     );
-            //     igTextColored(IM_RED_COLOR, str);
+            //     igTextColored(IG_RED_COLOR, str);
 
-            //     same_line();
-            //     if (igButton("Fix", VEC2_ZERO)) {
-            //         brain->n_view_rays = n_view_rays;
+            //     ig_same_line();
+            //     if (igButton("Fix", IG_VEC2_ZERO)) {
+            //         BRAIN.n_view_rays = n_view_rays;
             //     }
             // }
 
@@ -208,10 +190,10 @@ static void render_brains_editor(void) {
             //         const char* name = get_component_type_name(type);
             //         char str[64];
             //         sprintf(str, "ERROR: %s input is missing", name);
-            //         igTextColored(IM_RED_COLOR, str);
-            //         same_line();
-            //         igPushID_Int(UNIQUE_ID++);
-            //         if (igButton("Fix", VEC2_ZERO)) {
+            //         igTextColored(IG_RED_COLOR, str);
+            //         ig_same_line();
+            //         igPushID_Int(IG_UNIQUE_ID++);
+            //         if (igButton("Fix", IG_VEC2_ZERO)) {
             //             SCENE.components[entity] |= type;
             //         }
             //         igPopID();
@@ -222,30 +204,30 @@ static void render_brains_editor(void) {
             // if (n_weights == 0) {
             //     can_initialize &= 0;
             //     igTextColored(
-            //         IM_RED_COLOR, "ERROR: Brain has no weights"
+            //         IG_RED_COLOR, "ERROR: Brain has no weights"
             //     );
             // }
 
-            // if (brain->weights == NULL) {
+            // if (BRAIN.weights == NULL) {
             //     igTextColored(
-            //         IM_RED_COLOR, "ERROR: Brain is NOT initialized"
+            //         IG_RED_COLOR, "ERROR: Brain is NOT initialized"
             //     );
 
             //     if (can_initialize) {
-            //         same_line();
-            //         igPushID_Int(UNIQUE_ID++);
-            //         if (igButton("Fix", VEC2_ZERO)) {
+            //         ig_same_line();
+            //         igPushID_Int(IG_UNIQUE_ID++);
+            //         if (igButton("Fix", IG_VEC2_ZERO)) {
             //             init_brain_weights(brain);
             //         }
             //         igPopID();
             //     }
             // } else {
             //     igTextColored(
-            //         IM_GREEN_COLOR, "INFO: Brain is initialized"
+            //         IG_GREEN_COLOR, "INFO: Brain is initialized"
             //     );
             // }
 
-            // // if (igButton("Finalize", VEC2_ZERO)) {
+            // // if (igButton("Finalize", IG_VEC2_ZERO)) {
             // //     nfdfilteritem_t filter_items[1] = {{"Brain",
             // //     "xbrain"}}; const char* file_path =
             // //     save_file_path_via_nfd(EDITOR.project.default_search_path,
