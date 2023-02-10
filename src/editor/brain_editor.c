@@ -4,9 +4,44 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
+#include <string.h>
 
 static char STR_BUFFER[8];
 static Brain BRAIN;
+
+static void render_brain_menu_bar(void) {
+    if (igBeginMenu("Brain Editor", 1)) {
+        if (igBeginMenu("File", 1)) {
+            if (menu_item("Open", "Ctrl+O", false, 1)) {}
+            if (menu_item("Save", "Ctrl+S", false, 1)) {}
+            if (menu_item("Save As", "", false, 1)) {}
+            igEndMenu();
+        }
+
+        igSeparator();
+        if (menu_item("Reset", "Ctrl+R", false, 1)) {
+            memset(&BRAIN, 0, sizeof(BRAIN));
+        }
+
+        if (menu_item("Quit", "Ctrl+Q", false, 1)) {
+            EDITOR.is_editing_brain = 0;
+        }
+
+        igEndMenu();
+    }
+
+    int key_ctrl = igGetIO()->KeyCtrl;
+    int key_r = igIsKeyPressed_Bool(ImGuiKey_R, 0);
+    int key_q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);
+    // int key_o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
+    // int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
+    // int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
+    if (key_r && key_ctrl) {
+        memset(&BRAIN, 0, sizeof(BRAIN));
+    } else if (key_q && key_ctrl) {
+        EDITOR.is_editing_brain = 0;
+    }
+}
 
 static void render_brain_inputs() {
     igText("Inputs");
@@ -105,12 +140,17 @@ static void render_brain_outputs() {
 
 static void render_brain_footer(void) {
     igText("N weights: %d", get_brain_size(BRAIN));
-    ig_set_button("Cancel", &EDITOR.is_editing_brain, 0);
 }
 
 void render_brain_editor(void) {
-    igText("Brain Editor");
+    render_brain_menu_bar();
     igSeparator();
+    // igText("Brain Editor");
+    // ig_same_line();
+    // ig_mem_reset_button("Reset", &BRAIN, sizeof(BRAIN));
+    // ig_same_line();
+    // ig_set_button("Close", &EDITOR.is_editing_brain, 0);
+    // igSeparator();
 
     render_brain_inputs();
     igSeparator();

@@ -103,6 +103,14 @@ void ig_set_button(const char* label, int* val, int set) {
     igPopID();
 }
 
+void ig_mem_reset_button(const char* label, void* ptr, int size) {
+    igPushID_Int(IG_UNIQUE_ID++);
+    if (igButton(label, IG_VEC2_ZERO)) {
+        memset(ptr, 0, size);
+    }
+    igPopID();
+}
+
 void render_component_checkboxes(uint64_t* components) {
     int flags[N_COMPONENT_TYPES] = {0};
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {

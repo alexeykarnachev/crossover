@@ -42,6 +42,7 @@ void ig_drag_int(
 void ig_add_button(const char* label, int* val, int add, int max_val);
 void ig_sub_button(const char* label, int* val, int sub, int min_val);
 void ig_set_button(const char* label, int* val, int set);
+void ig_mem_reset_button(const char* label, void* ptr, int size);
 
 void render_component_checkboxes(uint64_t* components);
 int render_component_type_picker(
