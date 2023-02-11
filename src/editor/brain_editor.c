@@ -9,15 +9,22 @@
 static char STR_BUFFER[8];
 static BrainParams BRAIN_PARAMS;
 static BrainParams PREV_BRAIN_PARAMS;
-static FileSaveResult SAVE_RESULT = {.is_success = -1};
+static FileResult FILE_RESULT = {.is_success = -1};
 
 static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain Editor", 1)) {
         if (igBeginMenu("File", 1)) {
-            if (menu_item("Open", "Ctrl+O", false, 1)) {}
-            if (menu_item("Save As", "Ctrl+S", false, 1)) {
+            if (menu_item("Open params", "Ctrl+O", false, 1)) {
+                Brain brain = load_brain_via_nfd(
+                    EDITOR.project.default_search_path, &FILE_RESULT
+                );
+                PREV_BRAIN_PARAMS = brain.params;
+                BRAIN_PARAMS = brain.params;
+                destroy_brain(&brain);
+            }
+            if (menu_item("Init and Save As", "Ctrl+S", false, 1)) {
                 Brain brain = init_brain(BRAIN_PARAMS);
-                SAVE_RESULT = save_brain_via_nfd(
+                FILE_RESULT = save_brain_via_nfd(
                     EDITOR.project.default_search_path, brain
                 );
                 destroy_brain(&brain);
@@ -152,13 +159,13 @@ static void render_brain_footer(void) {
     int is_changed = memcmp(
         &PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams)
     );
-    if (is_changed || SAVE_RESULT.is_success == -1) {
-        SAVE_RESULT.is_success = -1;
+    if (is_changed || FILE_RESULT.is_success == -1) {
+        FILE_RESULT.is_success = -1;
         igTextColored(IG_YELLOW_COLOR, "INFO: Brain is not saved");
-    } else if (SAVE_RESULT.is_success == 0) {
-        igTextColored(IG_RED_COLOR, SAVE_RESULT.msg);
-    } else if (SAVE_RESULT.is_success == 1) {
-        igTextColored(IG_GREEN_COLOR, SAVE_RESULT.msg);
+    } else if (FILE_RESULT.is_success == 0) {
+        igTextColored(IG_RED_COLOR, FILE_RESULT.msg);
+    } else if (FILE_RESULT.is_success == 1) {
+        igTextColored(IG_GREEN_COLOR, FILE_RESULT.msg);
     }
 }
 

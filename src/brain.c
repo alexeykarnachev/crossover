@@ -269,10 +269,62 @@ void reset_brain_params(BrainParams* brain_params) {
     memset(brain_params, 0, sizeof(BrainParams));
 }
 
-Brain load_brain(const char* file_path) {}
+Brain load_brain(const char* file_path, FileResult* result) {
+    Brain brain = {0};
+    result->is_success = 0;
+    if (file_path == NULL) {
+        strcpy(
+            result->msg, "ERROR: Can't load the Brain from a NULL file"
+        );
+        return brain;
+    }
 
-FileSaveResult save_brain(const char* file_path, Brain brain) {
-    FileSaveResult result = {0};
+    int file_path_len = min(strlen(file_path), MAX_PATH_LENGTH - 1);
+    strncpy(result->file_path, file_path, file_path_len);
+
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) {
+        strcpy(
+            result->msg, "ERROR: Can't open the file to load the Brain"
+        );
+        return brain;
+    }
+
+    int version;
+    fread(&version, sizeof(int), 1, fp);
+
+    if (version != BRAIN_VERSION) {
+        char str[128];
+        sprintf(
+            str,
+            "ERROR: Brain version %d is not compatible with the engine, "
+            "expecting the version %d\n",
+            version,
+            BRAIN_VERSION
+        );
+        strcpy(result->msg, str);
+        return brain;
+    }
+
+    BrainParams params;
+    fread(&params, sizeof(BrainParams), 1, fp);
+
+    int n_weights = get_brain_size(params);
+    int n_bytes = n_weights * sizeof(float);
+    float* weights = (float*)malloc(n_bytes);
+    fread(weights, sizeof(float), n_weights, fp);
+
+    Brain initialized_brain = {.params = params, .weights = weights};
+
+    fclose(fp);
+    result->is_success = 1;
+
+    sprintf(result->msg, "INFO: Brain is loaded (%dB)", n_bytes);
+    return initialized_brain;
+}
+
+FileResult save_brain(const char* file_path, Brain brain) {
+    FileResult result = {0};
 
     if (file_path == NULL) {
         strcpy(result.msg, "ERROR: Can't save the Brain to a NULL file");
@@ -300,9 +352,7 @@ FileSaveResult save_brain(const char* file_path, Brain brain) {
     int version = BRAIN_VERSION;
     int n_bytes = 0;
     n_bytes += fwrite(&version, sizeof(int), 1, fp);
-    n_bytes += fwrite(&brain, sizeof(Brain), 1, fp);
-
-    n_bytes += fwrite(&n_weights, sizeof(int), 1, fp);
+    n_bytes += fwrite(&brain.params, sizeof(BrainParams), 1, fp);
     n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
