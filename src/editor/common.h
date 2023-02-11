@@ -20,7 +20,7 @@ extern ImGuiColorEditFlags COLOR_PICKER_FLAGS;
 
 void ig_same_line(void);
 void ig_center_next_window(void);
-void ig_drag_float(
+int ig_drag_float(
     char* label,
     float* value,
     float min_val,
@@ -28,7 +28,7 @@ void ig_drag_float(
     float step,
     int flags
 );
-void ig_drag_float2(
+int ig_drag_float2(
     char* label,
     float values[2],
     float min_val,
@@ -36,13 +36,13 @@ void ig_drag_float2(
     float step,
     int flags
 );
-void ig_drag_int(
+int ig_drag_int(
     char* label, int* value, int min_val, int max_val, int step, int flags
 );
-void ig_add_button(const char* label, int* val, int add, int max_val);
-void ig_sub_button(const char* label, int* val, int sub, int min_val);
-void ig_set_button(const char* label, int* val, int set);
-void ig_mem_reset_button(const char* label, void* ptr, int size);
+int ig_add_button(const char* label, int* val, int add, int max_val);
+int ig_sub_button(const char* label, int* val, int sub, int min_val);
+int ig_set_button(const char* label, int* val, int set);
+int ig_mem_reset_button(const char* label, void* ptr, int size);
 
 void render_component_checkboxes(uint64_t* components);
 int render_component_type_picker(

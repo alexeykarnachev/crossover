@@ -1,3 +1,4 @@
+#include "../brain.h"
 #include "../editor.h"
 #include "../scene.h"
 #include "../utils.h"
@@ -5,10 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+static nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
+static nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
+static nfdfilteritem_t BRAIN_FILTER[1] = {{"Brain", "xbrain"}};
+
 void create_project_via_nfd(const nfdchar_t* search_path) {
-    nfdfilteritem_t filter_items[1] = {{"Project", "xproj"}};
     nfdchar_t* file_path = save_file_path_via_nfd(
-        search_path, filter_items, 1
+        search_path, PROJECT_FILTER, 1
     );
 
     if (file_path != NULL) {
@@ -28,9 +32,8 @@ void create_project_via_nfd(const nfdchar_t* search_path) {
 }
 
 void load_project_via_nfd(const nfdchar_t* search_path) {
-    nfdfilteritem_t filter_items[1] = {{"Project", "xproj"}};
     nfdchar_t* file_path = open_file_path_via_nfd(
-        search_path, filter_items, 1
+        search_path, PROJECT_FILTER, 1
     );
     if (file_path != NULL) {
         load_editor_project(file_path);
@@ -39,9 +42,8 @@ void load_project_via_nfd(const nfdchar_t* search_path) {
 }
 
 const char* load_scene_via_nfd(const char* search_path) {
-    nfdfilteritem_t filter_items[1] = {{"Scene", "xscene"}};
     nfdchar_t* file_path = open_file_path_via_nfd(
-        search_path, filter_items, 1
+        search_path, SCENE_FILTER, 1
     );
     if (file_path != NULL) {
         load_scene(file_path);
@@ -51,9 +53,8 @@ const char* load_scene_via_nfd(const char* search_path) {
 }
 
 const char* save_scene_via_nfd(const char* search_path) {
-    nfdfilteritem_t filter_items[1] = {{"Scene", "xscene"}};
     nfdchar_t* file_path = save_file_path_via_nfd(
-        search_path, filter_items, 1
+        search_path, SCENE_FILTER, 1
     );
 
     if (file_path != NULL) {
@@ -61,4 +62,12 @@ const char* save_scene_via_nfd(const char* search_path) {
     }
 
     return file_path;
+}
+
+FileSaveResult save_brain_via_nfd(const char* search_path, Brain brain) {
+    nfdchar_t* file_path = save_file_path_via_nfd(
+        search_path, BRAIN_FILTER, 1
+    );
+
+    return save_brain(file_path, brain);
 }

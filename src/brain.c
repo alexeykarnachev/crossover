@@ -1,6 +1,7 @@
 #include "brain.h"
 
 #include "component.h"
+#include "const.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,11 +77,11 @@ void change_brain_input_type(
     }
 }
 
-int get_brain_input_size(Brain brain) {
-    int n_view_rays = brain.n_view_rays;
+int get_brain_input_size(BrainParams params) {
+    int n_view_rays = params.n_view_rays;
     int input_size = 0;
-    for (int i = 0; i < brain.n_inputs; ++i) {
-        BrainInput input = brain.inputs[i];
+    for (int i = 0; i < params.n_inputs; ++i) {
+        BrainInput input = params.inputs[i];
         BrainInputType type = input.type;
         switch (type) {
             case TARGET_ENTITY_INPUT:
@@ -174,11 +175,11 @@ void change_brain_output_type(
     }
 }
 
-int get_brain_output_size(Brain brain) {
-    int n_view_rays = brain.n_view_rays;
+int get_brain_output_size(BrainParams params) {
+    int n_view_rays = params.n_view_rays;
     int output_size = 0;
-    for (int i = 0; i < brain.n_outputs; ++i) {
-        BrainOutput output = brain.outputs[i];
+    for (int i = 0; i < params.n_outputs; ++i) {
+        BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
         switch (type) {
             case LOOK_AT_ORIENTATION_OUTPUT:
@@ -200,10 +201,10 @@ int get_brain_output_size(Brain brain) {
 
 // --------------------------------------------------------
 // Brain general
-uint64_t get_brain_required_input_types(Brain brain) {
+uint64_t get_brain_required_input_types(BrainParams params) {
     uint64_t components = 0;
-    for (int i = 0; i < brain.n_inputs; ++i) {
-        BrainInputType type = brain.inputs[i].type;
+    for (int i = 0; i < params.n_inputs; ++i) {
+        BrainInputType type = params.inputs[i].type;
         switch (type) {
             case TARGET_ENTITY_INPUT: {
                 components |= VISION_COMPONENT;
@@ -227,15 +228,15 @@ uint64_t get_brain_required_input_types(Brain brain) {
     return components;
 }
 
-int get_brain_size(Brain brain) {
-    int input_size = get_brain_input_size(brain);
-    int output_size = get_brain_output_size(brain);
+int get_brain_size(BrainParams params) {
+    int input_size = get_brain_input_size(params);
+    int output_size = get_brain_output_size(params);
     if (!input_size || !output_size) {
         return 0;
     }
 
-    int n_layers = brain.n_layers;
-    int* layer_sizes = brain.layer_sizes;
+    int n_layers = params.n_layers;
+    int* layer_sizes = params.layer_sizes;
     int inp_layer_size = input_size;
     int out_layer_size;
     int n_weights = 0;
@@ -248,8 +249,65 @@ int get_brain_size(Brain brain) {
     return n_weights;
 }
 
-void init_brain_weights(Brain* brain) {
-    int n_weights = get_brain_size(*brain);
-    float* weights = (float*)malloc(sizeof(float) * n_weights);
-    brain->weights = weights;
+Brain init_brain(BrainParams params) {
+    int n_weights = get_brain_size(params);
+    int n_bytes = sizeof(float) * n_weights;
+    float* weights = (float*)malloc(n_bytes);
+    memset(weights, 0, n_bytes);
+    Brain brain = {.params = params, weights = weights};
+    return brain;
+}
+
+void destroy_brain(Brain* brain) {
+    if (brain->weights != NULL) {
+        free(brain->weights);
+        brain->weights = NULL;
+    }
+}
+
+void reset_brain_params(BrainParams* brain_params) {
+    memset(brain_params, 0, sizeof(BrainParams));
+}
+
+Brain load_brain(const char* file_path) {}
+
+FileSaveResult save_brain(const char* file_path, Brain brain) {
+    FileSaveResult result = {0};
+
+    if (file_path == NULL) {
+        strcpy(result.msg, "ERROR: Can't save the Brain to a NULL file");
+        return result;
+    }
+
+    int file_path_len = min(strlen(file_path), MAX_PATH_LENGTH - 1);
+    strncpy(result.file_path, file_path, file_path_len);
+
+    float* weights = brain.weights;
+    int n_weights = get_brain_size(brain.params);
+    brain.weights = NULL;
+
+    if (weights == NULL || n_weights == 0) {
+        strcpy(result.msg, "ERROR: Can't save the Brain without weights");
+        return result;
+    }
+
+    FILE* fp = fopen(file_path, "wb");
+    if (!fp) {
+        strcpy(result.msg, "ERROR: Can't open the file to save the Brain");
+        return result;
+    }
+
+    int version = BRAIN_VERSION;
+    int n_bytes = 0;
+    n_bytes += fwrite(&version, sizeof(int), 1, fp);
+    n_bytes += fwrite(&brain, sizeof(Brain), 1, fp);
+
+    n_bytes += fwrite(&n_weights, sizeof(int), 1, fp);
+    n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
+
+    fclose(fp);
+    result.is_success = 1;
+
+    sprintf(result.msg, "INFO: Brain is saved (%dB)", n_bytes);
+    return result;
 }

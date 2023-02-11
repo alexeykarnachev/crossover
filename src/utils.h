@@ -1,6 +1,13 @@
 #pragma once
+#include "const.h"
 #include "nfd.h"
 #include <stdio.h>
+
+typedef struct FileSaveResult {
+    char file_path[MAX_PATH_LENGTH];
+    char msg[MAX_ERR_STR_LENGTH];
+    int is_success;
+} FileSaveResult;
 
 char* read_bin_file(const char* restrict file_path, long* n_bytes);
 char* read_cstr_file(

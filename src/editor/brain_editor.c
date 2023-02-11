@@ -7,20 +7,27 @@
 #include <string.h>
 
 static char STR_BUFFER[8];
-static Brain BRAIN;
+static BrainParams BRAIN_PARAMS;
+static BrainParams PREV_BRAIN_PARAMS;
+static FileSaveResult SAVE_RESULT = {.is_success = -1};
 
 static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain Editor", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open", "Ctrl+O", false, 1)) {}
-            if (menu_item("Save", "Ctrl+S", false, 1)) {}
-            if (menu_item("Save As", "", false, 1)) {}
+            if (menu_item("Save As", "Ctrl+S", false, 1)) {
+                Brain brain = init_brain(BRAIN_PARAMS);
+                SAVE_RESULT = save_brain_via_nfd(
+                    EDITOR.project.default_search_path, brain
+                );
+                destroy_brain(&brain);
+            }
             igEndMenu();
         }
 
         igSeparator();
         if (menu_item("Reset", "Ctrl+R", false, 1)) {
-            memset(&BRAIN, 0, sizeof(BRAIN));
+            reset_brain_params(&BRAIN_PARAMS);
         }
 
         if (menu_item("Quit", "Ctrl+Q", false, 1)) {
@@ -37,7 +44,7 @@ static void render_brain_menu_bar(void) {
     // int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
     // int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
     if (key_r && key_ctrl) {
-        memset(&BRAIN, 0, sizeof(BRAIN));
+        reset_brain_params(&BRAIN_PARAMS);
     } else if (key_q && key_ctrl) {
         EDITOR.is_editing_brain = 0;
     }
@@ -47,17 +54,17 @@ static void render_brain_inputs() {
     igText("Inputs");
 
     ig_drag_int(
-        "N view rays", &BRAIN.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0
+        "N view rays", &BRAIN_PARAMS.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0
     );
 
-    ig_add_button("Add", &BRAIN.n_inputs, 1, MAX_N_BRAIN_INPUTS);
+    ig_add_button("Add", &BRAIN_PARAMS.n_inputs, 1, MAX_N_BRAIN_INPUTS);
     ig_same_line();
-    ig_sub_button("Delete", &BRAIN.n_inputs, 1, 0);
+    ig_sub_button("Delete", &BRAIN_PARAMS.n_inputs, 1, 0);
     ig_same_line();
-    igText("Size: %d", get_brain_input_size(BRAIN));
+    igText("Size: %d", get_brain_input_size(BRAIN_PARAMS));
 
-    for (int i = 0; i < BRAIN.n_inputs; ++i) {
-        BrainInput* picked_input = &BRAIN.inputs[i];
+    for (int i = 0; i < BRAIN_PARAMS.n_inputs; ++i) {
+        BrainInput* picked_input = &BRAIN_PARAMS.inputs[i];
 
         sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
@@ -87,12 +94,12 @@ static void render_brain_inputs() {
 static void render_brain_layers(void) {
     igText("Layers");
 
-    ig_add_button("Add", &BRAIN.n_layers, 1, MAX_N_BRAIN_LAYERS);
+    ig_add_button("Add", &BRAIN_PARAMS.n_layers, 1, MAX_N_BRAIN_LAYERS);
     ig_same_line();
-    ig_sub_button("Delete", &BRAIN.n_layers, 1, 0);
+    ig_sub_button("Delete", &BRAIN_PARAMS.n_layers, 1, 0);
 
-    for (int i = 0; i < BRAIN.n_layers; ++i) {
-        int* size = &BRAIN.layer_sizes[i];
+    for (int i = 0; i < BRAIN_PARAMS.n_layers; ++i) {
+        int* size = &BRAIN_PARAMS.layer_sizes[i];
         sprintf(STR_BUFFER, ": %d", i);
         ig_drag_int(STR_BUFFER, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
     }
@@ -101,15 +108,15 @@ static void render_brain_layers(void) {
 static void render_brain_outputs() {
     igText("Outputs");
 
-    ig_add_button("Add", &BRAIN.n_outputs, 1, MAX_N_BRAIN_OUTPUTS);
+    ig_add_button("Add", &BRAIN_PARAMS.n_outputs, 1, MAX_N_BRAIN_OUTPUTS);
     ig_same_line();
-    ig_sub_button("Delete", &BRAIN.n_outputs, 1, 0);
+    ig_sub_button("Delete", &BRAIN_PARAMS.n_outputs, 1, 0);
 
     ig_same_line();
-    igText("Size: %d", get_brain_output_size(BRAIN));
+    igText("Size: %d", get_brain_output_size(BRAIN_PARAMS));
 
-    for (int i = 0; i < BRAIN.n_outputs; ++i) {
-        BrainOutput* picked_output = &BRAIN.outputs[i];
+    for (int i = 0; i < BRAIN_PARAMS.n_outputs; ++i) {
+        BrainOutput* picked_output = &BRAIN_PARAMS.outputs[i];
 
         sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
@@ -139,24 +146,34 @@ static void render_brain_outputs() {
 }
 
 static void render_brain_footer(void) {
-    igText("N weights: %d", get_brain_size(BRAIN));
+    igText("N weights: %d", get_brain_size(BRAIN_PARAMS));
+
+    igSeparator();
+    int is_changed = memcmp(
+        &PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams)
+    );
+    if (is_changed || SAVE_RESULT.is_success == -1) {
+        SAVE_RESULT.is_success = -1;
+        igTextColored(IG_YELLOW_COLOR, "INFO: Brain is not saved");
+    } else if (SAVE_RESULT.is_success == 0) {
+        igTextColored(IG_RED_COLOR, SAVE_RESULT.msg);
+    } else if (SAVE_RESULT.is_success == 1) {
+        igTextColored(IG_GREEN_COLOR, SAVE_RESULT.msg);
+    }
 }
 
 void render_brain_editor(void) {
+    PREV_BRAIN_PARAMS = BRAIN_PARAMS;
+
     render_brain_menu_bar();
     igSeparator();
-    // igText("Brain Editor");
-    // ig_same_line();
-    // ig_mem_reset_button("Reset", &BRAIN, sizeof(BRAIN));
-    // ig_same_line();
-    // ig_set_button("Close", &EDITOR.is_editing_brain, 0);
-    // igSeparator();
 
     render_brain_inputs();
     igSeparator();
     render_brain_layers();
     igSeparator();
     render_brain_outputs();
+
     igSeparator();
     render_brain_footer();
 }

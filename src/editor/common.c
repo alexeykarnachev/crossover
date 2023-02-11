@@ -41,7 +41,7 @@ void ig_center_next_window(void) {
     igSetNextWindowPos(center, ImGuiCond_Appearing, pivot);
 }
 
-void ig_drag_float(
+int ig_drag_float(
     char* label,
     float* value,
     float min_val,
@@ -49,12 +49,14 @@ void ig_drag_float(
     float step,
     int flags
 ) {
+    float init_value = *value;
     igPushID_Int(IG_UNIQUE_ID++);
     igDragFloat(label, value, step, min_val, max_val, "%.2f", flags);
     igPopID();
+    return *value != init_value;
 }
 
-void ig_drag_float2(
+int ig_drag_float2(
     char* label,
     float values[2],
     float min_val,
@@ -62,53 +64,69 @@ void ig_drag_float2(
     float step,
     int flags
 ) {
+    float init_values[2] = {values[0], values[1]};
     igPushID_Int(IG_UNIQUE_ID++);
     igDragFloat2(label, values, step, min_val, max_val, "%.2f", flags);
     igPopID();
+    return values[0] != init_values[0] || values[1] != init_values[1];
 }
 
-void ig_drag_int(
+int ig_drag_int(
     char* label, int* value, int min_val, int max_val, int step, int flags
 ) {
+    int init_value = *value;
     igPushID_Int(IG_UNIQUE_ID++);
     igDragInt(label, value, 1, min_val, max_val, "%d", flags);
     igPopID();
+    return *value != init_value;
 }
 
-void ig_add_button(const char* label, int* val, int add, int max_val) {
+int ig_add_button(const char* label, int* val, int add, int max_val) {
+    int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
         if (*val < max_val) {
             *val += add;
+            is_changed = 1;
         }
     }
     igPopID();
+    return is_changed;
 }
 
-void ig_sub_button(const char* label, int* val, int sub, int min_val) {
+int ig_sub_button(const char* label, int* val, int sub, int min_val) {
+    int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
         if (*val > min_val) {
             *val -= sub;
+            is_changed = 1;
         }
     }
     igPopID();
+    return is_changed;
 }
 
-void ig_set_button(const char* label, int* val, int set) {
+int ig_set_button(const char* label, int* val, int set) {
+    int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
         *val = set;
+        is_changed = 1;
     }
     igPopID();
+    return is_changed;
 }
 
-void ig_mem_reset_button(const char* label, void* ptr, int size) {
+int ig_mem_reset_button(const char* label, void* ptr, int size) {
+    int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
         memset(ptr, 0, size);
+        is_changed = 1;
     }
     igPopID();
+    return is_changed;
 }
 
 void render_component_checkboxes(uint64_t* components) {

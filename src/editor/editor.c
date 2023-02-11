@@ -107,7 +107,6 @@ int save_editor_project(void) {
     }
 
     Project project = EDITOR.project;
-
     if (project.scene_file_path != NULL) {
         save_scene(project.scene_file_path);
     }

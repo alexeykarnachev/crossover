@@ -1,5 +1,6 @@
 #pragma once
 #include "const.h"
+#include "utils.h"
 #include <stdint.h>
 
 typedef enum BrainInputType {
@@ -72,7 +73,7 @@ void change_brain_output_type(
 BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
 const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
-typedef struct Brain {
+typedef struct BrainParams {
     BrainInput inputs[MAX_N_BRAIN_INPUTS];
     BrainOutput outputs[MAX_N_BRAIN_OUTPUTS];
     int layer_sizes[MAX_N_BRAIN_LAYERS];
@@ -82,16 +83,21 @@ typedef struct Brain {
     int n_layers;
     int input_size;
     int output_size;
+} BrainParams;
+
+typedef struct Brain {
+    const BrainParams params;
     float* weights;
-    const char* file_path;
 } Brain;
 
-void init_brain_weights(Brain* brain);
-int get_brain_input_size(Brain brain);
-int get_brain_output_size(Brain brain);
-int get_brain_size(Brain brain);
-uint64_t get_brain_required_input_types(Brain brain);
-uint64_t get_brain_required_output_types(Brain brain);
+Brain init_brain(BrainParams params);
+void destroy_brain(Brain* brain);
+void reset_brain_params(BrainParams* brain_params);
+int get_brain_input_size(BrainParams params);
+int get_brain_output_size(BrainParams params);
+int get_brain_size(BrainParams params);
+uint64_t get_brain_required_input_types(BrainParams params);
+uint64_t get_brain_required_output_types(BrainParams params);
 
 BrainInput init_target_entity_brain_input(void);
 BrainInput init_target_distance_brain_input(void);
@@ -101,3 +107,6 @@ BrainInput init_self_health_brain_input(void);
 BrainOutput init_look_at_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
+
+Brain load_brain(const char* file_path);
+FileSaveResult save_brain(const char* file_path, Brain brain);

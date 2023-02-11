@@ -1,5 +1,9 @@
+#define MAX_ERR_STR_LENGTH 1024
+
 #define PROJECT_VERSION 1
 #define SCENE_VERSION 1
+#define BRAIN_VERSION 0
+
 #define MAX_N_ENTITIES 1024
 #define MAX_N_COLLISIONS MAX_N_ENTITIES* MAX_N_ENTITIES
 #define MAX_N_VIEW_RAYS 64
@@ -28,4 +32,12 @@
 #define PATH_SEPARATOR '/'
 #else
 #error "ERROR: Unknown platform. PATH_SEPARATOR is not defined."
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#define MAX_PATH_LENGTH MAX_PATH
+#else
+#include <limits.h>
+#define MAX_PATH_LENGTH PATH_MAX
 #endif
