@@ -64,7 +64,7 @@ const char* save_scene_via_nfd(const char* search_path) {
     return file_path;
 }
 
-FileResult save_brain_via_nfd(const char* search_path, Brain brain) {
+ResultMessage save_brain_via_nfd(const char* search_path, Brain brain) {
     nfdchar_t* file_path = save_file_path_via_nfd(
         search_path, BRAIN_FILTER, 1
     );
@@ -72,10 +72,10 @@ FileResult save_brain_via_nfd(const char* search_path, Brain brain) {
     return save_brain(file_path, brain);
 }
 
-Brain load_brain_via_nfd(const char* search_path, FileResult* result) {
+Brain load_brain_via_nfd(const char* search_path, ResultMessage* res_msg) {
     nfdchar_t* file_path = open_file_path_via_nfd(
         search_path, BRAIN_FILTER, 1
     );
 
-    return load_brain(file_path, result);
+    return load_brain(file_path, res_msg);
 }

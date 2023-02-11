@@ -9,25 +9,29 @@
 static char STR_BUFFER[8];
 static BrainParams BRAIN_PARAMS;
 static BrainParams PREV_BRAIN_PARAMS;
-static FileResult FILE_RESULT = {.is_success = -1};
+static ResultMessage RESULT_MESSAGE = {.flag = -1};
+
+static void init_and_save_as(void) {
+    Brain brain = init_brain(BRAIN_PARAMS);
+    RESULT_MESSAGE = save_brain_via_nfd(
+        EDITOR.project.default_search_path, brain
+    );
+    destroy_brain(&brain);
+}
 
 static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain Editor", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open params", "Ctrl+O", false, 1)) {
                 Brain brain = load_brain_via_nfd(
-                    EDITOR.project.default_search_path, &FILE_RESULT
+                    EDITOR.project.default_search_path, &RESULT_MESSAGE
                 );
                 PREV_BRAIN_PARAMS = brain.params;
                 BRAIN_PARAMS = brain.params;
                 destroy_brain(&brain);
             }
             if (menu_item("Init and Save As", "Ctrl+S", false, 1)) {
-                Brain brain = init_brain(BRAIN_PARAMS);
-                FILE_RESULT = save_brain_via_nfd(
-                    EDITOR.project.default_search_path, brain
-                );
-                destroy_brain(&brain);
+                init_and_save_as();
             }
             igEndMenu();
         }
@@ -47,13 +51,13 @@ static void render_brain_menu_bar(void) {
     int key_ctrl = igGetIO()->KeyCtrl;
     int key_r = igIsKeyPressed_Bool(ImGuiKey_R, 0);
     int key_q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);
-    // int key_o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
-    // int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
-    // int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
+    int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
     if (key_r && key_ctrl) {
         reset_brain_params(&BRAIN_PARAMS);
     } else if (key_q && key_ctrl) {
         EDITOR.is_editing_brain = 0;
+    } else if (key_s && key_ctrl) {
+        init_and_save_as();
     }
 }
 
@@ -159,13 +163,13 @@ static void render_brain_footer(void) {
     int is_changed = memcmp(
         &PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams)
     );
-    if (is_changed || FILE_RESULT.is_success == -1) {
-        FILE_RESULT.is_success = -1;
+    if (is_changed || RESULT_MESSAGE.flag == -1) {
+        RESULT_MESSAGE.flag = -1;
         igTextColored(IG_YELLOW_COLOR, "INFO: Brain is not saved");
-    } else if (FILE_RESULT.is_success == 0) {
-        igTextColored(IG_RED_COLOR, FILE_RESULT.msg);
-    } else if (FILE_RESULT.is_success == 1) {
-        igTextColored(IG_GREEN_COLOR, FILE_RESULT.msg);
+    } else if (RESULT_MESSAGE.flag == 0) {
+        igTextColored(IG_RED_COLOR, RESULT_MESSAGE.msg);
+    } else if (RESULT_MESSAGE.flag == 1) {
+        igTextColored(IG_GREEN_COLOR, RESULT_MESSAGE.msg);
     }
 }
 
@@ -186,25 +190,6 @@ void render_brain_editor(void) {
 }
 
 #if 0
-    igPopID();
-    igSeparator();
-
-    // ----------------------------------------------------
-    // Brain layers
-
-    // ----------------------------------------------------
-    // Brain outputs
-    igPopID();
-    igSeparator();
-
-    // ----------------------------------------------------
-    // Brain general
-    igSeparator();
-
-    igEndPopup();
-
-    return brain;
-}
 
 static void render_brains_editor(void) {
     ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};

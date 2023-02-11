@@ -3,11 +3,10 @@
 #include "nfd.h"
 #include <stdio.h>
 
-typedef struct FileResult {
-    char file_path[MAX_PATH_LENGTH];
-    char msg[MAX_ERR_STR_LENGTH];
-    int is_success;
-} FileResult;
+typedef struct ResultMessage {
+    char msg[MAX_RESULT_MESSAGE_LENGTH];
+    int flag;
+} ResultMessage;
 
 char* read_bin_file(const char* restrict file_path, long* n_bytes);
 char* read_cstr_file(

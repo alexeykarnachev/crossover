@@ -1,4 +1,5 @@
 #pragma once
+#include "brain.h"
 #include "component.h"
 #include "const.h"
 #include "system.h"
@@ -8,6 +9,10 @@ typedef struct Scene {
     int version;
     float time;
     int n_entities;
+    int n_brains;
+
+    // Brains
+    Brain brains[MAX_N_BRAINS];
 
     // Components
     uint64_t components[MAX_N_ENTITIES];
@@ -86,4 +91,7 @@ int spawn_default_circle_obstacle(Transformation transformation);
 int spawn_default_rectangle_obstacle(Transformation transformation);
 int spawn_default_line_obstacle(Transformation transformation);
 int spawn_default_polygon_obstacle(Transformation transformation);
+
+int load_scene_brain(const char* file_path, ResultMessage* res_msg);
+
 void update_scene(float dt, int is_playing);

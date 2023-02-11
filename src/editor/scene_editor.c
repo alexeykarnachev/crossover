@@ -423,6 +423,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case BRAIN_AI_CONTROLLER: {
+                    BrainAIController* ai = &controller->c.brain_ai;
                     igTextColored(
                         IG_YELLOW_COLOR, "TODO: Connect with brain"
                     );
@@ -576,6 +577,12 @@ static void render_scene_inspector(void) {
             }
         }
 
+        // Scene brains list
+        if (igCollapsingHeader_TreeNodeFlags("Brains", 0)) {
+            if (igButton("Load", IG_VEC2_ZERO)) {}
+        }
+
+        // Debug scene pane
         if (igCollapsingHeader_TreeNodeFlags("Debug", 0)) {
             if (igTreeNodeEx_Str("Shading", 0)) {
                 igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));

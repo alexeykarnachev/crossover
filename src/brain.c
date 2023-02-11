@@ -269,23 +269,20 @@ void reset_brain_params(BrainParams* brain_params) {
     memset(brain_params, 0, sizeof(BrainParams));
 }
 
-Brain load_brain(const char* file_path, FileResult* result) {
+Brain load_brain(const char* file_path, ResultMessage* res_msg) {
     Brain brain = {0};
-    result->is_success = 0;
+    res_msg->flag = 0;
     if (file_path == NULL) {
         strcpy(
-            result->msg, "ERROR: Can't load the Brain from a NULL file"
+            res_msg->msg, "ERROR: Can't load the Brain from a NULL file"
         );
         return brain;
     }
 
-    int file_path_len = min(strlen(file_path), MAX_PATH_LENGTH - 1);
-    strncpy(result->file_path, file_path, file_path_len);
-
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
         strcpy(
-            result->msg, "ERROR: Can't open the file to load the Brain"
+            res_msg->msg, "ERROR: Can't open the file to load the Brain"
         );
         return brain;
     }
@@ -302,7 +299,7 @@ Brain load_brain(const char* file_path, FileResult* result) {
             version,
             BRAIN_VERSION
         );
-        strcpy(result->msg, str);
+        strcpy(res_msg->msg, str);
         return brain;
     }
 
@@ -317,36 +314,35 @@ Brain load_brain(const char* file_path, FileResult* result) {
     Brain initialized_brain = {.params = params, .weights = weights};
 
     fclose(fp);
-    result->is_success = 1;
+    res_msg->flag = 1;
 
-    sprintf(result->msg, "INFO: Brain is loaded (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
     return initialized_brain;
 }
 
-FileResult save_brain(const char* file_path, Brain brain) {
-    FileResult result = {0};
+ResultMessage save_brain(const char* file_path, Brain brain) {
+    ResultMessage res_msg = {0};
 
     if (file_path == NULL) {
-        strcpy(result.msg, "ERROR: Can't save the Brain to a NULL file");
-        return result;
+        strcpy(res_msg.msg, "ERROR: Can't save the Brain to a NULL file");
+        return res_msg;
     }
-
-    int file_path_len = min(strlen(file_path), MAX_PATH_LENGTH - 1);
-    strncpy(result.file_path, file_path, file_path_len);
 
     float* weights = brain.weights;
     int n_weights = get_brain_size(brain.params);
     brain.weights = NULL;
 
     if (weights == NULL || n_weights == 0) {
-        strcpy(result.msg, "ERROR: Can't save the Brain without weights");
-        return result;
+        strcpy(res_msg.msg, "ERROR: Can't save the Brain without weights");
+        return res_msg;
     }
 
     FILE* fp = fopen(file_path, "wb");
     if (!fp) {
-        strcpy(result.msg, "ERROR: Can't open the file to save the Brain");
-        return result;
+        strcpy(
+            res_msg.msg, "ERROR: Can't open the file to save the Brain"
+        );
+        return res_msg;
     }
 
     int version = BRAIN_VERSION;
@@ -356,8 +352,8 @@ FileResult save_brain(const char* file_path, Brain brain) {
     n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
-    result.is_success = 1;
+    res_msg.flag = 1;
 
-    sprintf(result.msg, "INFO: Brain is saved (%dB)", n_bytes);
-    return result;
+    sprintf(res_msg.msg, "INFO: Brain is saved (%dB)", n_bytes);
+    return res_msg;
 }
