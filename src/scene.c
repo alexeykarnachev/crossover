@@ -35,18 +35,8 @@ void reset_scene(void) {
 }
 
 void save_scene(const char* file_path, ResultMessage* res_msg) {
-    memset(res_msg, 0, sizeof(ResultMessage));
-
-    if (file_path == NULL) {
-        strcpy(res_msg->msg, "ERROR: Can't save the Scene to a NULL file");
-        return;
-    }
-
-    FILE* fp = fopen(file_path, "wb");
-    if (!fp) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't open the file to save the Scene"
-        );
+    FILE* fp = open_file(file_path, res_msg, "wb");
+    if (res_msg->flag != 1) {
         return;
     }
 
@@ -106,22 +96,12 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 }
 
 void load_scene(const char* file_path, ResultMessage* res_msg) {
-    memset(res_msg, 0, sizeof(ResultMessage));
-
-    if (file_path == NULL) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't load the Scene from a NULL file"
-        );
+    FILE* fp = open_file(file_path, res_msg, "rb");
+    if (res_msg->flag != 1) {
         return;
     }
 
-    FILE* fp = fopen(file_path, "rb");
-    if (!fp) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't open the file to load the Scene"
-        );
-        return;
-    }
+    reset_scene();
 
     int version;
     int n_bytes = 0;

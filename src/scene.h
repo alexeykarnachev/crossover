@@ -8,10 +8,10 @@
 typedef struct Scene {
     float time;
     int n_entities;
-    int n_brains;
 
     // Brains
-    Brain brains[MAX_N_BRAINS];
+    // int n_brains;
+    // Brain brains[MAX_N_BRAINS];
 
     // Components
     uint64_t components[MAX_N_ENTITIES];

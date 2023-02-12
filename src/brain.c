@@ -274,22 +274,12 @@ void destroy_brain(Brain* brain) {
 void load_brain(
     const char* file_path, Brain* brain, ResultMessage* res_msg
 ) {
-    if (file_path == NULL) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't load the Brain from a NULL file"
-        );
+    FILE* fp = open_file(file_path, res_msg, "rb");
+    if (res_msg->flag != 1) {
         return;
     }
 
     destroy_brain(brain);
-    memset(res_msg, 0, sizeof(ResultMessage));
-    FILE* fp = fopen(file_path, "rb");
-    if (!fp) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't open the file to load the Brain"
-        );
-        return;
-    }
 
     int version;
     int n_bytes = 0;
@@ -320,10 +310,8 @@ void load_brain(
 void save_brain(
     const char* file_path, Brain* brain, ResultMessage* res_msg
 ) {
-    memset(res_msg, 0, sizeof(ResultMessage));
-
-    if (file_path == NULL) {
-        strcpy(res_msg->msg, "ERROR: Can't save the Brain to a NULL file");
+    FILE* fp = open_file(file_path, res_msg, "wb");
+    if (res_msg->flag != 1) {
         return;
     }
 
@@ -334,14 +322,6 @@ void save_brain(
     if (weights == NULL || n_weights == 0) {
         strcpy(
             res_msg->msg, "ERROR: Can't save the Brain without weights"
-        );
-        return;
-    }
-
-    FILE* fp = fopen(file_path, "wb");
-    if (!fp) {
-        strcpy(
-            res_msg->msg, "ERROR: Can't open the file to save the Brain"
         );
         return;
     }

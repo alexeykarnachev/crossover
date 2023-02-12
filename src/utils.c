@@ -7,7 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO: Factor out these two functions below
+FILE* open_file(const char* file_path, ResultMessage* res_msg, const char* mode) {
+    memset(res_msg, 0, sizeof(ResultMessage));
+
+    if (file_path == NULL) {
+        strcpy(res_msg->msg, "ERROR: Can't open the NULL file");
+        return NULL;
+    }
+
+    FILE* fp = fopen(file_path, mode);
+    if (!fp) {
+        strcpy(res_msg->msg, "ERROR: Can't open the file");
+        return NULL;
+    }
+
+    res_msg->flag = 1;
+    return fp;
+}
+
 char* read_bin_file(const char* restrict file_path, long* n_bytes) {
     FILE* file = NULL;
     char* content = NULL;
