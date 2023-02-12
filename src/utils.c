@@ -103,7 +103,7 @@ fail:
     return NULL;
 }
 
-nfdchar_t* open_file_path_via_nfd(
+nfdchar_t* open_nfd(
     const nfdchar_t* search_path,
     nfdfilteritem_t* filter_items,
     int n_filter_items
@@ -126,7 +126,7 @@ nfdchar_t* open_file_path_via_nfd(
     return file_path;
 }
 
-nfdchar_t* save_file_path_via_nfd(
+nfdchar_t* save_nfd(
     const nfdchar_t* search_path,
     nfdfilteritem_t* filter_items,
     int n_filter_items

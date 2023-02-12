@@ -92,6 +92,4 @@ int spawn_default_rectangle_obstacle(Transformation transformation);
 int spawn_default_line_obstacle(Transformation transformation);
 int spawn_default_polygon_obstacle(Transformation transformation);
 
-int load_scene_brain(const char* file_path, ResultMessage* res_msg);
-
 void update_scene(float dt, int is_playing);

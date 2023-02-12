@@ -86,13 +86,13 @@ typedef struct BrainParams {
 } BrainParams;
 
 typedef struct Brain {
-    const BrainParams params;
+    BrainParams params;
     float* weights;
 } Brain;
 
+Brain init_empty_brain(void);
 Brain init_brain(BrainParams params);
 void destroy_brain(Brain* brain);
-void reset_brain_params(BrainParams* brain_params);
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);
 int get_brain_size(BrainParams params);
@@ -108,5 +108,9 @@ BrainOutput init_look_at_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
 
-Brain load_brain(const char* file_path, ResultMessage* res_msg);
-ResultMessage save_brain(const char* file_path, Brain brain);
+void load_brain(
+    const char* file_path, Brain* brain, ResultMessage* res_msg
+);
+void save_brain(
+    const char* file_path, Brain* brain, ResultMessage* res_msg
+);

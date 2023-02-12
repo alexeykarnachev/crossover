@@ -12,12 +12,12 @@ char* read_bin_file(const char* restrict file_path, long* n_bytes);
 char* read_cstr_file(
     const char* restrict file_path, const char* mode, long* n_bytes
 );
-nfdchar_t* open_file_path_via_nfd(
+nfdchar_t* open_nfd(
     const nfdchar_t* search_path,
     nfdfilteritem_t* filter_items,
     int n_filter_items
 );
-nfdchar_t* save_file_path_via_nfd(
+nfdchar_t* save_nfd(
     const nfdchar_t* search_path,
     nfdfilteritem_t* filter_items,
     int n_filter_items

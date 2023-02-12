@@ -3,9 +3,14 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "nfd.h"
 
 #define menu_item igMenuItem_Bool
 #define menu_item_ptr igMenuItem_BoolPtr
+
+extern nfdfilteritem_t SCENE_FILTER[1];
+extern nfdfilteritem_t PROJECT_FILTER[1];
+extern nfdfilteritem_t BRAIN_FILTER[1];
 
 extern int IG_UNIQUE_ID;
 

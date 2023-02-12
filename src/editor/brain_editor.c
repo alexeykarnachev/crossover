@@ -13,8 +13,10 @@ static ResultMessage RESULT_MESSAGE = {.flag = -1};
 
 static void init_and_save_as(void) {
     Brain brain = init_brain(BRAIN_PARAMS);
-    RESULT_MESSAGE = save_brain_via_nfd(
-        EDITOR.project.default_search_path, brain
+    save_brain(
+        save_nfd(EDITOR.project.default_search_path, BRAIN_FILTER, 1),
+        &brain,
+        &RESULT_MESSAGE
     );
     destroy_brain(&brain);
 }
@@ -23,8 +25,13 @@ static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain Editor", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open params", "Ctrl+O", false, 1)) {
-                Brain brain = load_brain_via_nfd(
-                    EDITOR.project.default_search_path, &RESULT_MESSAGE
+                Brain brain = init_empty_brain();
+                load_brain(
+                    open_nfd(
+                        EDITOR.project.default_search_path, BRAIN_FILTER, 1
+                    ),
+                    &brain,
+                    &RESULT_MESSAGE
                 );
                 PREV_BRAIN_PARAMS = brain.params;
                 BRAIN_PARAMS = brain.params;
@@ -38,7 +45,7 @@ static void render_brain_menu_bar(void) {
 
         igSeparator();
         if (menu_item("Reset", "Ctrl+R", false, 1)) {
-            reset_brain_params(&BRAIN_PARAMS);
+            memset(&BRAIN_PARAMS, 0, sizeof(BrainParams));
         }
 
         if (menu_item("Quit", "Ctrl+Q", false, 1)) {
@@ -53,7 +60,7 @@ static void render_brain_menu_bar(void) {
     int key_q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);
     int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
     if (key_r && key_ctrl) {
-        reset_brain_params(&BRAIN_PARAMS);
+        memset(&BRAIN_PARAMS, 0, sizeof(BrainParams));
     } else if (key_q && key_ctrl) {
         EDITOR.is_editing_brain = 0;
     } else if (key_s && key_ctrl) {

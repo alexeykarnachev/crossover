@@ -249,6 +249,11 @@ int get_brain_size(BrainParams params) {
     return n_weights;
 }
 
+Brain init_empty_brain(void) {
+    Brain brain = {0};
+    return brain;
+}
+
 Brain init_brain(BrainParams params) {
     int n_weights = get_brain_size(params);
     int n_bytes = sizeof(float) * n_weights;
@@ -261,22 +266,22 @@ Brain init_brain(BrainParams params) {
 void destroy_brain(Brain* brain) {
     if (brain->weights != NULL) {
         free(brain->weights);
-        brain->weights = NULL;
     }
+
+    memset(brain, 0, sizeof(Brain));
 }
 
-void reset_brain_params(BrainParams* brain_params) {
-    memset(brain_params, 0, sizeof(BrainParams));
-}
+void load_brain(
+    const char* file_path, Brain* brain, ResultMessage* res_msg
+) {
+    destroy_brain(brain);
+    memset(res_msg, 0, sizeof(ResultMessage));
 
-Brain load_brain(const char* file_path, ResultMessage* res_msg) {
-    Brain brain = {0};
-    res_msg->flag = 0;
     if (file_path == NULL) {
         strcpy(
             res_msg->msg, "ERROR: Can't load the Brain from a NULL file"
         );
-        return brain;
+        return;
     }
 
     FILE* fp = fopen(file_path, "rb");
@@ -284,7 +289,7 @@ Brain load_brain(const char* file_path, ResultMessage* res_msg) {
         strcpy(
             res_msg->msg, "ERROR: Can't open the file to load the Brain"
         );
-        return brain;
+        return;
     }
 
     int version;
@@ -300,60 +305,60 @@ Brain load_brain(const char* file_path, ResultMessage* res_msg) {
             BRAIN_VERSION
         );
         strcpy(res_msg->msg, str);
-        return brain;
+        return;
     }
 
-    BrainParams params;
-    fread(&params, sizeof(BrainParams), 1, fp);
-
-    int n_weights = get_brain_size(params);
+    fread(&brain->params, sizeof(BrainParams), 1, fp);
+    int n_weights = get_brain_size(brain->params);
     int n_bytes = n_weights * sizeof(float);
-    float* weights = (float*)malloc(n_bytes);
-    fread(weights, sizeof(float), n_weights, fp);
-
-    Brain initialized_brain = {.params = params, .weights = weights};
+    brain->weights = (float*)malloc(n_bytes);
+    fread(brain->weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = 1;
 
     sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
-    return initialized_brain;
+    return;
 }
 
-ResultMessage save_brain(const char* file_path, Brain brain) {
-    ResultMessage res_msg = {0};
+void save_brain(
+    const char* file_path, Brain* brain, ResultMessage* res_msg
+) {
+    memset(res_msg, 0, sizeof(ResultMessage));
 
     if (file_path == NULL) {
-        strcpy(res_msg.msg, "ERROR: Can't save the Brain to a NULL file");
-        return res_msg;
+        strcpy(res_msg->msg, "ERROR: Can't save the Brain to a NULL file");
+        return;
     }
 
-    float* weights = brain.weights;
-    int n_weights = get_brain_size(brain.params);
-    brain.weights = NULL;
+    float* weights = brain->weights;
+    int n_weights = get_brain_size(brain->params);
+    brain->weights = NULL;
 
     if (weights == NULL || n_weights == 0) {
-        strcpy(res_msg.msg, "ERROR: Can't save the Brain without weights");
-        return res_msg;
+        strcpy(
+            res_msg->msg, "ERROR: Can't save the Brain without weights"
+        );
+        return;
     }
 
     FILE* fp = fopen(file_path, "wb");
     if (!fp) {
         strcpy(
-            res_msg.msg, "ERROR: Can't open the file to save the Brain"
+            res_msg->msg, "ERROR: Can't open the file to save the Brain"
         );
-        return res_msg;
+        return;
     }
 
     int version = BRAIN_VERSION;
     int n_bytes = 0;
     n_bytes += fwrite(&version, sizeof(int), 1, fp);
-    n_bytes += fwrite(&brain.params, sizeof(BrainParams), 1, fp);
+    n_bytes += fwrite(&brain->params, sizeof(BrainParams), 1, fp);
     n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
-    res_msg.flag = 1;
+    res_msg->flag = 1;
 
-    sprintf(res_msg.msg, "INFO: Brain is saved (%dB)", n_bytes);
-    return res_msg;
+    sprintf(res_msg->msg, "INFO: Brain is saved (%dB)", n_bytes);
+    return;
 }
