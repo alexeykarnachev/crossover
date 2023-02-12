@@ -182,34 +182,6 @@ static void render_game_controls(void) {
     igEnd();
 }
 
-static void render_debug_info(void) {
-    ImGuiIO* io = igGetIO();
-    ImVec2 position = {0, io->DisplaySize.y};
-    ImVec2 pivot = {0, 1};
-    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
-
-    if (igBegin("Debug info", NULL, GHOST_WINDOW_FLAGS)) {
-        igText("FPS: %.1f", io->Framerate);
-        igText("Scene time: %.1f", SCENE.time);
-        igText("Entities: %d", SCENE.n_entities);
-        igText("Collisions: %d", DEBUG.general.n_collisions);
-        igText(
-            "Camera pos: (%.2f, %.2f)",
-            DEBUG.general.camera_position.x,
-            DEBUG.general.camera_position.y
-        );
-        igText("Cursor pos: (%.2f, %.2f)", APP.cursor_x, APP.cursor_y);
-        igText("Cursor delta: (%.2f, %.2f)", APP.cursor_dx, APP.cursor_dy);
-        igText("Scroll: %.2f", APP.scroll_dy);
-        igText("Project: %s", EDITOR.project.project_file_path);
-        igText("Scene: %s", EDITOR.project.scene_file_path);
-        igText("Search path: %s", EDITOR.project.default_search_path);
-    }
-
-    igEnd();
-}
-
 static void render_context_menu(void) {
     static Vec2 cursor_scene_pos;
     static Transformation transformation;
@@ -618,7 +590,6 @@ static void render_scene_inspector(void) {
 
 void render_scene_editor(void) {
     render_game_controls();
-    render_debug_info();
     if (!EDITOR.is_playing) {
         render_entity_inspector();
         render_scene_inspector();

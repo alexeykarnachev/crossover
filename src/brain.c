@@ -275,7 +275,7 @@ void load_brain(
     const char* file_path, Brain* brain, ResultMessage* res_msg
 ) {
     FILE* fp = open_file(file_path, res_msg, "rb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -301,7 +301,7 @@ void load_brain(
     n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
     return;
@@ -311,7 +311,7 @@ void save_brain(
     const char* file_path, Brain* brain, ResultMessage* res_msg
 ) {
     FILE* fp = open_file(file_path, res_msg, "wb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -333,7 +333,7 @@ void save_brain(
     n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Brain is saved (%dB)", n_bytes);
     return;

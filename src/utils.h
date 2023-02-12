@@ -3,9 +3,15 @@
 #include "nfd.h"
 #include <stdio.h>
 
+typedef enum ResultFlag {
+    UNKNOWN_RESULT = -1,
+    FAIL_RESULT = 0,
+    SUCCESS_RESULT = 1
+} ResultFlag;
+
 typedef struct ResultMessage {
     char msg[MAX_RESULT_MESSAGE_LENGTH];
-    int flag;
+    ResultFlag flag;
 } ResultMessage;
 
 FILE* open_file(

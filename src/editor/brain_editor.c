@@ -9,13 +9,14 @@
 static char STR_BUFFER[8];
 static BrainParams BRAIN_PARAMS;
 static BrainParams PREV_BRAIN_PARAMS;
+static ResultMessage BRAIN_RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};
 
 static void init_and_save_as(void) {
     Brain brain = init_brain(BRAIN_PARAMS);
     save_brain(
         save_nfd(EDITOR.project.default_search_path, BRAIN_FILTER, 1),
         &brain,
-        &RESULT_MESSAGE
+        &BRAIN_RESULT_MESSAGE
     );
     destroy_brain(&brain);
 }
@@ -30,10 +31,12 @@ static void render_brain_menu_bar(void) {
                         EDITOR.project.default_search_path, BRAIN_FILTER, 1
                     ),
                     &brain,
-                    &RESULT_MESSAGE
+                    &BRAIN_RESULT_MESSAGE
                 );
-                PREV_BRAIN_PARAMS = brain.params;
-                BRAIN_PARAMS = brain.params;
+                if (BRAIN_RESULT_MESSAGE.flag == SUCCESS_RESULT) {
+                    PREV_BRAIN_PARAMS = brain.params;
+                    BRAIN_PARAMS = brain.params;
+                }
                 destroy_brain(&brain);
             }
             if (menu_item("Init and Save As", "Ctrl+S", false, 1)) {
@@ -171,13 +174,13 @@ static void render_brain_footer(void) {
     int is_changed = memcmp(
         &PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams)
     );
-    if (is_changed || RESULT_MESSAGE.flag == -1) {
-        RESULT_MESSAGE.flag = -1;
+    if (is_changed || BRAIN_RESULT_MESSAGE.flag == UNKNOWN_RESULT) {
+        BRAIN_RESULT_MESSAGE.flag = UNKNOWN_RESULT;
         igTextColored(IG_YELLOW_COLOR, "INFO: Brain is not saved");
-    } else if (RESULT_MESSAGE.flag == 0) {
-        igTextColored(IG_RED_COLOR, RESULT_MESSAGE.msg);
-    } else if (RESULT_MESSAGE.flag == 1) {
-        igTextColored(IG_GREEN_COLOR, RESULT_MESSAGE.msg);
+    } else if (BRAIN_RESULT_MESSAGE.flag == FAIL_RESULT) {
+        igTextColored(IG_RED_COLOR, BRAIN_RESULT_MESSAGE.msg);
+    } else if (BRAIN_RESULT_MESSAGE.flag == SUCCESS_RESULT) {
+        igTextColored(IG_GREEN_COLOR, BRAIN_RESULT_MESSAGE.msg);
     }
 }
 

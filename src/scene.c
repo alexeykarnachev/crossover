@@ -36,7 +36,7 @@ void reset_scene(void) {
 
 void save_scene(const char* file_path, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "wb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -89,7 +89,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Scene is saved (%dB)", n_bytes);
     return;
@@ -97,7 +97,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 
 void load_scene(const char* file_path, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "rb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -172,7 +172,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Scene is loaded (%dB)", n_bytes);
     return;

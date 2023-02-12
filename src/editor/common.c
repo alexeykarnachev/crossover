@@ -13,7 +13,7 @@ nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
 nfdfilteritem_t BRAIN_FILTER[1] = {{"Brain", "xbrain"}};
 
 static char STR_BUFFER[256];
-ResultMessage RESULT_MESSAGE = {.flag = -1};
+ResultMessage RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};
 int IG_UNIQUE_ID = 0;
 
 ImVec2 IG_VEC2_ZERO = {0, 0};

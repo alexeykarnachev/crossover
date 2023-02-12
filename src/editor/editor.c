@@ -55,7 +55,7 @@ static void update_recent_project(const char* recent_project_file_path) {
 
 void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "rb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -83,13 +83,13 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     fclose(fp);
 
     load_scene(project->scene_file_path, &RESULT_MESSAGE);
-    if (RESULT_MESSAGE.flag != 1) {
+    if (RESULT_MESSAGE.flag != SUCCESS_RESULT) {
         reset_scene();
         project->scene_file_path = NULL;
     }
 
     update_recent_project(project->project_file_path);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Project is loaded (%dB)", n_bytes);
     return;
@@ -97,7 +97,7 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
 
 void save_editor_project(ResultMessage* res_msg) {
     FILE* fp = open_file(EDITOR.project.project_file_path, res_msg, "wb");
-    if (res_msg->flag != 1) {
+    if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
@@ -113,7 +113,7 @@ void save_editor_project(ResultMessage* res_msg) {
     n_bytes += write_str_to_file(project.default_search_path, fp, 1);
 
     fclose(fp);
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Project is saved (%dB)", n_bytes);
     return;
@@ -168,7 +168,7 @@ void open_editor_scene(void) {
         EDITOR.project.default_search_path, SCENE_FILTER, 1
     );
     load_scene(scene_file_path, &RESULT_MESSAGE);
-    if (RESULT_MESSAGE.flag == 1) {
+    if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
         reset_editor();
         EDITOR.project.scene_file_path = scene_file_path;
         save_editor_project(&RESULT_MESSAGE);
@@ -185,7 +185,7 @@ void save_editor_scene(void) {
             EDITOR.project.default_search_path, SCENE_FILTER, 1
         );
         save_scene(scene_file_path, &RESULT_MESSAGE);
-        if (RESULT_MESSAGE.flag == 1) {
+        if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
             EDITOR.project.scene_file_path = scene_file_path;
         }
     }
@@ -199,7 +199,7 @@ void save_editor_scene_as(void) {
         EDITOR.project.default_search_path, SCENE_FILTER, 1
     );
     save_scene(scene_file_path, &RESULT_MESSAGE);
-    if (RESULT_MESSAGE.flag == 1) {
+    if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
         EDITOR.project.scene_file_path = scene_file_path;
         save_editor_project(&RESULT_MESSAGE);
     }
@@ -249,6 +249,7 @@ void render_editor(void) {
     igNewFrame();
 
     render_main_menu_bar();
+    render_debug_overlay();
 
     if (EDITOR.project.project_file_path != NULL) {
         render_scene_editor();

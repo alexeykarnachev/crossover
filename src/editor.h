@@ -52,6 +52,7 @@ void update_entity_dragging(void);
 
 void render_editor(void);
 void render_main_menu_bar(void);
+void render_debug_overlay(void);
 void render_scene_editor(void);
 void render_brain_editor(void);
 void render_entity_handles(void);

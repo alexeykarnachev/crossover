@@ -23,7 +23,7 @@ FILE* open_file(
         return NULL;
     }
 
-    res_msg->flag = 1;
+    res_msg->flag = SUCCESS_RESULT;
     return fp;
 }
 
