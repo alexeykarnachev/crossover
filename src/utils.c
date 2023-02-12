@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-FILE* open_file(const char* file_path, ResultMessage* res_msg, const char* mode) {
+FILE* open_file(
+    const char* file_path, ResultMessage* res_msg, const char* mode
+) {
     memset(res_msg, 0, sizeof(ResultMessage));
 
     if (file_path == NULL) {

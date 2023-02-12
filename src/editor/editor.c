@@ -15,7 +15,6 @@
 #include <string.h>
 
 const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
-ResultMessage RESULT_MESSAGE = {.flag = -1};
 
 #define ASSERT_PROJECT(fn_name) \
     do { \
@@ -37,7 +36,7 @@ void init_editor(void) {
     if (fp) {
         const char* file_path;
         read_str_from_file(&file_path, fp, 0);
-        load_editor_project(file_path);
+        load_editor_project(file_path, &RESULT_MESSAGE);
     }
 }
 
@@ -45,7 +44,6 @@ void reset_editor(void) {
     EDITOR.picked_entity.entity = -1;
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
-    EDITOR.project.version = PROJECT_VERSION;
     EDITOR.project.scene_file_path = NULL;
 }
 
@@ -55,35 +53,33 @@ static void update_recent_project(const char* recent_project_file_path) {
     fclose(fp);
 }
 
-int load_editor_project(const char* file_path) {
-    FILE* fp = fopen(file_path, "rb");
-    if (!fp) {
-        fprintf(stderr, "ERROR: Can't load Project file: %s\n", file_path);
-        return 0;
+void load_editor_project(const char* file_path, ResultMessage* res_msg) {
+    FILE* fp = open_file(file_path, res_msg, "rb");
+    if (res_msg->flag != 1) {
+        return;
     }
 
     reset_editor();
-    Project* project = &EDITOR.project;
-    fread(&project->version, sizeof(int), 1, fp);
-    if (project->version != PROJECT_VERSION) {
-        fprintf(
-            stderr,
+
+    int version;
+    int n_bytes = 0;
+    n_bytes += fread(&version, sizeof(int), 1, fp);
+    if (version != PROJECT_VERSION) {
+        sprintf(
+            res_msg->msg,
             "ERROR: Project version %d is not compatible with the engine, "
             "expecting the version %d\n",
-            project->version,
+            version,
             PROJECT_VERSION
         );
-        return 0;
+        return;
     }
 
-    const char** file_paths[3] = {
-        &project->project_file_path,
-        &project->scene_file_path,
-        &project->default_search_path};
+    Project* project = &EDITOR.project;
+    n_bytes += read_str_from_file(&project->project_file_path, fp, 0);
+    n_bytes += read_str_from_file(&project->scene_file_path, fp, 1);
+    n_bytes += read_str_from_file(&project->default_search_path, fp, 1);
 
-    read_str_from_file(&project->project_file_path, fp, 0);
-    read_str_from_file(&project->scene_file_path, fp, 1);
-    read_str_from_file(&project->default_search_path, fp, 1);
     fclose(fp);
 
     load_scene(project->scene_file_path, &RESULT_MESSAGE);
@@ -93,40 +89,57 @@ int load_editor_project(const char* file_path) {
     }
 
     update_recent_project(project->project_file_path);
-    return 1;
+    res_msg->flag = 1;
+
+    sprintf(res_msg->msg, "INFO: Project is loaded (%dB)", n_bytes);
+    return;
 }
 
-int save_editor_project(void) {
-    const char* file_path = EDITOR.project.project_file_path;
-    FILE* fp = fopen(file_path, "wb");
-    if (!fp) {
-        fprintf(
-            stderr,
-            "ERROR: Can't save Project to the file: %s\n",
-            file_path
-        );
-        exit(1);
+void save_editor_project(ResultMessage* res_msg) {
+    FILE* fp = open_file(EDITOR.project.project_file_path, res_msg, "wb");
+    if (res_msg->flag != 1) {
+        return;
     }
 
     Project project = EDITOR.project;
     save_scene(project.scene_file_path, &RESULT_MESSAGE);
 
-    fwrite(&project.version, sizeof(int), 1, fp);
+    int n_bytes = 0;
+    int version = PROJECT_VERSION;
 
-    write_str_to_file(project.project_file_path, fp, 0);
-    write_str_to_file(project.scene_file_path, fp, 1);
-    write_str_to_file(project.default_search_path, fp, 1);
+    n_bytes += fwrite(&version, sizeof(int), 1, fp);
+    n_bytes += write_str_to_file(project.project_file_path, fp, 0);
+    n_bytes += write_str_to_file(project.scene_file_path, fp, 1);
+    n_bytes += write_str_to_file(project.default_search_path, fp, 1);
 
     fclose(fp);
+    res_msg->flag = 1;
 
-    return 1;
+    sprintf(res_msg->msg, "INFO: Project is saved (%dB)", n_bytes);
+    return;
 }
 
 void new_editor_project(void) {
-    reset_scene();
-    reset_editor();
-    create_project_via_nfd(NULL);
-    update_recent_project(EDITOR.project.project_file_path);
+    nfdchar_t* file_path = save_nfd(NULL, PROJECT_FILTER, 1);
+
+    if (file_path != NULL) {
+        char* default_search_path = (char*)malloc(
+            sizeof(char) * strlen(file_path)
+        );
+        strcpy(default_search_path, file_path);
+        char* last_sep_loc = strrchr(default_search_path, PATH_SEPARATOR);
+        if (last_sep_loc) {
+            *last_sep_loc = '\0';
+        }
+
+        EDITOR.project.default_search_path = default_search_path;
+        EDITOR.project.project_file_path = file_path;
+        save_editor_project(&RESULT_MESSAGE);
+
+        reset_scene();
+        reset_editor();
+        update_recent_project(EDITOR.project.project_file_path);
+    }
 }
 
 void new_editor_scene(void) {
@@ -134,12 +147,18 @@ void new_editor_scene(void) {
 
     reset_scene();
     reset_editor();
-    save_editor_project();
+    save_editor_project(&RESULT_MESSAGE);
 }
 
 void open_editor_project(void) {
-    load_project_via_nfd(EDITOR.project.default_search_path);
-    update_recent_project(EDITOR.project.project_file_path);
+    nfdchar_t* file_path = open_nfd(
+        EDITOR.project.default_search_path, PROJECT_FILTER, 1
+    );
+    if (file_path != NULL) {
+        load_editor_project(file_path, &RESULT_MESSAGE);
+        NFD_FreePath(file_path);
+        update_recent_project(EDITOR.project.project_file_path);
+    }
 }
 
 void open_editor_scene(void) {
@@ -152,7 +171,7 @@ void open_editor_scene(void) {
     if (RESULT_MESSAGE.flag == 1) {
         reset_editor();
         EDITOR.project.scene_file_path = scene_file_path;
-        save_editor_project();
+        save_editor_project(&RESULT_MESSAGE);
     }
 }
 
@@ -170,7 +189,7 @@ void save_editor_scene(void) {
             EDITOR.project.scene_file_path = scene_file_path;
         }
     }
-    save_editor_project();
+    save_editor_project(&RESULT_MESSAGE);
 }
 
 void save_editor_scene_as(void) {
@@ -182,7 +201,7 @@ void save_editor_scene_as(void) {
     save_scene(scene_file_path, &RESULT_MESSAGE);
     if (RESULT_MESSAGE.flag == 1) {
         EDITOR.project.scene_file_path = scene_file_path;
-        save_editor_project();
+        save_editor_project(&RESULT_MESSAGE);
     }
 }
 

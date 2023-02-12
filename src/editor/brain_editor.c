@@ -9,7 +9,6 @@
 static char STR_BUFFER[8];
 static BrainParams BRAIN_PARAMS;
 static BrainParams PREV_BRAIN_PARAMS;
-static ResultMessage RESULT_MESSAGE = {.flag = -1};
 
 static void init_and_save_as(void) {
     Brain brain = init_brain(BRAIN_PARAMS);

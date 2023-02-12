@@ -1,6 +1,7 @@
 #pragma once
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "../utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "nfd.h"
@@ -12,6 +13,7 @@ extern nfdfilteritem_t SCENE_FILTER[1];
 extern nfdfilteritem_t PROJECT_FILTER[1];
 extern nfdfilteritem_t BRAIN_FILTER[1];
 
+extern ResultMessage RESULT_MESSAGE;
 extern int IG_UNIQUE_ID;
 
 extern ImVec2 IG_VEC2_ZERO;

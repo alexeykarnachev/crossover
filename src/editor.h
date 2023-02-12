@@ -4,7 +4,6 @@
 #include "nfd.h"
 
 typedef struct Project {
-    int version;
     const char* project_file_path;
     const char* scene_file_path;
     const char* default_search_path;
@@ -32,9 +31,6 @@ Vec2 get_cursor_scene_pos(void);
 void init_editor(void);
 void reset_editor(void);
 
-void create_project_via_nfd(const nfdchar_t* search_path);
-void load_project_via_nfd(const nfdchar_t* search_path);
-
 void new_editor_project(void);
 void new_editor_scene(void);
 void open_editor_project(void);
@@ -42,8 +38,8 @@ void open_editor_scene(void);
 void save_editor_scene(void);
 void save_editor_scene_as(void);
 
-int load_editor_project(const char* file_path);
-int save_editor_project(void);
+void load_editor_project(const char* file_path, ResultMessage* res_msg);
+void save_editor_project(ResultMessage* res_msg);
 
 void pick_entity(int entity);
 int check_if_cursor_on_entity(int entity);

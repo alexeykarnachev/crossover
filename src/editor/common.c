@@ -8,7 +8,12 @@
 #include <stdio.h>
 #include <string.h>
 
+nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
+nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
+nfdfilteritem_t BRAIN_FILTER[1] = {{"Brain", "xbrain"}};
+
 static char STR_BUFFER[256];
+ResultMessage RESULT_MESSAGE = {.flag = -1};
 int IG_UNIQUE_ID = 0;
 
 ImVec2 IG_VEC2_ZERO = {0, 0};
