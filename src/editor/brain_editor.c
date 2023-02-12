@@ -55,6 +55,8 @@ static void render_brain_menu_bar(void) {
         igEndMenu();
     }
 
+    // TODO: These keys will trigger the main window combinations, but the
+    // Brain editor popup needs to be triggered
     int key_ctrl = igGetIO()->KeyCtrl;
     int key_r = igIsKeyPressed_Bool(ImGuiKey_R, 0);
     int key_q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);

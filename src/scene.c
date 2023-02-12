@@ -106,6 +106,8 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 }
 
 void load_scene(const char* file_path, ResultMessage* res_msg) {
+    memset(res_msg, 0, sizeof(ResultMessage));
+
     if (file_path == NULL) {
         strcpy(
             res_msg->msg, "ERROR: Can't load the Scene from a NULL file"
