@@ -1,14 +1,13 @@
-#include "scene.h"
+#include "../scene.h"
 
-#include "app.h"
-#include "asset.h"
-#include "component.h"
-#include "const.h"
-#include "debug.h"
-#include "math.h"
+#include "../app.h"
+#include "../component.h"
+#include "../const.h"
+#include "../debug.h"
+#include "../math.h"
+#include "../system.h"
+#include "../utils.h"
 #include "nfd.h"
-#include "system.h"
-#include "utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

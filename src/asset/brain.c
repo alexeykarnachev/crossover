@@ -271,9 +271,7 @@ void destroy_brain(Brain* brain) {
     memset(brain, 0, sizeof(Brain));
 }
 
-void load_brain(
-    const char* file_path, Brain* brain, ResultMessage* res_msg
-) {
+void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
@@ -307,9 +305,7 @@ void load_brain(
     return;
 }
 
-void save_brain(
-    const char* file_path, Brain* brain, ResultMessage* res_msg
-) {
+void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "wb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;

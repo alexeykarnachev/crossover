@@ -108,9 +108,5 @@ BrainOutput init_look_at_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
 
-void load_brain(
-    const char* file_path, Brain* brain, ResultMessage* res_msg
-);
-void save_brain(
-    const char* file_path, Brain* brain, ResultMessage* res_msg
-);
+void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
+void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);

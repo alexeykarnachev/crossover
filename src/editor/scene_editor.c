@@ -13,6 +13,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     TRANSFORMATION_COMPONENT,
@@ -525,9 +526,44 @@ static void render_entities_browser(void) {
 }
 
 static void render_assets_browser(void) {
-    if (igCollapsingHeader_TreeNodeFlags(
-            "Assets", ImGuiTreeNodeFlags_DefaultOpen
-        )) {}
+    int node = igCollapsingHeader_TreeNodeFlags(
+        "Assets", ImGuiTreeNodeFlags_DefaultOpen
+    );
+    if (!node) {
+        return;
+    }
+
+    if (igTreeNodeEx_Str("Brains", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (igButton("Open", IG_VEC2_ZERO)) {
+            char* file_path = open_nfd(
+                EDITOR.project.default_search_path, BRAIN_FILTER, 1
+            );
+            Brain brain = init_empty_brain();
+            load_brain(file_path, &brain, &RESULT_MESSAGE);
+            if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
+                Asset asset;
+                strcpy(asset.file_path, file_path);
+                asset.type = BRAIN_ASSET;
+                asset.a.brain = brain;
+                add_asset(asset);
+            }
+        }
+
+        igSeparator();
+        for (int i = 0; i < N_ASSETS; ++i) {
+            Asset asset = ASSETS[i];
+            if (asset.type == BRAIN_ASSET) {
+                igText("Brain: %d", i);
+                char* file_path = &asset.file_path[strlen(
+                    EDITOR.project.default_search_path
+                )];
+                igText("File: .%s", file_path);
+                igSeparator();
+            }
+        }
+
+        igTreePop();
+    }
 }
 
 static void render_debug_inspector(void) {
@@ -564,6 +600,20 @@ static void render_debug_inspector(void) {
     }
 }
 
+static void process_keys(void) {
+    if (EDITOR.key.ctrl && EDITOR.key.c
+        && EDITOR.picked_entity.entity != -1) {
+        EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
+    } else if (EDITOR.key.ctrl && EDITOR.key.v && EDITOR.entity_to_copy != -1) {
+        Transformation cursor = init_transformation(
+            get_cursor_scene_pos(), 0.0
+        );
+        pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
+    } else if (EDITOR.key.del && EDITOR.picked_entity.entity != -1) {
+        destroy_entity(EDITOR.picked_entity.entity);
+    }
+}
+
 void render_scene_editor(void) {
     render_game_controls();
     if (!EDITOR.is_playing) {
@@ -585,17 +635,6 @@ void render_scene_editor(void) {
         igEnd();
 
         render_context_menu();
-
-        Transformation cursor;
-
-        if (EDITOR.key.ctrl && EDITOR.key.c
-            && EDITOR.picked_entity.entity != -1) {
-            EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
-        } else if (EDITOR.key.ctrl && EDITOR.key.v && EDITOR.entity_to_copy != -1) {
-            cursor = init_transformation(get_cursor_scene_pos(), 0.0);
-            pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
-        } else if (EDITOR.key.del && EDITOR.picked_entity.entity != -1) {
-            destroy_entity(EDITOR.picked_entity.entity);
-        }
+        process_keys();
     }
 }

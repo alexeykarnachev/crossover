@@ -4,9 +4,9 @@
 #include "nfd.h"
 
 typedef struct Project {
-    const char* project_file_path;
-    const char* scene_file_path;
-    const char* default_search_path;
+    char* project_file_path;
+    char* scene_file_path;
+    char* default_search_path;
 } Project;
 
 typedef struct PickedEntity {
