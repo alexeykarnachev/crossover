@@ -148,7 +148,7 @@ nfdchar_t* save_nfd(
     return file_path;
 }
 
-void write_str_to_file(const char* str, FILE* fp, int allow_null) {
+int write_str_to_file(const char* str, FILE* fp, int allow_null) {
     if (str == NULL && !allow_null) {
         fprintf(
             stderr,
@@ -159,21 +159,25 @@ void write_str_to_file(const char* str, FILE* fp, int allow_null) {
     }
 
     int str_len = 0;
+    int n_bytes = 0;
     if (str == NULL) {
-        fwrite(&str_len, sizeof(int), 1, fp);
+        n_bytes += fwrite(&str_len, sizeof(int), 1, fp);
     } else {
         str_len = strlen(str) + 1;
-        fwrite(&str_len, sizeof(int), 1, fp);
-        fwrite(str, sizeof(char), str_len, fp);
+        n_bytes += fwrite(&str_len, sizeof(int), 1, fp);
+        n_bytes += fwrite(str, sizeof(char), str_len, fp);
     }
+
+    return n_bytes;
 }
 
-void read_str_from_file(const char** str_p, FILE* fp, int allow_null) {
+int read_str_from_file(const char** str_p, FILE* fp, int allow_null) {
     uint32_t str_len;
-    fread(&str_len, sizeof(uint32_t), 1, fp);
+    int n_bytes = 0;
+    n_bytes += fread(&str_len, sizeof(uint32_t), 1, fp);
     if (str_len > 0) {
         char* buffer = (char*)malloc(str_len + 1);
-        fread(buffer, sizeof(char), str_len, fp);
+        n_bytes += fread(buffer, sizeof(char), str_len, fp);
         buffer[str_len] = '\0';
         *str_p = buffer;
     } else if (allow_null) {
@@ -184,5 +188,8 @@ void read_str_from_file(const char** str_p, FILE* fp, int allow_null) {
             "ERROR: Can't read 0 length string from the file. Set "
             "allow_null = 1 if you still want to do this\n"
         );
+        exit(1);
     }
+
+    return n_bytes;
 }

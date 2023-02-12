@@ -34,8 +34,6 @@ void reset_editor(void);
 
 void create_project_via_nfd(const nfdchar_t* search_path);
 void load_project_via_nfd(const nfdchar_t* search_path);
-const char* load_scene_via_nfd(const char* search_path);
-const char* save_scene_via_nfd(const char* search_path);
 
 void new_editor_project(void);
 void new_editor_scene(void);

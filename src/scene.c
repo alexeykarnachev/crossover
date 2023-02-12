@@ -29,118 +29,171 @@ Vec2 get_cursor_scene_pos(void) {
 }
 
 void reset_scene(void) {
-    SCENE.version = SCENE_VERSION;
     SCENE.n_entities = 0;
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     reset_camera();
 }
 
-int save_scene(const char* file_path) {
+void save_scene(const char* file_path, ResultMessage* res_msg) {
+    memset(res_msg, 0, sizeof(ResultMessage));
+
+    if (file_path == NULL) {
+        strcpy(res_msg->msg, "ERROR: Can't save the Scene to a NULL file");
+        return;
+    }
+
     FILE* fp = fopen(file_path, "wb");
     if (!fp) {
-        fprintf(
-            stderr, "ERROR: Can't save Scene to the file: %s\n", file_path
+        strcpy(
+            res_msg->msg, "ERROR: Can't open the file to save the Scene"
         );
-        exit(1);
+        return;
     }
 
-    fwrite(&SCENE.version, sizeof(int), 1, fp);
-    fwrite(&SCENE.time, sizeof(float), 1, fp);
-    fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
-    fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
+    int version = SCENE_VERSION;
+    int n_bytes = 0;
+    n_bytes += fwrite(&version, sizeof(int), 1, fp);
+    n_bytes += fwrite(&SCENE.time, sizeof(float), 1, fp);
+    n_bytes += fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
+    n_bytes += fwrite(
+        SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
+    );
 
     for (int i = 0; i < SCENE.n_entities; ++i) {
-        write_str_to_file(SCENE.names[i], fp, 0);
+        n_bytes += write_str_to_file(SCENE.names[i], fp, 0);
     }
 
-    fwrite(
+    n_bytes += fwrite(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
-    fwrite(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
-    fwrite(
+    n_bytes += fwrite(
+        SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(
         SCENE.kinematic_movements,
         sizeof(KinematicMovement),
         SCENE.n_entities,
         fp
     );
-    fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
-    fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
-    fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fwrite(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
-    fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
-    fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    fwrite(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
-    fwrite(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
-    fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
-    fwrite(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
-    fwrite(&SCENE.camera, sizeof(int), 1, fp);
-    fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
+    n_bytes += fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    n_bytes += fwrite(
+        SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(
+        SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(
+        SCENE.materials, sizeof(Material), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    n_bytes += fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fwrite(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fwrite(
+        SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    n_bytes += fwrite(
+        SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
+    );
+    n_bytes += fwrite(&SCENE.camera, sizeof(int), 1, fp);
+    n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
+    res_msg->flag = 1;
 
-    return 1;
+    sprintf(res_msg->msg, "INFO: Scene is saved (%dB)", n_bytes);
+    return;
 }
 
-int load_scene(const char* file_path) {
+void load_scene(const char* file_path, ResultMessage* res_msg) {
+    if (file_path == NULL) {
+        strcpy(
+            res_msg->msg, "ERROR: Can't load the Scene from a NULL file"
+        );
+        return;
+    }
+
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
-        fprintf(stderr, "ERROR: Can't load Scene file: %s\n", file_path);
-        return 0;
+        strcpy(
+            res_msg->msg, "ERROR: Can't open the file to load the Scene"
+        );
+        return;
     }
 
-    fread(&SCENE.version, sizeof(int), 1, fp);
-    if (SCENE.version != SCENE_VERSION) {
-        fprintf(
-            stderr,
+    int version;
+    int n_bytes = 0;
+    n_bytes += fread(&version, sizeof(int), 1, fp);
+    if (version != SCENE_VERSION) {
+        sprintf(
+            res_msg->msg,
             "ERROR: Scene version %d is not compatible with the engine, "
             "expecting the version %d\n",
-            SCENE.version,
+            version,
             SCENE_VERSION
         );
-        return 0;
+        return;
     }
 
-    fread(&SCENE.time, sizeof(float), 1, fp);
-    fread(&SCENE.n_entities, sizeof(int), 1, fp);
-    fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
+    n_bytes += fread(&SCENE.time, sizeof(float), 1, fp);
+    n_bytes += fread(&SCENE.n_entities, sizeof(int), 1, fp);
+    n_bytes += fread(
+        SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
+    );
 
     for (int i = 0; i < SCENE.n_entities; ++i) {
         uint32_t name_len;
-        fread(&name_len, sizeof(uint32_t), 1, fp);
+        n_bytes += fread(&name_len, sizeof(uint32_t), 1, fp);
 
-        char* buffer = (char*)malloc(name_len + 1);
-        fread(buffer, sizeof(char), name_len, fp);
+        int name_size = name_len + 1;
+        char* buffer = (char*)malloc(name_size);
+        n_bytes += name_size;
+        n_bytes += fread(buffer, sizeof(char), name_len, fp);
         buffer[name_len] = '\0';
 
         SCENE.names[i] = buffer;
     }
 
-    fread(
+    n_bytes += fread(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
-    fread(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
-    fread(
+    n_bytes += fread(
+        SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp
+    );
+    n_bytes += fread(
         SCENE.kinematic_movements,
         sizeof(KinematicMovement),
         SCENE.n_entities,
         fp
     );
-    fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
-    fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
-    fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fread(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
-    fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
-    fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    fread(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
-    fread(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
-    fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
-    fread(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
-    fread(&SCENE.camera, sizeof(int), 1, fp);
-    fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
+    n_bytes += fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    n_bytes += fread(
+        SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp
+    );
+    n_bytes += fread(
+        SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp
+    );
+    n_bytes += fread(
+        SCENE.materials, sizeof(Material), SCENE.n_entities, fp
+    );
+    n_bytes += fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    n_bytes += fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fread(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fread(
+        SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
+    );
+    n_bytes += fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    n_bytes += fread(
+        SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
+    );
+    n_bytes += fread(&SCENE.camera, sizeof(int), 1, fp);
+    n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     fclose(fp);
+    res_msg->flag = 1;
 
-    return 1;
+    sprintf(res_msg->msg, "INFO: Scene is loaded (%dB)", n_bytes);
+    return;
 }
 
 void destroy_entity(int entity) {

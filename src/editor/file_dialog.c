@@ -36,22 +36,3 @@ void load_project_via_nfd(const nfdchar_t* search_path) {
         NFD_FreePath(file_path);
     }
 }
-
-const char* load_scene_via_nfd(const char* search_path) {
-    nfdchar_t* file_path = open_nfd(search_path, SCENE_FILTER, 1);
-    if (file_path != NULL) {
-        load_scene(file_path);
-    }
-
-    return file_path;
-}
-
-const char* save_scene_via_nfd(const char* search_path) {
-    nfdchar_t* file_path = save_nfd(search_path, SCENE_FILTER, 1);
-
-    if (file_path != NULL) {
-        save_scene(file_path);
-    }
-
-    return file_path;
-}

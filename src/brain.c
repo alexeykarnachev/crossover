@@ -274,9 +274,6 @@ void destroy_brain(Brain* brain) {
 void load_brain(
     const char* file_path, Brain* brain, ResultMessage* res_msg
 ) {
-    destroy_brain(brain);
-    memset(res_msg, 0, sizeof(ResultMessage));
-
     if (file_path == NULL) {
         strcpy(
             res_msg->msg, "ERROR: Can't load the Brain from a NULL file"
@@ -284,6 +281,8 @@ void load_brain(
         return;
     }
 
+    destroy_brain(brain);
+    memset(res_msg, 0, sizeof(ResultMessage));
     FILE* fp = fopen(file_path, "rb");
     if (!fp) {
         strcpy(
@@ -293,26 +292,23 @@ void load_brain(
     }
 
     int version;
-    fread(&version, sizeof(int), 1, fp);
-
+    int n_bytes = 0;
+    n_bytes += fread(&version, sizeof(int), 1, fp);
     if (version != BRAIN_VERSION) {
-        char str[128];
         sprintf(
-            str,
+            res_msg->msg,
             "ERROR: Brain version %d is not compatible with the engine, "
             "expecting the version %d\n",
             version,
             BRAIN_VERSION
         );
-        strcpy(res_msg->msg, str);
         return;
     }
 
-    fread(&brain->params, sizeof(BrainParams), 1, fp);
+    n_bytes += fread(&brain->params, sizeof(BrainParams), 1, fp);
     int n_weights = get_brain_size(brain->params);
-    int n_bytes = n_weights * sizeof(float);
-    brain->weights = (float*)malloc(n_bytes);
-    fread(brain->weights, sizeof(float), n_weights, fp);
+    brain->weights = (float*)malloc(n_weights * sizeof(float));
+    n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = 1;

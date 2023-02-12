@@ -22,5 +22,5 @@ nfdchar_t* save_nfd(
     nfdfilteritem_t* filter_items,
     int n_filter_items
 );
-void write_str_to_file(const char* str, FILE* fp, int allow_null);
-void read_str_from_file(const char** str_p, FILE* fp, int allow_null);
+int write_str_to_file(const char* str, FILE* fp, int allow_null);
+int read_str_from_file(const char** str_p, FILE* fp, int allow_null);

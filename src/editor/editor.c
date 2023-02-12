@@ -15,6 +15,7 @@
 #include <string.h>
 
 const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
+ResultMessage RESULT_MESSAGE = {.flag = -1};
 
 #define ASSERT_PROJECT(fn_name) \
     do { \
@@ -85,7 +86,8 @@ int load_editor_project(const char* file_path) {
     read_str_from_file(&project->default_search_path, fp, 1);
     fclose(fp);
 
-    if (!load_scene(project->scene_file_path)) {
+    load_scene(project->scene_file_path, &RESULT_MESSAGE);
+    if (RESULT_MESSAGE.flag != 1) {
         reset_scene();
         project->scene_file_path = NULL;
     }
@@ -107,9 +109,7 @@ int save_editor_project(void) {
     }
 
     Project project = EDITOR.project;
-    if (project.scene_file_path != NULL) {
-        save_scene(project.scene_file_path);
-    }
+    save_scene(project.scene_file_path, &RESULT_MESSAGE);
 
     fwrite(&project.version, sizeof(int), 1, fp);
 
@@ -145,12 +145,13 @@ void open_editor_project(void) {
 void open_editor_scene(void) {
     ASSERT_PROJECT("open_editor_scene");
 
-    const char* file_path = load_scene_via_nfd(
-        EDITOR.project.default_search_path
+    char* scene_file_path = open_nfd(
+        EDITOR.project.default_search_path, SCENE_FILTER, 1
     );
-    if (file_path != NULL) {
+    load_scene(scene_file_path, &RESULT_MESSAGE);
+    if (RESULT_MESSAGE.flag == 1) {
         reset_editor();
-        EDITOR.project.scene_file_path = file_path;
+        EDITOR.project.scene_file_path = scene_file_path;
         save_editor_project();
     }
 }
@@ -159,11 +160,15 @@ void save_editor_scene(void) {
     ASSERT_PROJECT("save_editor_scene");
 
     if (EDITOR.project.scene_file_path != NULL) {
-        save_scene(EDITOR.project.scene_file_path);
+        save_scene(EDITOR.project.scene_file_path, &RESULT_MESSAGE);
     } else {
-        EDITOR.project.scene_file_path = save_scene_via_nfd(
-            EDITOR.project.default_search_path
+        char* scene_file_path = save_nfd(
+            EDITOR.project.default_search_path, SCENE_FILTER, 1
         );
+        save_scene(scene_file_path, &RESULT_MESSAGE);
+        if (RESULT_MESSAGE.flag == 1) {
+            EDITOR.project.scene_file_path = scene_file_path;
+        }
     }
     save_editor_project();
 }
@@ -171,11 +176,12 @@ void save_editor_scene(void) {
 void save_editor_scene_as(void) {
     ASSERT_PROJECT("save_editor_scene_as");
 
-    const char* file_path = save_scene_via_nfd(
-        EDITOR.project.default_search_path
+    char* scene_file_path = save_nfd(
+        EDITOR.project.default_search_path, SCENE_FILTER, 1
     );
-    if (file_path != NULL) {
-        EDITOR.project.scene_file_path = file_path;
+    save_scene(scene_file_path, &RESULT_MESSAGE);
+    if (RESULT_MESSAGE.flag == 1) {
+        EDITOR.project.scene_file_path = scene_file_path;
         save_editor_project();
     }
 }

@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 typedef struct Scene {
-    int version;
     float time;
     int n_entities;
     int n_brains;
@@ -49,8 +48,8 @@ void center_camera_on_entity(int entity);
 int reset_camera(void);
 void reset_scene(void);
 Vec2 get_cursor_scene_pos(void);
-int save_scene(const char* file_path);
-int load_scene(const char* file_path);
+void save_scene(const char* file_path, ResultMessage* res_msg);
+void load_scene(const char* file_path, ResultMessage* res_msg);
 void destroy_entity(int entity);
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
