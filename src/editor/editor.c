@@ -248,6 +248,15 @@ void render_editor(void) {
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
+    EDITOR.key.ctrl = igGetIO()->KeyCtrl;
+    EDITOR.key.del = igIsKeyPressed_Bool(ImGuiKey_Delete, 0);
+    EDITOR.key.n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
+    EDITOR.key.o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
+    EDITOR.key.s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
+    EDITOR.key.q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);
+    EDITOR.key.c = igIsKeyPressed_Bool(ImGuiKey_C, 0);
+    EDITOR.key.v = igIsKeyPressed_Bool(ImGuiKey_V, 0);
+
     render_main_menu_bar();
     render_debug_overlay();
 

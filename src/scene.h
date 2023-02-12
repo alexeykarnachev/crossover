@@ -1,5 +1,5 @@
 #pragma once
-#include "brain.h"
+#include "asset.h"
 #include "component.h"
 #include "const.h"
 #include "system.h"

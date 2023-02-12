@@ -1,7 +1,7 @@
 #include "scene.h"
 
 #include "app.h"
-#include "brain.h"
+#include "asset.h"
 #include "component.h"
 #include "const.h"
 #include "debug.h"

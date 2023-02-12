@@ -17,8 +17,25 @@ typedef struct PickedEntity {
 } PickedEntity;
 
 typedef struct Editor {
+    struct {
+        int ctrl;
+        int del;
+        int n;
+        int o;
+        int s;
+        int q;
+        int c;
+        int v;
+    } key;
+
     Project project;
     PickedEntity picked_entity;
+    Transformation cursor_transformation;
+
+    int can_copy;
+    int can_paste;
+    int can_delete;
+
     int is_playing;
     int entity_to_copy;
     int is_editing_brain;

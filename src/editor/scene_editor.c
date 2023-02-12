@@ -30,6 +30,20 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
 
 static int LAST_PICKED_ENTITY = -1;
 
+static void set_next_window_at_up_right(void) {
+    ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};
+    ImVec2 pivot = {1, 0};
+    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
+    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
+}
+
+static void set_next_window_at_up_left(void) {
+    ImVec2 position = {0.0, igGetFrameHeight()};
+    ImVec2 pivot = {0, 0};
+    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
+    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
+}
+
 static void render_edit_button(ComponentType component_type) {
     igPushID_Int(IG_UNIQUE_ID++);
     if (EDITOR.picked_entity.component_type == component_type) {
@@ -183,100 +197,70 @@ static void render_game_controls(void) {
 }
 
 static void render_context_menu(void) {
-    static Vec2 cursor_scene_pos;
-    static Transformation transformation;
+    Transformation cursor;
     int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
     int want_capture_mouse = igGetIO()->WantCaptureMouse;
 
     if (is_rmb_clicked && !want_capture_mouse) {
         pick_entity(get_entity_under_cursor());
-        cursor_scene_pos = get_cursor_scene_pos();
-        transformation = init_transformation(cursor_scene_pos, 0.0);
+        cursor = init_transformation(get_cursor_scene_pos(), 0.0);
         igOpenPopup_Str("context_menu", 0);
     }
-
-    int spawn_player_keyboard_guy = 0;
-    int spawn_dummy_ai_guy = 0;
-    int spawn_brain_ai_guy = 0;
-    int spawn_line_obstacle = 0;
-    int spawn_circle_obstacle = 0;
-    int spawn_rectangle_obstacle = 0;
-    int spawn_polygon_obstacle = 0;
 
     int copy = 0;
     int paste = 0;
     int delete = 0;
-    if (igBeginPopup("context_menu", 0)) {
-        if (igBeginMenu("Spawn", 1)) {
-            if (igBeginMenu("Guy", 1)) {
-                menu_item_ptr(
-                    "Player Keyboard",
-                    NULL,
-                    (bool*)&spawn_player_keyboard_guy,
-                    1
-                );
-                menu_item_ptr(
-                    "Dummy AI", NULL, (bool*)&spawn_dummy_ai_guy, 1
-                );
-                menu_item_ptr(
-                    "Brain AI", NULL, (bool*)&spawn_brain_ai_guy, 1
-                );
-                igEndMenu();
-            }
+    int popup = igBeginPopup("context_menu", 0);
+    if (!popup) {
+        return;
+    }
 
-            if (igBeginMenu("Obstacle", 1)) {
-                menu_item_ptr(
-                    "Line", NULL, (bool*)&spawn_line_obstacle, 1
-                );
-                menu_item_ptr(
-                    "Circle", NULL, (bool*)&spawn_circle_obstacle, 1
-                );
-                menu_item_ptr(
-                    "Rectangle", NULL, (bool*)&spawn_rectangle_obstacle, 1
-                );
-                menu_item_ptr(
-                    "Polygon", NULL, (bool*)&spawn_polygon_obstacle, 1
-                );
-                igEndMenu();
+    if (igBeginMenu("Spawn", 1)) {
+        if (igBeginMenu("Guy", 1)) {
+            if (menu_item("Player Keyboard", "", 0, 1)) {
+                pick_entity(spawn_default_player_keyboard_guy(cursor));
             }
-
+            if (menu_item("Dummy AI", "", 0, 1)) {
+                pick_entity(spawn_default_dummy_ai_guy(cursor));
+            }
+            if (menu_item("Brain AI", "", 0, 1)) {
+                pick_entity(spawn_default_brain_ai_guy(cursor));
+            }
             igEndMenu();
         }
 
-        igSeparator();
-        int can_copy = EDITOR.picked_entity.entity != -1;
-        int can_paste = EDITOR.entity_to_copy != -1;
-        int can_delete = can_copy;
-        menu_item_ptr("Copy", NULL, (bool*)&copy, can_copy);
-        menu_item_ptr("Paste", NULL, (bool*)&paste, can_paste);
-        menu_item_ptr("Delete", NULL, (bool*)&delete, can_delete);
-
-        igEndPopup();
+        if (igBeginMenu("Obstacle", 1)) {
+            if (menu_item("Line", "", 0, 1)) {
+                pick_entity(spawn_default_line_obstacle(cursor));
+            }
+            if (menu_item("Circle", "", 0, 1)) {
+                pick_entity(spawn_default_circle_obstacle(cursor));
+            }
+            if (menu_item("Rectangle", "", 0, 1)) {
+                pick_entity(spawn_default_rectangle_obstacle(cursor));
+            }
+            if (menu_item("Polygon", "", 0, 1)) {
+                pick_entity(spawn_default_polygon_obstacle(cursor));
+            }
+            igEndMenu();
+        }
+        igEndMenu();
     }
 
-    if (spawn_player_keyboard_guy) {
-        pick_entity(spawn_default_player_keyboard_guy(transformation));
-    } else if (spawn_dummy_ai_guy) {
-        pick_entity(spawn_default_dummy_ai_guy(transformation));
-    } else if (spawn_brain_ai_guy) {
-        pick_entity(spawn_default_brain_ai_guy(transformation));
-    } else if (spawn_line_obstacle) {
-        pick_entity(spawn_default_line_obstacle(transformation));
-    } else if (spawn_circle_obstacle) {
-        pick_entity(spawn_default_circle_obstacle(transformation));
-    } else if (spawn_rectangle_obstacle) {
-        pick_entity(spawn_default_rectangle_obstacle(transformation));
-    } else if (spawn_polygon_obstacle) {
-        pick_entity(spawn_default_polygon_obstacle(transformation));
-    } else if (copy) {
+    igSeparator();
+    if (menu_item(
+            "Copy", "Ctrl+C", 0, EDITOR.picked_entity.entity != -1
+        )) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
-    } else if (paste) {
-        pick_entity(
-            spawn_entity_copy(EDITOR.entity_to_copy, transformation)
-        );
-    } else if (delete) {
+    }
+    if (menu_item("Paste", "Ctrl+V", 0, EDITOR.entity_to_copy != -1)) {
+        pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
+    }
+    if (menu_item("Delete", "Del", 0, EDITOR.picked_entity.entity != -1)) {
         destroy_entity(EDITOR.picked_entity.entity);
     }
+
+    igEndPopup();
 }
 
 static void render_component_inspector(int entity, ComponentType type) {
@@ -447,152 +431,171 @@ static void render_component_inspector(int entity, ComponentType type) {
     igTreePop();
 }
 
-static void render_entity_inspector() {
-    int picked_entity = EDITOR.picked_entity.entity;
-    int camera_entity = SCENE.camera;
-
-    ImGuiIO* io = igGetIO();
-    ImVec2 position = {0.0, igGetFrameHeight()};
-    ImVec2 pivot = {0, 0};
-    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
-    if (igBegin("Entity", NULL, 0)) {
-        // Camera settings: current scene camera components editor
-        if (igCollapsingHeader_TreeNodeFlags("Camera", 0)
-            && camera_entity != -1) {
-            if (igButton("Reset", IG_VEC2_ZERO)) {
-                reset_camera();
-            }
-            Transformation* transformation
-                = &SCENE.transformations[camera_entity];
-            float* pos = (float*)&transformation->position;
-            float* orient = (float*)&transformation->orientation;
-            ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
-            ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
-            ig_drag_float(
-                "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
-            );
-        }
-
-        // Components selector: checkboxes for enabling/disabling
-        // components of the currently picked entity
-        if (igCollapsingHeader_TreeNodeFlags("Components", 0)
-            && picked_entity != -1) {
-            uint64_t* components = &SCENE.components[picked_entity];
-            LAST_PICKED_ENTITY = picked_entity;
-            render_component_checkboxes(components);
-        }
-
-        // Components inspector: components editor of the currently
-        // picked entity
-        if (igCollapsingHeader_TreeNodeFlags(
-                "Inspector", ImGuiTreeNodeFlags_DefaultOpen
-            )
-            && picked_entity != -1) {
-            int n_types = sizeof(INSPECTABLE_COMPONENT_TYPES)
-                          / sizeof(INSPECTABLE_COMPONENT_TYPES[0]);
-            for (int i = 0; i < n_types; ++i) {
-                ComponentType type = INSPECTABLE_COMPONENT_TYPES[i];
-                render_component_inspector(picked_entity, type);
-            }
-        }
+static void render_camera_inspector(void) {
+    int node = igCollapsingHeader_TreeNodeFlags("Camera", 0);
+    if (!node || SCENE.camera == -1) {
+        return;
     }
-    igEnd();
+
+    if (igButton("Reset", IG_VEC2_ZERO)) {
+        reset_camera();
+    }
+
+    Transformation* transformation = &SCENE.transformations[SCENE.camera];
+    float* pos = (float*)&transformation->position;
+    float* orient = (float*)&transformation->orientation;
+    ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+    ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
+    ig_drag_float(
+        "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
+    );
 }
 
-static void render_scene_inspector(void) {
-    ImVec2 position = {igGetIO()->DisplaySize.x, igGetFrameHeight()};
-    ImVec2 pivot = {1, 0};
-    igSetNextWindowPos(position, ImGuiCond_Always, pivot);
-    igSetNextWindowSize(IG_VEC2_ZERO, ImGuiCond_Always);
-
-    if (igBegin("Scene", NULL, 0)) {
-        // List of all current Scene Entities
-        if (igCollapsingHeader_TreeNodeFlags(
-                "Entities", ImGuiTreeNodeFlags_DefaultOpen
-            )) {
-            for (int i = 0; i < 2; ++i) {
-                const char* label = i == 0 ? "Alive" : "Trash";
-                if (igTreeNodeEx_Str(
-                        label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i)
-                    )) {
-                    for (int entity = 0; entity < SCENE.n_entities;
-                         ++entity) {
-                        int show = check_if_entity_alive(entity) ^ i;
-                        if (!show) {
-                            continue;
-                        }
-
-                        const char* name = SCENE.names[entity];
-                        char str[MAX_ENTITY_NAME_SIZE + 16];
-                        sprintf(str, "%s (%d)", name, entity);
-                        int is_picked = entity
-                                        == EDITOR.picked_entity.entity;
-                        int flags = ImGuiTreeNodeFlags_Leaf;
-                        flags |= (ImGuiTreeNodeFlags_Selected * is_picked);
-                        int node = igTreeNodeEx_StrStr(
-                            str, flags, "%s", str
-                        );
-
-                        if (node) {
-                            igTreePop();
-                        }
-
-                        if (igIsItemClicked(0)) {
-                            pick_entity(entity);
-                            center_camera_on_entity(entity);
-                        }
-                    }
-                    igTreePop();
-                }
-                igSeparator();
-            }
-        }
-
-        // Scene brains list
-        if (igCollapsingHeader_TreeNodeFlags("Brains", 0)) {
-            if (igButton("Load", IG_VEC2_ZERO)) {}
-        }
-
-        // Debug scene pane
-        if (igCollapsingHeader_TreeNodeFlags("Debug", 0)) {
-            if (igTreeNodeEx_Str("Shading", 0)) {
-                igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
-                igCheckbox(
-                    "Collision MTVs",
-                    (bool*)(&DEBUG.shading.collision_mtvs)
-                );
-                igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
-                igCheckbox(
-                    "Kinematic movements",
-                    (bool*)(&DEBUG.shading.kinematic_movements)
-                );
-                igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
-                igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
-                igTreePop();
-                igSeparator();
-            }
-
-            if (igTreeNodeEx_Str("Collisions", 0)) {
-                igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
-
-                ig_same_line();
-                if (igButton("once", IG_VEC2_ZERO)) {
-                    DEBUG.collisions.resolve_once = 1;
-                }
-                igTreePop();
-                igSeparator();
-            }
-        }
+static void render_components_selector(void) {
+    int picked_entity = EDITOR.picked_entity.entity;
+    int node = igCollapsingHeader_TreeNodeFlags("Components", 0);
+    if (!node || picked_entity == -1) {
+        return;
     }
-    igEnd();
+
+    uint64_t* components = &SCENE.components[picked_entity];
+    LAST_PICKED_ENTITY = picked_entity;
+    render_component_checkboxes(components);
+}
+
+static void render_components_inspector(void) {
+    int picked_entity = EDITOR.picked_entity.entity;
+    int node = igCollapsingHeader_TreeNodeFlags(
+        "Inspector", ImGuiTreeNodeFlags_DefaultOpen
+    );
+    if (!node || picked_entity == -1) {
+        return;
+    }
+
+    int n_types = sizeof(INSPECTABLE_COMPONENT_TYPES)
+                  / sizeof(INSPECTABLE_COMPONENT_TYPES[0]);
+    for (int i = 0; i < n_types; ++i) {
+        ComponentType type = INSPECTABLE_COMPONENT_TYPES[i];
+        render_component_inspector(picked_entity, type);
+    }
+}
+
+static void render_entities_browser(void) {
+    int node = igCollapsingHeader_TreeNodeFlags(
+        "Entities", ImGuiTreeNodeFlags_DefaultOpen
+    );
+    if (!node) {
+        return;
+    }
+
+    for (int i = 0; i < 2; ++i) {
+        const char* label = i == 0 ? "Alive" : "Trash";
+        int node = igTreeNodeEx_Str(
+            label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i)
+        );
+        if (!node) {
+            continue;
+        }
+        for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+            int show = check_if_entity_alive(entity) ^ i;
+            if (!show) {
+                continue;
+            }
+
+            const char* name = SCENE.names[entity];
+            char str[MAX_ENTITY_NAME_SIZE + 16];
+            sprintf(str, "%s (%d)", name, entity);
+            int is_picked = entity == EDITOR.picked_entity.entity;
+            int flags = ImGuiTreeNodeFlags_Leaf;
+            flags |= (ImGuiTreeNodeFlags_Selected * is_picked);
+            int node = igTreeNodeEx_StrStr(str, flags, "%s", str);
+
+            if (node) {
+                igTreePop();
+            }
+
+            if (igIsItemClicked(0)) {
+                pick_entity(entity);
+                center_camera_on_entity(entity);
+            }
+        }
+        igTreePop();
+        igSeparator();
+    }
+}
+
+static void render_assets_browser(void) {
+    if (igCollapsingHeader_TreeNodeFlags(
+            "Assets", ImGuiTreeNodeFlags_DefaultOpen
+        )) {}
+}
+
+static void render_debug_inspector(void) {
+    int node = igCollapsingHeader_TreeNodeFlags("Debug", 0);
+    if (!node) {
+        return;
+    }
+
+    if (igTreeNodeEx_Str("Shading", 0)) {
+        igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
+        igCheckbox(
+            "Collision MTVs", (bool*)(&DEBUG.shading.collision_mtvs)
+        );
+        igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
+        igCheckbox(
+            "Kinematic movements",
+            (bool*)(&DEBUG.shading.kinematic_movements)
+        );
+        igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
+        igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
+        igTreePop();
+        igSeparator();
+    }
+
+    if (igTreeNodeEx_Str("Collisions", 0)) {
+        igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
+
+        ig_same_line();
+        if (igButton("once", IG_VEC2_ZERO)) {
+            DEBUG.collisions.resolve_once = 1;
+        }
+        igTreePop();
+        igSeparator();
+    }
 }
 
 void render_scene_editor(void) {
     render_game_controls();
     if (!EDITOR.is_playing) {
-        render_entity_inspector();
-        render_scene_inspector();
+
+        set_next_window_at_up_left();
+        if (igBegin("Inspector", NULL, 0)) {
+            render_camera_inspector();
+            render_components_selector();
+            render_components_inspector();
+            render_debug_inspector();
+        }
+        igEnd();
+
+        set_next_window_at_up_right();
+        if (igBegin("Browser", NULL, 0)) {
+            render_entities_browser();
+            render_assets_browser();
+        }
+        igEnd();
+
         render_context_menu();
+
+        Transformation cursor;
+
+        if (EDITOR.key.ctrl && EDITOR.key.c
+            && EDITOR.picked_entity.entity != -1) {
+            EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
+        } else if (EDITOR.key.ctrl && EDITOR.key.v && EDITOR.entity_to_copy != -1) {
+            cursor = init_transformation(get_cursor_scene_pos(), 0.0);
+            pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
+        } else if (EDITOR.key.del && EDITOR.picked_entity.entity != -1) {
+            destroy_entity(EDITOR.picked_entity.entity);
+        }
     }
 }

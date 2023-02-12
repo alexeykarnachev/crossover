@@ -1,6 +1,6 @@
 #pragma once
-#include "const.h"
-#include "utils.h"
+#include "../const.h"
+#include "../utils.h"
 #include <stdint.h>
 
 typedef enum BrainInputType {

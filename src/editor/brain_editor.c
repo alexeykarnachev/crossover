@@ -1,5 +1,5 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "../brain.h"
+#include "../asset.h"
 #include "../editor.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"

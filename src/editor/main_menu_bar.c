@@ -52,23 +52,19 @@ void render_main_menu_bar(void) {
         igEndMainMenuBar();
     }
 
-    int key_ctrl = igGetIO()->KeyCtrl;
-    int key_o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
-    int key_n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
-    int key_s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
-    if (key_o && key_ctrl) {
+    if (EDITOR.key.o && EDITOR.key.ctrl) {
         if (proj_loaded) {
             open_editor_scene();
         } else {
             open_editor_project();
         }
-    } else if (key_n && key_ctrl) {
+    } else if (EDITOR.key.n && EDITOR.key.ctrl) {
         if (proj_loaded) {
             new_editor_scene();
         } else {
             new_editor_project();
         }
-    } else if (proj_loaded && key_s && key_ctrl) {
+    } else if (proj_loaded && EDITOR.key.s && EDITOR.key.ctrl) {
         save_editor_scene();
     }
 }

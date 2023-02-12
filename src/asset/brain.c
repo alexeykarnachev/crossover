@@ -1,7 +1,7 @@
 #include "brain.h"
 
-#include "component.h"
-#include "const.h"
+#include "../component.h"
+#include "../const.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
