@@ -17,5 +17,5 @@ extern Asset ASSETS[MAX_N_ASSETS];
 extern int N_ASSETS;
 
 void reset_assets(void);
-int load_asset(char* file_path, AssetType type);
-uint64_t get_asset_hash(Asset asset);
+int load_asset(char* file_path, ResultMessage* res_msg);
+Asset* get_asset(char* file_path);

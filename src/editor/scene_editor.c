@@ -266,34 +266,52 @@ static void render_context_menu(void) {
     igEndPopup();
 }
 
-static void render_brain_tooltip(Brain brain) {
-    BrainParams p = brain.params;
-    igSetTooltip(
-        "n_view_rays: %d\ninput_size: %d\noutput_size: %d\n",
-        p.n_view_rays,
-        get_brain_input_size(p),
-        get_brain_output_size(p)
-    );
+static void render_asset_tooltip(Asset* asset) {
+    AssetType type = asset->type;
+    switch (type) {
+        case BRAIN_ASSET: {
+            Brain brain = asset->a.brain;
+            BrainParams p = brain.params;
+            igSetTooltip(
+                "n_view_rays: %d\ninput_size: %d\noutput_size: %d\n",
+                p.n_view_rays,
+                get_brain_input_size(p),
+                get_brain_output_size(p)
+            );
+            break;
+        }
+        default: {
+            igSetTooltip(
+                "ERROR: Can't show tooltip for the Asset with type id: %d",
+                type
+            );
+        }
+    }
 }
 
-static void render_brain_assets_browser(void) {
+static char* get_short_file_path(Asset* asset) {
+    return &asset->file_path[strlen(EDITOR.project.default_search_path)];
+}
+
+static char* render_brain_assets_browser(void) {
+    char* selected_file_path = NULL;
     for (int i = 0; i < MAX_N_ASSETS; ++i) {
         if (ASSETS[i].type != BRAIN_ASSET) {
             continue;
         }
-        Asset asset = ASSETS[i];
+        Asset* asset = &ASSETS[i];
 
-        static char name[MAX_PATH_LENGTH + 16];
-        char* file_path
-            = &asset.file_path[strlen(EDITOR.project.default_search_path)];
-        sprintf(name, "Brain: %s", file_path);
-        if (igSelectable_Bool(name, 0, 0, IG_VEC2_ZERO)) {
-            printf("CLICK!\n");
+        static char text[MAX_PATH_LENGTH + 16];
+        sprintf(text, "Brain: %s", get_short_file_path(asset));
+        if (igSelectable_Bool(text, 0, 0, IG_VEC2_ZERO)) {
+            selected_file_path = asset->file_path;
         };
         if (igIsItemHovered(0)) {
-            render_brain_tooltip(asset.a.brain);
+            render_asset_tooltip(asset);
         }
     }
+
+    return selected_file_path;
 }
 
 static void render_component_inspector(int entity, ComponentType type) {
@@ -412,19 +430,42 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case BRAIN_AI_CONTROLLER: {
-                    BrainAIController ai = controller->c.brain_ai;
-                    uint64_t key = ai.brain_key;
-                    if (key == 0) {
+                    BrainAIController* ai = &controller->c.brain_ai;
+                    Asset* asset = get_asset(ai->brain_file_path);
+                    if (ai->brain_file_path[0] == '\0') {
                         igTextColored(
                             IG_YELLOW_COLOR, "WARNING: Brain is missed |"
                         );
                         ig_same_line();
                         if (igBeginMenu("Attach", 1)) {
-                            render_brain_assets_browser();
+                            char* fp = render_brain_assets_browser();
+                            if (fp != NULL) {
+                                strcpy(ai->brain_file_path, fp);
+                            }
                             igEndMenu();
                         }
-                    } else {
-                        int idx = key % MAX_N_ASSETS;
+                    } else if (asset == NULL) {
+                        igTextColored(
+                            IG_RED_COLOR,
+                            "ERROR: Brain with this name is missed "
+                            "from the assets pool.\nIt's a bug"
+                        );
+                    } else if (asset->type != BRAIN_ASSET) {
+                        igTextColored(
+                            IG_RED_COLOR,
+                            "ERROR: Asset with this hash is not a "
+                            "Brain asset.\nIt's a bug"
+                        );
+                    } else if (igIsItemHovered(0)) {
+                        render_asset_tooltip(asset);
+                    }
+
+                    if (asset != NULL) {
+                        igTextColored(
+                            IG_GREEN_COLOR,
+                            "Brain: %s",
+                            get_short_file_path(asset)
+                        );
                     }
                     break;
                 }
@@ -580,8 +621,7 @@ static void render_assets_browser(void) {
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
-            // TODO: Provide the ResultMessage for the load_asset
-            int n_bytes = load_asset(file_path, BRAIN_ASSET);
+            int n_bytes = load_asset(file_path, &RESULT_MESSAGE);
         }
 
         igSeparator();

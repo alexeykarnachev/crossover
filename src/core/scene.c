@@ -211,7 +211,12 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         AssetType type;
         n_bytes += fread(&type, sizeof(int), 1, fp);
         n_bytes += read_str_from_file(&file_path, fp, 0);
-        n_bytes += load_asset(file_path, type);
+
+        // TODO: There could be different errors during the assets loading.
+        // One common res_msg is not enough. I need to introduct some kind
+        // of the queue with the log messages which could be rendered on
+        // each editor update iteration
+        n_bytes += load_asset(file_path, res_msg);
     }
     int assets_n_bytes = n_bytes;
 
