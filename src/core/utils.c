@@ -19,7 +19,9 @@ FILE* open_file(
 
     FILE* fp = fopen(file_path, mode);
     if (!fp) {
-        strcpy(res_msg->msg, "ERROR: Can't open the file\n");
+        static char msg[MAX_RESULT_MESSAGE_LENGTH + 64];
+        sprintf(msg, "ERROR: Can't open the file: %s\n", file_path);
+        strncpy(res_msg->msg, msg, MAX_RESULT_MESSAGE_LENGTH);
         return NULL;
     }
 
