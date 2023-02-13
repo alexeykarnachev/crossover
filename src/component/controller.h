@@ -2,6 +2,7 @@
 #include "../asset.h"
 #include "../const.h"
 #include "../math.h"
+#include <stdint.h>
 
 #define N_CONTROLLER_TYPES 3
 typedef enum ControllerType {
@@ -21,6 +22,7 @@ typedef struct DummyAIController {
 } DummyAIController;
 
 typedef struct BrainAIController {
+    uint64_t brain_key;
 } BrainAIController;
 
 typedef struct Controller {
@@ -35,6 +37,6 @@ typedef struct Controller {
 void change_controller_type(
     Controller* controller, ControllerType target_type
 );
-Controller init_player_keyboard_controller();
-Controller init_dummy_ai_controller();
-Controller init_brain_ai_controller();
+Controller init_player_keyboard_controller(void);
+Controller init_dummy_ai_controller(void);
+Controller init_brain_ai_controller(void);

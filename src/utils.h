@@ -1,6 +1,7 @@
 #pragma once
 #include "const.h"
 #include "nfd.h"
+#include <stdint.h>
 #include <stdio.h>
 
 typedef enum ResultFlag {
@@ -32,4 +33,5 @@ nfdchar_t* save_nfd(
     int n_filter_items
 );
 int write_str_to_file(const char* str, FILE* fp, int allow_null);
-int read_str_from_file(const char** str_p, FILE* fp, int allow_null);
+int read_str_from_file(char** str_p, FILE* fp, int allow_null);
+uint64_t get_bytes_hash(const char* bytes, int n_bytes);

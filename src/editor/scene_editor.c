@@ -198,13 +198,15 @@ static void render_game_controls(void) {
 }
 
 static void render_context_menu(void) {
-    Transformation cursor;
+    static Vec2 cursor_scene_pos;
+    static Transformation cursor;
     int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
     int want_capture_mouse = igGetIO()->WantCaptureMouse;
 
     if (is_rmb_clicked && !want_capture_mouse) {
         pick_entity(get_entity_under_cursor());
-        cursor = init_transformation(get_cursor_scene_pos(), 0.0);
+        cursor_scene_pos = get_cursor_scene_pos();
+        cursor = init_transformation(cursor_scene_pos, 0.0);
         igOpenPopup_Str("context_menu", 0);
     }
 
@@ -262,6 +264,36 @@ static void render_context_menu(void) {
     }
 
     igEndPopup();
+}
+
+static void render_brain_tooltip(Brain brain) {
+    BrainParams p = brain.params;
+    igSetTooltip(
+        "n_view_rays: %d\ninput_size: %d\noutput_size: %d\n",
+        p.n_view_rays,
+        get_brain_input_size(p),
+        get_brain_output_size(p)
+    );
+}
+
+static void render_brain_assets_browser(void) {
+    for (int i = 0; i < MAX_N_ASSETS; ++i) {
+        if (ASSETS[i].type != BRAIN_ASSET) {
+            continue;
+        }
+        Asset asset = ASSETS[i];
+
+        static char name[MAX_PATH_LENGTH + 16];
+        char* file_path
+            = &asset.file_path[strlen(EDITOR.project.default_search_path)];
+        sprintf(name, "Brain: %s", file_path);
+        if (igSelectable_Bool(name, 0, 0, IG_VEC2_ZERO)) {
+            printf("CLICK!\n");
+        };
+        if (igIsItemHovered(0)) {
+            render_brain_tooltip(asset.a.brain);
+        }
+    }
 }
 
 static void render_component_inspector(int entity, ComponentType type) {
@@ -380,10 +412,20 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case BRAIN_AI_CONTROLLER: {
-                    BrainAIController* ai = &controller->c.brain_ai;
-                    igTextColored(
-                        IG_YELLOW_COLOR, "TODO: Connect with brain"
-                    );
+                    BrainAIController ai = controller->c.brain_ai;
+                    uint64_t key = ai.brain_key;
+                    if (key == 0) {
+                        igTextColored(
+                            IG_YELLOW_COLOR, "WARNING: Brain is missed |"
+                        );
+                        ig_same_line();
+                        if (igBeginMenu("Attach", 1)) {
+                            render_brain_assets_browser();
+                            igEndMenu();
+                        }
+                    } else {
+                        int idx = key % MAX_N_ASSETS;
+                    }
                     break;
                 }
                 default: {
@@ -538,30 +580,12 @@ static void render_assets_browser(void) {
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
-            Brain brain = init_empty_brain();
-            load_brain(file_path, &brain, &RESULT_MESSAGE);
-            if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
-                Asset asset;
-                strcpy(asset.file_path, file_path);
-                asset.type = BRAIN_ASSET;
-                asset.a.brain = brain;
-                add_asset(asset);
-            }
+            // TODO: Provide the ResultMessage for the load_asset
+            int n_bytes = load_asset(file_path, BRAIN_ASSET);
         }
 
         igSeparator();
-        for (int i = 0; i < N_ASSETS; ++i) {
-            Asset asset = ASSETS[i];
-            if (asset.type == BRAIN_ASSET) {
-                igText("Brain: %d", i);
-                char* file_path = &asset.file_path[strlen(
-                    EDITOR.project.default_search_path
-                )];
-                igText("File: .%s", file_path);
-                igSeparator();
-            }
-        }
-
+        render_brain_assets_browser();
         igTreePop();
     }
 }

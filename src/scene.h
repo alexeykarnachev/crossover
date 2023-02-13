@@ -9,10 +9,6 @@ typedef struct Scene {
     float time;
     int n_entities;
 
-    // Brains
-    // int n_brains;
-    // Brain brains[MAX_N_BRAINS];
-
     // Components
     uint64_t components[MAX_N_ENTITIES];
     const char* names[MAX_N_ENTITIES];

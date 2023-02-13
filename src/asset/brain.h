@@ -81,8 +81,6 @@ typedef struct BrainParams {
     int n_inputs;
     int n_outputs;
     int n_layers;
-    int input_size;
-    int output_size;
 } BrainParams;
 
 typedef struct Brain {
@@ -108,5 +106,5 @@ BrainOutput init_look_at_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
 
-void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
+int load_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);

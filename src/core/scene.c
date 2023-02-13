@@ -41,7 +41,11 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 
     int version = SCENE_VERSION;
     int n_bytes = 0;
+
+    // Write version
     n_bytes += fwrite(&version, sizeof(int), 1, fp);
+
+    // Write Scene itself
     n_bytes += fwrite(&SCENE.time, sizeof(float), 1, fp);
     n_bytes += fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
     n_bytes += fwrite(
@@ -87,6 +91,30 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fwrite(&SCENE.camera, sizeof(int), 1, fp);
     n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
+    // Write Assets
+    n_bytes += fwrite(&N_ASSETS, sizeof(int), 1, fp);
+    int n_assets = 0;
+    for (int i = 0; i < MAX_N_ASSETS; ++i) {
+        Asset* asset = &ASSETS[i];
+        if (asset->type == NULL_ASSET) {
+            continue;
+        }
+
+        n_assets += 1;
+        n_bytes += fwrite(&asset->type, sizeof(int), 1, fp);
+        n_bytes += write_str_to_file(asset->file_path, fp, 0);
+    }
+
+    if (n_assets != N_ASSETS) {
+        fprintf(
+            stderr,
+            "ERROR: Number of saved assets is not equal to the number of "
+            "assets registered in the engine runtime. It's a bug\n"
+        );
+        exit(1);
+    }
+
+    // Close the file
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
@@ -101,7 +129,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     }
 
     reset_scene();
+    reset_assets();
 
+    // Read version
     int version;
     int n_bytes = 0;
     n_bytes += fread(&version, sizeof(int), 1, fp);
@@ -116,6 +146,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         return;
     }
 
+    // Read Scene itself
     n_bytes += fread(&SCENE.time, sizeof(float), 1, fp);
     n_bytes += fread(&SCENE.n_entities, sizeof(int), 1, fp);
     n_bytes += fread(
@@ -123,6 +154,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     );
 
     for (int i = 0; i < SCENE.n_entities; ++i) {
+        // TODO: Rewrite with read_str_from_file()
         uint32_t name_len;
         n_bytes += fread(&name_len, sizeof(uint32_t), 1, fp);
 
@@ -169,11 +201,30 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     );
     n_bytes += fread(&SCENE.camera, sizeof(int), 1, fp);
     n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
+    int scene_n_bytes = n_bytes;
 
+    // Read Assets
+    int n_assets;
+    n_bytes = fread(&n_assets, sizeof(int), 1, fp);
+    for (int i = 0; i < n_assets; ++i) {
+        char* file_path;
+        AssetType type;
+        n_bytes += fread(&type, sizeof(int), 1, fp);
+        n_bytes += read_str_from_file(&file_path, fp, 0);
+        n_bytes += load_asset(file_path, type);
+    }
+    int assets_n_bytes = n_bytes;
+
+    // Close the file
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Scene is loaded (%dB)", n_bytes);
+    sprintf(
+        res_msg->msg,
+        "INFO: Scene is loaded (%dB) with assets (%dB)",
+        scene_n_bytes,
+        assets_n_bytes
+    );
     return;
 }
 

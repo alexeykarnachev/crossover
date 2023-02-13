@@ -271,10 +271,10 @@ void destroy_brain(Brain* brain) {
     memset(brain, 0, sizeof(Brain));
 }
 
-void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
+int load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
-        return;
+        return 0;
     }
 
     destroy_brain(brain);
@@ -290,7 +290,7 @@ void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
             version,
             BRAIN_VERSION
         );
-        return;
+        return 0;
     }
 
     n_bytes += fread(&brain->params, sizeof(BrainParams), 1, fp);
@@ -302,7 +302,7 @@ void load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
-    return;
+    return n_bytes;
 }
 
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {

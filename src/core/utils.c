@@ -13,13 +13,13 @@ FILE* open_file(
     memset(res_msg, 0, sizeof(ResultMessage));
 
     if (file_path == NULL) {
-        strcpy(res_msg->msg, "ERROR: Can't open the NULL file");
+        strcpy(res_msg->msg, "ERROR: Can't open the NULL file\n");
         return NULL;
     }
 
     FILE* fp = fopen(file_path, mode);
     if (!fp) {
-        strcpy(res_msg->msg, "ERROR: Can't open the file");
+        strcpy(res_msg->msg, "ERROR: Can't open the file\n");
         return NULL;
     }
 
@@ -190,7 +190,7 @@ int write_str_to_file(const char* str, FILE* fp, int allow_null) {
     return n_bytes;
 }
 
-int read_str_from_file(const char** str_p, FILE* fp, int allow_null) {
+int read_str_from_file(char** str_p, FILE* fp, int allow_null) {
     uint32_t str_len;
     int n_bytes = 0;
     n_bytes += fread(&str_len, sizeof(uint32_t), 1, fp);
@@ -211,4 +211,16 @@ int read_str_from_file(const char** str_p, FILE* fp, int allow_null) {
     }
 
     return n_bytes;
+}
+
+uint64_t get_bytes_hash(const char* bytes, int n_bytes) {
+    uint64_t p1 = 7;
+    uint64_t p2 = 31;
+
+    uint64_t hash = p1;
+    for (const char* p = bytes; n_bytes != 0; n_bytes--) {
+        hash = hash * p2 + *p;
+    }
+
+    return hash;
 }

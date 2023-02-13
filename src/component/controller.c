@@ -43,7 +43,7 @@ void change_controller_type(
     }
 }
 
-Controller init_player_keyboard_controller() {
+Controller init_player_keyboard_controller(void) {
     Controller controller = {0};
 
     controller.type = PLAYER_KEYBOARD_CONTROLLER;
@@ -52,7 +52,7 @@ Controller init_player_keyboard_controller() {
     return controller;
 }
 
-Controller init_dummy_ai_controller() {
+Controller init_dummy_ai_controller(void) {
     Controller controller = {0};
 
     controller.type = DUMMY_AI_CONTROLLER;
@@ -62,11 +62,8 @@ Controller init_dummy_ai_controller() {
     return controller;
 }
 
-Controller init_brain_ai_controller() {
+Controller init_brain_ai_controller(void) {
     Controller controller = {0};
-
     controller.type = BRAIN_AI_CONTROLLER;
-    BrainAIController brain_ai_controller;
-    controller.c.brain_ai = brain_ai_controller;
     return controller;
 }

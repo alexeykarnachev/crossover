@@ -34,7 +34,7 @@ void init_editor(void) {
     reset_editor();
     FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "rb");
     if (fp) {
-        const char* file_path;
+        char* file_path;
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
     }
