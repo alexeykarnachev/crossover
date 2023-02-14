@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 // --------------------------------------------------------
 // Brain inputs
@@ -255,27 +256,20 @@ Brain init_empty_brain(void) {
 }
 
 Brain init_brain(BrainParams params) {
-    int input_size = get_brain_input_size(params);
     int n_weights = get_brain_size(params);
-    int output_size = get_brain_output_size(params);
-
-    int input_n_bytes = sizeof(float) * input_size;
     int weights_n_bytes = sizeof(float) * n_weights;
-    int output_n_bytes = sizeof(float) * output_size;
-
-    float* input = (float*)malloc(input_n_bytes);
     float* weights = (float*)malloc(weights_n_bytes);
-    float* output = (float*)malloc(output_n_bytes);
 
-    memset(input, 0, input_n_bytes);
-    memset(weights, 0, weights_n_bytes);
-    memset(output, 0, output_n_bytes);
+    // for (int i = 0; i < n_weights; ++i) {
+    //     weights[i] = i;
+    // }
 
-    Brain brain = {
-        .params = params,
-        .input = input,
-        .weights = weights,
-        .output = output};
+    srand(time(NULL));
+    for (int i = 0; i < n_weights; ++i) {
+        weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+    }
+
+    Brain brain = {.params = params, .weights = weights};
     return brain;
 }
 
@@ -310,23 +304,10 @@ int load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     }
 
     n_bytes += fread(&brain->params, sizeof(BrainParams), 1, fp);
-    int input_size = get_brain_input_size(brain->params);
     int n_weights = get_brain_size(brain->params);
-    int output_size = get_brain_output_size(brain->params);
 
-    int input_n_bytes = input_size * sizeof(float);
-    int output_n_bytes = output_size * sizeof(float);
-
-    brain->input = (float*)malloc(input_n_bytes);
     brain->weights = (float*)malloc(n_weights * sizeof(float));
-    brain->output = (float*)malloc(output_n_bytes);
-
-    memset(brain->input, 0, input_size * sizeof(float));
-    memset(brain->output, 0, output_size * sizeof(float));
-
-    n_bytes += input_n_bytes;
     n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
-    n_bytes += output_n_bytes;
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;

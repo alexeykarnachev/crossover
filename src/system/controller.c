@@ -8,6 +8,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+static float BRAIN_INPUT[MAX_BRAIN_LAYER_SIZE];
+static float BRAIN_OUTPUT[MAX_BRAIN_LAYER_SIZE];
+
 static void try_shoot(int entity) {
     if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
         return;
@@ -143,7 +146,7 @@ static ControllerAction get_brain_ai_action(int entity) {
     Brain brain = asset->a.brain;
     BrainParams params = brain.params;
     int n_view_rays = params.n_view_rays;
-    float* input_p = brain.input;
+    float* inp = BRAIN_INPUT;
     BrainFitsEntityError error = check_if_brain_fits_entity(
         params, entity
     );
@@ -151,6 +154,7 @@ static ControllerAction get_brain_ai_action(int entity) {
         return action;
     }
 
+    // Construct Brain input array
     Vision* vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
     float health = SCENE.healths[entity];
@@ -164,13 +168,12 @@ static ControllerAction get_brain_ai_action(int entity) {
                 for (int i_ray = 0; i_ray < n_view_rays; ++i_ray) {
                     int target = vision->observations[i_ray].entity;
                     if (target != -1) {
-                        *input_p = check_if_entity_has_component(
+                        *inp++ = check_if_entity_has_component(
                             target, components
                         );
                     } else {
-                        *input_p = 0;
+                        *inp++ = 0;
                     }
-                    input_p++;
                 }
                 break;
             }
@@ -180,20 +183,54 @@ static ControllerAction get_brain_ai_action(int entity) {
                         = &vision->observations[i_ray];
                     if (observation->entity != -1) {
                         Vec2 target_position = observation->position;
-                        *input_p = dist(target_position, position);
+                        *inp++ = dist(target_position, position);
                     } else {
-                        *input_p = 0;
+                        *inp++ = 0;
                     }
-                    input_p++;
                 }
                 break;
             }
             case SELF_HEALTH_INPUT: {
-                *input_p = health;
-                input_p++;
+                *inp++ = health;
                 break;
             }
         }
+    }
+
+    // Perform forward pass
+    inp = BRAIN_INPUT;
+    float* out = BRAIN_OUTPUT;
+    float* weights = brain.weights;
+    int inp_size = get_brain_input_size(params);
+
+    // printf("--------------------------------\n");
+    // printf("FORWARD PASS...\n");
+
+    for (int i_layer = 0; i_layer < params.n_layers + 1; ++i_layer) {
+        int layer_size;
+        if (i_layer == params.n_layers) {
+            layer_size = get_brain_output_size(params);
+        } else {
+            layer_size = params.layer_sizes[i_layer];
+        }
+
+        // printf("Layer %d of size %d\n", i_layer, layer_size);
+        for (int i = 0; i < layer_size; ++i) {
+            float z = 0.0;
+            for (int ix = 0; ix < inp_size + 1; ++ix) {
+                float x = ix == inp_size ? 1.0 : inp[ix];
+                float w = *weights++;
+                z += x * w;
+                printf("x:%f * w:%f + ", x, w);
+            }
+
+            float y = i_layer == params.n_layers ? z : max(0.0, z);
+            *out++ = y;
+            // printf(" = %f\n", y);
+        }
+        inp_size = layer_size;
+        inp = BRAIN_OUTPUT;
+        out = BRAIN_INPUT;
     }
 
     return action;
