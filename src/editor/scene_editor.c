@@ -6,6 +6,7 @@
 #include "../editor.h"
 #include "../math.h"
 #include "../scene.h"
+#include "../system.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
@@ -273,9 +274,11 @@ static void render_asset_tooltip(Asset* asset) {
             Brain brain = asset->a.brain;
             BrainParams p = brain.params;
             igSetTooltip(
-                "n_view_rays: %d\ninput_size: %d\noutput_size: %d\n",
+                "n_view_rays: %d\ninput_size: %d\nn_weights: "
+                "%d\noutput_size: %d\n",
                 p.n_view_rays,
                 get_brain_input_size(p),
+                get_brain_size(p),
                 get_brain_output_size(p)
             );
             break;
@@ -312,6 +315,92 @@ static char* render_brain_assets_browser(void) {
     }
 
     return selected_file_path;
+}
+
+static void render_brain_ai_controller_inspector(int entity) {
+    Controller* controller = &SCENE.controllers[entity];
+    BrainAIController* ai = &controller->c.brain_ai;
+    Asset* asset = get_asset(ai->brain_file_path);
+    if (ai->brain_file_path[0] == '\0') {
+        igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
+        ig_same_line();
+        if (igBeginMenu("Attach", 1)) {
+            char* fp = render_brain_assets_browser();
+            if (fp != NULL) {
+                strcpy(ai->brain_file_path, fp);
+            }
+            igEndMenu();
+        }
+    } else if (asset == NULL) {
+        igTextColored(
+            IG_RED_COLOR,
+            "ERROR: Brain with this name is missed from the assets "
+            "pool.\nIt's a bug"
+        );
+    } else if (asset->type != BRAIN_ASSET) {
+        igTextColored(
+            IG_RED_COLOR,
+            "ERROR: Asset with this hash is not a Brain asset.\nIt's a bug"
+        );
+    } else if (igIsItemHovered(0)) {
+        render_asset_tooltip(asset);
+    }
+
+    if (asset != NULL) {
+        BrainParams params = asset->a.brain.params;
+        BrainFitsEntityError error = check_if_brain_fits_entity(
+            params, entity
+        );
+        for (int i = 0; i < error.n_reasons; ++i) {
+            BrainFitsEntityErrorReason reason = error.reasons[i];
+            switch (reason) {
+                case VISION_COMPONENT_MISSED_ERROR: {
+                    igTextColored(
+                        IG_RED_COLOR,
+                        "ERROR: This Brain requires Vision component\n"
+                    );
+                    ig_same_line();
+                    if (igButton("Fix", IG_VEC2_ZERO)) {
+                        SCENE.components[entity] |= VISION_COMPONENT;
+                    }
+                    break;
+                }
+                case HEALTH_COMPONENT_MISSED_ERROR: {
+                    igTextColored(
+                        IG_RED_COLOR,
+                        "ERROR: This Brain requires Health component\n"
+                    );
+                    ig_same_line();
+                    if (igButton("Fix", IG_VEC2_ZERO)) {
+                        SCENE.components[entity] |= HEALTH_COMPONENT;
+                    }
+                }
+                case N_VIEW_RAYS_MISSMATCH_ERROR: {
+                    igTextColored(
+                        IG_RED_COLOR,
+                        "ERROR: This Brain requires %d "
+                        "view rays,\nbut the Vision component has "
+                        "%d\n",
+                        params.n_view_rays,
+                        SCENE.visions[entity].n_view_rays
+                    );
+                    ig_same_line();
+                    if (igButton("Fix", IG_VEC2_ZERO)) {
+                        SCENE.visions[entity].n_view_rays
+                            = params.n_view_rays;
+                    }
+                }
+            }
+        }
+
+        if (error.n_reasons > 0) {
+            igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
+        } else {
+            igTextColored(
+                IG_GREEN_COLOR, "Brain: %s", get_short_file_path(asset)
+            );
+        }
+    }
 }
 
 static void render_component_inspector(int entity, ComponentType type) {
@@ -430,43 +519,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case BRAIN_AI_CONTROLLER: {
-                    BrainAIController* ai = &controller->c.brain_ai;
-                    Asset* asset = get_asset(ai->brain_file_path);
-                    if (ai->brain_file_path[0] == '\0') {
-                        igTextColored(
-                            IG_YELLOW_COLOR, "WARNING: Brain is missed |"
-                        );
-                        ig_same_line();
-                        if (igBeginMenu("Attach", 1)) {
-                            char* fp = render_brain_assets_browser();
-                            if (fp != NULL) {
-                                strcpy(ai->brain_file_path, fp);
-                            }
-                            igEndMenu();
-                        }
-                    } else if (asset == NULL) {
-                        igTextColored(
-                            IG_RED_COLOR,
-                            "ERROR: Brain with this name is missed "
-                            "from the assets pool.\nIt's a bug"
-                        );
-                    } else if (asset->type != BRAIN_ASSET) {
-                        igTextColored(
-                            IG_RED_COLOR,
-                            "ERROR: Asset with this hash is not a "
-                            "Brain asset.\nIt's a bug"
-                        );
-                    } else if (igIsItemHovered(0)) {
-                        render_asset_tooltip(asset);
-                    }
-
-                    if (asset != NULL) {
-                        igTextColored(
-                            IG_GREEN_COLOR,
-                            "Brain: %s",
-                            get_short_file_path(asset)
-                        );
-                    }
+                    render_brain_ai_controller_inspector(entity);
                     break;
                 }
                 default: {

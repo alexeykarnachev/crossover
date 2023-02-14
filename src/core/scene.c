@@ -114,6 +114,9 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
         exit(1);
     }
 
+    // Write debug info
+    n_bytes += fwrite(&DEBUG, sizeof(DEBUG), 1, fp);
+
     // Close the file
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
@@ -219,6 +222,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         n_bytes += load_asset(file_path, res_msg);
     }
     int assets_n_bytes = n_bytes;
+
+    // Read debug info
+    n_bytes += fread(&DEBUG, sizeof(DEBUG), 1, fp);
 
     // Close the file
     fclose(fp);

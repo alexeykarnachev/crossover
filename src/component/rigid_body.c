@@ -41,13 +41,13 @@ void change_rigid_body_type(
 }
 
 RigidBody init_static_rigid_body(void) {
-    RigidBody body;
+    RigidBody body = {0};
     body.type = STATIC_BODY;
     return body;
 }
 
 RigidBody init_kinematic_rigid_body(void) {
-    RigidBody body;
+    RigidBody body = {0};
     body.type = KINEMATIC_BODY;
     return body;
 }

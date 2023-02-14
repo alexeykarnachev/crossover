@@ -85,7 +85,9 @@ typedef struct BrainParams {
 
 typedef struct Brain {
     BrainParams params;
+    float* input;
     float* weights;
+    float* output;
 } Brain;
 
 Brain init_empty_brain(void);

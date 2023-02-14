@@ -14,6 +14,21 @@ typedef struct CollisionsArena {
     int n;
 } CollisionsArena;
 
+typedef enum BrainFitsEntityErrorReason {
+    VISION_COMPONENT_MISSED_ERROR,
+    HEALTH_COMPONENT_MISSED_ERROR,
+    N_VIEW_RAYS_MISSMATCH_ERROR
+} BrainFitsEntityErrorReason;
+
+typedef struct BrainFitsEntityError {
+    BrainFitsEntityErrorReason reasons[4];
+    int n_reasons;
+} BrainFitsEntityError;
+
+BrainFitsEntityError check_if_brain_fits_entity(
+    BrainParams params, int entity
+);
+
 void update_camera(void);
 void update_collisions(void);
 void update_bullets(float dt);

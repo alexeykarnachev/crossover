@@ -39,7 +39,9 @@ static int collide_circles(
     axis = normalize(axis);
     float radii_sum = r0 + r1;
     if (dist < radii_sum) {
-        *mtv = scale(normalize(sub(p1, p0)), dist - radii_sum);
+        Vec2 dp = sub(p1, p0);
+        Vec2 dir = length(dp) > EPS ? normalize(dp) : vec2(1.0, 0.0);
+        *mtv = scale(dir, dist - radii_sum);
         return 1;
     }
     return 0;

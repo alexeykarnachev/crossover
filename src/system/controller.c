@@ -134,20 +134,117 @@ static ControllerAction get_dummy_ai_action(int entity) {
 }
 
 static ControllerAction get_brain_ai_action(int entity) {
-    int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
-    if (!check_if_entity_has_component(entity, required_component)) {
-        fprintf(
-            stderr,
-            "ERROR: Can't get the brain ai controller action. The entity "
-            "doesn't have Transformation | Vision | Brain component\n"
-        );
-        exit(1);
-    }
-
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
+    Asset* asset = get_asset(ai.brain_file_path);
+    if (asset == NULL) {
+        return action;
+    }
+    Brain brain = asset->a.brain;
+    BrainParams params = brain.params;
+    int n_view_rays = params.n_view_rays;
+    float* input_p = brain.input;
+    BrainFitsEntityError error = check_if_brain_fits_entity(
+        params, entity
+    );
+    if (error.n_reasons != 0) {
+        return action;
+    }
+
+    Vision* vision = &SCENE.visions[entity];
+    Vec2 position = SCENE.transformations[entity].position;
+    float health = SCENE.healths[entity];
+    for (int i = 0; i < params.n_inputs; ++i) {
+        BrainInput brain_input = params.inputs[i];
+        BrainInputType type = brain_input.type;
+        switch (type) {
+            case TARGET_ENTITY_INPUT: {
+                TargetEntityBrainInput input = brain_input.i.target_entity;
+                uint64_t components = input.components;
+                for (int i_ray = 0; i_ray < n_view_rays; ++i_ray) {
+                    int target = vision->observations[i_ray].entity;
+                    if (target != -1) {
+                        *input_p = check_if_entity_has_component(
+                            target, components
+                        );
+                    } else {
+                        *input_p = 0;
+                    }
+                    input_p++;
+                }
+                break;
+            }
+            case TARGET_DISTANCE_INPUT: {
+                for (int i_ray = 0; i_ray < n_view_rays; ++i_ray) {
+                    RayCastResult* observation
+                        = &vision->observations[i_ray];
+                    if (observation->entity != -1) {
+                        Vec2 target_position = observation->position;
+                        *input_p = dist(target_position, position);
+                    } else {
+                        *input_p = 0;
+                    }
+                    input_p++;
+                }
+                break;
+            }
+            case SELF_HEALTH_INPUT: {
+                *input_p = health;
+                input_p++;
+                break;
+            }
+        }
+    }
 
     return action;
+}
+
+BrainFitsEntityError check_if_brain_fits_entity(
+    BrainParams params, int entity
+) {
+    int has_vision = check_if_entity_has_component(
+        entity, VISION_COMPONENT
+    );
+    int has_health = check_if_entity_has_component(
+        entity, HEALTH_COMPONENT
+    );
+    Vision* vision = &SCENE.visions[entity];
+    int n_view_rays = vision->n_view_rays;
+    int vision_error = 0;
+    int n_view_rays_error = 0;
+    int health_error = 0;
+    for (int i = 0; i < params.n_inputs; ++i) {
+        BrainInput input = params.inputs[i];
+        BrainInputType type = input.type;
+        if (type == TARGET_ENTITY_INPUT || type == TARGET_DISTANCE_INPUT) {
+            vision_error |= !has_vision;
+            n_view_rays_error |= params.n_view_rays != n_view_rays;
+        } else if (type == SELF_HEALTH_INPUT) {
+            health_error |= !has_health;
+        } else {
+            fprintf(
+                stderr,
+                "ERROR: BrainInput with type id: %d is not "
+                "implemented in the "
+                "`render_brain_ai_controller_inspector` function\n",
+                type
+            );
+            exit(1);
+        }
+    }
+
+    BrainFitsEntityError error = {0};
+    if (vision_error) {
+        error.reasons[error.n_reasons++] = VISION_COMPONENT_MISSED_ERROR;
+    }
+    if (n_view_rays_error) {
+        error.reasons[error.n_reasons++] = N_VIEW_RAYS_MISSMATCH_ERROR;
+    }
+    if (health_error) {
+        error.reasons[error.n_reasons++] = HEALTH_COMPONENT_MISSED_ERROR;
+    }
+
+    return error;
 }
 
 void update_controllers() {
