@@ -2,13 +2,14 @@
 
 #include "./component/controller.h"
 #include "./component/gun.h"
+#include "./component/health.h"
 #include "./component/kinematic_movement.h"
 #include "./component/material.h"
 #include "./component/primitive.h"
 #include "./component/rigid_body.h"
+#include "./component/scorer.h"
 #include "./component/transformation.h"
 #include "./component/vision.h"
-#include "./component/scorer.h"
 
 #define N_COMPONENT_TYPES 16
 typedef enum ComponentType {

@@ -39,6 +39,12 @@ void update_kinematic_movements(float dt) {
         if (movement.is_moving) {
             Vec2 step = scale(get_kinematic_velocity(movement), dt);
             transformation->position = add(transformation->position, step);
+
+            if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+                Scorer* scorer = &SCENE.scorers[entity];
+                scorer->score += scorer->weight.do_kinematic_move
+                                 * length(step);
+            }
         }
     }
 }

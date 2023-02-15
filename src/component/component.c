@@ -19,8 +19,7 @@ ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES] = {
     BULLET_COMPONENT,
     OWNER_COMPONENT,
     CONTROLLER_COMPONENT,
-    SCORER_COMPONENT
-};
+    SCORER_COMPONENT};
 
 const char* get_component_type_name(ComponentType type) {
     switch (type) {
@@ -54,6 +53,8 @@ const char* get_component_type_name(ComponentType type) {
             return "Owner";
         case CONTROLLER_COMPONENT:
             return "Controller";
+        case SCORER_COMPONENT:
+            return "Scorer";
         default: {
             fprintf(
                 stderr,

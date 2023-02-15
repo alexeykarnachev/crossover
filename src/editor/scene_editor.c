@@ -26,6 +26,7 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     KINEMATIC_MOVEMENT_COMPONENT,
     VISION_COMPONENT,
     CONTROLLER_COMPONENT,
+    SCORER_COMPONENT,
     TTL_COMPONENT,
     HEALTH_COMPONENT,
     GUN_COMPONENT};
@@ -534,14 +535,18 @@ static void render_component_inspector(int entity, ComponentType type) {
 
             break;
         }
+        case SCORER_COMPONENT: {
+            igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+            break;
+        }
         case TTL_COMPONENT: {
             float* ttl = &SCENE.ttls[entity];
             ig_drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case HEALTH_COMPONENT: {
-            float* health = &SCENE.healths[entity];
-            ig_drag_float("health", health, 0.0, FLT_MAX, 1.0, 0);
+            Health* health = &SCENE.healths[entity];
+            ig_drag_float("health", &health->health, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case GUN_COMPONENT: {

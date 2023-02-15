@@ -7,8 +7,25 @@ void update_healths() {
             continue;
         }
 
-        if (SCENE.healths[entity] <= 0) {
+        Health* health = &SCENE.healths[entity];
+
+        if (health->health <= 0) {
             destroy_entity(entity);
+            if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+                Scorer* scorer = &SCENE.scorers[entity];
+                scorer->score += scorer->weight.get_killed;
+
+                int damage_dealler = health->damage_dealler;
+                if (damage_dealler != -1
+                    && check_if_entity_has_component(
+                        damage_dealler, SCORER_COMPONENT
+                    )) {
+                    Scorer* scorer = &SCENE.scorers[damage_dealler];
+                    scorer->score += scorer->weight.kill_enemy;
+                }
+            }
         }
+
+        health->damage_dealler = -1;
     }
 }

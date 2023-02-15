@@ -22,10 +22,11 @@ typedef struct Scene {
     Material materials[MAX_N_ENTITIES];
     Gun guns[MAX_N_ENTITIES];
     float ttls[MAX_N_ENTITIES];
-    float healths[MAX_N_ENTITIES];
+    Health healths[MAX_N_ENTITIES];
     float render_layers[MAX_N_ENTITIES];
     int owners[MAX_N_ENTITIES];
     Controller controllers[MAX_N_ENTITIES];
+    Scorer scorers[MAX_N_ENTITIES];
 
     // Singleton entities
     int camera;
@@ -63,7 +64,7 @@ int spawn_guy(
     Vision vision,
     Gun gun,
     Controller controller,
-    float health
+    Health health
 );
 int spawn_obstacle(
     Transformation transformation,

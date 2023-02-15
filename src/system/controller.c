@@ -33,6 +33,11 @@ static void try_shoot(int entity) {
             1
         );
         spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
+
+        if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+            Scorer* scorer = &SCENE.scorers[entity];
+            scorer->score += scorer->weight.do_shoot;
+        }
     }
 }
 
@@ -172,7 +177,7 @@ static ControllerAction get_brain_ai_action(int entity) {
     // Construct Brain input array
     Vision* vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
-    float health = SCENE.healths[entity];
+    Health health = SCENE.healths[entity];
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput brain_input = params.inputs[i];
         BrainInputType type = brain_input.type;
@@ -206,7 +211,7 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case SELF_HEALTH_INPUT: {
-                *inp++ = health;
+                *inp++ = health.health;
                 break;
             }
         }

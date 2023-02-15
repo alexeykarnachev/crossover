@@ -80,7 +80,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     );
     n_bytes += fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     n_bytes += fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    n_bytes += fwrite(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fwrite(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
     n_bytes += fwrite(
         SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
     );
@@ -88,6 +88,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fwrite(
         SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
     );
+    n_bytes += fwrite(SCENE.scorers, sizeof(Scorer), SCENE.n_entities, fp);
     n_bytes += fwrite(&SCENE.camera, sizeof(int), 1, fp);
     n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
@@ -202,6 +203,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fread(
         SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
     );
+    n_bytes += fread(SCENE.scorers, sizeof(Scorer), SCENE.n_entities, fp);
     n_bytes += fread(&SCENE.camera, sizeof(int), 1, fp);
     n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
     int scene_n_bytes = n_bytes;
@@ -340,6 +342,9 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.controllers[entity_copy]
                         = SCENE.controllers[entity];
                     break;
+                case SCORER_COMPONENT:
+                    SCENE.scorers[entity_copy] = SCENE.scorers[entity];
+                    break;
                 default: {
                     const char* component_name = get_component_type_name(
                         type
@@ -370,7 +375,7 @@ int spawn_guy(
     Vision vision,
     Gun gun,
     Controller controller,
-    float health
+    Health health
 ) {
     int entity = spawn_entity("Guy");
 
@@ -452,7 +457,7 @@ int spawn_default_ai_guy(
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
-        1000.0
+        init_default_health()
     );
 }
 
@@ -478,7 +483,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         init_player_keyboard_controller(),
-        1000.0
+        init_default_health()
     );
 }
 

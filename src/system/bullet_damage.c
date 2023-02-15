@@ -18,9 +18,9 @@ void update_bullets(float dt) {
             continue;
         }
 
-        int owner = -1;
+        int bullet_owner = -1;
         if (check_if_entity_has_component(bullet, OWNER_COMPONENT)) {
-            owner = SCENE.owners[bullet];
+            bullet_owner = SCENE.owners[bullet];
         }
         Transformation transformation = SCENE.transformations[bullet];
         KinematicMovement movement = SCENE.kinematic_movements[bullet];
@@ -29,12 +29,33 @@ void update_bullets(float dt) {
                                         | COLLIDER_COMPONENT
                                         | RIGID_BODY_COMPONENT;
         RayCastResult result = cast_ray(
-            transformation.position, ray, target_required_component, owner
+            transformation.position,
+            ray,
+            target_required_component,
+            bullet_owner
         );
         int entity = result.entity;
         if (entity != -1) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
-                SCENE.healths[entity] -= movement.speed;
+                float damage = movement.speed;
+                Health* health = &SCENE.healths[entity];
+                health->health -= damage;
+                health->damage_dealler = bullet_owner;
+
+                if (check_if_entity_has_component(
+                        entity, SCORER_COMPONENT
+                    )) {
+                    Scorer* scorer = &SCENE.scorers[entity];
+                    scorer->score += scorer->weight.loose_health * damage;
+                }
+
+                if (bullet_owner != -1
+                    && check_if_entity_has_component(
+                        bullet_owner, SCORER_COMPONENT
+                    )) {
+                    Scorer* scorer = &SCENE.scorers[bullet_owner];
+                    scorer->score += scorer->weight.hit_enemy * damage;
+                }
             }
             destroy_entity(bullet);
         }
