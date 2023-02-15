@@ -9,19 +9,17 @@ void update_healths() {
 
         Health* health = &SCENE.healths[entity];
 
-        if (health->health <= 0) {
+        if (health->value <= 0) {
             destroy_entity(entity);
             if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
-                Scorer* scorer = &SCENE.scorers[entity];
-                scorer->score += scorer->weight.get_killed;
+                update_get_killed_score(entity);
 
                 int damage_dealler = health->damage_dealler;
                 if (damage_dealler != -1
                     && check_if_entity_has_component(
                         damage_dealler, SCORER_COMPONENT
                     )) {
-                    Scorer* scorer = &SCENE.scorers[damage_dealler];
-                    scorer->score += scorer->weight.kill_enemy;
+                    update_kill_enemy_score(damage_dealler);
                 }
             }
         }

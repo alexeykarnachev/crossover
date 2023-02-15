@@ -1,8 +1,8 @@
 #include "health.h"
 
-Health init_health(float health) {
-    Health h = {.health = health, .damage_dealler = -1};
-    return h;
+Health init_health(float value) {
+    Health health = {.value = value, .damage_dealler = -1};
+    return health;
 }
 
 Health init_default_health(void) {

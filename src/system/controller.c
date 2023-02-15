@@ -35,8 +35,7 @@ static void try_shoot(int entity) {
         spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
 
         if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
-            Scorer* scorer = &SCENE.scorers[entity];
-            scorer->score += scorer->weight.do_shoot;
+            update_do_shoot_score(entity);
         }
     }
 }
@@ -211,7 +210,7 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case SELF_HEALTH_INPUT: {
-                *inp++ = health.health;
+                *inp++ = health.value;
                 break;
             }
         }

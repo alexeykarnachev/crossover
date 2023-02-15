@@ -1,7 +1,7 @@
 #pragma once
 
 typedef struct Health {
-    float health;
+    float value;
     int damage_dealler;
 } Health;
 

@@ -39,22 +39,20 @@ void update_bullets(float dt) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
                 float damage = movement.speed;
                 Health* health = &SCENE.healths[entity];
-                health->health -= damage;
+                health->value -= damage;
                 health->damage_dealler = bullet_owner;
 
                 if (check_if_entity_has_component(
                         entity, SCORER_COMPONENT
                     )) {
-                    Scorer* scorer = &SCENE.scorers[entity];
-                    scorer->score += scorer->weight.loose_health * damage;
+                    update_loose_health_score(entity, damage);
                 }
 
                 if (bullet_owner != -1
                     && check_if_entity_has_component(
                         bullet_owner, SCORER_COMPONENT
                     )) {
-                    Scorer* scorer = &SCENE.scorers[bullet_owner];
-                    scorer->score += scorer->weight.hit_enemy * damage;
+                    update_hit_enemy_score(bullet_owner, damage);
                 }
             }
             destroy_entity(bullet);
