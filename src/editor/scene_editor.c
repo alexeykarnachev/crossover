@@ -334,8 +334,7 @@ static void render_brain_ai_controller_inspector(int entity) {
     } else if (asset == NULL) {
         igTextColored(
             IG_RED_COLOR,
-            "ERROR: Brain with this name is missed from the assets "
-            "pool.\nIt's a bug"
+            "ERROR: Brain with this name is missed from the assets"
         );
     } else if (asset->type != BRAIN_ASSET) {
         igTextColored(

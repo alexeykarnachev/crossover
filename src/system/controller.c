@@ -5,6 +5,7 @@
 #include "../math.h"
 #include "../scene.h"
 #include "../system.h"
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -136,6 +137,20 @@ static ControllerAction get_dummy_ai_action(int entity) {
     return action;
 }
 
+static int argmax(float* ptr, int n_vals) {
+    float max_val = -FLT_MAX;
+    int max_val_idx = 0;
+    for (int i = 0; i < n_vals; ++i) {
+        float val = *ptr++;
+        if (val > max_val) {
+            max_val_idx = i;
+            max_val = val;
+        }
+    }
+
+    return max_val_idx;
+}
+
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
@@ -221,7 +236,7 @@ static ControllerAction get_brain_ai_action(int entity) {
                 float x = ix == inp_size ? 1.0 : inp[ix];
                 float w = *weights++;
                 z += x * w;
-                printf("x:%f * w:%f + ", x, w);
+                // printf("x:%f * w:%f + ", x, w);
             }
 
             float y = i_layer == params.n_layers ? z : max(0.0, z);
@@ -231,6 +246,55 @@ static ControllerAction get_brain_ai_action(int entity) {
         inp_size = layer_size;
         inp = BRAIN_OUTPUT;
         out = BRAIN_INPUT;
+    }
+
+    // Construct controller action based on the brain output
+    for (int i = 0; i < params.n_outputs; ++i) {
+        BrainOutput output = params.outputs[i];
+        BrainOutputType type = output.type;
+
+        switch (type) {
+            case WATCH_ORIENTATION_OUTPUT: {
+                int best_ray_idx = argmax(out, n_view_rays);
+                Vec2 look_at = vision->observations[best_ray_idx].position;
+                action.watch_orientation = get_vec_orientation(
+                    sub(look_at, position)
+                );
+
+                out += n_view_rays;
+                break;
+            }
+            case MOVE_ORIENTATION_OUTPUT: {
+                int n_dirs = output.o.move_orientation.n_directions;
+                int best_dir_idx = argmax(out, n_dirs);
+                float dir_step = 2.0 * PI / n_dirs;
+                action.move_orientation = dir_step * best_dir_idx;
+
+                out += n_dirs;
+                break;
+            }
+            case IS_SHOOTING_OUTPUT: {
+                action.is_shooting = *out > 0.0;
+
+                out += 1;
+                break;
+            }
+            case IS_MOVING_OUTPUT: {
+                action.is_moving = *out > 0.0;
+
+                out += 1;
+                break;
+            }
+            default:
+                fprintf(
+                    stderr,
+                    "ERROR: Can't contstruct controller action, based on "
+                    "the brain input with type id: %d. Needs to be "
+                    "implemented in function `get_brain_ai_action`\n",
+                    type
+                );
+                exit(1);
+        }
     }
 
     return action;

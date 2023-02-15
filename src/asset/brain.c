@@ -118,18 +118,19 @@ int get_brain_input_size(BrainParams params) {
     } while (0)
 
 BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES] = {
-    LOOK_AT_ORIENTATION_OUTPUT,
+    WATCH_ORIENTATION_OUTPUT,
     MOVE_ORIENTATION_OUTPUT,
-    IS_SHOOTING_OUTPUT};
+    IS_SHOOTING_OUTPUT,
+    IS_MOVING_OUTPUT};
 const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES] = {
-    "Look at orientation", "Move orientation", "Is shooting"};
+    "Look at orientation", "Move orientation", "Is shooting", "Is moving"};
 
-BrainOutput init_look_at_orientation_brain_output(void) {
+BrainOutput init_watch_orientation_brain_output(void) {
     BrainOutput output;
-    output.type = LOOK_AT_ORIENTATION_OUTPUT;
+    output.type = WATCH_ORIENTATION_OUTPUT;
 
-    LookAtOrientationBrainOutput look_at_orientation;
-    output.o.look_at_orientation = look_at_orientation;
+    WatchOrientationBrainOutput watch_orientation;
+    output.o.watch_orientation = watch_orientation;
     return output;
 }
 
@@ -151,6 +152,15 @@ BrainOutput init_is_shooting_brain_output(void) {
     return output;
 }
 
+BrainOutput init_is_moving_brain_output(void) {
+    BrainOutput output;
+    output.type = IS_MOVING_OUTPUT;
+
+    IsMovingBrainOutput is_moving;
+    output.o.is_moving = is_moving;
+    return output;
+}
+
 void change_brain_output_type(
     BrainOutput* brain_output, BrainOutputType target_type
 ) {
@@ -160,14 +170,17 @@ void change_brain_output_type(
     }
 
     switch (target_type) {
-        case LOOK_AT_ORIENTATION_OUTPUT:
-            *brain_output = init_look_at_orientation_brain_output();
+        case WATCH_ORIENTATION_OUTPUT:
+            *brain_output = init_watch_orientation_brain_output();
             break;
         case MOVE_ORIENTATION_OUTPUT:
             *brain_output = init_move_orientation_brain_output();
             break;
         case IS_SHOOTING_OUTPUT:
             *brain_output = init_is_shooting_brain_output();
+            break;
+        case IS_MOVING_OUTPUT:
+            *brain_output = init_is_moving_brain_output();
             break;
         default:
             BRAIN_INPUT_TYPE_ERROR(
@@ -183,13 +196,16 @@ int get_brain_output_size(BrainParams params) {
         BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
         switch (type) {
-            case LOOK_AT_ORIENTATION_OUTPUT:
+            case WATCH_ORIENTATION_OUTPUT:
                 output_size += n_view_rays;
                 break;
             case MOVE_ORIENTATION_OUTPUT:
                 output_size += output.o.move_orientation.n_directions;
                 break;
             case IS_SHOOTING_OUTPUT:
+                output_size += 1;
+                break;
+            case IS_MOVING_OUTPUT:
                 output_size += 1;
                 break;
             default:
@@ -259,10 +275,6 @@ Brain init_brain(BrainParams params) {
     int n_weights = get_brain_size(params);
     int weights_n_bytes = sizeof(float) * n_weights;
     float* weights = (float*)malloc(weights_n_bytes);
-
-    // for (int i = 0; i < n_weights; ++i) {
-    //     weights[i] = i;
-    // }
 
     srand(time(NULL));
     for (int i = 0; i < n_weights; ++i) {

@@ -18,7 +18,9 @@ ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES] = {
     GUN_COMPONENT,
     BULLET_COMPONENT,
     OWNER_COMPONENT,
-    CONTROLLER_COMPONENT};
+    CONTROLLER_COMPONENT,
+    SCORER_COMPONENT
+};
 
 const char* get_component_type_name(ComponentType type) {
     switch (type) {

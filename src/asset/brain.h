@@ -41,13 +41,14 @@ BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
 
 typedef enum BrainOutputType {
-    LOOK_AT_ORIENTATION_OUTPUT,
+    WATCH_ORIENTATION_OUTPUT,
     MOVE_ORIENTATION_OUTPUT,
-    IS_SHOOTING_OUTPUT
+    IS_SHOOTING_OUTPUT,
+    IS_MOVING_OUTPUT
 } BrainOutputType;
 
-typedef struct LookAtOrientationBrainOutput {
-} LookAtOrientationBrainOutput;
+typedef struct WatchOrientationBrainOutput {
+} WatchOrientationBrainOutput;
 
 typedef struct MoveOrientationBrainOutput {
     int n_directions;
@@ -56,12 +57,16 @@ typedef struct MoveOrientationBrainOutput {
 typedef struct IsShootingBrainOutput {
 } IsShootingBrainOutput;
 
+typedef struct IsMovingBrainOutput {
+} IsMovingBrainOutput;
+
 typedef struct BrainOutput {
     BrainOutputType type;
     union {
-        LookAtOrientationBrainOutput look_at_orientation;
+        WatchOrientationBrainOutput watch_orientation;
         MoveOrientationBrainOutput move_orientation;
         IsShootingBrainOutput is_shooting;
+        IsMovingBrainOutput is_moving;
     } o;
 } BrainOutput;
 
@@ -69,7 +74,7 @@ void change_brain_output_type(
     BrainOutput* brain_output, BrainOutputType target_type
 );
 
-#define N_BRAIN_OUTPUT_TYPES 3
+#define N_BRAIN_OUTPUT_TYPES 4
 BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
 const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
@@ -102,7 +107,7 @@ BrainInput init_target_distance_brain_input(void);
 BrainInput init_target_health_brain_input(void);
 BrainInput init_self_health_brain_input(void);
 
-BrainOutput init_look_at_orientation_brain_output(void);
+BrainOutput init_watch_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
 
