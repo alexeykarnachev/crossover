@@ -3,30 +3,40 @@
 
 void update_get_killed_score(int entity) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.get_killed;
+    scorer->value += scorer->weight.get_killed;
 }
 
 void update_kill_enemy_score(int entity) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.kill_enemy;
+    scorer->value += scorer->weight.kill_enemy;
 }
 
 void update_do_kinematic_move_score(int entity, Vec2 step) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.do_kinematic_move * length(step);
+    scorer->value += scorer->weight.do_kinematic_move * length(step);
 }
 
 void update_do_shoot_score(int entity) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.do_shoot;
+    scorer->value += scorer->weight.do_shoot;
 }
 
-void update_loose_health_score(int entity, float damage) {
+void update_receive_damage_score(int entity, float damage) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.loose_health * damage;
+    scorer->value += scorer->weight.receive_damage * damage;
 }
 
-void update_hit_enemy_score(int entity, float damage) {
+void update_deal_damage_score(int entity, float damage) {
     Scorer* scorer = &SCENE.scorers[entity];
-    scorer->score += scorer->weight.hit_enemy * damage;
+    scorer->value += scorer->weight.deal_damage * damage;
+}
+
+void update_hit_enemy_score(int entity) {
+    Scorer* scorer = &SCENE.scorers[entity];
+    scorer->value += scorer->weight.hit_enemy;
+}
+
+void update_get_hit_score(int entity) {
+    Scorer* scorer = &SCENE.scorers[entity];
+    scorer->value += scorer->weight.get_hit;
 }

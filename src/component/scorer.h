@@ -2,14 +2,14 @@
 
 typedef struct Scorer {
     struct {
+        float get_killed;
+        float kill_enemy;
         float do_kinematic_move;
         float do_shoot;
-        float loose_health;
-        float get_killed;
+        float receive_damage;
+        float deal_damage;
         float hit_enemy;
-        float kill_enemy;
+        float get_hit;
     } weight;
-    int score;
+    float value;
 } Scorer;
-
-void reset_scorer(Scorer* scorer);

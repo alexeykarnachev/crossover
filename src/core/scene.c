@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-Scene SCENE;
+Scene SCENE = {0};
 
 Vec2 get_cursor_scene_pos(void) {
     Vec2 screen_pos = get_cursor_screen_pos();
@@ -195,7 +195,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     );
     n_bytes += fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     n_bytes += fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    n_bytes += fread(SCENE.healths, sizeof(float), SCENE.n_entities, fp);
+    n_bytes += fread(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
     n_bytes += fread(
         SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
     );
@@ -251,6 +251,10 @@ void destroy_entity(int entity) {
             SCENE.owners[i] = -1;
         }
     }
+
+    // Entity should nullify some occupied component buffers:
+    SCENE.healths[entity] = init_default_health();
+    SCENE.scorers[entity].value = 0.0;
 }
 
 int check_if_entity_alive(int entity) {

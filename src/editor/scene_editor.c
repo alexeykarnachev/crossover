@@ -16,6 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define IG_DRAG_FLOAT_SCORE(name) \
+    ig_drag_float(#name, &scorer->weight.name, FLT_MIN, FLT_MAX, 0.1, 0)
+
 static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     TRANSFORMATION_COMPONENT,
     RIGID_BODY_COMPONENT,
@@ -536,7 +539,26 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case SCORER_COMPONENT: {
-            igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+            Scorer* scorer = &SCENE.scorers[entity];
+            igText("Value: %.2f", scorer->value);
+            ig_same_line();
+            if (igButton("Reset", IG_VEC2_ZERO)) {
+                scorer->value = 0.0;
+            }
+            if (igBeginMenu("Weights", 1)) {
+                IG_DRAG_FLOAT_SCORE(get_killed);
+                IG_DRAG_FLOAT_SCORE(kill_enemy);
+                IG_DRAG_FLOAT_SCORE(do_kinematic_move);
+                IG_DRAG_FLOAT_SCORE(do_shoot);
+                IG_DRAG_FLOAT_SCORE(receive_damage);
+                IG_DRAG_FLOAT_SCORE(deal_damage);
+                IG_DRAG_FLOAT_SCORE(hit_enemy);
+                IG_DRAG_FLOAT_SCORE(get_hit);
+                if (igButton("Reset", IG_VEC2_ZERO)) {
+                    memset(&scorer->weight, 0, sizeof(scorer->weight));
+                }
+                igEndMenu();
+            }
             break;
         }
         case TTL_COMPONENT: {
