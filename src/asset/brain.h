@@ -86,6 +86,7 @@ typedef struct BrainParams {
     int n_inputs;
     int n_outputs;
     int n_layers;
+    int is_trainable;
 } BrainParams;
 
 typedef struct Brain {

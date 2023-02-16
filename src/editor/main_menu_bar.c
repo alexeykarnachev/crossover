@@ -36,6 +36,11 @@ void render_main_menu_bar(void) {
 
         if (igBeginMenu("Edit", 1)) {
             if (menu_item("Project", "", false, proj_loaded)) {}
+            if (igIsItemHovered(0)) {
+                igSetTooltip(
+                    "TODO: Project settings editor is not implemented yet"
+                );
+            }
             igEndMenu();
         }
 
@@ -46,6 +51,19 @@ void render_main_menu_bar(void) {
                 }
                 igEndMenu();
             }
+            igEndMenu();
+        }
+
+        if (igBeginMenu("Simulation", 1)) {
+            if (menu_item("Start", "", false, 1)) {}
+            if (menu_item("Pause", "", false, 1)) {}
+            if (menu_item("Stop", "", false, 1)) {}
+
+            igSeparator();
+            if (menu_item("Edit", "", false, 1)) {
+                EDITOR.is_editing_simulation = 1;
+            }
+
             igEndMenu();
         }
 

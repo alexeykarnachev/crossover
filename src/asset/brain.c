@@ -336,7 +336,6 @@ void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
 
     float* weights = brain->weights;
     int n_weights = get_brain_size(brain->params);
-    brain->weights = NULL;
 
     if (weights == NULL || n_weights == 0) {
         strcpy(

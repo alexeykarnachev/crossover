@@ -58,7 +58,7 @@ int load_asset(char* file_path, ResultMessage* res_msg) {
 
     int file_path_len = strlen(file_path);
     uint64_t hash = get_bytes_hash(file_path, file_path_len);
-    Asset asset;
+    Asset asset = {0};
     strcpy(asset.file_path, file_path);
 
     int n_bytes = file_path_len + sizeof(type);

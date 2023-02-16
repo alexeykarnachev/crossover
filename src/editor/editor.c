@@ -271,6 +271,16 @@ void render_editor(void) {
             igEndPopup();
         }
     }
+    if (EDITOR.is_editing_simulation) {
+        ig_center_next_window();
+        igOpenPopup_Str("render_simulation_editor", 0);
+        if (igBeginPopup(
+                "render_simulation_editor", ImGuiWindowFlags_Modal
+            )) {
+            render_simulation_editor();
+            igEndPopup();
+        }
+    }
 
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());

@@ -271,20 +271,31 @@ static void render_context_menu(void) {
     igEndPopup();
 }
 
+static char* get_brain_params_text(BrainParams params) {
+    static char text[128];
+    sprintf(
+        text,
+        "Paramters:\n"
+        "  n_view_rays:   %d\n"
+        "  input_size:    %d\n"
+        "  size:          %d\n"
+        "  output_size:   %d\n"
+        "  is_trainable:  %d\n",
+        params.n_view_rays,
+        get_brain_input_size(params),
+        get_brain_size(params),
+        get_brain_output_size(params),
+        params.is_trainable
+    );
+    return text;
+}
+
 static void render_asset_tooltip(Asset* asset) {
     AssetType type = asset->type;
     switch (type) {
         case BRAIN_ASSET: {
             Brain brain = asset->a.brain;
-            BrainParams p = brain.params;
-            igSetTooltip(
-                "n_view_rays: %d\ninput_size: %d\nn_weights: "
-                "%d\noutput_size: %d\n",
-                p.n_view_rays,
-                get_brain_input_size(p),
-                get_brain_size(p),
-                get_brain_output_size(p)
-            );
+            igSetTooltip(get_brain_params_text(brain.params));
             break;
         }
         default: {
@@ -300,7 +311,7 @@ static char* get_short_file_path(Asset* asset) {
     return &asset->file_path[strlen(EDITOR.project.default_search_path)];
 }
 
-static char* render_brain_assets_browser(void) {
+static char* render_brain_asset_selector(void) {
     char* selected_file_path = NULL;
     for (int i = 0; i < MAX_N_ASSETS; ++i) {
         if (ASSETS[i].type != BRAIN_ASSET) {
@@ -321,6 +332,35 @@ static char* render_brain_assets_browser(void) {
     return selected_file_path;
 }
 
+static void render_brain_asset_editor(void) {
+    for (int i = 0; i < MAX_N_ASSETS; ++i) {
+        if (ASSETS[i].type != BRAIN_ASSET) {
+            continue;
+        }
+        Asset* asset = &ASSETS[i];
+        Brain* brain = &asset->a.brain;
+        BrainParams* params = &brain->params;
+
+        static char text[MAX_PATH_LENGTH + 16];
+        sprintf(text, "Brain: %s", get_short_file_path(asset));
+        if (igBeginMenu(text, 1)) {
+            igText(get_brain_params_text(asset->a.brain.params));
+
+            igSeparator();
+            if (params->is_trainable
+                && igButton("Freeze weights", IG_VEC2_ZERO)) {
+                params->is_trainable = 0;
+                save_brain(asset->file_path, brain, &RESULT_MESSAGE);
+            } else if (!params->is_trainable && igButton("Make trainable", IG_VEC2_ZERO)) {
+                params->is_trainable = 1;
+                save_brain(asset->file_path, brain, &RESULT_MESSAGE);
+            }
+
+            igEndMenu();
+        }
+    }
+}
+
 static void render_brain_ai_controller_inspector(int entity) {
     Controller* controller = &SCENE.controllers[entity];
     BrainAIController* ai = &controller->c.brain_ai;
@@ -329,7 +369,7 @@ static void render_brain_ai_controller_inspector(int entity) {
         igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
         ig_same_line();
         if (igBeginMenu("Attach", 1)) {
-            char* fp = render_brain_assets_browser();
+            char* fp = render_brain_asset_selector();
             if (fp != NULL) {
                 strcpy(ai->brain_file_path, fp);
             }
@@ -704,7 +744,7 @@ static void render_assets_browser(void) {
         }
 
         igSeparator();
-        render_brain_assets_browser();
+        render_brain_asset_editor();
         igTreePop();
     }
 }
