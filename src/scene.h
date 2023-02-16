@@ -88,6 +88,4 @@ int spawn_default_rectangle_obstacle(Transformation transformation);
 int spawn_default_line_obstacle(Transformation transformation);
 int spawn_default_polygon_obstacle(Transformation transformation);
 
-char* get_entity_ai_controller_brain_file_path(int entity);
-
 void update_scene(float dt, int is_playing);

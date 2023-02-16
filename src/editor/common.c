@@ -2,11 +2,16 @@
 #include "common.h"
 
 #include "../component.h"
+#include "../editor.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include <float.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+#define IG_DRAG_FLOAT_SCORE(name) \
+    ig_drag_float(#name, &scorer->weight.name, FLT_MIN, FLT_MAX, 0.1, 0)
 
 nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
 nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
@@ -180,4 +185,22 @@ int render_component_type_picker(
     igPopID();
 
     return new_type;
+}
+
+char* get_short_file_path(char* file_path) {
+    return &file_path[strlen(EDITOR.project.default_search_path)];
+}
+
+void render_scorer_weights_inspector(Scorer* scorer) {
+    IG_DRAG_FLOAT_SCORE(get_killed);
+    IG_DRAG_FLOAT_SCORE(kill_enemy);
+    IG_DRAG_FLOAT_SCORE(do_kinematic_move);
+    IG_DRAG_FLOAT_SCORE(do_shoot);
+    IG_DRAG_FLOAT_SCORE(receive_damage);
+    IG_DRAG_FLOAT_SCORE(deal_damage);
+    IG_DRAG_FLOAT_SCORE(hit_enemy);
+    IG_DRAG_FLOAT_SCORE(get_hit);
+    if (igButton("Reset", IG_VEC2_ZERO)) {
+        memset(&scorer->weight, 0, sizeof(scorer->weight));
+    }
 }

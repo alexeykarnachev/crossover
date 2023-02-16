@@ -1,6 +1,7 @@
 #pragma once
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "../component.h"
 #include "../utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
@@ -59,3 +60,6 @@ int render_component_type_picker(
     int n_types,
     const char* type_names[]
 );
+
+char* get_short_file_path(char* file_path);
+void render_scorer_weights_inspector(Scorer* scorer);

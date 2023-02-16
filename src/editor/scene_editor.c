@@ -16,9 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define IG_DRAG_FLOAT_SCORE(name) \
-    ig_drag_float(#name, &scorer->weight.name, FLT_MIN, FLT_MAX, 0.1, 0)
-
 static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     TRANSFORMATION_COMPONENT,
     RIGID_BODY_COMPONENT,
@@ -307,10 +304,6 @@ static void render_asset_tooltip(Asset* asset) {
     }
 }
 
-static char* get_short_file_path(Asset* asset) {
-    return &asset->file_path[strlen(EDITOR.project.default_search_path)];
-}
-
 static char* render_brain_asset_selector(void) {
     char* selected_file_path = NULL;
     for (int i = 0; i < MAX_N_ASSETS; ++i) {
@@ -320,7 +313,7 @@ static char* render_brain_asset_selector(void) {
         Asset* asset = &ASSETS[i];
 
         static char text[MAX_PATH_LENGTH + 16];
-        sprintf(text, "Brain: %s", get_short_file_path(asset));
+        sprintf(text, "Brain: %s", get_short_file_path(asset->file_path));
         if (igSelectable_Bool(text, 0, 0, IG_VEC2_ZERO)) {
             selected_file_path = asset->file_path;
         };
@@ -342,7 +335,7 @@ static void render_brain_asset_editor(void) {
         BrainParams* params = &brain->params;
 
         static char text[MAX_PATH_LENGTH + 16];
-        sprintf(text, "Brain: %s", get_short_file_path(asset));
+        sprintf(text, "Brain: %s", get_short_file_path(asset->file_path));
         if (igBeginMenu(text, 1)) {
             igText(get_brain_params_text(asset->a.brain.params));
 
@@ -440,7 +433,9 @@ static void render_brain_ai_controller_inspector(int entity) {
             igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
         } else {
             igTextColored(
-                IG_GREEN_COLOR, "Brain: %s", get_short_file_path(asset)
+                IG_GREEN_COLOR,
+                "Brain: %s",
+                get_short_file_path(asset->file_path)
             );
         }
     }
@@ -586,17 +581,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 scorer->value = 0.0;
             }
             if (igBeginMenu("Weights", 1)) {
-                IG_DRAG_FLOAT_SCORE(get_killed);
-                IG_DRAG_FLOAT_SCORE(kill_enemy);
-                IG_DRAG_FLOAT_SCORE(do_kinematic_move);
-                IG_DRAG_FLOAT_SCORE(do_shoot);
-                IG_DRAG_FLOAT_SCORE(receive_damage);
-                IG_DRAG_FLOAT_SCORE(deal_damage);
-                IG_DRAG_FLOAT_SCORE(hit_enemy);
-                IG_DRAG_FLOAT_SCORE(get_hit);
-                if (igButton("Reset", IG_VEC2_ZERO)) {
-                    memset(&scorer->weight, 0, sizeof(scorer->weight));
-                }
+                render_scorer_weights_inspector(scorer);
                 igEndMenu();
             }
             break;

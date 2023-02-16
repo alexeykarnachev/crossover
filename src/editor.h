@@ -42,7 +42,12 @@ typedef struct Editor {
     int is_editing_simulation;
 } Editor;
 
+typedef struct Simulation {
+    float round_duration;
+} Simulation;
+
 extern Editor EDITOR;
+extern Simulation SIMULATION;
 
 Vec2 get_cursor_scene_pos(void);
 

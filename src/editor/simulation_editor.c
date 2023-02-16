@@ -6,6 +6,13 @@
 #include "common.h"
 #include <string.h>
 
+Simulation SIMULATION = {0};
+
+static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_ASSETS];
+static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
+static int N_BRAINS_TO_TRAIN = 0;
+static int N_ENTITIES_WITHOUT_SCORER = 0;
+
 static void render_simulation_menu_bar(void) {
     if (igBeginMenu("Simulation Editor", 1)) {
         if (igBeginMenu("File", 1)) {
@@ -29,7 +36,24 @@ static void render_simulation_menu_bar(void) {
     }
 }
 
-static int count_brains_to_train(void) {
+static char* get_brain_file_path(int entity) {
+    int has_controller = check_if_entity_has_component(
+        entity, CONTROLLER_COMPONENT
+    );
+    if (!has_controller) {
+        return NULL;
+    }
+
+    Controller* controller = &SCENE.controllers[entity];
+    ControllerType type = controller->type;
+    if (type != BRAIN_AI_CONTROLLER) {
+        return NULL;
+    }
+
+    return controller->c.brain_ai.brain_file_path;
+}
+
+static void update_counters(void) {
     static char* trainable_brain_file_paths[MAX_N_ASSETS];
     int n_trainable_brains = 0;
 
@@ -44,33 +68,85 @@ static int count_brains_to_train(void) {
         }
     }
 
-    int n_brains_to_train = 0;
+    N_BRAINS_TO_TRAIN = 0;
+    N_ENTITIES_WITHOUT_SCORER = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        char* file_path = get_entity_ai_controller_brain_file_path(entity);
+        char* file_path = get_brain_file_path(entity);
+        int has_scorer = check_if_entity_has_component(
+            entity, SCORER_COMPONENT
+        );
         if (file_path == NULL) {
             continue;
         }
 
+        int has_trainable_brain = 0;
         for (int i = 0; i < n_trainable_brains; ++i) {
             char* fp = trainable_brain_file_paths[i];
-            if (fp && strcmp(file_path, fp) == 0) {
-                n_brains_to_train += 1;
-                trainable_brain_file_paths[i] = NULL;
+            if (fp == NULL || strcmp(file_path, fp) == 0) {
+                has_trainable_brain = 1;
+                if (fp != NULL) {
+                    BRAINS_TO_TRAIN_FILE_PATHS[N_BRAINS_TO_TRAIN++] = fp;
+                    trainable_brain_file_paths[i] = NULL;
+                }
+                break;
             }
         }
+
+        if (has_trainable_brain && !has_scorer) {
+            ENTITIES_WITHOUT_SCORERS[N_ENTITIES_WITHOUT_SCORER++] = entity;
+        }
     }
-
-    return n_brains_to_train;
 }
 
-static void render_scene_info(void) {
-    igText("Brains to train: %d", count_brains_to_train());
+static void render_brains_to_train(void) {
+    igText("%d Brains to train:", N_BRAINS_TO_TRAIN);
+    for (int i = 0; i < N_BRAINS_TO_TRAIN; ++i) {
+        char* name = get_short_file_path(BRAINS_TO_TRAIN_FILE_PATHS[i]);
+        igText("  %s", name);
+    }
 }
+
+static void render_entities_without_scorer(void) {
+    if (N_ENTITIES_WITHOUT_SCORER > 0) {
+        igTextColored(IG_RED_COLOR, "%d", N_ENTITIES_WITHOUT_SCORER);
+    } else {
+        igTextColored(IG_GREEN_COLOR, "%d", 0);
+    }
+    ig_same_line();
+    igText("missed Scorers:");
+    for (int i = 0; i < N_ENTITIES_WITHOUT_SCORER; ++i) {
+        int entity = ENTITIES_WITHOUT_SCORERS[i];
+        static char str[16];
+        sprintf(str, "Entity: %d", entity);
+
+        Scorer* scorer = &SCENE.scorers[entity];
+        if (igBeginMenu(str, 1)) {
+            render_scorer_weights_inspector(scorer);
+            ig_same_line();
+            if (igButton("Add", IG_VEC2_ZERO)) {
+                SCENE.components[entity] |= SCORER_COMPONENT;
+            }
+            igEndMenu();
+        } else {
+            reset_scorer(scorer);
+        }
+    }
+}
+
+static void render_simulation_options(void) {}
 
 void render_simulation_editor(void) {
+    update_counters();
+
     render_simulation_menu_bar();
     igSeparator();
 
-    render_scene_info();
+    render_brains_to_train();
+    igSeparator();
+
+    render_entities_without_scorer();
+    igSeparator();
+
+    render_simulation_options();
     igSeparator();
 }

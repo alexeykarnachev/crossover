@@ -13,3 +13,5 @@ typedef struct Scorer {
     } weight;
     float value;
 } Scorer;
+
+void reset_scorer(Scorer* scorer);
