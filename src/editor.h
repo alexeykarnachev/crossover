@@ -43,7 +43,11 @@ typedef struct Editor {
 } Editor;
 
 typedef struct Simulation {
-    float round_duration;
+    struct {
+        float duration;
+        int population_size;
+    } generation;
+    float generation_duration;
 } Simulation;
 
 extern Editor EDITOR;
