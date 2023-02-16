@@ -338,6 +338,7 @@ void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     int n_weights = get_brain_size(brain->params);
 
     if (weights == NULL || n_weights == 0) {
+        res_msg->flag = FAIL_RESULT;
         strcpy(
             res_msg->msg, "ERROR: Can't save the Brain without weights"
         );

@@ -577,6 +577,23 @@ static void update_entities_scene_counter() {
     SCENE.n_entities = n_entities;
 }
 
+char* get_entity_ai_controller_brain_file_path(int entity) {
+    int has_brain = check_if_entity_has_component(
+        entity, CONTROLLER_COMPONENT
+    );
+    if (!has_brain) {
+        return NULL;
+    }
+
+    Controller* controller = &SCENE.controllers[entity];
+    ControllerType type = controller->type;
+    if (type != BRAIN_AI_CONTROLLER) {
+        return NULL;
+    }
+
+    return controller->c.brain_ai.brain_file_path;
+}
+
 void update_scene(float dt, int is_playing) {
     update_visions();
     update_camera();

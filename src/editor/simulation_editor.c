@@ -1,8 +1,10 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../editor.h"
+#include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
+#include <string.h>
 
 static void render_simulation_menu_bar(void) {
     if (igBeginMenu("Simulation Editor", 1)) {
@@ -27,21 +29,42 @@ static void render_simulation_menu_bar(void) {
     }
 }
 
-static void render_scene_info(void) {
-    int n_brains = 0;
+static int count_brains_to_train(void) {
+    static char* trainable_brain_file_paths[MAX_N_ASSETS];
     int n_trainable_brains = 0;
+
     for (int i = 0; i < MAX_N_ASSETS; ++i) {
         Asset* asset = &ASSETS[i];
         if (asset->type == BRAIN_ASSET) {
             Brain brain = asset->a.brain;
-            BrainParams params = brain.params;
-            n_brains += 1;
-            n_trainable_brains += params.is_trainable;
+            if (brain.params.is_trainable) {
+                trainable_brain_file_paths[n_trainable_brains++]
+                    = asset->file_path;
+            }
         }
     }
-    igText("Brains:");
-    igText("  total:     %d", n_brains);
-    igText("  trainable: %d", n_trainable_brains);
+
+    int n_brains_to_train = 0;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        char* file_path = get_entity_ai_controller_brain_file_path(entity);
+        if (file_path == NULL) {
+            continue;
+        }
+
+        for (int i = 0; i < n_trainable_brains; ++i) {
+            char* fp = trainable_brain_file_paths[i];
+            if (fp && strcmp(file_path, fp) == 0) {
+                n_brains_to_train += 1;
+                trainable_brain_file_paths[i] = NULL;
+            }
+        }
+    }
+
+    return n_brains_to_train;
+}
+
+static void render_scene_info(void) {
+    igText("Brains to train: %d", count_brains_to_train());
 }
 
 void render_simulation_editor(void) {
