@@ -44,10 +44,19 @@ typedef struct Editor {
 
 typedef struct Simulation {
     struct {
+        float timestep;
+        int n_generations;
+    } simulation;
+
+    struct {
         float duration;
         int population_size;
     } generation;
-    float generation_duration;
+
+    struct {
+        float elite_ratio;
+        float mutation_rate;
+    } genetic;
 } Simulation;
 
 extern Editor EDITOR;

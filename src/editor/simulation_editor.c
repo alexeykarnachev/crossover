@@ -99,7 +99,8 @@ static void update_counters(void) {
             if (has_scorer) {
                 ENTITIES_TO_TRAIN[N_ENTITIES_TO_TRAIN++] = entity;
             } else {
-                ENTITIES_WITHOUT_SCORERS[N_ENTITIES_WITHOUT_SCORER++] = entity;
+                ENTITIES_WITHOUT_SCORERS[N_ENTITIES_WITHOUT_SCORER++]
+                    = entity;
             }
         }
     }
@@ -151,9 +152,55 @@ static void render_entities_to_train(void) {
 }
 
 static void render_simulation_parameters(void) {
+    igText("Simulation paramters:");
+    ig_drag_int(
+        "Generations",
+        &SIMULATION.simulation.n_generations,
+        10,
+        10000,
+        1,
+        0
+    );
+    ig_drag_float(
+        "Timestep (ms)",
+        &SIMULATION.simulation.timestep,
+        1.0,
+        100.0,
+        1.0,
+        0
+    );
+    igSeparator();
+
     igText("Generation paramters:");
-    ig_drag_float("Duration (sec)", &SIMULATION.generation.duration, 5.0, 600.0, 1.0, 0);
-    ig_drag_int("Population size", &SIMULATION.generation.population_size, 10, 10000, 1, 0);
+    ig_drag_float(
+        "Duration (s)", &SIMULATION.generation.duration, 5.0, 600.0, 1.0, 0
+    );
+    ig_drag_int(
+        "Population size",
+        &SIMULATION.generation.population_size,
+        10,
+        10000,
+        1,
+        0
+    );
+
+    igText("Genetic paramters:");
+    ig_drag_float(
+        "Elite (ratio)",
+        &SIMULATION.genetic.elite_ratio,
+        0.01,
+        0.9,
+        0.01,
+        0
+    );
+    ig_drag_float(
+        "Mutation (rate)",
+        &SIMULATION.genetic.mutation_rate,
+        0.01,
+        0.9,
+        0.01,
+        0
+    );
 }
 
 void render_simulation_editor(void) {
