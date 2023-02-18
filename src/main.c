@@ -8,12 +8,14 @@
 #include <signal.h>
 #include <unistd.h>
 
-static void handle_sigint(int sig) {
+static void shutdown(int sig) {
+    close_editor();
+    destroy_app();
     kill(0, SIGTERM);
 }
 
 int main(int argc, char* argv[]) {
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, shutdown);
 
     init_editor();
 
@@ -32,9 +34,7 @@ int main(int argc, char* argv[]) {
         update_window();
     }
 
-    destroy_app();
-
     signal(SIGTERM, SIG_IGN);
-    kill(0, SIGTERM);
+    shutdown(0);
     return 0;
 }

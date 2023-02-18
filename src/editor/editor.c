@@ -67,6 +67,7 @@ void init_editor(void) {
         exit(1);
     }
 
+    memset(GENETIC_TRAINING, 0, sizeof(GeneticTraining));
     GENETIC_TRAINING->simulation.dt = 10.0;
     GENETIC_TRAINING->simulation.status = SIMULATION_NOT_STARTED;
     GENETIC_TRAINING->population.live_time = 60.0;
@@ -80,6 +81,11 @@ void reset_editor(void) {
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
     EDITOR.project.scene_file_path = NULL;
+}
+
+void close_editor(void) {
+    shmdt(GENETIC_TRAINING);
+    shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
 }
 
 static void update_recent_project(const char* recent_project_file_path) {

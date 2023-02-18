@@ -25,16 +25,10 @@ static void start_genetic_training(void) {
         SimulationStatus* status = &params->simulation.status;
         *status = SIMULATION_RUNNING;
 
-        int generation = 1;
-        while (*status == SIMULATION_RUNNING && generation++) {
-            int population = 0;
-            while (population++ < params->population.size) {
-                printf(
-                    "Generation: %d, Population: %d/%d\n",
-                    generation,
-                    population,
-                    params->population.size
-                );
+        int generation = 0;
+        while (*status == SIMULATION_RUNNING) {
+            int individual = 0;
+            while (individual++ < params->population.size) {
                 int live_time = 0;
                 while (live_time < params->population.live_time) {
                     update_scene(params->simulation.dt, 1);
@@ -51,7 +45,11 @@ static void start_genetic_training(void) {
                     printf("Score %d: %f, ", entity, scorer.value);
                 }
                 printf("\n\n");
+
+                params->progress.individual = individual;
             }
+
+            params->progress.generation = ++generation;
         }
         exit(0);
     } else {
@@ -270,6 +268,18 @@ void render_genetic_training_controls(void) {
     }
 }
 
+void render_genetic_training_progress(void) {
+    igText("Progress:");
+
+    GeneticTraining* params = GENETIC_TRAINING;
+    float fraction = (float)params->progress.individual
+                     / params->population.size;
+    ImVec2 size_arg = {0.0, 0.0};
+    igProgressBar(fraction, size_arg, "");
+    ig_same_line();
+    igText("Generation: %d", params->progress.generation);
+}
+
 void render_genetic_training_editor(void) {
     update_counters();
 
@@ -286,6 +296,9 @@ void render_genetic_training_editor(void) {
     igSeparator();
 
     render_genetic_training_parameters();
+    igSeparator();
+
+    render_genetic_training_progress();
     igSeparator();
 
     render_genetic_training_controls();

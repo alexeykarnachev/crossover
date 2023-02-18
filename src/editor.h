@@ -50,6 +50,11 @@ typedef enum SimulationStatus {
 
 typedef struct GeneticTraining {
     struct {
+        int generation;
+        int individual;
+    } progress;
+
+    struct {
         float dt;
         SimulationStatus status;
     } simulation;
@@ -72,6 +77,7 @@ const int GENETIC_TRAINING_SHMKEY;
 Vec2 get_cursor_scene_pos(void);
 
 void init_editor(void);
+void close_editor(void);
 void reset_editor(void);
 
 void new_editor_project(void);
