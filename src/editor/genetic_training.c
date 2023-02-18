@@ -8,8 +8,6 @@
 #include <string.h>
 #include <unistd.h>
 
-GeneticTrainingParams GENETIC_TRAINING_PARAMS = {0};
-
 static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_ASSETS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
 static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
@@ -23,23 +21,31 @@ static void start_genetic_training(void) {
     if (pid == -1) {
         perror("ERROR: Can't start Genetic Training\n");
     } else if (pid == 0) {
-        GeneticTrainingParams params = GENETIC_TRAINING_PARAMS;
+        GeneticTraining* params = GENETIC_TRAINING;
+        params->simulation.is_started = 1;
+
         int generation = 0;
-        while (generation++ < params.simulation.n_generations) {
+        while (params->simulation.is_started) {
             int population = 0;
-            while (population++ < params.population.size) {
+            while (population++ < params->population.size) {
                 printf(
-                    "Generation: %d/%d, Population: %d/%d\n",
+                    "Generation: %d, Population: %d/%d\n",
                     generation,
-                    params.simulation.n_generations,
                     population,
-                    params.population.size
+                    params->population.size
                 );
                 int live_time = 0;
-                while (live_time < params.population.live_time) {
-                    update_scene(params.simulation.timestep, 1);
-                    live_time += params.simulation.timestep;
+                while (live_time < params->population.live_time) {
+                    update_scene(params->simulation.dt, 1);
+                    live_time += params->simulation.dt;
                 }
+
+                for (int i = 0; i < N_ENTITIES_TO_TRAIN; ++i) {
+                    int entity = ENTITIES_TO_TRAIN[i];
+                    Scorer scorer = SCENE.scorers[entity];
+                    printf("Score %d: %f, ", entity, scorer.value);
+                }
+                printf("\n\n");
             }
         }
         exit(0);
@@ -188,17 +194,9 @@ static void render_entities_to_train(void) {
 
 static void render_genetic_training_parameters(void) {
     igText("Simulation:");
-    ig_drag_int(
-        "Generations",
-        &GENETIC_TRAINING_PARAMS.simulation.n_generations,
-        10,
-        10000,
-        1,
-        0
-    );
     ig_drag_float(
         "Timestep (ms)",
-        &GENETIC_TRAINING_PARAMS.simulation.timestep,
+        &GENETIC_TRAINING->simulation.dt,
         1.0,
         100.0,
         1.0,
@@ -209,7 +207,7 @@ static void render_genetic_training_parameters(void) {
     igText("Population:");
     ig_drag_float(
         "Live time (s)",
-        &GENETIC_TRAINING_PARAMS.population.live_time,
+        &GENETIC_TRAINING->population.live_time,
         5.0,
         600.0,
         1.0,
@@ -217,7 +215,7 @@ static void render_genetic_training_parameters(void) {
     );
     ig_drag_int(
         "Population size",
-        &GENETIC_TRAINING_PARAMS.population.size,
+        &GENETIC_TRAINING->population.size,
         10,
         10000,
         1,
@@ -227,7 +225,7 @@ static void render_genetic_training_parameters(void) {
     igText("Evolution:");
     ig_drag_float(
         "Elite (ratio)",
-        &GENETIC_TRAINING_PARAMS.evolution.elite_ratio,
+        &GENETIC_TRAINING->evolution.elite_ratio,
         0.01,
         0.9,
         0.01,
@@ -235,7 +233,7 @@ static void render_genetic_training_parameters(void) {
     );
     ig_drag_float(
         "Mutation (rate)",
-        &GENETIC_TRAINING_PARAMS.evolution.mutation_rate,
+        &GENETIC_TRAINING->evolution.mutation_rate,
         0.01,
         0.9,
         0.01,

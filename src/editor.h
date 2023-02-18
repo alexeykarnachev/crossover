@@ -42,10 +42,10 @@ typedef struct Editor {
     int is_editing_genetic_training;
 } Editor;
 
-typedef struct GeneticTrainingParams {
+typedef struct GeneticTraining {
     struct {
-        float timestep;
-        int n_generations;
+        float dt;
+        int is_started;
     } simulation;
 
     struct {
@@ -57,10 +57,11 @@ typedef struct GeneticTrainingParams {
         float elite_ratio;
         float mutation_rate;
     } evolution;
-} GeneticTrainingParams;
+} GeneticTraining;
 
 extern Editor EDITOR;
-extern GeneticTrainingParams GENETIC_TRAINING_PARAMS;
+extern GeneticTraining* GENETIC_TRAINING;
+const int GENETIC_TRAINING_SHMKEY;
 
 Vec2 get_cursor_scene_pos(void);
 

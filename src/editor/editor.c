@@ -13,6 +13,8 @@
 #include "nfd.h"
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
@@ -29,6 +31,9 @@ const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
     } while (0)
 
 Editor EDITOR;
+GeneticTraining* GENETIC_TRAINING;
+static int GENETIC_TRAINING_SHMID;
+const int GENETIC_TRAINING_SHMKEY = 1234;
 
 void init_editor(void) {
     reset_editor();
@@ -38,6 +43,33 @@ void init_editor(void) {
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
     }
+
+    // Create the shared memory segment
+    GENETIC_TRAINING_SHMID = shmget(
+        GENETIC_TRAINING_SHMKEY, sizeof(GeneticTraining), 0666 | IPC_CREAT
+    );
+    if (GENETIC_TRAINING_SHMID == -1) {
+        perror("ERROR: Failed to create shared memory segment for the "
+               "GeneticTraining\n");
+        exit(1);
+    }
+
+    // Attach the shared memory segment to the current process
+    GENETIC_TRAINING = (GeneticTraining*)shmat(
+        GENETIC_TRAINING_SHMID, NULL, 0
+    );
+    if (GENETIC_TRAINING == (GeneticTraining*)-1) {
+        perror("ERROR: Failed to create shared memory segment for the "
+               "GeneticTraining\n");
+        exit(1);
+    }
+
+    GENETIC_TRAINING->simulation.dt = 10.0;
+    GENETIC_TRAINING->simulation.is_started = 0;
+    GENETIC_TRAINING->population.live_time = 60.0;
+    GENETIC_TRAINING->population.size = 1000;
+    GENETIC_TRAINING->evolution.elite_ratio = 0.1;
+    GENETIC_TRAINING->evolution.mutation_rate = 0.01;
 }
 
 void reset_editor(void) {
