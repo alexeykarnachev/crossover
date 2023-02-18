@@ -22,10 +22,11 @@ static void start_genetic_training(void) {
         perror("ERROR: Can't start Genetic Training\n");
     } else if (pid == 0) {
         GeneticTraining* params = GENETIC_TRAINING;
-        params->simulation.is_started = 1;
+        SimulationStatus* status = &params->simulation.status;
+        *status = SIMULATION_RUNNING;
 
-        int generation = 0;
-        while (params->simulation.is_started) {
+        int generation = 1;
+        while (*status == SIMULATION_RUNNING && generation++) {
             int population = 0;
             while (population++ < params->population.size) {
                 printf(
@@ -38,6 +39,10 @@ static void start_genetic_training(void) {
                 while (live_time < params->population.live_time) {
                     update_scene(params->simulation.dt, 1);
                     live_time += params->simulation.dt;
+
+                    while (*status == SIMULATION_PAUSED) {
+                        sleep(0.1);
+                    }
                 }
 
                 for (int i = 0; i < N_ENTITIES_TO_TRAIN; ++i) {
@@ -242,8 +247,26 @@ static void render_genetic_training_parameters(void) {
 }
 
 void render_genetic_training_controls(void) {
-    if (igButton("Start", IG_VEC2_ZERO)) {
-        start_genetic_training();
+    SimulationStatus* status = &GENETIC_TRAINING->simulation.status;
+    switch (*status) {
+        case SIMULATION_RUNNING: {
+            if (igButton("Pause", IG_VEC2_ZERO)) {
+                *status = SIMULATION_PAUSED;
+            }
+            break;
+        }
+        case SIMULATION_PAUSED: {
+            if (igButton("Continue", IG_VEC2_ZERO)) {
+                *status = SIMULATION_RUNNING;
+            }
+            break;
+        }
+        case SIMULATION_NOT_STARTED: {
+            if (igButton("Start", IG_VEC2_ZERO)) {
+                start_genetic_training();
+            }
+            break;
+        }
     }
 }
 

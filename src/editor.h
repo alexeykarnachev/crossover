@@ -42,10 +42,16 @@ typedef struct Editor {
     int is_editing_genetic_training;
 } Editor;
 
+typedef enum SimulationStatus {
+    SIMULATION_NOT_STARTED,
+    SIMULATION_RUNNING,
+    SIMULATION_PAUSED
+} SimulationStatus;
+
 typedef struct GeneticTraining {
     struct {
         float dt;
-        int is_started;
+        SimulationStatus status;
     } simulation;
 
     struct {

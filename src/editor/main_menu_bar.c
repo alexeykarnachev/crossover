@@ -54,7 +54,7 @@ void render_main_menu_bar(void) {
             igEndMenu();
         }
 
-        if (igBeginMenu("Genetic Training", proj_loaded)) {
+        if (igBeginMenu("GeneticTraining", proj_loaded)) {
             if (menu_item("Edit", "", false, 1)) {
                 EDITOR.is_editing_genetic_training = 1;
             }

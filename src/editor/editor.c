@@ -33,7 +33,7 @@ const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 Editor EDITOR;
 GeneticTraining* GENETIC_TRAINING;
 static int GENETIC_TRAINING_SHMID;
-const int GENETIC_TRAINING_SHMKEY = 1234;
+const int GENETIC_TRAINING_SHMKEY;
 
 void init_editor(void) {
     reset_editor();
@@ -43,6 +43,9 @@ void init_editor(void) {
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
     }
+
+    // Get uinique key for the GENETIC_TRAINING
+    key_t GENETIC_TRAINING_SHMKEY = ftok("GENETIC_TRAINING", 'X');
 
     // Create the shared memory segment
     GENETIC_TRAINING_SHMID = shmget(
@@ -65,7 +68,7 @@ void init_editor(void) {
     }
 
     GENETIC_TRAINING->simulation.dt = 10.0;
-    GENETIC_TRAINING->simulation.is_started = 0;
+    GENETIC_TRAINING->simulation.status = SIMULATION_NOT_STARTED;
     GENETIC_TRAINING->population.live_time = 60.0;
     GENETIC_TRAINING->population.size = 1000;
     GENETIC_TRAINING->evolution.elite_ratio = 0.1;
