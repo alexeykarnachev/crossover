@@ -39,28 +39,28 @@ typedef struct Editor {
     int is_playing;
     int entity_to_copy;
     int is_editing_brain;
-    int is_editing_simulation;
+    int is_editing_genetic_training;
 } Editor;
 
-typedef struct Simulation {
+typedef struct GeneticTrainingParams {
     struct {
         float timestep;
         int n_generations;
     } simulation;
 
     struct {
-        float duration;
-        int population_size;
-    } generation;
+        float live_time;
+        int size;
+    } population;
 
     struct {
         float elite_ratio;
         float mutation_rate;
-    } genetic;
-} Simulation;
+    } evolution;
+} GeneticTrainingParams;
 
 extern Editor EDITOR;
-extern Simulation SIMULATION;
+extern GeneticTrainingParams GENETIC_TRAINING_PARAMS;
 
 Vec2 get_cursor_scene_pos(void);
 
@@ -91,5 +91,5 @@ void render_main_menu_bar(void);
 void render_debug_overlay(void);
 void render_scene_editor(void);
 void render_brain_editor(void);
-void render_simulation_editor(void);
+void render_genetic_training_editor(void);
 void render_entity_handles(void);

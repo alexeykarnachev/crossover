@@ -54,14 +54,9 @@ void render_main_menu_bar(void) {
             igEndMenu();
         }
 
-        if (igBeginMenu("Simulation", 1)) {
-            if (menu_item("Start", "", false, 1)) {}
-            if (menu_item("Pause", "", false, 1)) {}
-            if (menu_item("Stop", "", false, 1)) {}
-
-            igSeparator();
+        if (igBeginMenu("Genetic Training", proj_loaded)) {
             if (menu_item("Edit", "", false, 1)) {
-                EDITOR.is_editing_simulation = 1;
+                EDITOR.is_editing_genetic_training = 1;
             }
 
             igEndMenu();

@@ -271,13 +271,13 @@ void render_editor(void) {
             igEndPopup();
         }
     }
-    if (EDITOR.is_editing_simulation) {
+    if (EDITOR.is_editing_genetic_training) {
         ig_center_next_window();
-        igOpenPopup_Str("render_simulation_editor", 0);
+        igOpenPopup_Str("render_genetic_training_editor", 0);
         if (igBeginPopup(
-                "render_simulation_editor", ImGuiWindowFlags_Modal
+                "render_genetic_training_editor", ImGuiWindowFlags_Modal
             )) {
-            render_simulation_editor();
+            render_genetic_training_editor();
             igEndPopup();
         }
     }

@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define IG_DRAG_FLOAT_SCORE(name) \
-    ig_drag_float(#name, &scorer->weight.name, FLT_MIN, FLT_MAX, 0.1, 0)
+    ig_drag_float(#name, &scorer->weight.name, -FLT_MAX, FLT_MAX, 0.1, 0)
 
 nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
 nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};

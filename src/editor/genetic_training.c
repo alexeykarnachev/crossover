@@ -4,9 +4,11 @@
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-Simulation SIMULATION = {0};
+GeneticTrainingParams GENETIC_TRAINING_PARAMS = {0};
 
 static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_ASSETS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
@@ -15,26 +17,59 @@ static int N_BRAINS_TO_TRAIN = 0;
 static int N_ENTITIES_WITHOUT_SCORER = 0;
 static int N_ENTITIES_TO_TRAIN = 0;
 
-static void render_simulation_menu_bar(void) {
-    if (igBeginMenu("Simulation Editor", 1)) {
+static void start_genetic_training(void) {
+    pid_t pid;
+    pid = fork();
+    if (pid == -1) {
+        perror("ERROR: Can't start Genetic Training\n");
+    } else if (pid == 0) {
+        GeneticTrainingParams params = GENETIC_TRAINING_PARAMS;
+        int generation = 0;
+        while (generation++ < params.simulation.n_generations) {
+            int population = 0;
+            while (population++ < params.population.size) {
+                printf(
+                    "Generation: %d/%d, Population: %d/%d\n",
+                    generation,
+                    params.simulation.n_generations,
+                    population,
+                    params.population.size
+                );
+                int live_time = 0;
+                while (live_time < params.population.live_time) {
+                    update_scene(params.simulation.timestep, 1);
+                    live_time += params.simulation.timestep;
+                }
+            }
+        }
+        exit(0);
+    } else {
+        printf("INFO: FOO\n");
+    }
+}
+
+static void render_genetic_training_menu_bar(void) {
+    if (igBeginMenu("Genetic Training Parameters", 1)) {
         if (igBeginMenu("File", 1)) {
-            if (menu_item("Open", "", false, 1)) {}
-            if (menu_item("Save As", "", false, 1)) {}
+            if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {}
+            if (menu_item(
+                    "Save As (TODO: Not implemented)", "", false, 1
+                )) {}
             igEndMenu();
         }
 
         igSeparator();
-        if (menu_item("Reset", "", false, 1)) {}
+        if (menu_item("Reset (TODO: Not implemented)", "", false, 1)) {}
 
         if (menu_item("Quit", "Ctrl+Q", false, 1)) {
-            EDITOR.is_editing_simulation = 0;
+            EDITOR.is_editing_genetic_training = 0;
         }
 
         igEndMenu();
     }
 
     if (EDITOR.key.ctrl && EDITOR.key.q) {
-        EDITOR.is_editing_simulation = 0;
+        EDITOR.is_editing_genetic_training = 0;
     }
 }
 
@@ -151,11 +186,11 @@ static void render_entities_to_train(void) {
     }
 }
 
-static void render_simulation_parameters(void) {
-    igText("Simulation paramters:");
+static void render_genetic_training_parameters(void) {
+    igText("Simulation:");
     ig_drag_int(
         "Generations",
-        &SIMULATION.simulation.n_generations,
+        &GENETIC_TRAINING_PARAMS.simulation.n_generations,
         10,
         10000,
         1,
@@ -163,7 +198,7 @@ static void render_simulation_parameters(void) {
     );
     ig_drag_float(
         "Timestep (ms)",
-        &SIMULATION.simulation.timestep,
+        &GENETIC_TRAINING_PARAMS.simulation.timestep,
         1.0,
         100.0,
         1.0,
@@ -171,23 +206,28 @@ static void render_simulation_parameters(void) {
     );
     igSeparator();
 
-    igText("Generation paramters:");
+    igText("Population:");
     ig_drag_float(
-        "Duration (s)", &SIMULATION.generation.duration, 5.0, 600.0, 1.0, 0
+        "Live time (s)",
+        &GENETIC_TRAINING_PARAMS.population.live_time,
+        5.0,
+        600.0,
+        1.0,
+        0
     );
     ig_drag_int(
         "Population size",
-        &SIMULATION.generation.population_size,
+        &GENETIC_TRAINING_PARAMS.population.size,
         10,
         10000,
         1,
         0
     );
 
-    igText("Genetic paramters:");
+    igText("Evolution:");
     ig_drag_float(
         "Elite (ratio)",
-        &SIMULATION.genetic.elite_ratio,
+        &GENETIC_TRAINING_PARAMS.evolution.elite_ratio,
         0.01,
         0.9,
         0.01,
@@ -195,7 +235,7 @@ static void render_simulation_parameters(void) {
     );
     ig_drag_float(
         "Mutation (rate)",
-        &SIMULATION.genetic.mutation_rate,
+        &GENETIC_TRAINING_PARAMS.evolution.mutation_rate,
         0.01,
         0.9,
         0.01,
@@ -203,10 +243,16 @@ static void render_simulation_parameters(void) {
     );
 }
 
-void render_simulation_editor(void) {
+void render_genetic_training_controls(void) {
+    if (igButton("Start", IG_VEC2_ZERO)) {
+        start_genetic_training();
+    }
+}
+
+void render_genetic_training_editor(void) {
     update_counters();
 
-    render_simulation_menu_bar();
+    render_genetic_training_menu_bar();
     igSeparator();
 
     render_brains_to_train();
@@ -218,6 +264,8 @@ void render_simulation_editor(void) {
     render_entities_to_train();
     igSeparator();
 
-    render_simulation_parameters();
+    render_genetic_training_parameters();
     igSeparator();
+
+    render_genetic_training_controls();
 }
