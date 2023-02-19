@@ -68,7 +68,7 @@ void init_editor(void) {
     }
 
     memset(GENETIC_TRAINING, 0, sizeof(GeneticTraining));
-    GENETIC_TRAINING->simulation.dt = 10.0;
+    GENETIC_TRAINING->simulation.dt_ms = 10.0;
     GENETIC_TRAINING->simulation.status = SIMULATION_NOT_STARTED;
     GENETIC_TRAINING->population.live_time = 60.0;
     GENETIC_TRAINING->population.size = 1000;

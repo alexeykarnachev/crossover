@@ -53,11 +53,12 @@ typedef struct GeneticTraining {
     struct {
         int generation;
         int individual;
+        float live_time;
         float scores[MAX_N_ENTITIES_TO_TRAIN];
     } progress;
 
     struct {
-        float dt;
+        float dt_ms;
         SimulationStatus status;
     } simulation;
 

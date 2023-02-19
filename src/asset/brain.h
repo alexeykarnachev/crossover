@@ -96,6 +96,7 @@ typedef struct Brain {
 
 Brain init_empty_brain(void);
 Brain init_brain(BrainParams params);
+void randomize_brain(Brain* brain);
 void destroy_brain(Brain* brain);
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);

@@ -7,6 +7,7 @@ if(WIN32) # to mingw work as all the others
 endif(WIN32)
 
 set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_BUILD_TYPE Release)
 
 # Cimgui settings
 set(BAKENDS_FOLDER "${CMAKE_BINARY_DIR}/../dependencies/cimgui/imgui/backends/")

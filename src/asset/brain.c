@@ -285,6 +285,15 @@ Brain init_brain(BrainParams params) {
     return brain;
 }
 
+void randomize_brain(Brain* brain) {
+    BrainParams params = brain->params;
+    int n_weights = get_brain_size(params);
+    srand(time(NULL));
+    for (int i = 0; i < n_weights; ++i) {
+        brain->weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+    }
+}
+
 void destroy_brain(Brain* brain) {
     if (brain->weights != NULL) {
         free(brain->weights);

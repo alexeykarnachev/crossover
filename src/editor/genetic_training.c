@@ -19,6 +19,47 @@ static int N_BRAINS_TO_TRAIN = 0;
 static int N_ENTITIES_WITHOUT_SCORER = 0;
 static int N_ENTITIES_TO_TRAIN = 0;
 
+static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
+static Array GENERATIONS = {0};
+static float MAX_SCORE = -FLT_MAX;
+static float MIN_SCORE = FLT_MAX;
+
+static void update_evolution_history(void) {
+    GeneticTraining* params = GENETIC_TRAINING;
+
+    if (SCORES[0].data == NULL) {
+        for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
+            SCORES[e] = init_array();
+        }
+        GENERATIONS = init_array();
+    }
+
+    int gen = params->progress.generation;
+    if (GENERATIONS.length == 0 || array_peek(&GENERATIONS) < gen) {
+        array_push(&GENERATIONS, gen);
+    }
+
+    for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+        float val = params->progress.scores[e];
+
+        MAX_SCORE = max(MAX_SCORE, val);
+        MIN_SCORE = min(MIN_SCORE, val);
+
+        if (SCORES[e].length <= gen) {
+            array_push(&SCORES[e], val);
+        } else if (SCORES[e].length == gen + 1) {
+            SCORES[e].data[SCORES[e].length - 1] = val;
+        } else {
+            fprintf(
+                stderr,
+                "ERROR: Generations are in descending order. This is a "
+                "bug\n"
+            );
+            exit(1);
+        }
+    }
+}
+
 static void start_genetic_training(void) {
     pid_t pid;
     pid = fork();
@@ -35,10 +76,12 @@ static void start_genetic_training(void) {
 
             static float scores[MAX_N_ENTITIES_TO_TRAIN] = {-FLT_MAX};
             while (individual < params->population.size) {
-                int live_time = 0;
-                while (live_time < params->population.live_time) {
-                    update_scene(params->simulation.dt, 1);
-                    live_time += params->simulation.dt;
+                params->progress.live_time = 0.0;
+                while (params->progress.live_time
+                       < params->population.live_time) {
+                    float dt = params->simulation.dt_ms / 1000.0;
+                    update_scene(dt, 1);
+                    params->progress.live_time += dt;
 
                     while (*status == SIMULATION_PAUSED) {
                         sleep(0.1);
@@ -49,19 +92,21 @@ static void start_genetic_training(void) {
                     int entity = ENTITIES_TO_TRAIN[e];
                     Scorer* scorer = &SCENE.scorers[entity];
                     float score = scorer->value;
-                    scores[e] = max(scores[e], score);
+                    // scores[e] = max(scores[e], score);
+                    scores[e] = score;
 
-                    // TODO: Remove after tests
-                    scores[e] = ((float)rand() / RAND_MAX);
+                    // TODO: Remove after testing:
+                    // scores[e] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
 
                     scorer->value = 0.0;
                 }
 
-                params->progress.individual = individual++;
+                params->progress.individual = ++individual;
+                // TODO: Reset scene here!
             }
 
             memcpy(params->progress.scores, scores, sizeof(scores));
-            params->progress.generation = generation++;
+            params->progress.generation = ++generation;
         }
         exit(0);
     }
@@ -116,8 +161,8 @@ static void update_counters(void) {
     for (int i = 0; i < MAX_N_ASSETS; ++i) {
         Asset* asset = &ASSETS[i];
         if (asset->type == BRAIN_ASSET) {
-            Brain brain = asset->a.brain;
-            if (brain.params.is_trainable) {
+            Brain* brain = &asset->a.brain;
+            if (brain->params.is_trainable) {
                 trainable_brain_file_paths[n_trainable_brains++]
                     = asset->file_path;
             }
@@ -209,7 +254,7 @@ static void render_genetic_training_parameters(void) {
     igText("Simulation:");
     ig_drag_float(
         "Timestep (ms)",
-        &GENETIC_TRAINING->simulation.dt,
+        &GENETIC_TRAINING->simulation.dt_ms,
         1.0,
         100.0,
         1.0,
@@ -310,18 +355,7 @@ void render_genetic_training_controls(void) {
     }
 }
 
-void render_genetic_training_progress(void) {
-    static Array scores = {0};
-    static Array generations = {0};
-    static float max_score = -FLT_MAX;
-    static float min_score = FLT_MAX;
-    if (scores.data == NULL) {
-        scores = init_array();
-        generations = init_array();
-    }
-
-    igText("Progress:");
-
+static void render_evolution_progress_bar(void) {
     GeneticTraining* params = GENETIC_TRAINING;
     float fraction = (float)params->progress.individual
                      / params->population.size;
@@ -330,56 +364,60 @@ void render_genetic_training_progress(void) {
     ig_same_line();
     igText("Generation: %d", params->progress.generation);
 
+    fraction = (float)params->progress.live_time
+               / params->population.live_time;
+    igProgressBar(fraction, size_arg, "");
+    ig_same_line();
+    igText(
+        "Individual: %d/%d",
+        params->progress.individual,
+        params->population.size
+    );
+}
+
+static void render_evolution_plots(void) {
     ImPlotContext* ctx = ImPlot_CreateContext();
     ImPlot_SetCurrentContext(ctx);
 
     if (ImPlot_BeginPlot("Evolution", IG_VEC2_ZERO, 0)) {
-        int gen = params->progress.generation;
-        float val = params->progress.scores[0];
-        if (generations.length == 0 || array_peek(&generations) < gen) {
-            array_push(&generations, gen);
-            array_push(&scores, val);
-            max_score = max(max_score, val);
-            min_score = min(min_score, val);
-        } else if (array_peek(&generations) == gen) {
-            scores.data[scores.length - 1] = val;
-        } else {
-            fprintf(
-                stderr,
-                "ERROR: Generations are in descending order. This is a "
-                "bug\n"
-            );
-            exit(1);
-        }
-
         int offset = 0;
         int stride = sizeof(float);
-        float* xs = generations.data;
-        float* ys = scores.data;
-        int n = scores.length;
+        int n = GENERATIONS.length;
+        float* xs = GENERATIONS.data;
 
         ImPlot_SetupAxis(ImAxis_X1, "Generation", 0);
         ImPlot_SetupAxis(ImAxis_Y1, "Score", 0);
         ImPlot_SetupAxisLimits(ImAxis_X1, 0.0, (int)(1.05 * n), 0);
         ImPlot_SetupAxisLimits(
             ImAxis_Y1,
-            min_score - fabs(0.05 * min_score),
-            max_score + fabs(0.05 * max_score),
+            MIN_SCORE - fabs(0.05 * MIN_SCORE),
+            MAX_SCORE + fabs(0.05 * MAX_SCORE),
             0
         );
-
-        ImPlot_PushStyleColor_Vec4(ImPlotCol_Line, IG_RED_COLOR);
-        ImPlot_PlotLine_FloatPtrFloatPtr(
-            "Score", xs, ys, n, 0, offset, stride
-        );
-        ImPlot_PopStyleColor(1);
+        for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+            float* ys = SCORES[e].data;
+            char str[16];
+            sprintf(str, "Entity: %d", ENTITIES_TO_TRAIN[e]);
+            ImPlot_PlotLine_FloatPtrFloatPtr(
+                str, xs, ys, n, 0, offset, stride
+            );
+        }
 
         ImPlot_EndPlot();
     }
-    // ImGui::SameLine();
-    // ImPlot::ColormapScale(hist_flags & ImPlotHistogramFlags_Density ?
-    // "Density" : "Count",0,max_count,ImVec2(100,0));
-    // ImPlot_PopColormap(1);
+}
+
+void render_genetic_training_progress(void) {
+    SimulationStatus status = GENETIC_TRAINING->simulation.status;
+
+    igText("Progress:");
+    if (status == SIMULATION_NOT_STARTED) {
+        igTextColored(IG_YELLOW_COLOR, "Simulation not started");
+    } else {
+        update_evolution_history();
+        render_evolution_progress_bar();
+        render_evolution_plots();
+    }
 }
 
 void render_genetic_training_editor(void) {
