@@ -26,10 +26,13 @@ static Array GENERATIONS = {0};
 
 void init_genetic_training(GeneticTraining* genetic_training) {
     memset(genetic_training, 0, sizeof(GeneticTraining));
-    genetic_training->simulation.dt_ms = 10.0;
+    genetic_training->simulation.dt_ms = 17.0;
     genetic_training->progress.status = SIMULATION_NOT_STARTED;
-    genetic_training->population.live_time = 60.0;
-    genetic_training->population.size = 1000;
+    for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
+        genetic_training->progress.scores[e] = -FLT_MAX;
+    }
+    genetic_training->population.live_time = 10.0;
+    genetic_training->population.size = 10;
     genetic_training->evolution.elite_ratio = 0.1;
     genetic_training->evolution.mutation_rate = 0.01;
 }
@@ -83,7 +86,7 @@ static void update_evolution_history(void) {
         float val = params->progress.scores[e];
 
         MAX_SCORE = max(MAX_SCORE, val);
-        MIN_SCORE = min(MIN_SCORE, val);
+        MIN_SCORE = MIN_SCORE == -FLT_MAX ? val : min(MIN_SCORE, val);
 
         if (SCORES[e].length <= gen) {
             array_push(&SCORES[e], val);
@@ -110,11 +113,15 @@ static void start_genetic_training(void) {
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
 
+        for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+            SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+        }
+
         int generation = 0;
         while (*status == SIMULATION_RUNNING) {
             int individual = 0;
 
-            static float scores[MAX_N_ENTITIES_TO_TRAIN] = {-FLT_MAX};
+            float* scores = params->progress.scores;
             while (individual < params->population.size) {
                 params->progress.live_time = 0.0;
                 while (params->progress.live_time
@@ -136,8 +143,7 @@ static void start_genetic_training(void) {
                     int entity = ENTITIES_TO_TRAIN[e];
                     Scorer* scorer = &SCENE.scorers[entity];
                     float score = scorer->value;
-                    // scores[e] = max(scores[e], score);
-                    scores[e] = score;
+                    scores[e] = max(scores[e], score);
 
                     // TODO: Remove after testing:
                     // scores[e] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
@@ -149,7 +155,6 @@ static void start_genetic_training(void) {
                 // TODO: Reset scene here!
             }
 
-            memcpy(params->progress.scores, scores, sizeof(scores));
             params->progress.generation = ++generation;
         }
 
@@ -289,7 +294,15 @@ static void render_entities_to_train(void) {
 
         Scorer* scorer = &SCENE.scorers[entity];
         if (igBeginMenu(str, 1)) {
-            render_scorer_weights_inspector(scorer);
+            SimulationStatus status = GENETIC_TRAINING->progress.status;
+            if (status == SIMULATION_NOT_STARTED) {
+                render_scorer_weights_inspector(scorer);
+            } else {
+                igTextColored(
+                    IG_YELLOW_COLOR,
+                    "Can't change scorer weights if simulation is started"
+                );
+            }
             igEndMenu();
         }
     }
