@@ -7,6 +7,7 @@
 #include "cimplot.h"
 #include "common.h"
 #include <float.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -312,6 +313,8 @@ void render_genetic_training_controls(void) {
 void render_genetic_training_progress(void) {
     static Array scores = {0};
     static Array generations = {0};
+    static float max_score = -FLT_MAX;
+    static float min_score = FLT_MAX;
     if (scores.data == NULL) {
         scores = init_array();
         generations = init_array();
@@ -330,17 +333,14 @@ void render_genetic_training_progress(void) {
     ImPlotContext* ctx = ImPlot_CreateContext();
     ImPlot_SetCurrentContext(ctx);
 
-    if (ImPlot_BeginPlot("PLOT", IG_VEC2_ZERO, 0)) {
-        ImPlot_SetupAxis(ImAxis_X1, "x", 0);
-        ImPlot_SetupAxis(ImAxis_Y1, "y", 0);
-        ImPlot_SetupAxisLimits(ImAxis_X1, 0.0, 5, 0);
-        ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 1.0, 0);
-
+    if (ImPlot_BeginPlot("Evolution", IG_VEC2_ZERO, 0)) {
         int gen = params->progress.generation;
         float val = params->progress.scores[0];
         if (generations.length == 0 || array_peek(&generations) < gen) {
             array_push(&generations, gen);
             array_push(&scores, val);
+            max_score = max(max_score, val);
+            min_score = min(min_score, val);
         } else if (array_peek(&generations) == gen) {
             scores.data[scores.length - 1] = val;
         } else {
@@ -357,12 +357,21 @@ void render_genetic_training_progress(void) {
         float* xs = generations.data;
         float* ys = scores.data;
         int n = scores.length;
-        ImPlot_PushStyleColor_Vec4(ImPlotCol_Line, IG_RED_COLOR);
 
+        ImPlot_SetupAxis(ImAxis_X1, "Generation", 0);
+        ImPlot_SetupAxis(ImAxis_Y1, "Score", 0);
+        ImPlot_SetupAxisLimits(ImAxis_X1, 0.0, (int)(1.05 * n), 0);
+        ImPlot_SetupAxisLimits(
+            ImAxis_Y1,
+            min_score - fabs(0.05 * min_score),
+            max_score + fabs(0.05 * max_score),
+            0
+        );
+
+        ImPlot_PushStyleColor_Vec4(ImPlotCol_Line, IG_RED_COLOR);
         ImPlot_PlotLine_FloatPtrFloatPtr(
             "Score", xs, ys, n, 0, offset, stride
         );
-
         ImPlot_PopStyleColor(1);
 
         ImPlot_EndPlot();
