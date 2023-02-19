@@ -14,6 +14,8 @@ set(TABLES_SOURCE "${CMAKE_BINARY_DIR}/../dependencies/cimgui/imgui/imgui_tables
 
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/)
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/imgui)
+include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/cimplot)
+include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/cimplot/implot)
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/generator/output/)
 add_definitions("-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1")
 
@@ -23,11 +25,16 @@ set(IMGUI_SOURCES
 ../dependencies/cimgui/imgui/imgui_draw.cpp 
 ../dependencies/cimgui/imgui/imgui_demo.cpp 
 ../dependencies/cimgui/imgui/imgui_widgets.cpp
+../dependencies/cimgui/imgui/imgui_tables.cpp
+../dependencies/cimgui/cimplot/cimplot.cpp 
+../dependencies/cimgui/cimplot/implot/implot.cpp 
+../dependencies/cimgui/cimplot/implot/implot_demo.cpp 
+../dependencies/cimgui/cimplot/implot/implot_items.cpp 
 ${TABLES_SOURCE} 
 )
 
 set(IMGUI_SOURCES_sdl)
-set(IMGUI_LIBRARIES )
+set(IMGUI_LIBRARIES)
 
 if (WIN32)
     add_definitions("-DIMGUI_IMPL_API=extern \"C\" __declspec\(dllexport\)")
