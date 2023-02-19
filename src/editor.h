@@ -1,4 +1,5 @@
 #pragma once
+#include "array.h"
 #include "component.h"
 #include "math.h"
 #include "nfd.h"
@@ -52,7 +53,7 @@ typedef struct GeneticTraining {
     struct {
         int generation;
         int individual;
-        float scores[MAX_N_ENTITIES_TO_TRAIN][MAX_POPULATION_SIZE];
+        float scores[MAX_N_ENTITIES_TO_TRAIN];
     } progress;
 
     struct {

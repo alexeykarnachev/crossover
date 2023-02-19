@@ -1,9 +1,12 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "../array.h"
 #include "../editor.h"
 #include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "cimplot.h"
 #include "common.h"
+#include <float.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -28,6 +31,8 @@ static void start_genetic_training(void) {
         int generation = 0;
         while (*status == SIMULATION_RUNNING) {
             int individual = 0;
+
+            static float scores[MAX_N_ENTITIES_TO_TRAIN] = {-FLT_MAX};
             while (individual < params->population.size) {
                 int live_time = 0;
                 while (live_time < params->population.live_time) {
@@ -39,24 +44,23 @@ static void start_genetic_training(void) {
                     }
                 }
 
-                for (int i = 0; i < N_ENTITIES_TO_TRAIN; ++i) {
-                    int entity = ENTITIES_TO_TRAIN[i];
+                for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+                    int entity = ENTITIES_TO_TRAIN[e];
                     Scorer* scorer = &SCENE.scorers[entity];
-                    // params->progress.scores[i][individual] =
-                    // scorer->value;
-                    // TODO: Replace with real score values (for now it's
-                    // more convenient to debug the histogram just with
-                    // random score values)
-                    params->progress.scores[i][individual] = (float)rand()
-                                                             / RAND_MAX
-                                                             * 100.0;
+                    float score = scorer->value;
+                    scores[e] = max(scores[e], score);
+
+                    // TODO: Remove after tests
+                    scores[e] = ((float)rand() / RAND_MAX);
+
                     scorer->value = 0.0;
                 }
 
                 params->progress.individual = individual++;
             }
 
-            params->progress.generation = ++generation;
+            memcpy(params->progress.scores, scores, sizeof(scores));
+            params->progress.generation = generation++;
         }
         exit(0);
     }
@@ -306,6 +310,13 @@ void render_genetic_training_controls(void) {
 }
 
 void render_genetic_training_progress(void) {
+    static Array scores = {0};
+    static Array generations = {0};
+    if (scores.data == NULL) {
+        scores = init_array();
+        generations = init_array();
+    }
+
     igText("Progress:");
 
     GeneticTraining* params = GENETIC_TRAINING;
@@ -315,6 +326,51 @@ void render_genetic_training_progress(void) {
     igProgressBar(fraction, size_arg, "");
     ig_same_line();
     igText("Generation: %d", params->progress.generation);
+
+    ImPlotContext* ctx = ImPlot_CreateContext();
+    ImPlot_SetCurrentContext(ctx);
+
+    if (ImPlot_BeginPlot("PLOT", IG_VEC2_ZERO, 0)) {
+        ImPlot_SetupAxis(ImAxis_X1, "x", 0);
+        ImPlot_SetupAxis(ImAxis_Y1, "y", 0);
+        ImPlot_SetupAxisLimits(ImAxis_X1, 0.0, 5, 0);
+        ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 1.0, 0);
+
+        int gen = params->progress.generation;
+        float val = params->progress.scores[0];
+        if (generations.length == 0 || array_peek(&generations) < gen) {
+            array_push(&generations, gen);
+            array_push(&scores, val);
+        } else if (array_peek(&generations) == gen) {
+            scores.data[scores.length - 1] = val;
+        } else {
+            fprintf(
+                stderr,
+                "ERROR: Generations are in descending order. This is a "
+                "bug\n"
+            );
+            exit(1);
+        }
+
+        int offset = 0;
+        int stride = sizeof(float);
+        float* xs = generations.data;
+        float* ys = scores.data;
+        int n = scores.length;
+        ImPlot_PushStyleColor_Vec4(ImPlotCol_Line, IG_RED_COLOR);
+
+        ImPlot_PlotLine_FloatPtrFloatPtr(
+            "Score", xs, ys, n, 0, offset, stride
+        );
+
+        ImPlot_PopStyleColor(1);
+
+        ImPlot_EndPlot();
+    }
+    // ImGui::SameLine();
+    // ImPlot::ColormapScale(hist_flags & ImPlotHistogramFlags_Density ?
+    // "Density" : "Count",0,max_count,ImVec2(100,0));
+    // ImPlot_PopColormap(1);
 }
 
 void render_genetic_training_editor(void) {
