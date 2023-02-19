@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     init_editor();
 
-    init_app(1024, 768);
+    init_app(1600, 1200);
     init_renderer();
     init_debug();
 

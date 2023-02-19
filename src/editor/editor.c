@@ -67,13 +67,7 @@ void init_editor(void) {
         exit(1);
     }
 
-    memset(GENETIC_TRAINING, 0, sizeof(GeneticTraining));
-    GENETIC_TRAINING->simulation.dt_ms = 10.0;
-    GENETIC_TRAINING->simulation.status = SIMULATION_NOT_STARTED;
-    GENETIC_TRAINING->population.live_time = 60.0;
-    GENETIC_TRAINING->population.size = 1000;
-    GENETIC_TRAINING->evolution.elite_ratio = 0.1;
-    GENETIC_TRAINING->evolution.mutation_rate = 0.01;
+    init_genetic_training(GENETIC_TRAINING);
 }
 
 void reset_editor(void) {
@@ -81,6 +75,8 @@ void reset_editor(void) {
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
     EDITOR.project.scene_file_path = NULL;
+
+    reset_genetic_training(GENETIC_TRAINING);
 }
 
 void close_editor(void) {

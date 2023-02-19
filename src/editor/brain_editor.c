@@ -6,7 +6,7 @@
 #include "common.h"
 #include <string.h>
 
-static char STR_BUFFER[8];
+static char STR_BUFFER[16];
 static BrainParams BRAIN_PARAMS;
 static BrainParams PREV_BRAIN_PARAMS;
 static ResultMessage BRAIN_RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};

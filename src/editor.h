@@ -51,6 +51,7 @@ typedef enum SimulationStatus {
 
 typedef struct GeneticTraining {
     struct {
+        SimulationStatus status;
         int generation;
         int individual;
         float live_time;
@@ -59,7 +60,6 @@ typedef struct GeneticTraining {
 
     struct {
         float dt_ms;
-        SimulationStatus status;
     } simulation;
 
     struct {
@@ -82,6 +82,9 @@ Vec2 get_cursor_scene_pos(void);
 void init_editor(void);
 void close_editor(void);
 void reset_editor(void);
+
+void init_genetic_training(GeneticTraining* genetic_training);
+void reset_genetic_training(GeneticTraining* genetic_training);
 
 void new_editor_project(void);
 void new_editor_scene(void);

@@ -18,11 +18,51 @@ static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
 static int N_BRAINS_TO_TRAIN = 0;
 static int N_ENTITIES_WITHOUT_SCORER = 0;
 static int N_ENTITIES_TO_TRAIN = 0;
+static float MAX_SCORE = -FLT_MAX;
+static float MIN_SCORE = FLT_MAX;
 
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
 static Array GENERATIONS = {0};
-static float MAX_SCORE = -FLT_MAX;
-static float MIN_SCORE = FLT_MAX;
+
+void init_genetic_training(GeneticTraining* genetic_training) {
+    memset(genetic_training, 0, sizeof(GeneticTraining));
+    genetic_training->simulation.dt_ms = 10.0;
+    genetic_training->progress.status = SIMULATION_NOT_STARTED;
+    genetic_training->population.live_time = 60.0;
+    genetic_training->population.size = 1000;
+    genetic_training->evolution.elite_ratio = 0.1;
+    genetic_training->evolution.mutation_rate = 0.01;
+}
+
+void reset_genetic_training(GeneticTraining* genetic_training) {
+    if (genetic_training != NULL) {
+        genetic_training->progress.status = SIMULATION_NOT_STARTED;
+        genetic_training->progress.generation = 0;
+        genetic_training->progress.individual = 0;
+        genetic_training->progress.live_time = 0;
+        memset(
+            genetic_training->progress.scores,
+            0,
+            sizeof(genetic_training->progress.scores)
+        );
+    }
+
+    N_BRAINS_TO_TRAIN = 0;
+    N_ENTITIES_WITHOUT_SCORER = 0;
+    N_ENTITIES_TO_TRAIN = 0;
+    MAX_SCORE = -FLT_MAX;
+    MIN_SCORE = FLT_MAX;
+
+    for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
+        if (SCORES[e].data != NULL) {
+            destroy_array(&SCORES[e]);
+        }
+    }
+
+    if (GENERATIONS.data != NULL) {
+        destroy_array(&GENERATIONS);
+    }
+}
 
 static void update_evolution_history(void) {
     GeneticTraining* params = GENETIC_TRAINING;
@@ -67,7 +107,7 @@ static void start_genetic_training(void) {
         perror("ERROR: Can't start Genetic Training\n");
     } else if (pid == 0) {
         GeneticTraining* params = GENETIC_TRAINING;
-        SimulationStatus* status = &params->simulation.status;
+        SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
 
         int generation = 0;
@@ -85,6 +125,10 @@ static void start_genetic_training(void) {
 
                     while (*status == SIMULATION_PAUSED) {
                         sleep(0.1);
+                    }
+
+                    if (*status == SIMULATION_NOT_STARTED) {
+                        exit(0);
                     }
                 }
 
@@ -108,6 +152,7 @@ static void start_genetic_training(void) {
             memcpy(params->progress.scores, scores, sizeof(scores));
             params->progress.generation = ++generation;
         }
+
         exit(0);
     }
 }
@@ -300,7 +345,7 @@ static void render_genetic_training_parameters(void) {
 }
 
 void render_genetic_training_controls(void) {
-    SimulationStatus* status = &GENETIC_TRAINING->simulation.status;
+    SimulationStatus* status = &GENETIC_TRAINING->progress.status;
     switch (*status) {
         case SIMULATION_RUNNING: {
             if (igButton("Pause", IG_VEC2_ZERO)) {
@@ -408,7 +453,7 @@ static void render_evolution_plots(void) {
 }
 
 void render_genetic_training_progress(void) {
-    SimulationStatus status = GENETIC_TRAINING->simulation.status;
+    SimulationStatus status = GENETIC_TRAINING->progress.status;
 
     igText("Progress:");
     if (status == SIMULATION_NOT_STARTED) {
