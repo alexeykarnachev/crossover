@@ -52,6 +52,7 @@ typedef struct GeneticTraining {
     struct {
         int generation;
         int individual;
+        float scores[MAX_N_ENTITIES_TO_TRAIN][MAX_POPULATION_SIZE];
     } progress;
 
     struct {

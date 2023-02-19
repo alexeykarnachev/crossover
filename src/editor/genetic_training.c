@@ -28,7 +28,7 @@ static void start_genetic_training(void) {
         int generation = 0;
         while (*status == SIMULATION_RUNNING) {
             int individual = 0;
-            while (individual++ < params->population.size) {
+            while (individual < params->population.size) {
                 int live_time = 0;
                 while (live_time < params->population.live_time) {
                     update_scene(params->simulation.dt, 1);
@@ -41,19 +41,24 @@ static void start_genetic_training(void) {
 
                 for (int i = 0; i < N_ENTITIES_TO_TRAIN; ++i) {
                     int entity = ENTITIES_TO_TRAIN[i];
-                    Scorer scorer = SCENE.scorers[entity];
-                    printf("Score %d: %f, ", entity, scorer.value);
+                    Scorer* scorer = &SCENE.scorers[entity];
+                    // params->progress.scores[i][individual] =
+                    // scorer->value;
+                    // TODO: Replace with real score values (for now it's
+                    // more convenient to debug the histogram just with
+                    // random score values)
+                    params->progress.scores[i][individual] = (float)rand()
+                                                             / RAND_MAX
+                                                             * 100.0;
+                    scorer->value = 0.0;
                 }
-                printf("\n\n");
 
-                params->progress.individual = individual;
+                params->progress.individual = individual++;
             }
 
             params->progress.generation = ++generation;
         }
         exit(0);
-    } else {
-        printf("INFO: FOO\n");
     }
 }
 
@@ -220,7 +225,7 @@ static void render_genetic_training_parameters(void) {
         "Population size",
         &GENETIC_TRAINING->population.size,
         10,
-        10000,
+        MAX_POPULATION_SIZE,
         1,
         0
     );
@@ -260,7 +265,39 @@ void render_genetic_training_controls(void) {
             break;
         }
         case SIMULATION_NOT_STARTED: {
-            if (igButton("Start", IG_VEC2_ZERO)) {
+            char* str[128];
+            int can_start = 1;
+            if (N_BRAINS_TO_TRAIN > MAX_N_BRAINS_TO_TRAIN) {
+                igTextColored(
+                    IG_RED_COLOR,
+                    "ERROR: Can't start training, freeze some brains "
+                    "(MAX_N_BRAINS_TO_TRAIN: %d)",
+                    MAX_N_BRAINS_TO_TRAIN
+                );
+                can_start = 0;
+            }
+
+            if (N_ENTITIES_TO_TRAIN > MAX_N_ENTITIES_TO_TRAIN) {
+                igTextColored(
+                    IG_RED_COLOR,
+                    "ERROR: Can't start training, freeze some brains "
+                    "(MAX_N_ENTITIES_TO_TRAIN: %d)",
+                    MAX_N_ENTITIES_TO_TRAIN
+                );
+                can_start = 0;
+            }
+
+            if (GENETIC_TRAINING->population.size > MAX_POPULATION_SIZE) {
+                igTextColored(
+                    IG_RED_COLOR,
+                    "ERROR: Can't start training, reduce population size "
+                    "(MAX_POPULATION_SIZE: %d)",
+                    MAX_POPULATION_SIZE
+                );
+                can_start = 0;
+            }
+
+            if (can_start && igButton("Start", IG_VEC2_ZERO)) {
                 start_genetic_training();
             }
             break;
