@@ -43,11 +43,11 @@ void destroy_brain(Brain* brain) {
     memset(brain, 0, sizeof(Brain));
 }
 
-void destory_brains(void) {
+void destroy_brains(void) {
     int n_brains = 0;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i, n_brains) {
         Brain* brain = &BRAINS[i];
-        if (strlen(brain->params.key) == 0) {
+        if (brain->params.key[0] == '\0') {
             continue;
         }
 
@@ -64,12 +64,21 @@ void destory_brains(void) {
         );
         exit(1);
     }
+
+    N_BRAINS = 0;
 }
 
 // --------------------------------------------------------
 // Brain general
-Brain* init_brain(BrainParams params) {
-    if (strlen(params.key) == 0) {
+static Brain* add_brain(Brain brain) {
+    if (N_BRAINS++ >= MAX_N_BRAINS) {
+        fprintf(stderr, "ERROR: Can't initalize more Brains\n");
+        exit(1);
+    }
+
+    BrainParams params = brain.params;
+
+    if (params.key[0] == '\0') {
         fprintf(
             stderr,
             "ERROR: Can't initialize the Brain without specified key in "
@@ -78,25 +87,26 @@ Brain* init_brain(BrainParams params) {
         exit(1);
     }
 
-    if (N_BRAINS++ >= MAX_N_BRAINS) {
-        fprintf(stderr, "ERROR: Can't initalize more Brains\n");
-        exit(1);
-    }
-
     uint64_t hash = get_bytes_hash(params.key, strlen(params.key));
     int idx = hash % BRAINS_ARRAY_CAPACITY;
-    while (strlen(BRAINS[idx].params.key) != 0) {
+    while (BRAINS[idx].params.key[0] != '\0') {
         if (strcmp(BRAINS[idx].params.key, params.key) == 0) {
             fprintf(
                 stderr,
-                "ERROR: Can't initialize new Brain with key: %s. The "
-                "Brain with this key already exists\n",
+                "ERROR: Brain with this key has been already initialized: "
+                "%s\n",
                 BRAINS[idx].params.key
             );
+            exit(1);
         }
         idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
     }
 
+    BRAINS[idx] = brain;
+    return &BRAINS[idx];
+}
+
+Brain init_local_brain(BrainParams params) {
     int n_weights = get_brain_size(params);
     int weights_n_bytes = sizeof(float) * n_weights;
     float* weights = (float*)malloc(weights_n_bytes);
@@ -107,8 +117,31 @@ Brain* init_brain(BrainParams params) {
     }
 
     Brain brain = {.params = params, .weights = weights};
-    BRAINS[idx] = brain;
-    return &BRAINS[idx];
+    return brain;
+}
+
+Brain* init_brain(BrainParams params) {
+    Brain brain = init_local_brain(params);
+    return add_brain(brain);
+}
+
+Brain* load_brain(char* file_path, ResultMessage* res_msg) {
+    Brain brain = load_local_brain(file_path, res_msg);
+    return add_brain(brain);
+}
+
+Brain* get_or_load_brain(char* key) {
+    uint64_t hash = get_bytes_hash(key, strlen(key));
+    int idx = hash % BRAINS_ARRAY_CAPACITY;
+    while (strlen(BRAINS[idx].params.key) != 0) {
+        if (strcmp(BRAINS[idx].params.key, key) == 0) {
+            return &BRAINS[idx];
+        }
+        idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
+    }
+    ResultMessage res_msg = {0};
+    Brain* brain = load_brain(key, &res_msg);
+    return brain;
 }
 
 void randomize_brain(Brain* brain) {
@@ -143,10 +176,13 @@ Brain* mutate_and_copy_brain(
     return new_brain;
 }
 
-Brain* load_brain(char* file_path, ResultMessage* res_msg) {
+Brain load_local_brain(char* file_path, ResultMessage* res_msg) {
     FILE* fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
-        return 0;
+        fprintf(
+            stderr, "ERROR: Failed to load the Brain: %s\n", file_path
+        );
+        exit(1);
     }
 
     int version;
@@ -160,14 +196,14 @@ Brain* load_brain(char* file_path, ResultMessage* res_msg) {
             version,
             BRAIN_VERSION
         );
-        return 0;
+        exit(1);
     }
 
     BrainParams params;
     n_bytes += fread(&params, sizeof(BrainParams), 1, fp);
-    Brain* brain = init_brain(params);
+    Brain brain = init_local_brain(params);
     int n_weights = get_brain_size(params);
-    n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
+    n_bytes += fread(brain.weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;

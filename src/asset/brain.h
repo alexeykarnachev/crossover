@@ -98,6 +98,7 @@ typedef struct Brain {
 extern Brain BRAINS[BRAINS_ARRAY_CAPACITY];
 extern int N_BRAINS;
 
+Brain init_local_brain(BrainParams params);
 Brain* init_brain(BrainParams params);
 void randomize_brain(Brain* brain);
 Brain* mutate_and_copy_brain(
@@ -108,6 +109,12 @@ Brain* mutate_and_copy_brain(
 );
 void destroy_brains(void);
 void destroy_brain(Brain* brain);
+void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
+BrainParams load_brain_params(char* file_path, ResultMessage* res_msg);
+Brain load_local_brain(char* file_path, ResultMessage* res_msg);
+Brain* load_brain(char* file_path, ResultMessage* res_msg);
+Brain* get_or_load_brain(char* key);
+
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);
 int get_brain_size(BrainParams params);
@@ -122,6 +129,3 @@ BrainInput init_self_health_brain_input(void);
 BrainOutput init_watch_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
-
-Brain* load_brain(char* file_path, ResultMessage* res_msg);
-void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);

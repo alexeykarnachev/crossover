@@ -17,26 +17,28 @@ static void init_and_save_as(void) {
     );
     BrainParams params = BRAIN_PARAMS;
     strcpy(params.key, file_path);
-    Brain* brain = init_brain(params);
-    save_brain(file_path, brain, &BRAIN_RESULT_MESSAGE);
-    destroy_brain(brain);
+    Brain brain = init_local_brain(params);
+    save_brain(file_path, &brain, &BRAIN_RESULT_MESSAGE);
+    destroy_brain(&brain);
 }
 
 static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain Editor", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open", "", false, 1)) {
-                Brain* brain = load_brain(
-                    open_nfd(
-                        EDITOR.project.default_search_path, BRAIN_FILTER, 1
-                    ),
-                    &BRAIN_RESULT_MESSAGE
+                char* fp = open_nfd(
+                    EDITOR.project.default_search_path, BRAIN_FILTER, 1
                 );
-                if (BRAIN_RESULT_MESSAGE.flag == SUCCESS_RESULT) {
-                    PREV_BRAIN_PARAMS = brain->params;
-                    BRAIN_PARAMS = brain->params;
+                if (fp != NULL) {
+                    Brain brain = load_local_brain(
+                        fp, &BRAIN_RESULT_MESSAGE
+                    );
+                    if (BRAIN_RESULT_MESSAGE.flag == SUCCESS_RESULT) {
+                        PREV_BRAIN_PARAMS = brain.params;
+                        BRAIN_PARAMS = brain.params;
+                    }
+                    destroy_brain(&brain);
                 }
-                destroy_brain(brain);
             }
             if (menu_item("Save As", "", false, 1)) {
                 init_and_save_as();

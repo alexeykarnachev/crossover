@@ -158,10 +158,10 @@ static int argmax(float* ptr, int n_vals) {
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
-    Brain* brain = ai.brain;
-    if (brain == NULL) {
+    if (ai.key[0] == '\0') {
         return action;
     }
+    Brain* brain = get_or_load_brain(ai.key);
     BrainParams params = brain->params;
     int n_view_rays = params.n_view_rays;
     float* inp = BRAIN_INPUT;

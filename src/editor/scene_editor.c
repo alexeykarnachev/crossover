@@ -288,8 +288,8 @@ static char* get_brain_params_text(BrainParams params) {
     return text;
 }
 
-Brain* render_brain_asset_selector(void) {
-    Brain* selected_brain = NULL;
+char* render_brain_asset_selector(void) {
+    char* selected_key = NULL;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
         Brain* brain = &BRAINS[i];
         char* key = brain->params.key;
@@ -300,14 +300,14 @@ Brain* render_brain_asset_selector(void) {
         static char text[MAX_PATH_LENGTH + 16];
         sprintf(text, "Brain: %s", get_short_file_path(key));
         if (igSelectable_Bool(text, 0, 0, IG_VEC2_ZERO)) {
-            selected_brain = brain;
+            selected_key = key;
         };
         if (igIsItemHovered(0)) {
             igSetTooltip(get_brain_params_text(brain->params));
         }
     }
 
-    return selected_brain;
+    return selected_key;
 }
 
 static void render_brain_asset_editor(void) {
@@ -341,14 +341,19 @@ static void render_brain_asset_editor(void) {
 static void render_brain_ai_controller_inspector(int entity) {
     Controller* controller = &SCENE.controllers[entity];
     BrainAIController* ai = &controller->c.brain_ai;
-    Brain* brain = ai->brain;
+
+    Brain* brain = NULL;
+    if (ai->key[0] != '\0') {
+        brain = get_or_load_brain(ai->key);
+    }
+
     if (brain == NULL) {
         igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
         ig_same_line();
         if (igBeginMenu("Attach", 1)) {
-            Brain* selected_brain = render_brain_asset_selector();
-            if (selected_brain != NULL) {
-                ai->brain = selected_brain;
+            char* selected_key = render_brain_asset_selector();
+            if (selected_key != NULL) {
+                strcpy(ai->key, selected_key);
             }
             igEndMenu();
         }

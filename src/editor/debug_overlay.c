@@ -1,5 +1,6 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../app.h"
+#include "../asset.h"
 #include "../debug.h"
 #include "../editor.h"
 #include "../scene.h"
@@ -18,6 +19,7 @@ void render_debug_overlay(void) {
         igText("FPS: %.1f", io->Framerate);
         igText("Scene time: %.1f", SCENE.time);
         igText("Entities: %d", SCENE.n_entities);
+        igText("Brains: %d", N_BRAINS);
         igText("Collisions: %d", DEBUG.general.n_collisions);
         igText(
             "Camera pos: (%.2f, %.2f)",

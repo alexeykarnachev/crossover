@@ -123,16 +123,15 @@ static void start_genetic_training(void) {
 
             int entity = ENTITIES_TO_TRAIN[e];
             Controller controller = SCENE.controllers[entity];
-            Brain* brain = controller.c.brain_ai.brain;
-            if (brain == NULL) {
-                fprintf(
-                    stderr,
-                    "ERROR: Trainable entity %d doesn't have the Brain. "
-                    "This is a bug\n",
-                    entity
-                );
-                exit(1);
-            }
+            // Brain* brain = controller.c.brain_ai.brain;
+            // if (brain == NULL) {
+            //     fprintf(
+            //         stderr,
+            //         "ERROR: Trainable entity %d doesn't have the Brain.
+            //         " "This is a bug\n", entity
+            //     );
+            //     exit(1);
+            // }
 
             // Brain* orig_brain = &asset->a.brain;
             // Brain* brain_copy = mutate_and_copy_brain(brain, );
@@ -219,7 +218,8 @@ static void update_counters(void) {
         if (type != BRAIN_AI_CONTROLLER) {
             continue;
         }
-        Brain* brain = controller.c.brain_ai.brain;
+        char* key = controller.c.brain_ai.key;
+        Brain* brain = get_or_load_brain(key);
         if (brain == NULL) {
             continue;
         }
@@ -260,7 +260,6 @@ static void render_entities_without_scorer(void) {
         sprintf(str, "Entity: %d", entity);
 
         Scorer* scorer = &SCENE.scorers[entity];
-        ig_same_line();
         if (igButton("Fix", IG_VEC2_ZERO)) {
             reset_scorer(scorer);
             SCENE.components[entity] |= SCORER_COMPONENT;

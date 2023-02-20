@@ -3,5 +3,5 @@
 #include "brain.h"
 
 void destroy_assets(void) {
-    destory_brains();
+    destroy_brains();
 }

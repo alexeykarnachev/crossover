@@ -1,4 +1,5 @@
 #pragma once
+#include "asset.h"
 #include "component.h"
 #include "const.h"
 #include "math.h"
