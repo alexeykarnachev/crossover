@@ -1,6 +1,7 @@
 #include "../scene.h"
 
 #include "../app.h"
+#include "../asset.h"
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
@@ -92,25 +93,27 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fwrite(&SCENE.camera, sizeof(int), 1, fp);
     n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
-    // Write Assets
-    n_bytes += fwrite(&N_ASSETS, sizeof(int), 1, fp);
-    int n_assets = 0;
-    for (int i = 0; i < MAX_N_ASSETS; ++i) {
-        Asset* asset = &ASSETS[i];
-        if (asset->type == NULL_ASSET) {
+    // Write Brains
+    n_bytes += fwrite(&N_BRAINS, sizeof(int), 1, fp);
+    int n_brains = 0;
+    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
+        Brain* brain = &BRAINS[i];
+        if (strlen(brain->params.key) == 0) {
             continue;
         }
 
-        n_assets += 1;
-        n_bytes += fwrite(&asset->type, sizeof(int), 1, fp);
-        n_bytes += write_str_to_file(asset->file_path, fp, 0);
+        n_bytes += write_str_to_file(brain->params.key, fp, 0);
+        n_brains += 1;
     }
 
-    if (n_assets != N_ASSETS) {
+    if (n_brains != N_BRAINS) {
         fprintf(
             stderr,
-            "ERROR: Number of saved assets is not equal to the number of "
-            "assets registered in the engine runtime. It's a bug\n"
+            "ERROR: Number of saved Brains (%d) is not equal to the "
+            "number of "
+            "Brains registered in the engine runtime (%d). It's a bug\n",
+            n_brains,
+            N_BRAINS
         );
         exit(1);
     }
@@ -133,7 +136,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     }
 
     reset_scene();
-    reset_assets();
+    destroy_assets();
 
     // Read version
     int version;
@@ -208,22 +211,21 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
     int scene_n_bytes = n_bytes;
 
-    // Read Assets
-    int n_assets;
-    n_bytes = fread(&n_assets, sizeof(int), 1, fp);
-    for (int i = 0; i < n_assets; ++i) {
-        char* file_path;
-        AssetType type;
-        n_bytes += fread(&type, sizeof(int), 1, fp);
-        n_bytes += read_str_from_file(&file_path, fp, 0);
-
-        // TODO: There could be different errors during the assets loading.
-        // One common res_msg is not enough. I need to introduct some kind
-        // of the queue with the log messages which could be rendered on
-        // each editor update iteration
-        n_bytes += load_asset(file_path, res_msg);
+    // Read Brains
+    int n_brains;
+    n_bytes = fread(&n_brains, sizeof(int), 1, fp);
+    for (int i = 0; i < n_brains; ++i) {
+        char* key;
+        n_bytes += read_str_from_file(&key, fp, 0);
+        Brain* brain = load_brain(key, res_msg);
+        // TODO: Currently `get_brain_size` returns the number weights.
+        // It may be confusing. It's better to make the explicitly named
+        // function `get_brain_n_weights` as well as `get_brain_size`
+        // which returns the real total size in bytes
+        n_bytes += get_brain_size(brain->params) * sizeof(float)
+                   + sizeof(Brain);
     }
-    int assets_n_bytes = n_bytes;
+    int brains_n_bytes = n_bytes;
 
     // Read debug info
     n_bytes += fread(&DEBUG, sizeof(DEBUG), 1, fp);
@@ -234,9 +236,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
 
     sprintf(
         res_msg->msg,
-        "INFO: Scene is loaded (%dB) with assets (%dB)",
+        "INFO: Scene is loaded (%dB) with Brains (%dB)",
         scene_n_bytes,
-        assets_n_bytes
+        brains_n_bytes
     );
     return;
 }

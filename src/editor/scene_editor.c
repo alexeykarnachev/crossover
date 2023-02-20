@@ -1,6 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
 #include "../app.h"
+#include "../asset.h"
 #include "../component.h"
 #include "../debug.h"
 #include "../editor.h"
@@ -287,66 +288,49 @@ static char* get_brain_params_text(BrainParams params) {
     return text;
 }
 
-static void render_asset_tooltip(Asset* asset) {
-    AssetType type = asset->type;
-    switch (type) {
-        case BRAIN_ASSET: {
-            Brain brain = asset->a.brain;
-            igSetTooltip(get_brain_params_text(brain.params));
-            break;
-        }
-        default: {
-            igSetTooltip(
-                "ERROR: Can't show tooltip for the Asset with type id: %d",
-                type
-            );
-        }
-    }
-}
-
-static char* render_brain_asset_selector(void) {
-    char* selected_file_path = NULL;
-    for (int i = 0; i < MAX_N_ASSETS; ++i) {
-        if (ASSETS[i].type != BRAIN_ASSET) {
+Brain* render_brain_asset_selector(void) {
+    Brain* selected_brain = NULL;
+    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
+        Brain* brain = &BRAINS[i];
+        char* key = brain->params.key;
+        if (strlen(key) == 0) {
             continue;
         }
-        Asset* asset = &ASSETS[i];
 
         static char text[MAX_PATH_LENGTH + 16];
-        sprintf(text, "Brain: %s", get_short_file_path(asset->file_path));
+        sprintf(text, "Brain: %s", get_short_file_path(key));
         if (igSelectable_Bool(text, 0, 0, IG_VEC2_ZERO)) {
-            selected_file_path = asset->file_path;
+            selected_brain = brain;
         };
         if (igIsItemHovered(0)) {
-            render_asset_tooltip(asset);
+            igSetTooltip(get_brain_params_text(brain->params));
         }
     }
 
-    return selected_file_path;
+    return selected_brain;
 }
 
 static void render_brain_asset_editor(void) {
-    for (int i = 0; i < MAX_N_ASSETS; ++i) {
-        if (ASSETS[i].type != BRAIN_ASSET) {
+    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
+        Brain* brain = &BRAINS[i];
+        char* key = brain->params.key;
+        if (strlen(key) == 0) {
             continue;
         }
-        Asset* asset = &ASSETS[i];
-        Brain* brain = &asset->a.brain;
-        BrainParams* params = &brain->params;
 
         static char text[MAX_PATH_LENGTH + 16];
-        sprintf(text, "Brain: %s", get_short_file_path(asset->file_path));
+        sprintf(text, "Brain: %s", get_short_file_path(key));
         if (igBeginMenu(text, 1)) {
-            igText(get_brain_params_text(asset->a.brain.params));
+            igText(get_brain_params_text(brain->params));
 
             igSeparator();
-            if (params->is_trainable
+            if (brain->params.is_trainable
                 && igButton("Freeze weights", IG_VEC2_ZERO)) {
-                params->is_trainable = 0;
-                save_brain(asset->file_path, brain, &RESULT_MESSAGE);
-            } else if (!params->is_trainable && igButton("Make trainable", IG_VEC2_ZERO)) {
-                params->is_trainable = 1;
-                save_brain(asset->file_path, brain, &RESULT_MESSAGE);
+                brain->params.is_trainable = 0;
+                save_brain(key, brain, &RESULT_MESSAGE);
+            } else if (!brain->params.is_trainable && igButton("Make trainable", IG_VEC2_ZERO)) {
+                brain->params.is_trainable = 1;
+                save_brain(key, brain, &RESULT_MESSAGE);
             }
 
             igEndMenu();
@@ -357,33 +341,23 @@ static void render_brain_asset_editor(void) {
 static void render_brain_ai_controller_inspector(int entity) {
     Controller* controller = &SCENE.controllers[entity];
     BrainAIController* ai = &controller->c.brain_ai;
-    Asset* asset = get_asset(ai->brain_file_path);
-    if (ai->brain_file_path[0] == '\0') {
+    Brain* brain = ai->brain;
+    if (brain == NULL) {
         igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
         ig_same_line();
         if (igBeginMenu("Attach", 1)) {
-            char* fp = render_brain_asset_selector();
-            if (fp != NULL) {
-                strcpy(ai->brain_file_path, fp);
+            Brain* selected_brain = render_brain_asset_selector();
+            if (selected_brain != NULL) {
+                ai->brain = selected_brain;
             }
             igEndMenu();
         }
-    } else if (asset == NULL) {
-        igTextColored(
-            IG_RED_COLOR,
-            "ERROR: Brain with this name is missed from the assets"
-        );
-    } else if (asset->type != BRAIN_ASSET) {
-        igTextColored(
-            IG_RED_COLOR,
-            "ERROR: Asset with this hash is not a Brain asset.\nIt's a bug"
-        );
     } else if (igIsItemHovered(0)) {
-        render_asset_tooltip(asset);
+        igSetTooltip(get_brain_params_text(brain->params));
     }
 
-    if (asset != NULL) {
-        BrainParams params = asset->a.brain.params;
+    if (brain != NULL) {
+        BrainParams params = brain->params;
         BrainFitsEntityError error = check_if_brain_fits_entity(
             params, entity
         );
@@ -432,11 +406,7 @@ static void render_brain_ai_controller_inspector(int entity) {
         if (error.n_reasons > 0) {
             igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
         } else {
-            igTextColored(
-                IG_GREEN_COLOR,
-                "Brain: %s",
-                get_short_file_path(asset->file_path)
-            );
+            igTextColored(IG_GREEN_COLOR, "Brain attached");
         }
     }
 }
@@ -725,7 +695,7 @@ static void render_assets_browser(void) {
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
-            int n_bytes = load_asset(file_path, &RESULT_MESSAGE);
+            Brain* brain = load_brain(file_path, &RESULT_MESSAGE);
         }
 
         igSeparator();

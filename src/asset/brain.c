@@ -2,14 +2,13 @@
 
 #include "../component.h"
 #include "../const.h"
+#include "../utils.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-// --------------------------------------------------------
-// Brain inputs
 #define BRAIN_INPUT_TYPE_ERROR(fn_name, type) \
     do { \
         fprintf( \
@@ -22,6 +21,241 @@
         ); \
         exit(1); \
     } while (0)
+
+#define BRAIN_OUTPUT_TYPE_ERROR(fn_name, type) \
+    do { \
+        fprintf( \
+            stderr, \
+            "ERROR: can't %s for the brain output with type id: %d. " \
+            "Needs " \
+            "to be implemented\n", \
+            fn_name, \
+            type \
+        ); \
+        exit(1); \
+    } while (0)
+
+Brain BRAINS[BRAINS_ARRAY_CAPACITY] = {0};
+int N_BRAINS = 0;
+
+void destroy_brain(Brain* brain) {
+    free(brain->weights);
+    memset(brain, 0, sizeof(Brain));
+}
+
+void destory_brains(void) {
+    int n_brains = 0;
+    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i, n_brains) {
+        Brain* brain = &BRAINS[i];
+        if (strlen(brain->params.key) == 0) {
+            continue;
+        }
+
+        destroy_brain(brain);
+        n_brains += 1;
+    }
+
+    if (n_brains != N_BRAINS) {
+        fprintf(
+            stderr,
+            "ERROR: Number of destroyed Brains is not equal to the number "
+            "of "
+            "Brains registered in the engine runtime. It's a bug\n"
+        );
+        exit(1);
+    }
+}
+
+// --------------------------------------------------------
+// Brain general
+Brain* init_brain(BrainParams params) {
+    if (strlen(params.key) == 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't initialize the Brain without specified key in "
+            "its parameters\n"
+        );
+        exit(1);
+    }
+
+    if (N_BRAINS++ >= MAX_N_BRAINS) {
+        fprintf(stderr, "ERROR: Can't initalize more Brains\n");
+        exit(1);
+    }
+
+    uint64_t hash = get_bytes_hash(params.key, strlen(params.key));
+    int idx = hash % BRAINS_ARRAY_CAPACITY;
+    while (strlen(BRAINS[idx].params.key) != 0) {
+        if (strcmp(BRAINS[idx].params.key, params.key) == 0) {
+            fprintf(
+                stderr,
+                "ERROR: Can't initialize new Brain with key: %s. The "
+                "Brain with this key already exists\n",
+                BRAINS[idx].params.key
+            );
+        }
+        idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
+    }
+
+    int n_weights = get_brain_size(params);
+    int weights_n_bytes = sizeof(float) * n_weights;
+    float* weights = (float*)malloc(weights_n_bytes);
+
+    srand(time(NULL));
+    for (int i = 0; i < n_weights; ++i) {
+        weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+    }
+
+    Brain brain = {.params = params, .weights = weights};
+    BRAINS[idx] = brain;
+    return &BRAINS[idx];
+}
+
+void randomize_brain(Brain* brain) {
+    BrainParams params = brain->params;
+    int n_weights = get_brain_size(params);
+    srand(time(NULL));
+    for (int i = 0; i < n_weights; ++i) {
+        brain->weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+    }
+}
+
+Brain* mutate_and_copy_brain(
+    Brain* brain,
+    char* new_key,
+    float mutation_strength,
+    float mutation_rate
+) {
+    BrainParams new_params = brain->params;
+    strcpy(new_params.key, new_key);
+    Brain* new_brain = init_brain(new_params);
+
+    int n_weights = get_brain_size(new_params);
+    for (int i = 0; i < n_weights; ++i) {
+        float new_weight = brain->weights[i];
+        if (mutation_rate >= frand01()) {
+            float mutation = mutation_strength * (frand01() * 2.0 - 1.0);
+            new_weight += mutation;
+        }
+        new_brain->weights[i] = new_weight;
+    }
+
+    return new_brain;
+}
+
+Brain* load_brain(char* file_path, ResultMessage* res_msg) {
+    FILE* fp = open_file(file_path, res_msg, "rb");
+    if (res_msg->flag != SUCCESS_RESULT) {
+        return 0;
+    }
+
+    int version;
+    int n_bytes = 0;
+    n_bytes += fread(&version, sizeof(int), 1, fp);
+    if (version != BRAIN_VERSION) {
+        sprintf(
+            res_msg->msg,
+            "ERROR: Brain version %d is not compatible with the engine, "
+            "expecting the version %d\n",
+            version,
+            BRAIN_VERSION
+        );
+        return 0;
+    }
+
+    BrainParams params;
+    n_bytes += fread(&params, sizeof(BrainParams), 1, fp);
+    Brain* brain = init_brain(params);
+    int n_weights = get_brain_size(params);
+    n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
+
+    fclose(fp);
+    res_msg->flag = SUCCESS_RESULT;
+
+    sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
+    return brain;
+}
+
+void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
+    FILE* fp = open_file(file_path, res_msg, "wb");
+    if (res_msg->flag != SUCCESS_RESULT) {
+        return;
+    }
+
+    float* weights = brain->weights;
+    int n_weights = get_brain_size(brain->params);
+
+    if (weights == NULL || n_weights == 0) {
+        res_msg->flag = FAIL_RESULT;
+        strcpy(
+            res_msg->msg, "ERROR: Can't save the Brain without weights"
+        );
+        return;
+    }
+
+    int version = BRAIN_VERSION;
+    int n_bytes = 0;
+    n_bytes += fwrite(&version, sizeof(int), 1, fp);
+    n_bytes += fwrite(&brain->params, sizeof(BrainParams), 1, fp);
+    n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
+
+    fclose(fp);
+    res_msg->flag = SUCCESS_RESULT;
+
+    sprintf(res_msg->msg, "INFO: Brain is saved (%dB)", n_bytes);
+    return;
+}
+
+uint64_t get_brain_required_input_types(BrainParams params) {
+    uint64_t components = 0;
+    for (int i = 0; i < params.n_inputs; ++i) {
+        BrainInputType type = params.inputs[i].type;
+        switch (type) {
+            case TARGET_ENTITY_INPUT: {
+                components |= VISION_COMPONENT;
+                break;
+            }
+            case TARGET_DISTANCE_INPUT: {
+                components |= VISION_COMPONENT;
+                break;
+            }
+            case SELF_HEALTH_INPUT: {
+                components |= HEALTH_COMPONENT;
+                break;
+            }
+            default:
+                BRAIN_INPUT_TYPE_ERROR(
+                    "get_brain_required_components", type
+                );
+        }
+    }
+
+    return components;
+}
+
+int get_brain_size(BrainParams params) {
+    int input_size = get_brain_input_size(params);
+    int output_size = get_brain_output_size(params);
+    if (!input_size || !output_size) {
+        return 0;
+    }
+
+    int n_layers = params.n_layers;
+    int* layer_sizes = params.layer_sizes;
+    int inp_layer_size = input_size;
+    int out_layer_size;
+    int n_weights = 0;
+    for (int i = 0; i < n_layers + 1; ++i) {
+        out_layer_size = i >= n_layers ? output_size : layer_sizes[i];
+        n_weights += (inp_layer_size + 1) * out_layer_size;
+        inp_layer_size = out_layer_size;
+    }
+
+    return n_weights;
+}
+
+// --------------------------------------------------------
+// Brain inputs
 
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES] = {
     TARGET_ENTITY_INPUT, TARGET_DISTANCE_INPUT, SELF_HEALTH_INPUT};
@@ -104,19 +338,6 @@ int get_brain_input_size(BrainParams params) {
 
 // --------------------------------------------------------
 // Brain outputs
-#define BRAIN_OUTPUT_TYPE_ERROR(fn_name, type) \
-    do { \
-        fprintf( \
-            stderr, \
-            "ERROR: can't %s for the brain output with type id: %d. " \
-            "Needs " \
-            "to be implemented\n", \
-            fn_name, \
-            type \
-        ); \
-        exit(1); \
-    } while (0)
-
 BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES] = {
     WATCH_ORIENTATION_OUTPUT,
     MOVE_ORIENTATION_OUTPUT,
@@ -214,155 +435,4 @@ int get_brain_output_size(BrainParams params) {
     }
 
     return output_size;
-}
-
-// --------------------------------------------------------
-// Brain general
-uint64_t get_brain_required_input_types(BrainParams params) {
-    uint64_t components = 0;
-    for (int i = 0; i < params.n_inputs; ++i) {
-        BrainInputType type = params.inputs[i].type;
-        switch (type) {
-            case TARGET_ENTITY_INPUT: {
-                components |= VISION_COMPONENT;
-                break;
-            }
-            case TARGET_DISTANCE_INPUT: {
-                components |= VISION_COMPONENT;
-                break;
-            }
-            case SELF_HEALTH_INPUT: {
-                components |= HEALTH_COMPONENT;
-                break;
-            }
-            default:
-                BRAIN_INPUT_TYPE_ERROR(
-                    "get_brain_required_components", type
-                );
-        }
-    }
-
-    return components;
-}
-
-int get_brain_size(BrainParams params) {
-    int input_size = get_brain_input_size(params);
-    int output_size = get_brain_output_size(params);
-    if (!input_size || !output_size) {
-        return 0;
-    }
-
-    int n_layers = params.n_layers;
-    int* layer_sizes = params.layer_sizes;
-    int inp_layer_size = input_size;
-    int out_layer_size;
-    int n_weights = 0;
-    for (int i = 0; i < n_layers + 1; ++i) {
-        out_layer_size = i >= n_layers ? output_size : layer_sizes[i];
-        n_weights += (inp_layer_size + 1) * out_layer_size;
-        inp_layer_size = out_layer_size;
-    }
-
-    return n_weights;
-}
-
-Brain init_empty_brain(void) {
-    Brain brain = {0};
-    return brain;
-}
-
-Brain init_brain(BrainParams params) {
-    int n_weights = get_brain_size(params);
-    int weights_n_bytes = sizeof(float) * n_weights;
-    float* weights = (float*)malloc(weights_n_bytes);
-
-    srand(time(NULL));
-    for (int i = 0; i < n_weights; ++i) {
-        weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
-    }
-
-    Brain brain = {.params = params, .weights = weights};
-    return brain;
-}
-
-void randomize_brain(Brain* brain) {
-    BrainParams params = brain->params;
-    int n_weights = get_brain_size(params);
-    srand(time(NULL));
-    for (int i = 0; i < n_weights; ++i) {
-        brain->weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
-    }
-}
-
-void destroy_brain(Brain* brain) {
-    if (brain->weights != NULL) {
-        free(brain->weights);
-    }
-
-    memset(brain, 0, sizeof(Brain));
-}
-
-int load_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "rb");
-    if (res_msg->flag != SUCCESS_RESULT) {
-        return 0;
-    }
-
-    destroy_brain(brain);
-
-    int version;
-    int n_bytes = 0;
-    n_bytes += fread(&version, sizeof(int), 1, fp);
-    if (version != BRAIN_VERSION) {
-        sprintf(
-            res_msg->msg,
-            "ERROR: Brain version %d is not compatible with the engine, "
-            "expecting the version %d\n",
-            version,
-            BRAIN_VERSION
-        );
-        return 0;
-    }
-
-    n_bytes += fread(&brain->params, sizeof(BrainParams), 1, fp);
-    int n_weights = get_brain_size(brain->params);
-
-    brain->weights = (float*)malloc(n_weights * sizeof(float));
-    n_bytes += fread(brain->weights, sizeof(float), n_weights, fp);
-
-    fclose(fp);
-    res_msg->flag = SUCCESS_RESULT;
-
-    sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
-    return n_bytes;
-}
-
-void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "wb");
-    if (res_msg->flag != SUCCESS_RESULT) {
-        return;
-    }
-
-    float* weights = brain->weights;
-    int n_weights = get_brain_size(brain->params);
-
-    if (weights == NULL || n_weights == 0) {
-        res_msg->flag = FAIL_RESULT;
-        strcpy(
-            res_msg->msg, "ERROR: Can't save the Brain without weights"
-        );
-        return;
-    }
-
-    int version = BRAIN_VERSION;
-    int n_bytes = 0;
-    n_bytes += fwrite(&version, sizeof(int), 1, fp);
-    n_bytes += fwrite(&brain->params, sizeof(BrainParams), 1, fp);
-    n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
-
-    fclose(fp);
-    res_msg->flag = SUCCESS_RESULT;
-
-    sprintf(res_msg->msg, "INFO: Brain is saved (%dB)", n_bytes);
-    return;
 }

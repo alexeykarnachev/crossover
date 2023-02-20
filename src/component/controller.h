@@ -22,11 +22,7 @@ typedef struct DummyAIController {
 } DummyAIController;
 
 typedef struct BrainAIController {
-    // TODO: Do something with this array. I need to track its validity.
-    // With the pointer it is easier (I can compare it with NULL), but the
-    // pointer needs to be serialized properly during the Scene saving...
-    // So, need to think about it...
-    char brain_file_path[MAX_PATH_LENGTH];
+    Brain* brain;
 } BrainAIController;
 
 typedef struct Controller {

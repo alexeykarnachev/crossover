@@ -18,7 +18,6 @@ typedef struct ResultMessage {
 FILE* open_file(
     const char* file_path, ResultMessage* res_msg, const char* mode
 );
-char* read_bin_file(const char* restrict file_path, long* n_bytes);
 char* read_cstr_file(
     const char* restrict file_path, const char* mode, long* n_bytes
 );
@@ -35,3 +34,4 @@ nfdchar_t* save_nfd(
 int write_str_to_file(const char* str, FILE* fp, int allow_null);
 int read_str_from_file(char** str_p, FILE* fp, int allow_null);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);
+float frand01(void);

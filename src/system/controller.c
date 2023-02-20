@@ -158,12 +158,11 @@ static int argmax(float* ptr, int n_vals) {
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
-    Asset* asset = get_asset(ai.brain_file_path);
-    if (asset == NULL) {
+    Brain* brain = ai.brain;
+    if (brain == NULL) {
         return action;
     }
-    Brain brain = asset->a.brain;
-    BrainParams params = brain.params;
+    BrainParams params = brain->params;
     int n_view_rays = params.n_view_rays;
     float* inp = BRAIN_INPUT;
     BrainFitsEntityError error = check_if_brain_fits_entity(
@@ -219,7 +218,7 @@ static ControllerAction get_brain_ai_action(int entity) {
     // Perform forward pass
     inp = BRAIN_INPUT;
     float* out = BRAIN_OUTPUT;
-    float* weights = brain.weights;
+    float* weights = brain->weights;
     int inp_size = get_brain_input_size(params);
 
     // printf("--------------------------------\n");

@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_ASSETS];
+static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_BRAINS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
 static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
 static int N_BRAINS_TO_TRAIN = 0;
@@ -115,6 +115,28 @@ static void start_genetic_training(void) {
 
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
             SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+
+            // Don't randomize brain for the
+            // if (e == 0) {
+            //     continue;
+            // }
+
+            int entity = ENTITIES_TO_TRAIN[e];
+            Controller controller = SCENE.controllers[entity];
+            Brain* brain = controller.c.brain_ai.brain;
+            if (brain == NULL) {
+                fprintf(
+                    stderr,
+                    "ERROR: Trainable entity %d doesn't have the Brain. "
+                    "This is a bug\n",
+                    entity
+                );
+                exit(1);
+            }
+
+            // Brain* orig_brain = &asset->a.brain;
+            // Brain* brain_copy = mutate_and_copy_brain(brain, );
+            // randomize_brain(brain);
         }
 
         int generation = 0;
@@ -187,64 +209,25 @@ static void render_genetic_training_menu_bar(void) {
     }
 }
 
-static char* get_brain_file_path(int entity) {
-    int has_controller = check_if_entity_has_component(
-        entity, CONTROLLER_COMPONENT
-    );
-    if (!has_controller) {
-        return NULL;
-    }
-
-    Controller* controller = &SCENE.controllers[entity];
-    ControllerType type = controller->type;
-    if (type != BRAIN_AI_CONTROLLER) {
-        return NULL;
-    }
-
-    return controller->c.brain_ai.brain_file_path;
-}
-
 static void update_counters(void) {
-    static char* trainable_brain_file_paths[MAX_N_ASSETS];
-    int n_trainable_brains = 0;
-
-    for (int i = 0; i < MAX_N_ASSETS; ++i) {
-        Asset* asset = &ASSETS[i];
-        if (asset->type == BRAIN_ASSET) {
-            Brain* brain = &asset->a.brain;
-            if (brain->params.is_trainable) {
-                trainable_brain_file_paths[n_trainable_brains++]
-                    = asset->file_path;
-            }
-        }
-    }
-
     N_BRAINS_TO_TRAIN = 0;
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        char* file_path = get_brain_file_path(entity);
-        int has_scorer = check_if_entity_has_component(
-            entity, SCORER_COMPONENT
-        );
-        if (file_path == NULL) {
+        Controller controller = SCENE.controllers[entity];
+        ControllerType type = controller.type;
+        if (type != BRAIN_AI_CONTROLLER) {
+            continue;
+        }
+        Brain* brain = controller.c.brain_ai.brain;
+        if (brain == NULL) {
             continue;
         }
 
-        int has_trainable_brain = 0;
-        for (int i = 0; i < n_trainable_brains; ++i) {
-            char* fp = trainable_brain_file_paths[i];
-            if (fp == NULL || strcmp(file_path, fp) == 0) {
-                has_trainable_brain = 1;
-                if (fp != NULL) {
-                    BRAINS_TO_TRAIN_FILE_PATHS[N_BRAINS_TO_TRAIN++] = fp;
-                    trainable_brain_file_paths[i] = NULL;
-                }
-                break;
-            }
-        }
-
-        if (has_trainable_brain) {
+        int has_scorer = check_if_entity_has_component(
+            entity, SCORER_COMPONENT
+        );
+        if (brain->params.is_trainable) {
             if (has_scorer) {
                 ENTITIES_TO_TRAIN[N_ENTITIES_TO_TRAIN++] = entity;
             } else {

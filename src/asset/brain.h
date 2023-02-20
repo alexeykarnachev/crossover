@@ -79,6 +79,7 @@ BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
 const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
 typedef struct BrainParams {
+    char key[MAX_PATH_LENGTH];
     BrainInput inputs[MAX_N_BRAIN_INPUTS];
     BrainOutput outputs[MAX_N_BRAIN_OUTPUTS];
     int layer_sizes[MAX_N_BRAIN_LAYERS];
@@ -94,9 +95,18 @@ typedef struct Brain {
     float* weights;
 } Brain;
 
-Brain init_empty_brain(void);
-Brain init_brain(BrainParams params);
+extern Brain BRAINS[BRAINS_ARRAY_CAPACITY];
+extern int N_BRAINS;
+
+Brain* init_brain(BrainParams params);
 void randomize_brain(Brain* brain);
+Brain* mutate_and_copy_brain(
+    Brain* brain,
+    char* new_key,
+    float mutation_strength,
+    float mutation_rate
+);
+void destroy_brains(void);
 void destroy_brain(Brain* brain);
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);
@@ -113,5 +123,5 @@ BrainOutput init_watch_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
 BrainOutput init_is_shooting_brain_output(void);
 
-int load_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
+Brain* load_brain(char* file_path, ResultMessage* res_msg);
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
