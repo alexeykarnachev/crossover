@@ -39,6 +39,10 @@ Brain BRAINS[BRAINS_ARRAY_CAPACITY] = {0};
 int N_BRAINS = 0;
 
 void destroy_brain(Brain* brain) {
+    if (brain->weights == NULL) {
+        fprintf(stderr, "ERROR: Can't destroy Brain with NULL weights\n");
+        exit(1);
+    }
     free(brain->weights);
     memset(brain, 0, sizeof(Brain));
 }
@@ -58,9 +62,9 @@ void destroy_brains(void) {
     if (n_brains != N_BRAINS) {
         fprintf(
             stderr,
-            "ERROR: Number of destroyed Brains is not equal to the number "
+            "ERROR: Number of destroyed Brains (%d) is not equal to the number "
             "of "
-            "Brains registered in the engine runtime. It's a bug\n"
+            "Brains registered in the engine runtime (%d). It's a bug\n", n_brains, N_BRAINS
         );
         exit(1);
     }
@@ -70,13 +74,13 @@ void destroy_brains(void) {
 
 // --------------------------------------------------------
 // Brain general
-Brain* add_brain(Brain brain, int allow_replacement) {
+Brain* add_brain_clone(Brain* brain, int allow_replacement) {
     if (N_BRAINS++ >= MAX_N_BRAINS) {
         fprintf(stderr, "ERROR: Can't initalize more Brains\n");
         exit(1);
     }
 
-    BrainParams params = brain.params;
+    BrainParams params = brain->params;
 
     if (params.key[0] == '\0') {
         fprintf(
@@ -102,13 +106,19 @@ Brain* add_brain(Brain brain, int allow_replacement) {
             );
             exit(1);
         } else if (key_exists && allow_replacement) {
+            destroy_brain(&BRAINS[idx]);
+            N_BRAINS -= 1;
             break;
         } else {
             idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
         }
     }
 
-    BRAINS[idx] = brain;
+    BRAINS[idx] = *brain;
+    int n_bytes = get_brain_size(brain->params) * sizeof(float);
+    float* new_weights = malloc(n_bytes);
+    memcpy(new_weights, brain->weights, n_bytes);
+    BRAINS[idx].weights = new_weights;
     return &BRAINS[idx];
 }
 
@@ -128,12 +138,12 @@ Brain init_local_brain(BrainParams params) {
 
 Brain* init_brain(BrainParams params) {
     Brain brain = init_local_brain(params);
-    return add_brain(brain, 0);
+    return add_brain_clone(&brain, 0);
 }
 
 Brain* load_brain(char* file_path, ResultMessage* res_msg) {
     Brain brain = load_local_brain(file_path, res_msg);
-    return add_brain(brain, 0);
+    return add_brain_clone(&brain, 0);
 }
 
 Brain* get_brain(char* key, int allow_null) {

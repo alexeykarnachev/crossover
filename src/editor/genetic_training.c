@@ -113,6 +113,9 @@ static void start_genetic_training(void) {
     if (pid == -1) {
         perror("ERROR: Can't start Genetic Training\n");
     } else if (pid == 0) {
+        ResultMessage res_msg = {0};
+        save_scene(".tmp.xscene", &res_msg);
+
         GeneticTraining* params = GENETIC_TRAINING;
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
@@ -122,7 +125,6 @@ static void start_genetic_training(void) {
             char new_key[16] = {0};
             sprintf(new_key, "%d", entity);
 
-            SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
             for (int i = 0; i < params->population.size; ++i) {
                 Brain* dst_brain = &GENERATION_BRAINS[e][i];
@@ -137,14 +139,14 @@ static void start_genetic_training(void) {
 
             float* scores = params->progress.scores;
             while (individual < params->population.size) {
-
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+                    SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
                     int entity = ENTITIES_TO_TRAIN[e];
                     BrainAIController* ai
                         = &SCENE.controllers[entity].c.brain_ai;
-                    Brain brain = GENERATION_BRAINS[e][individual];
-                    add_brain(brain, 1);
-                    strcpy(ai->key, brain.params.key);
+                    Brain* brain = &GENERATION_BRAINS[e][individual];
+                    add_brain_clone(brain, 0);
+                    strcpy(ai->key, brain->params.key);
                 }
 
                 params->progress.live_time = 0.0;
@@ -172,7 +174,7 @@ static void start_genetic_training(void) {
                 }
 
                 params->progress.individual = ++individual;
-                // TODO: Reset scene here!
+                load_scene(".tmp.xscene", &res_msg);
             }
 
             params->progress.generation = ++generation;
