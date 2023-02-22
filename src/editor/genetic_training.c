@@ -24,7 +24,7 @@ static float MIN_SCORE = FLT_MAX;
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
 static Array GENERATIONS = {0};
 
-static Brain BRAINS_GENERATION[MAX_N_ENTITIES_TO_TRAIN]
+static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN]
                               [MAX_POPULATION_SIZE]
     = {0};
 
@@ -118,15 +118,17 @@ static void start_genetic_training(void) {
         *status = SIMULATION_RUNNING;
 
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-            // int entity = ENTITIES_TO_TRAIN[e];
-            // SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
-            // BrainAIController* ai =
-            // &SCENE.controllers[entity].c.brain_ai;
+            int entity = ENTITIES_TO_TRAIN[e];
+            char new_key[16] = {0};
+            sprintf(new_key, "%d", entity);
 
-            // for (int i = 0; i < params->population.size; ++i) {
-            //     clone_brain_into(&BRAINS_GENERATION[e][i], ai->key, e !=
-            //     0);
-            // }
+            SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+            BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
+            for (int i = 0; i < params->population.size; ++i) {
+                Brain* dst_brain = &GENERATION_BRAINS[e][i];
+                clone_brain_into(dst_brain, ai->key, e != 0);
+                strcpy(dst_brain->params.key, new_key);
+            }
         }
 
         int generation = 0;
@@ -135,6 +137,16 @@ static void start_genetic_training(void) {
 
             float* scores = params->progress.scores;
             while (individual < params->population.size) {
+
+                for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+                    int entity = ENTITIES_TO_TRAIN[e];
+                    BrainAIController* ai
+                        = &SCENE.controllers[entity].c.brain_ai;
+                    Brain brain = GENERATION_BRAINS[e][individual];
+                    add_brain(brain, 1);
+                    strcpy(ai->key, brain.params.key);
+                }
+
                 params->progress.live_time = 0.0;
                 while (params->progress.live_time
                        < params->population.live_time) {
@@ -152,14 +164,11 @@ static void start_genetic_training(void) {
                 }
 
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-                    // int entity = ENTITIES_TO_TRAIN[e];
-                    // Scorer* scorer = &SCENE.scorers[entity];
-                    // clone_brain_into(&BRAINS_GENERATION[e][individual],
-                    // (char*)&entity, 0);
-
-                    // float score = scorer->value;
-                    // scores[e] = max(scores[e], score);
-                    // scorer->value = 0.0;
+                    int entity = ENTITIES_TO_TRAIN[e];
+                    Scorer* scorer = &SCENE.scorers[entity];
+                    float score = scorer->value;
+                    scores[e] = max(scores[e], score);
+                    scorer->value = 0.0;
                 }
 
                 params->progress.individual = ++individual;

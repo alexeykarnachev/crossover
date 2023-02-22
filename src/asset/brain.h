@@ -107,6 +107,7 @@ Brain* mutate_and_copy_brain(
     float mutation_strength,
     float mutation_rate
 );
+Brain* add_brain(Brain brain, int allow_replacement);
 void destroy_brains(void);
 void destroy_brain(Brain* brain);
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);

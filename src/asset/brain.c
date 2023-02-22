@@ -70,7 +70,7 @@ void destroy_brains(void) {
 
 // --------------------------------------------------------
 // Brain general
-static Brain* add_brain(Brain brain) {
+Brain* add_brain(Brain brain, int allow_replacement) {
     if (N_BRAINS++ >= MAX_N_BRAINS) {
         fprintf(stderr, "ERROR: Can't initalize more Brains\n");
         exit(1);
@@ -89,17 +89,23 @@ static Brain* add_brain(Brain brain) {
 
     uint64_t hash = get_bytes_hash(params.key, strlen(params.key));
     int idx = hash % BRAINS_ARRAY_CAPACITY;
+    int idx_is_occupied = BRAINS[idx].params.key[0] != '\0';
     while (BRAINS[idx].params.key[0] != '\0') {
-        if (strcmp(BRAINS[idx].params.key, params.key) == 0) {
+        int key_exists = strcmp(BRAINS[idx].params.key, params.key) == 0;
+        if (key_exists && !allow_replacement) {
             fprintf(
                 stderr,
                 "ERROR: Brain with this key has been already initialized: "
-                "%s\n",
+                "%s. You can set `allow_replacement`=true to replace "
+                "existing Brain with the new one\n",
                 BRAINS[idx].params.key
             );
             exit(1);
+        } else if (key_exists && allow_replacement) {
+            break;
+        } else {
+            idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
         }
-        idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
     }
 
     BRAINS[idx] = brain;
@@ -122,12 +128,12 @@ Brain init_local_brain(BrainParams params) {
 
 Brain* init_brain(BrainParams params) {
     Brain brain = init_local_brain(params);
-    return add_brain(brain);
+    return add_brain(brain, 0);
 }
 
 Brain* load_brain(char* file_path, ResultMessage* res_msg) {
     Brain brain = load_local_brain(file_path, res_msg);
-    return add_brain(brain);
+    return add_brain(brain, 0);
 }
 
 Brain* get_brain(char* key, int allow_null) {
