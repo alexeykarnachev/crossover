@@ -186,3 +186,87 @@ float frand01(void) {
     srand(time(NULL));
     return (float)rand() / RAND_MAX;
 }
+
+static void merge(
+    float arr[],
+    int idx[],
+    float left[],
+    int left_idx[],
+    int left_size,
+    float right[],
+    int right_idx[],
+    int right_size,
+    int descending
+) {
+    int i = 0, j = 0, k = 0;
+
+    while (i < left_size && j < right_size) {
+        if ((descending && left[i] >= right[j])
+            || (!descending && left[i] <= right[j])) {
+            arr[k] = left[i];
+            idx[k] = left_idx[i];
+            i++;
+        } else {
+            arr[k] = right[j];
+            idx[k] = right_idx[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < left_size) {
+        arr[k] = left[i];
+        idx[k] = left_idx[i];
+        i++;
+        k++;
+    }
+
+    while (j < right_size) {
+        arr[k] = right[j];
+        idx[k] = right_idx[j];
+        j++;
+        k++;
+    }
+}
+
+void sort(float arr[], int idx[], int length, int descending) {
+    if (length < 2) {
+        return;
+    }
+
+    int mid = length / 2;
+    float left[mid], right[length - mid];
+    int left_idx[mid], right_idx[length - mid];
+
+    for (int i = 0; i < mid; i++) {
+        left[i] = arr[i];
+        left_idx[i] = idx[i];
+    }
+
+    for (int i = mid; i < length; i++) {
+        right[i - mid] = arr[i];
+        right_idx[i - mid] = idx[i];
+    }
+
+    sort(left, left_idx, mid, descending);
+    sort(right, right_idx, length - mid, descending);
+    merge(
+        arr,
+        idx,
+        left,
+        left_idx,
+        mid,
+        right,
+        right_idx,
+        length - mid,
+        descending
+    );
+}
+
+void argsort(float arr[], int idx[], int length, int descending) {
+    for (int i = 0; i < length; i++) {
+        idx[i] = i;
+    }
+
+    sort(arr, idx, length, descending);
+}

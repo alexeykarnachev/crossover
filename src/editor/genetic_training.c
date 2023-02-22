@@ -2,6 +2,7 @@
 #include "../array.h"
 #include "../editor.h"
 #include "../scene.h"
+#include "../utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "cimplot.h"
@@ -182,11 +183,9 @@ static void start_genetic_training(void) {
             }
 
             for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-                fprintf(stderr, "e[%d] ", e);
-                for (int i = 0; i < params->population.size; ++i) {
-                    fprintf(stderr, "%f ", GENERATION_SCORES[e][i]);
-                }
-                fprintf(stderr, "\n");
+                float* scores = GENERATION_SCORES[e];
+                static int indices[MAX_POPULATION_SIZE];
+                argsort(scores, indices, params->population.size, 1);
             }
 
             params->progress.generation = ++generation;

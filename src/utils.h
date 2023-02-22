@@ -35,3 +35,6 @@ int write_str_to_file(const char* str, FILE* fp, int allow_null);
 int read_str_from_file(char** str_p, FILE* fp, int allow_null);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);
 float frand01(void);
+
+void argsort(float arr[], int idx[], int length, int descending);
+void sort(float arr[], int idx[], int length, int descending);
