@@ -130,7 +130,7 @@ Brain* load_brain(char* file_path, ResultMessage* res_msg) {
     return add_brain(brain);
 }
 
-Brain* get_or_load_brain(char* key) {
+Brain* get_brain(char* key, int allow_null) {
     uint64_t hash = get_bytes_hash(key, strlen(key));
     int idx = hash % BRAINS_ARRAY_CAPACITY;
     while (strlen(BRAINS[idx].params.key) != 0) {
@@ -139,9 +139,61 @@ Brain* get_or_load_brain(char* key) {
         }
         idx = (idx + 1) % BRAINS_ARRAY_CAPACITY;
     }
-    ResultMessage res_msg = {0};
-    Brain* brain = load_brain(key, &res_msg);
+
+    if (!allow_null) {
+        fprintf(
+            stderr,
+            "ERROR: Can't get the Brain with key: '%s' since it is not "
+            "loaded\n",
+            key
+        );
+        exit(1);
+    }
+
+    return NULL;
+}
+
+Brain* get_or_load_brain(char* key) {
+    Brain* brain = get_brain(key, 1);
+    if (brain == NULL) {
+        ResultMessage res_msg = {0};
+        brain = load_brain(key, &res_msg);
+    }
     return brain;
+}
+
+Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights) {
+    Brain* src_brain = get_brain(src_key, 0);
+    if (get_brain(dst_key, 1) != NULL) {
+        fprintf(
+            stderr,
+            "ERROR: Can't copy the Brain with the dst_key='%s' since this "
+            "destination key is already occupied by another Brain\n",
+            dst_key
+        );
+        exit(1);
+    }
+
+    BrainParams params = src_brain->params;
+    strcpy(params.key, dst_key);
+    Brain* dst_brain = init_brain(params);
+    if (!randomize_weights) {
+        int n_bytes = get_brain_size(params) * sizeof(float);
+        memcpy(dst_brain->weights, src_brain->weights, n_bytes);
+    }
+    return dst_brain;
+}
+
+void clone_brain_into(
+    Brain* dst_brain, char* src_key, int randomize_weights
+) {
+    Brain* src_brain = get_brain(src_key, 0);
+    BrainParams params = src_brain->params;
+    *dst_brain = init_local_brain(params);
+    if (!randomize_weights) {
+        int n_bytes = get_brain_size(params) * sizeof(float);
+        memcpy(dst_brain->weights, src_brain->weights, n_bytes);
+    }
 }
 
 void randomize_brain(Brain* brain) {

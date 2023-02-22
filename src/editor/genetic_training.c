@@ -24,6 +24,10 @@ static float MIN_SCORE = FLT_MAX;
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
 static Array GENERATIONS = {0};
 
+static Brain BRAINS_GENERATION[MAX_N_ENTITIES_TO_TRAIN]
+                              [MAX_POPULATION_SIZE]
+    = {0};
+
 void init_genetic_training(GeneticTraining* genetic_training) {
     memset(genetic_training, 0, sizeof(GeneticTraining));
     genetic_training->simulation.dt_ms = 17.0;
@@ -114,28 +118,15 @@ static void start_genetic_training(void) {
         *status = SIMULATION_RUNNING;
 
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-            SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+            // int entity = ENTITIES_TO_TRAIN[e];
+            // SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+            // BrainAIController* ai =
+            // &SCENE.controllers[entity].c.brain_ai;
 
-            // Don't randomize brain for the
-            // if (e == 0) {
-            //     continue;
+            // for (int i = 0; i < params->population.size; ++i) {
+            //     clone_brain_into(&BRAINS_GENERATION[e][i], ai->key, e !=
+            //     0);
             // }
-
-            int entity = ENTITIES_TO_TRAIN[e];
-            Controller controller = SCENE.controllers[entity];
-            // Brain* brain = controller.c.brain_ai.brain;
-            // if (brain == NULL) {
-            //     fprintf(
-            //         stderr,
-            //         "ERROR: Trainable entity %d doesn't have the Brain.
-            //         " "This is a bug\n", entity
-            //     );
-            //     exit(1);
-            // }
-
-            // Brain* orig_brain = &asset->a.brain;
-            // Brain* brain_copy = mutate_and_copy_brain(brain, );
-            // randomize_brain(brain);
         }
 
         int generation = 0;
@@ -161,15 +152,14 @@ static void start_genetic_training(void) {
                 }
 
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-                    int entity = ENTITIES_TO_TRAIN[e];
-                    Scorer* scorer = &SCENE.scorers[entity];
-                    float score = scorer->value;
-                    scores[e] = max(scores[e], score);
+                    // int entity = ENTITIES_TO_TRAIN[e];
+                    // Scorer* scorer = &SCENE.scorers[entity];
+                    // clone_brain_into(&BRAINS_GENERATION[e][individual],
+                    // (char*)&entity, 0);
 
-                    // TODO: Remove after testing:
-                    // scores[e] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
-
-                    scorer->value = 0.0;
+                    // float score = scorer->value;
+                    // scores[e] = max(scores[e], score);
+                    // scorer->value = 0.0;
                 }
 
                 params->progress.individual = ++individual;

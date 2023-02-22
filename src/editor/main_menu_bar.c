@@ -55,7 +55,7 @@ void render_main_menu_bar(void) {
         }
 
         if (igBeginMenu("GeneticTraining", proj_loaded)) {
-            if (menu_item("Edit", "", false, 1)) {
+            if (menu_item("Edit", "Ctrl+T", false, 1)) {
                 EDITOR.is_editing_genetic_training = 1;
             }
 
@@ -79,5 +79,7 @@ void render_main_menu_bar(void) {
         }
     } else if (proj_loaded && EDITOR.key.s && EDITOR.key.ctrl) {
         save_editor_scene();
+    } else if (proj_loaded && EDITOR.key.t && EDITOR.key.ctrl) {
+        EDITOR.is_editing_genetic_training = 1;
     }
 }

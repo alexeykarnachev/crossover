@@ -24,6 +24,7 @@ typedef struct Editor {
         int n;
         int o;
         int s;
+        int t;
         int q;
         int c;
         int v;
@@ -53,6 +54,7 @@ typedef struct GeneticTraining {
     struct {
         SimulationStatus status;
         int generation;
+        // TODO: Maybe rename `individual` to `episode`
         int individual;
         float live_time;
         float scores[MAX_N_ENTITIES_TO_TRAIN];
@@ -64,6 +66,7 @@ typedef struct GeneticTraining {
 
     struct {
         float live_time;
+        // TODO: Maybe rename `size` to `n_episodes`
         int size;
     } population;
 

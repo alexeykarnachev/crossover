@@ -113,7 +113,12 @@ void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
 BrainParams load_brain_params(char* file_path, ResultMessage* res_msg);
 Brain load_local_brain(char* file_path, ResultMessage* res_msg);
 Brain* load_brain(char* file_path, ResultMessage* res_msg);
+Brain* get_brain(char* key, int allow_null);
 Brain* get_or_load_brain(char* key);
+Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights);
+void clone_brain_into(
+    Brain* dst_brain, char* src_key, int randomize_weights
+);
 
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);

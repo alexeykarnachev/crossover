@@ -290,6 +290,7 @@ void render_editor(void) {
     EDITOR.key.n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
     EDITOR.key.o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
     EDITOR.key.s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
+    EDITOR.key.t = igIsKeyPressed_Bool(ImGuiKey_T, 0);
     EDITOR.key.q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);
     EDITOR.key.c = igIsKeyPressed_Bool(ImGuiKey_C, 0);
     EDITOR.key.v = igIsKeyPressed_Bool(ImGuiKey_V, 0);
