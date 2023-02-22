@@ -62,9 +62,12 @@ void destroy_brains(void) {
     if (n_brains != N_BRAINS) {
         fprintf(
             stderr,
-            "ERROR: Number of destroyed Brains (%d) is not equal to the number "
+            "ERROR: Number of destroyed Brains (%d) is not equal to the "
+            "number "
             "of "
-            "Brains registered in the engine runtime (%d). It's a bug\n", n_brains, N_BRAINS
+            "Brains registered in the engine runtime (%d). It's a bug\n",
+            n_brains,
+            N_BRAINS
         );
         exit(1);
     }
@@ -126,8 +129,6 @@ Brain init_local_brain(BrainParams params) {
     int n_weights = get_brain_size(params);
     int weights_n_bytes = sizeof(float) * n_weights;
     float* weights = (float*)malloc(weights_n_bytes);
-
-    srand(time(NULL));
     for (int i = 0; i < n_weights; ++i) {
         weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
     }

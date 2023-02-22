@@ -24,6 +24,9 @@ static float MIN_SCORE = FLT_MAX;
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
 static Array GENERATIONS = {0};
 
+static float GENERATION_SCORES[MAX_N_ENTITIES_TO_TRAIN]
+                              [MAX_POPULATION_SIZE]
+    = {0};
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN]
                               [MAX_POPULATION_SIZE]
     = {0};
@@ -169,12 +172,21 @@ static void start_genetic_training(void) {
                     int entity = ENTITIES_TO_TRAIN[e];
                     Scorer* scorer = &SCENE.scorers[entity];
                     float score = scorer->value;
+                    GENERATION_SCORES[e][individual] = score;
                     scores[e] = max(scores[e], score);
                     scorer->value = 0.0;
                 }
 
                 params->progress.individual = ++individual;
                 load_scene(".tmp.xscene", &res_msg);
+            }
+
+            for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+                fprintf(stderr, "e[%d] ", e);
+                for (int i = 0; i < params->population.size; ++i) {
+                    fprintf(stderr, "%f ", GENERATION_SCORES[e][i]);
+                }
+                fprintf(stderr, "\n");
             }
 
             params->progress.generation = ++generation;
