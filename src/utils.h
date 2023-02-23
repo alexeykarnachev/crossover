@@ -38,3 +38,6 @@ float frand01(void);
 
 void argsort(float arr[], int idx[], int length, int descending);
 void sort(float arr[], int idx[], int length, int descending);
+
+int choose_idx(int to);
+void shuffle(int arr[], int n);

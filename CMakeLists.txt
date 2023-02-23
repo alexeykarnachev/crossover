@@ -99,6 +99,9 @@ set(SOURCES ${SOURCES})
 add_executable(${PROJECT_NAME} ${SOURCES} "../dependencies/glad/glad.c")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
+target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_GLFW)
 if (MINGW)
 	target_link_options(${PROJECT_NAME} PRIVATE "-mconsole")

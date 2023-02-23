@@ -43,6 +43,7 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     genetic_training->population.size = 10;
     genetic_training->evolution.elite_ratio = 0.1;
     genetic_training->evolution.mutation_rate = 0.01;
+    genetic_training->evolution.mutation_strength = 0.1;
 }
 
 void reset_genetic_training(GeneticTraining* genetic_training) {
@@ -121,6 +122,11 @@ static void start_genetic_training(void) {
         save_scene(".tmp.xscene", &res_msg);
 
         GeneticTraining* params = GENETIC_TRAINING;
+        int n_elites = max(
+            2,
+            (int)(params->population.size * params->evolution.elite_ratio)
+        );
+        int n_children = params->population.size - n_elites;
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
 
@@ -183,9 +189,40 @@ static void start_genetic_training(void) {
             }
 
             for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-                float* scores = GENERATION_SCORES[e];
                 static int indices[MAX_POPULATION_SIZE];
+                static Brain elite_brains[MAX_POPULATION_SIZE];
+                static Brain children_brains[MAX_POPULATION_SIZE];
+
+                float* scores = GENERATION_SCORES[e];
                 argsort(scores, indices, params->population.size, 1);
+
+                for (int i = 0; i < n_elites; ++i) {
+                    int idx = indices[i];
+                    elite_brains[i] = init_local_brain(
+                        GENERATION_BRAINS[e][idx].params
+                    );
+                }
+
+                for (int i = 0; i < n_children; ++i) {
+                    int idx1 = indices[choose_idx(n_elites)];
+                    int idx2 = indices[choose_idx(n_elites)];
+                    children_brains[i] = crossover_brains(
+                        &GENERATION_BRAINS[e][idx1],
+                        &GENERATION_BRAINS[e][idx2],
+                        params->evolution.mutation_rate,
+                        params->evolution.mutation_strength
+                    );
+                }
+
+                shuffle(indices, params->population.size);
+                for (int i = 0; i < params->population.size; ++i) {
+                    int idx = indices[i];
+                    destroy_brain(&GENERATION_BRAINS[e][idx]);
+                    Brain brain = i < n_elites
+                                      ? elite_brains[i]
+                                      : children_brains[i - n_elites];
+                    GENERATION_BRAINS[e][idx] = brain;
+                }
             }
 
             params->progress.generation = ++generation;
@@ -221,6 +258,7 @@ static void render_genetic_training_menu_bar(void) {
 }
 
 static void update_counters(void) {
+    // TODO: Currently, N_BRAINS_TO_TRAIN are not updating. Fix it!
     N_BRAINS_TO_TRAIN = 0;
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
@@ -334,7 +372,7 @@ static void render_genetic_training_parameters(void) {
 
     igText("Evolution:");
     ig_drag_float(
-        "Elite (ratio)",
+        "Elite ratio",
         &GENETIC_TRAINING->evolution.elite_ratio,
         0.01,
         0.9,
@@ -342,8 +380,16 @@ static void render_genetic_training_parameters(void) {
         0
     );
     ig_drag_float(
-        "Mutation (rate)",
+        "Mutation rate",
         &GENETIC_TRAINING->evolution.mutation_rate,
+        0.01,
+        0.9,
+        0.01,
+        0
+    );
+    ig_drag_float(
+        "Mutation strength",
+        &GENETIC_TRAINING->evolution.mutation_strength,
         0.01,
         0.9,
         0.01,

@@ -359,9 +359,40 @@ int get_brain_size(BrainParams params) {
     return n_weights;
 }
 
+Brain crossover_brains(
+    Brain* brain0,
+    Brain* brain1,
+    float mutation_rate,
+    float mutation_strength
+) {
+    int n_weights0 = get_brain_size(brain0->params);
+    int n_weights1 = get_brain_size(brain1->params);
+    if (n_weights0 != n_weights1) {
+        fprintf(
+            stderr,
+            "ERROR: Can't crossover Brains with different number of "
+            "weights: %d != %d\n",
+            n_weights0,
+            n_weights1
+        );
+        exit(1);
+    }
+
+    Brain brain = init_local_brain(brain0->params);
+    for (int i = 0; i < n_weights0; ++i) {
+        float weight = frand01() < 0.5 ? brain0->weights[i]
+                                       : brain1->weights[i];
+        if (frand01() < mutation_rate) {
+            weight += (frand01() * 2.0 - 1.0) * mutation_strength;
+        }
+        brain.weights[i] = weight;
+    }
+
+    return brain;
+}
+
 // --------------------------------------------------------
 // Brain inputs
-
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES] = {
     TARGET_ENTITY_INPUT, TARGET_DISTANCE_INPUT, SELF_HEALTH_INPUT};
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES] = {

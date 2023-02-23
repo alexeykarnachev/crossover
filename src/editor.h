@@ -73,6 +73,7 @@ typedef struct GeneticTraining {
     struct {
         float elite_ratio;
         float mutation_rate;
+        float mutation_strength;
     } evolution;
 } GeneticTraining;
 

@@ -270,3 +270,18 @@ void argsort(float arr[], int idx[], int length, int descending) {
 
     sort(arr, idx, length, descending);
 }
+
+int choose_idx(int to) {
+    float r = frand01();
+    return (int)(r * to);
+}
+
+void shuffle(int arr[], int n) {
+    int i, j, tmp;
+    for (i = n - 1; i > 0; i--) {
+        j = rand() % (i + 1);
+        tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+}

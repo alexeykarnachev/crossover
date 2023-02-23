@@ -117,6 +117,12 @@ Brain* load_brain(char* file_path, ResultMessage* res_msg);
 Brain* get_brain(char* key, int allow_null);
 Brain* get_or_load_brain(char* key);
 Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights);
+Brain crossover_brains(
+    Brain* brain0,
+    Brain* brain1,
+    float mutation_rate,
+    float mutation_strength
+);
 void clone_brain_into(
     Brain* dst_brain, char* src_key, int randomize_weights
 );
