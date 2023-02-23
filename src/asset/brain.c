@@ -52,6 +52,14 @@ void destroy_brains(void) {
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i, n_brains) {
         Brain* brain = &BRAINS[i];
         if (brain->params.key[0] == '\0') {
+            if (brain->weights != NULL) {
+                fprintf(
+                    stderr,
+                    "ERROR: Trying to destroy a Brain with null key, but "
+                    "not null weights. It's a bug\n"
+                );
+                exit(1);
+            }
             continue;
         }
 
@@ -138,13 +146,17 @@ Brain init_local_brain(BrainParams params) {
 }
 
 Brain* init_brain(BrainParams params) {
-    Brain brain = init_local_brain(params);
-    return add_brain_clone(&brain, 0);
+    Brain local_brain = init_local_brain(params);
+    Brain* brain = add_brain_clone(&local_brain, 0);
+    destroy_brain(&local_brain);
+    return brain;
 }
 
 Brain* load_brain(char* file_path, ResultMessage* res_msg) {
-    Brain brain = load_local_brain(file_path, res_msg);
-    return add_brain_clone(&brain, 0);
+    Brain local_brain = load_local_brain(file_path, res_msg);
+    Brain* brain = add_brain_clone(&local_brain, 0);
+    destroy_brain(&local_brain);
+    return brain;
 }
 
 Brain* get_brain(char* key, int allow_null) {
@@ -201,16 +213,22 @@ Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights) {
     return dst_brain;
 }
 
-void clone_brain_into(
-    Brain* dst_brain, char* src_key, int randomize_weights
+void clone_ptr_brain_into(
+    Brain* dst_brain, Brain* src_brain, int randomize_weights
 ) {
-    Brain* src_brain = get_brain(src_key, 0);
     BrainParams params = src_brain->params;
     *dst_brain = init_local_brain(params);
     if (!randomize_weights) {
         int n_bytes = get_brain_size(params) * sizeof(float);
         memcpy(dst_brain->weights, src_brain->weights, n_bytes);
     }
+}
+
+void clone_key_brain_into(
+    Brain* dst_brain, char* src_key, int randomize_weights
+) {
+    Brain* src_brain = get_brain(src_key, 0);
+    clone_ptr_brain_into(dst_brain, src_brain, randomize_weights);
 }
 
 void randomize_brain(Brain* brain) {
@@ -220,29 +238,6 @@ void randomize_brain(Brain* brain) {
     for (int i = 0; i < n_weights; ++i) {
         brain->weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
     }
-}
-
-Brain* mutate_and_copy_brain(
-    Brain* brain,
-    char* new_key,
-    float mutation_strength,
-    float mutation_rate
-) {
-    BrainParams new_params = brain->params;
-    strcpy(new_params.key, new_key);
-    Brain* new_brain = init_brain(new_params);
-
-    int n_weights = get_brain_size(new_params);
-    for (int i = 0; i < n_weights; ++i) {
-        float new_weight = brain->weights[i];
-        if (mutation_rate >= frand01()) {
-            float mutation = mutation_strength * (frand01() * 2.0 - 1.0);
-            new_weight += mutation;
-        }
-        new_brain->weights[i] = new_weight;
-    }
-
-    return new_brain;
 }
 
 Brain load_local_brain(char* file_path, ResultMessage* res_msg) {

@@ -11,7 +11,7 @@ typedef struct Scene {
 
     // Components
     uint64_t components[MAX_N_ENTITIES];
-    const char* names[MAX_N_ENTITIES];
+    char names[MAX_N_ENTITIES][MAX_ENTITY_NAME_LENGTH];
 
     Transformation transformations[MAX_N_ENTITIES];
     RigidBody rigid_bodies[MAX_N_ENTITIES];

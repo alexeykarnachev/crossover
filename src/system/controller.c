@@ -221,9 +221,6 @@ static ControllerAction get_brain_ai_action(int entity) {
     float* weights = brain->weights;
     int inp_size = get_brain_input_size(params);
 
-    // printf("--------------------------------\n");
-    // printf("FORWARD PASS...\n");
-
     for (int i_layer = 0; i_layer < params.n_layers + 1; ++i_layer) {
         int layer_size;
         if (i_layer == params.n_layers) {
@@ -232,19 +229,16 @@ static ControllerAction get_brain_ai_action(int entity) {
             layer_size = params.layer_sizes[i_layer];
         }
 
-        // printf("Layer %d of size %d\n", i_layer, layer_size);
         for (int i = 0; i < layer_size; ++i) {
             float z = 0.0;
             for (int ix = 0; ix < inp_size + 1; ++ix) {
                 float x = ix == inp_size ? 1.0 : inp[ix];
                 float w = *weights++;
                 z += x * w;
-                // printf("x:%f * w:%f + ", x, w);
             }
 
             float y = i_layer == params.n_layers ? z : max(0.0, z);
             *out++ = y;
-            // printf(" = %f\n", y);
         }
         inp_size = layer_size;
         inp = BRAIN_OUTPUT;

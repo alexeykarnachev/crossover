@@ -54,10 +54,10 @@ typedef struct GeneticTraining {
     struct {
         SimulationStatus status;
         int generation;
-        // TODO: Maybe rename `individual` to `episode`
-        int individual;
-        float live_time;
-        float scores[MAX_N_ENTITIES_TO_TRAIN];
+        int episode;
+        float episode_time;
+        float best_scores[MAX_N_ENTITIES_TO_TRAIN];
+        float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
     } progress;
 
     struct {
@@ -65,9 +65,8 @@ typedef struct GeneticTraining {
     } simulation;
 
     struct {
-        float live_time;
-        // TODO: Maybe rename `size` to `n_episodes`
-        int size;
+        float episode_time;
+        int n_episodes;
     } population;
 
     struct {

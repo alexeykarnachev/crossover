@@ -29,9 +29,11 @@ Vec2 get_cursor_scene_pos(void) {
 }
 
 void reset_scene(void) {
-    SCENE.n_entities = 0;
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
+    memset(SCENE.owners, -1, sizeof(int) * MAX_N_ENTITIES);
     reset_camera();
+
+    SCENE.n_entities = 0;
 }
 
 void save_scene(const char* file_path, ResultMessage* res_msg) {
@@ -53,10 +55,9 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
         SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
     );
 
-    for (int i = 0; i < SCENE.n_entities; ++i) {
-        n_bytes += write_str_to_file(SCENE.names[i], fp, 0);
-    }
-
+    n_bytes += fwrite(
+        SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp
+    );
     n_bytes += fwrite(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
@@ -160,20 +161,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
     );
 
-    for (int i = 0; i < SCENE.n_entities; ++i) {
-        // TODO: Rewrite with read_str_from_file()
-        uint32_t name_len;
-        n_bytes += fread(&name_len, sizeof(uint32_t), 1, fp);
-
-        int name_size = name_len + 1;
-        char* buffer = (char*)malloc(name_size);
-        n_bytes += name_size;
-        n_bytes += fread(buffer, sizeof(char), name_len, fp);
-        buffer[name_len] = '\0';
-
-        SCENE.names[i] = buffer;
-    }
-
+    n_bytes += fread(
+        SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp
+    );
     n_bytes += fread(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
@@ -222,8 +212,8 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         // It may be confusing. It's better to make the explicitly named
         // function `get_brain_n_weights` as well as `get_brain_size`
         // which returns the real total size in bytes
-        n_bytes += get_brain_size(brain->params) * sizeof(float)
-                   + sizeof(Brain);
+        // n_bytes += get_brain_size(brain->params) * sizeof(float)
+        //            + sizeof(Brain);
     }
     int brains_n_bytes = n_bytes;
 
@@ -257,6 +247,7 @@ void destroy_entity(int entity) {
     // Entity should nullify some occupied component buffers:
     SCENE.healths[entity] = init_default_health();
     SCENE.scorers[entity].value = 0.0;
+    SCENE.names[entity][0] = '\0';
 }
 
 int check_if_entity_alive(int entity) {
@@ -267,19 +258,19 @@ int check_if_entity_has_component(int entity, ComponentType type) {
     return (SCENE.components[entity] & type) == type;
 }
 
-static int spawn_entity(const char* name) {
-    if (strlen(name) > MAX_ENTITY_NAME_SIZE) {
+static int spawn_entity(char* name) {
+    if (strlen(name) > MAX_ENTITY_NAME_LENGTH) {
         fprintf(
             stderr,
             "ERROR: Max. entity name can't be larget than %d\n",
-            MAX_ENTITY_NAME_SIZE
+            MAX_ENTITY_NAME_LENGTH
         );
         exit(1);
     }
 
     for (int entity = 0; entity < MAX_N_ENTITIES; ++entity) {
         if (SCENE.components[entity] == 0) {
-            SCENE.names[entity] = name;
+            strcpy(SCENE.names[entity], name);
             SCENE.n_entities = max(SCENE.n_entities, entity + 1);
             return entity;
         }
@@ -290,8 +281,7 @@ static int spawn_entity(const char* name) {
 }
 
 int spawn_entity_copy(int entity, Transformation transformation) {
-    const char* name = SCENE.names[entity];
-    int entity_copy = spawn_entity(name);
+    int entity_copy = spawn_entity(SCENE.names[entity]);
     SCENE.components[entity_copy] |= TRANSFORMATION_COMPONENT;
     SCENE.transformations[entity_copy] = transformation;
 

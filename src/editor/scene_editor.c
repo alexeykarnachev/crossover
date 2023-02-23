@@ -665,9 +665,8 @@ static void render_entities_browser(void) {
                 continue;
             }
 
-            const char* name = SCENE.names[entity];
-            char str[MAX_ENTITY_NAME_SIZE + 16];
-            sprintf(str, "%s (%d)", name, entity);
+            static char str[MAX_ENTITY_NAME_LENGTH + 16];
+            sprintf(str, "%s (%d)", SCENE.names[entity], entity);
             int is_picked = entity == EDITOR.picked_entity.entity;
             int flags = ImGuiTreeNodeFlags_Leaf;
             flags |= (ImGuiTreeNodeFlags_Selected * is_picked);

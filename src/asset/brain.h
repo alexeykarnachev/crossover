@@ -101,12 +101,6 @@ extern int N_BRAINS;
 Brain init_local_brain(BrainParams params);
 Brain* init_brain(BrainParams params);
 void randomize_brain(Brain* brain);
-Brain* mutate_and_copy_brain(
-    Brain* brain,
-    char* new_key,
-    float mutation_strength,
-    float mutation_rate
-);
 Brain* add_brain_clone(Brain* brain, int allow_replacement);
 void destroy_brains(void);
 void destroy_brain(Brain* brain);
@@ -123,8 +117,11 @@ Brain crossover_brains(
     float mutation_rate,
     float mutation_strength
 );
-void clone_brain_into(
+void clone_key_brain_into(
     Brain* dst_brain, char* src_key, int randomize_weights
+);
+void clone_ptr_brain_into(
+    Brain* dst_brain, Brain* src_brain, int randomize_weights
 );
 
 int get_brain_input_size(BrainParams params);
