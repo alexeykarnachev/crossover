@@ -44,6 +44,10 @@ void ig_same_line(void) {
     igSameLine(0.0, igGetStyle()->ItemSpacing.y);
 }
 
+void ig_same_line_with_offset(float offset) {
+    igSameLine(0.0, igGetStyle()->ItemSpacing.y + offset);
+}
+
 void ig_center_next_window(void) {
     ImVec2 center;
     ImVec2 pivot = {0.5f, 0.5f};

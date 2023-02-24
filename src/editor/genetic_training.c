@@ -32,8 +32,8 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         genetic_training->progress.best_scores[e] = -FLT_MAX;
     }
-    genetic_training->population.episode_time = 15.0;
-    genetic_training->population.n_episodes = 250;
+    genetic_training->population.episode_time = 30.0;
+    genetic_training->population.n_episodes = 300;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.1;
     genetic_training->evolution.mutation_strength = 0.1;
@@ -109,7 +109,8 @@ static void start_genetic_training(void) {
         save_scene(".tmp.xscene", &res_msg);
 
         GeneticTraining* params = GENETIC_TRAINING;
-        int n_elites = params->population.n_episodes * params->evolution.elite_ratio;
+        int n_elites = params->population.n_episodes
+                       * params->evolution.elite_ratio;
         n_elites = max(2, n_elites);
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
@@ -119,12 +120,11 @@ static void start_genetic_training(void) {
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
 
             static char new_key[MAX_PATH_LENGTH + 32] = {0};
-            sprintf(new_key, "%s.%d", ai->key, entity);
+            sprintf(new_key, "%s.%d.xbrain", ai->key, entity);
 
             for (int i = 0; i < params->population.n_episodes; ++i) {
                 Brain* dst_brain = &GENERATION_BRAINS[e][i];
-                // clone_key_brain_into(dst_brain, ai->key, i != 0);
-                clone_key_brain_into(dst_brain, ai->key, 0);
+                clone_key_brain_into(dst_brain, ai->key, i != 0);
                 strcpy(dst_brain->params.key, new_key);
             }
         }
@@ -459,6 +459,14 @@ void render_genetic_training_controls(void) {
             }
             break;
         }
+    }
+
+    ig_same_line_with_offset(
+        igGetWindowWidth() - igGetCursorPosX() - 100.0
+    );
+    if (igButton("Reset", IG_VEC2_ZERO)) {
+        reset_genetic_training(GENETIC_TRAINING);
+        *status = SIMULATION_NOT_STARTED;
     }
 }
 

@@ -31,7 +31,7 @@ BrainFitsEntityError check_if_brain_fits_entity(
 );
 
 void update_camera(void);
-void update_collisions(void);
+void update_collisions(int is_playing);
 void update_bullets(float dt);
 void update_healths(void);
 void update_kinematic_movements(float dt);

@@ -27,6 +27,7 @@ extern ImGuiWindowFlags GHOST_WINDOW_FLAGS;
 extern ImGuiColorEditFlags COLOR_PICKER_FLAGS;
 
 void ig_same_line(void);
+void ig_same_line_with_offset(float offset);
 void ig_center_next_window(void);
 int ig_drag_float(
     char* label,

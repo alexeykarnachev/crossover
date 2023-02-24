@@ -583,5 +583,5 @@ void update_scene(float dt, int is_playing) {
         update_entities_scene_counter();
     }
 
-    update_collisions();
+    update_collisions(is_playing);
 }

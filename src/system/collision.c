@@ -1,5 +1,4 @@
 #include "../component.h"
-#include "../editor.h"
 #include "../const.h"
 #include "../debug.h"
 #include "../gl.h"
@@ -209,7 +208,7 @@ static void compute_collisions() {
     DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 
-static void resolve_collisions() {
+static void resolve_collisions(int is_playing) {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
 
@@ -252,8 +251,7 @@ static void resolve_collisions() {
                     );
                 }
 
-                // TODO: Decouple EDITOR and collision scores
-                if (EDITOR.is_playing) {
+                if (is_playing) {
                     if (check_if_entity_has_component(
                             entity0, SCORER_COMPONENT
                         )) {
@@ -270,9 +268,9 @@ static void resolve_collisions() {
     }
 }
 
-void update_collisions() {
+void update_collisions(int is_playing) {
     compute_collisions();
-    resolve_collisions();
+    resolve_collisions(is_playing);
 }
 
 void render_collision_mtvs() {
