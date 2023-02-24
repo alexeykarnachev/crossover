@@ -347,18 +347,27 @@ static void render_brain_ai_controller_inspector(int entity) {
         brain = get_or_load_brain(ai->key);
     }
 
+    char* selected_key = NULL;
     if (brain == NULL) {
         igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
         ig_same_line();
         if (igBeginMenu("Attach", 1)) {
-            char* selected_key = render_brain_asset_selector();
-            if (selected_key != NULL) {
-                strcpy(ai->key, selected_key);
-            }
+            selected_key = render_brain_asset_selector();
             igEndMenu();
         }
-    } else if (igIsItemHovered(0)) {
-        igSetTooltip(get_brain_params_text(brain->params));
+    } else {
+        if (igIsItemHovered(0)) {
+            igSetTooltip(get_brain_params_text(brain->params));
+        }
+
+        if (igBeginMenu("Change", 1)) {
+            selected_key = render_brain_asset_selector();
+            igEndMenu();
+        }
+    }
+
+    if (selected_key != NULL) {
+        strcpy(ai->key, selected_key);
     }
 
     if (brain != NULL) {
@@ -411,7 +420,7 @@ static void render_brain_ai_controller_inspector(int entity) {
         if (error.n_reasons > 0) {
             igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
         } else {
-            igTextColored(IG_GREEN_COLOR, "Brain attached");
+            igTextColored(IG_GREEN_COLOR, "Brain: %s", get_short_file_path(params.key));
         }
     }
 }
@@ -700,6 +709,10 @@ static void render_assets_browser(void) {
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
             Brain* brain = load_brain(file_path, &RESULT_MESSAGE, 1);
+        }
+
+        if (igButton("Reload all", IG_VEC2_ZERO)) {
+            reload_all_brains(&RESULT_MESSAGE);
         }
 
         igSeparator();

@@ -110,6 +110,7 @@ Brain load_local_brain(char* file_path, ResultMessage* res_msg);
 Brain* load_brain(
     char* file_path, ResultMessage* res_msg, int allow_replacement
 );
+void reload_all_brains(ResultMessage* res_msg);
 Brain* get_brain(char* key, int allow_null);
 Brain* get_or_load_brain(char* key);
 Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights);

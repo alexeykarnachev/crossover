@@ -33,8 +33,8 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         genetic_training->progress.best_scores[e] = -FLT_MAX;
     }
-    genetic_training->population.episode_time = 15.0;
-    genetic_training->population.n_episodes = 100;
+    genetic_training->population.episode_time = 11.0;
+    genetic_training->population.n_episodes = 250;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.1;
     genetic_training->evolution.mutation_strength = 0.1;
@@ -146,7 +146,7 @@ static void start_genetic_training(void) {
                     BrainAIController* ai
                         = &SCENE.controllers[entity].c.brain_ai;
                     Brain* brain = &GENERATION_BRAINS[e][episode];
-                    add_brain_clone(brain, 0);
+                    add_brain_clone(brain, 1);
                     strcpy(ai->key, brain->params.key);
                 }
 
@@ -547,12 +547,12 @@ static void render_evolution_plots(void) {
             max_score + fabs(0.05 * max_score),
             0
         );
-        ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 100, 0);
+        ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 50, 0);
         ImPlotRange range = {
             min_score - fabs(0.05 * min_score),
             max_score + fabs(0.05 * max_score)};
 
-        int bins = 20;
+        int bins = 50;
         float bar_scale = 1.0;
         int episode = GENETIC_TRAINING->progress.episode;
         int hist_flags = 0;
