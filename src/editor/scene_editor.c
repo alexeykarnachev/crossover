@@ -420,7 +420,11 @@ static void render_brain_ai_controller_inspector(int entity) {
         if (error.n_reasons > 0) {
             igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
         } else {
-            igTextColored(IG_GREEN_COLOR, "Brain: %s", get_short_file_path(params.key));
+            igTextColored(
+                IG_GREEN_COLOR,
+                "Brain: %s",
+                get_short_file_path(params.key)
+            );
         }
     }
 }
@@ -708,9 +712,12 @@ static void render_assets_browser(void) {
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
-            Brain* brain = load_brain(file_path, &RESULT_MESSAGE, 1);
+            if (file_path != NULL) {
+                Brain* brain = load_brain(file_path, &RESULT_MESSAGE, 1);
+            }
         }
 
+        ig_same_line();
         if (igButton("Reload all", IG_VEC2_ZERO)) {
             reload_all_brains(&RESULT_MESSAGE);
         }

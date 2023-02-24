@@ -450,7 +450,7 @@ int spawn_default_ai_guy(
         init_material(REDWOOD_COLOR),
         0.0,
         init_kinematic_movement(5.0, 0.0, 0.0, 0),
-        init_vision(0.5 * PI, 10.0, 32),
+        init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
         init_default_health()

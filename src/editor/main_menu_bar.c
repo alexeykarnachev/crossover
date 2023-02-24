@@ -21,6 +21,9 @@ void render_main_menu_bar(void) {
             if (menu_item("Save Scene As", "", false, proj_loaded)) {
                 save_editor_scene_as();
             }
+            if (menu_item("Reload Scene", "Ctrl+R", false, proj_loaded)) {
+                reload_editor_scene();
+            }
             igSeparator();
 
             if (menu_item("New Project", "", false, true)) {
@@ -79,6 +82,8 @@ void render_main_menu_bar(void) {
         }
     } else if (proj_loaded && EDITOR.key.s && EDITOR.key.ctrl) {
         save_editor_scene();
+    } else if (proj_loaded && EDITOR.key.r && EDITOR.key.ctrl) {
+        reload_editor_scene();
     } else if (proj_loaded && EDITOR.key.t && EDITOR.key.ctrl) {
         EDITOR.is_editing_genetic_training = 1;
     }

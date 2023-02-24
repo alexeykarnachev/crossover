@@ -201,9 +201,9 @@ static ControllerAction get_brain_ai_action(int entity) {
                         = &vision->observations[i_ray];
                     if (observation->entity != -1) {
                         Vec2 target_position = observation->position;
-                        float d = dist(target_position, position) / vision->distance;
+                        float d = dist(target_position, position)
+                                  / vision->distance;
                         *inp++ = d;
-                        printf("%f\n", d);
                     } else {
                         *inp++ = 0;
                     }

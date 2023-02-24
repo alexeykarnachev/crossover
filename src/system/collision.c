@@ -1,4 +1,5 @@
 #include "../component.h"
+#include "../editor.h"
 #include "../const.h"
 #include "../debug.h"
 #include "../gl.h"
@@ -249,6 +250,20 @@ static void resolve_collisions() {
                     transformation1->position = add(
                         transformation1->position, flip(mtv)
                     );
+                }
+
+                // TODO: Decouple EDITOR and collision scores
+                if (EDITOR.is_playing) {
+                    if (check_if_entity_has_component(
+                            entity0, SCORER_COMPONENT
+                        )) {
+                        update_get_rb_collided_score(entity0);
+                    }
+                    if (check_if_entity_has_component(
+                            entity1, SCORER_COMPONENT
+                        )) {
+                        update_get_rb_collided_score(entity1);
+                    }
                 }
             }
         }

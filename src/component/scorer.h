@@ -10,6 +10,7 @@ typedef struct Scorer {
         float deal_damage;
         float hit_enemy;
         float get_hit;
+        float get_rb_collided;
     } weight;
     float value;
 } Scorer;

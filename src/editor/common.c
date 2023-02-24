@@ -200,6 +200,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     IG_DRAG_FLOAT_SCORE(deal_damage);
     IG_DRAG_FLOAT_SCORE(hit_enemy);
     IG_DRAG_FLOAT_SCORE(get_hit);
+    IG_DRAG_FLOAT_SCORE(get_rb_collided);
     if (igButton("Reset", IG_VEC2_ZERO)) {
         memset(&scorer->weight, 0, sizeof(scorer->weight));
     }

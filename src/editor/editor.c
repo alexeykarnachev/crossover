@@ -229,6 +229,14 @@ void save_editor_scene(void) {
     save_editor_project(&RESULT_MESSAGE);
 }
 
+void reload_editor_scene(void) {
+    ASSERT_PROJECT("reload_editor_scene");
+
+    if (EDITOR.project.scene_file_path != NULL) {
+        load_scene(EDITOR.project.scene_file_path, &RESULT_MESSAGE);
+    }
+}
+
 void save_editor_scene_as(void) {
     ASSERT_PROJECT("save_editor_scene_as");
 
@@ -289,6 +297,7 @@ void render_editor(void) {
     EDITOR.key.del = igIsKeyPressed_Bool(ImGuiKey_Delete, 0);
     EDITOR.key.n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
     EDITOR.key.o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
+    EDITOR.key.r = igIsKeyPressed_Bool(ImGuiKey_R, 0);
     EDITOR.key.s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
     EDITOR.key.t = igIsKeyPressed_Bool(ImGuiKey_T, 0);
     EDITOR.key.q = igIsKeyPressed_Bool(ImGuiKey_Q, 0);

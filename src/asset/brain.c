@@ -169,19 +169,24 @@ void reload_all_brains(ResultMessage* res_msg) {
         Brain* brain = &BRAINS[i];
         char* file_path = brain->params.key;
         if (file_path[0] != '\0') {
-            printf("%s\n", file_path);
             load_brain(file_path, res_msg, 1);
             n_brains_realoded += 1;
         }
     }
 
     if (n_brains_realoded != N_BRAINS) {
-        fprintf(stderr, "ERROR: Expecting to reload %d Brains, but %d realoded. This is a bug\n", N_BRAINS, n_brains_realoded);
+        fprintf(
+            stderr,
+            "ERROR: Expecting to reload %d Brains, but %d realoded. This "
+            "is a bug\n",
+            N_BRAINS,
+            n_brains_realoded
+        );
         exit(1);
     }
 
     static char str[64];
-    sprintf(str, "INFO: %d Brains reloaded", n_brains_realoded); 
+    sprintf(str, "INFO: %d Brains reloaded", n_brains_realoded);
     res_msg->flag = SUCCESS_RESULT;
     strcpy(res_msg->msg, str);
 }

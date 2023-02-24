@@ -40,3 +40,8 @@ void update_get_hit_score(int entity) {
     Scorer* scorer = &SCENE.scorers[entity];
     scorer->value += scorer->weight.get_hit;
 }
+
+void update_get_rb_collided_score(int entity) {
+    Scorer* scorer = &SCENE.scorers[entity];
+    scorer->value += scorer->weight.get_rb_collided;
+}

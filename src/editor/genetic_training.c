@@ -16,7 +16,6 @@
 static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_BRAINS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
 static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
-static int N_BRAINS_TO_TRAIN = 0;
 static int N_ENTITIES_WITHOUT_SCORER = 0;
 static int N_ENTITIES_TO_TRAIN = 0;
 
@@ -33,7 +32,7 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         genetic_training->progress.best_scores[e] = -FLT_MAX;
     }
-    genetic_training->population.episode_time = 11.0;
+    genetic_training->population.episode_time = 15.0;
     genetic_training->population.n_episodes = 250;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.1;
@@ -53,7 +52,6 @@ void reset_genetic_training(GeneticTraining* genetic_training) {
         );
     }
 
-    N_BRAINS_TO_TRAIN = 0;
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
 
@@ -111,12 +109,8 @@ static void start_genetic_training(void) {
         save_scene(".tmp.xscene", &res_msg);
 
         GeneticTraining* params = GENETIC_TRAINING;
-        int n_elites = max(
-            2,
-            (int
-            )(params->population.n_episodes * params->evolution.elite_ratio
-            )
-        );
+        int n_elites = params->population.n_episodes * params->evolution.elite_ratio;
+        n_elites = max(2, n_elites);
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
 
@@ -129,7 +123,8 @@ static void start_genetic_training(void) {
 
             for (int i = 0; i < params->population.n_episodes; ++i) {
                 Brain* dst_brain = &GENERATION_BRAINS[e][i];
-                clone_key_brain_into(dst_brain, ai->key, i != 0);
+                // clone_key_brain_into(dst_brain, ai->key, i != 0);
+                clone_key_brain_into(dst_brain, ai->key, 0);
                 strcpy(dst_brain->params.key, new_key);
             }
         }
@@ -285,8 +280,6 @@ static void render_genetic_training_menu_bar(void) {
 }
 
 static void update_counters(void) {
-    // TODO: Currently, N_BRAINS_TO_TRAIN are not updating. Fix it!
-    N_BRAINS_TO_TRAIN = 0;
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
@@ -299,11 +292,12 @@ static void update_counters(void) {
         if (type != BRAIN_AI_CONTROLLER) {
             continue;
         }
+
         char* key = controller.c.brain_ai.key;
-        Brain* brain = get_or_load_brain(key);
-        if (brain == NULL) {
+        if (key[0] == '\0') {
             continue;
         }
+        Brain* brain = get_or_load_brain(key);
 
         int has_scorer = check_if_entity_has_component(
             entity, SCORER_COMPONENT
@@ -316,14 +310,6 @@ static void update_counters(void) {
                     = entity;
             }
         }
-    }
-}
-
-static void render_brains_to_train(void) {
-    igText("%d Brains to train:", N_BRAINS_TO_TRAIN);
-    for (int i = 0; i < N_BRAINS_TO_TRAIN; ++i) {
-        char* name = get_short_file_path(BRAINS_TO_TRAIN_FILE_PATHS[i]);
-        igText("  %s", name);
     }
 }
 
@@ -446,15 +432,6 @@ void render_genetic_training_controls(void) {
         case SIMULATION_NOT_STARTED: {
             char* str[128];
             int can_start = 1;
-            if (N_BRAINS_TO_TRAIN > MAX_N_BRAINS_TO_TRAIN) {
-                igTextColored(
-                    IG_RED_COLOR,
-                    "ERROR: Can't start training, freeze some brains "
-                    "(MAX_N_BRAINS_TO_TRAIN: %d)",
-                    MAX_N_BRAINS_TO_TRAIN
-                );
-                can_start = 0;
-            }
 
             if (N_ENTITIES_TO_TRAIN > MAX_N_ENTITIES_TO_TRAIN) {
                 igTextColored(
@@ -597,9 +574,6 @@ void render_genetic_training_editor(void) {
     update_counters();
 
     render_genetic_training_menu_bar();
-    igSeparator();
-
-    render_brains_to_train();
     igSeparator();
 
     render_entities_without_scorer();
