@@ -19,8 +19,6 @@ static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
 static int N_BRAINS_TO_TRAIN = 0;
 static int N_ENTITIES_WITHOUT_SCORER = 0;
 static int N_ENTITIES_TO_TRAIN = 0;
-static float MAX_SCORE = -FLT_MAX;
-static float MIN_SCORE = FLT_MAX;
 
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
 static Array GENERATIONS = {0};
@@ -35,8 +33,8 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         genetic_training->progress.best_scores[e] = -FLT_MAX;
     }
-    genetic_training->population.episode_time = 30.0;
-    genetic_training->population.n_episodes = 800;
+    genetic_training->population.episode_time = 15.0;
+    genetic_training->population.n_episodes = 100;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.1;
     genetic_training->evolution.mutation_strength = 0.1;
@@ -58,8 +56,6 @@ void reset_genetic_training(GeneticTraining* genetic_training) {
     N_BRAINS_TO_TRAIN = 0;
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
-    MAX_SCORE = -FLT_MAX;
-    MIN_SCORE = FLT_MAX;
 
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         if (SCORES[e].data != NULL) {
@@ -89,9 +85,6 @@ static void update_evolution_history(void) {
 
     for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
         float val = params->progress.best_scores[e];
-
-        MAX_SCORE = max(MAX_SCORE, val);
-        MIN_SCORE = MIN_SCORE == -FLT_MAX ? val : min(MIN_SCORE, val);
 
         if (SCORES[e].length <= gen) {
             array_push(&SCORES[e], val);
@@ -129,10 +122,11 @@ static void start_genetic_training(void) {
 
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
             int entity = ENTITIES_TO_TRAIN[e];
-            char new_key[16] = {0};
-            sprintf(new_key, "%d", entity);
-
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
+
+            static char new_key[MAX_PATH_LENGTH + 32] = {0};
+            sprintf(new_key, "%s.%d", ai->key, entity);
+
             for (int i = 0; i < params->population.n_episodes; ++i) {
                 Brain* dst_brain = &GENERATION_BRAINS[e][i];
                 clone_key_brain_into(dst_brain, ai->key, i != 0);
@@ -174,8 +168,25 @@ static void start_genetic_training(void) {
 
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
                     int entity = ENTITIES_TO_TRAIN[e];
+                    if (!check_if_entity_has_component(
+                            entity, SCORER_COMPONENT
+                        )) {
+                        fprintf(
+                            stderr,
+                            "ERROR: Trainable Entity %d doesn't have a "
+                            "Scorer. It's a bug\n",
+                            entity
+                        );
+                        exit(1);
+                    }
                     Scorer* scorer = &SCENE.scorers[entity];
                     float score = scorer->value;
+                    params->progress.min_score = min(
+                        params->progress.min_score, score
+                    );
+                    params->progress.max_score = max(
+                        params->progress.max_score, score
+                    );
                     params->progress.episode_scores[e][episode] = score;
                     scores[e] = max(scores[e], score);
                     scorer->value = 0.0;
@@ -194,6 +205,24 @@ static void start_genetic_training(void) {
                     gen_scores, indices, params->population.n_episodes, 1
                 );
 
+                int best_idx = indices[0];
+                Brain* best_brain = &GENERATION_BRAINS[e][best_idx];
+                ResultMessage res_msg = {0};
+                save_brain(best_brain->params.key, best_brain, &res_msg);
+                if (res_msg.flag != SUCCESS_RESULT) {
+                    fprintf(
+                        stderr,
+                        "ERROR: Failed to save new best Brain: %s\n",
+                        res_msg.msg
+                    );
+                    exit(1);
+                }
+
+                printf(
+                    "INFO: New best Brain saved: %s\n",
+                    best_brain->params.key
+                );
+
                 for (int i = 0; i < n_elites; ++i) {
                     int idx = indices[i];
                     clone_ptr_brain_into(
@@ -205,9 +234,11 @@ static void start_genetic_training(void) {
                      ++i) {
                     int idx1 = indices[choose_idx(n_elites)];
                     int idx2 = indices[choose_idx(n_elites)];
+                    Brain* brain1 = &GENERATION_BRAINS[e][idx1];
+                    Brain* brain2 = &GENERATION_BRAINS[e][idx2];
                     new_gen_brains[i] = crossover_brains(
-                        &GENERATION_BRAINS[e][idx1],
-                        &GENERATION_BRAINS[e][idx2],
+                        brain1,
+                        brain2,
                         params->evolution.mutation_rate,
                         params->evolution.mutation_strength
                     );
@@ -478,6 +509,9 @@ static void render_evolution_plots(void) {
     ImPlotContext* ctx = ImPlot_CreateContext();
     ImPlot_SetCurrentContext(ctx);
 
+    float min_score = GENETIC_TRAINING->progress.min_score;
+    float max_score = GENETIC_TRAINING->progress.max_score;
+
     if (ImPlot_BeginPlot("Best scores", IG_VEC2_ZERO, 0)) {
         int offset = 0;
         int stride = sizeof(float);
@@ -489,8 +523,8 @@ static void render_evolution_plots(void) {
         ImPlot_SetupAxisLimits(ImAxis_X1, 0.0, (int)(1.05 * n), 0);
         ImPlot_SetupAxisLimits(
             ImAxis_Y1,
-            MIN_SCORE - fabs(0.05 * MIN_SCORE),
-            MAX_SCORE + fabs(0.05 * MAX_SCORE),
+            min_score - fabs(0.05 * min_score),
+            max_score + fabs(0.05 * max_score),
             0
         );
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
@@ -509,14 +543,14 @@ static void render_evolution_plots(void) {
         ImPlot_SetupAxes("Score", "N Episoded", 0, 0);
         ImPlot_SetupAxisLimits(
             ImAxis_X1,
-            MIN_SCORE - fabs(0.05 * MIN_SCORE),
-            MAX_SCORE + fabs(0.05 * MAX_SCORE),
+            min_score - fabs(0.05 * min_score),
+            max_score + fabs(0.05 * max_score),
             0
         );
         ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 100, 0);
         ImPlotRange range = {
-            MIN_SCORE - fabs(0.05 * MIN_SCORE),
-            MAX_SCORE + fabs(0.05 * MAX_SCORE)};
+            min_score - fabs(0.05 * min_score),
+            max_score + fabs(0.05 * max_score)};
 
         int bins = 20;
         float bar_scale = 1.0;

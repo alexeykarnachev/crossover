@@ -79,7 +79,7 @@ BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
 const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
 typedef struct BrainParams {
-    char key[MAX_PATH_LENGTH];
+    char key[MAX_PATH_LENGTH + 32];
     BrainInput inputs[MAX_N_BRAIN_INPUTS];
     BrainOutput outputs[MAX_N_BRAIN_OUTPUTS];
     int layer_sizes[MAX_N_BRAIN_LAYERS];
@@ -107,7 +107,9 @@ void destroy_brain(Brain* brain);
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
 BrainParams load_brain_params(char* file_path, ResultMessage* res_msg);
 Brain load_local_brain(char* file_path, ResultMessage* res_msg);
-Brain* load_brain(char* file_path, ResultMessage* res_msg);
+Brain* load_brain(
+    char* file_path, ResultMessage* res_msg, int allow_replacement
+);
 Brain* get_brain(char* key, int allow_null);
 Brain* get_or_load_brain(char* key);
 Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights);

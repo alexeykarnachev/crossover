@@ -22,7 +22,7 @@ typedef struct DummyAIController {
 } DummyAIController;
 
 typedef struct BrainAIController {
-    char key[MAX_PATH_LENGTH];
+    char key[MAX_PATH_LENGTH + 32];
 } BrainAIController;
 
 typedef struct Controller {

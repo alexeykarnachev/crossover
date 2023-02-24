@@ -152,9 +152,11 @@ Brain* init_brain(BrainParams params) {
     return brain;
 }
 
-Brain* load_brain(char* file_path, ResultMessage* res_msg) {
+Brain* load_brain(
+    char* file_path, ResultMessage* res_msg, int allow_replacement
+) {
     Brain local_brain = load_local_brain(file_path, res_msg);
-    Brain* brain = add_brain_clone(&local_brain, 0);
+    Brain* brain = add_brain_clone(&local_brain, allow_replacement);
     destroy_brain(&local_brain);
     return brain;
 }
@@ -186,7 +188,7 @@ Brain* get_or_load_brain(char* key) {
     Brain* brain = get_brain(key, 1);
     if (brain == NULL) {
         ResultMessage res_msg = {0};
-        brain = load_brain(key, &res_msg);
+        brain = load_brain(key, &res_msg, 0);
     }
     return brain;
 }
@@ -234,7 +236,6 @@ void clone_key_brain_into(
 void randomize_brain(Brain* brain) {
     BrainParams params = brain->params;
     int n_weights = get_brain_size(params);
-    srand(time(NULL));
     for (int i = 0; i < n_weights; ++i) {
         brain->weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
     }

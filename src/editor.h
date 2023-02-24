@@ -58,6 +58,8 @@ typedef struct GeneticTraining {
         float episode_time;
         float best_scores[MAX_N_ENTITIES_TO_TRAIN];
         float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
+        float min_score;
+        float max_score;
     } progress;
 
     struct {

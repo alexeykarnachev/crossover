@@ -699,7 +699,7 @@ static void render_assets_browser(void) {
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
-            Brain* brain = load_brain(file_path, &RESULT_MESSAGE);
+            Brain* brain = load_brain(file_path, &RESULT_MESSAGE, 1);
         }
 
         igSeparator();

@@ -183,7 +183,6 @@ uint64_t get_bytes_hash(const char* bytes, int n_bytes) {
 }
 
 float frand01(void) {
-    srand(time(NULL));
     return (float)rand() / RAND_MAX;
 }
 

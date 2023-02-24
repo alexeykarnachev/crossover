@@ -10,9 +10,6 @@ void update_healths() {
         Health* health = &SCENE.healths[entity];
 
         if (health->value <= 0) {
-            if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
-                update_get_killed_score(entity);
-            }
 
             int damage_dealler = health->damage_dealler;
             if (damage_dealler != -1
@@ -22,7 +19,19 @@ void update_healths() {
                 update_kill_enemy_score(damage_dealler);
             }
 
-            destroy_entity(entity);
+            // TODO: Think about this case. What should I do if I need a
+            // scorer component (updated after the entity death).
+            // For now I just don't destroy an entity without Scorer
+            // component.
+            if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+                update_get_killed_score(entity);
+                // Leave only the SCORER_COMPONENT, so this entity doesn't
+                // participate in the common scene update routines, but it
+                // doesn't destroyed either...
+                SCENE.components[entity] = SCORER_COMPONENT;
+            } else {
+                destroy_entity(entity);
+            }
         }
 
         health->damage_dealler = -1;
