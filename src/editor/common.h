@@ -64,3 +64,4 @@ int render_component_type_picker(
 
 char* get_short_file_path(char* file_path);
 void render_scorer_weights_inspector(Scorer* scorer);
+void render_scorer_values_inspector(Scorer* scorer);

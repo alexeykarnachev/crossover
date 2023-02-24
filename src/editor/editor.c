@@ -295,6 +295,7 @@ void render_editor(void) {
 
     EDITOR.key.ctrl = igGetIO()->KeyCtrl;
     EDITOR.key.del = igIsKeyPressed_Bool(ImGuiKey_Delete, 0);
+    EDITOR.key.b = igIsKeyPressed_Bool(ImGuiKey_B, 0);
     EDITOR.key.n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
     EDITOR.key.o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
     EDITOR.key.r = igIsKeyPressed_Bool(ImGuiKey_R, 0);

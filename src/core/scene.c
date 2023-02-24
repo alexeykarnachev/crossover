@@ -244,9 +244,8 @@ void destroy_entity(int entity) {
         }
     }
 
-    // Entity should nullify some occupied component buffers:
     SCENE.healths[entity] = init_default_health();
-    SCENE.scorers[entity].value = 0.0;
+    memset(&SCENE.scorers[entity], 0, sizeof(Scorer));
     SCENE.names[entity][0] = '\0';
 }
 

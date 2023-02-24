@@ -21,6 +21,7 @@ typedef struct Editor {
     struct {
         int ctrl;
         int del;
+        int b;
         int n;
         int o;
         int r;
@@ -53,12 +54,13 @@ typedef enum SimulationStatus {
 
 typedef struct GeneticTraining {
     struct {
+        Scorer best_scorers[MAX_N_ENTITIES_TO_TRAIN];
+        float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
+
         SimulationStatus status;
         int generation;
         int episode;
         float episode_time;
-        float best_scores[MAX_N_ENTITIES_TO_TRAIN];
-        float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
         float min_score;
         float max_score;
     } progress;

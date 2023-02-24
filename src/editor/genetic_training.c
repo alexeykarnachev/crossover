@@ -7,36 +7,35 @@
 #include "cimgui_impl.h"
 #include "cimplot.h"
 #include "common.h"
+#include "signal.h"
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+pid_t GENETIC_TRAINING_PID;
+
 static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_BRAINS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
 static int ENTITIES_TO_TRAIN[MAX_N_ENTITIES];
-static int N_ENTITIES_WITHOUT_SCORER = 0;
-static int N_ENTITIES_TO_TRAIN = 0;
+static int N_ENTITIES_WITHOUT_SCORER;
+static int N_ENTITIES_TO_TRAIN;
 
-static Array SCORES[MAX_N_ENTITIES_TO_TRAIN] = {0};
-static Array GENERATIONS = {0};
+static Array SCORES[MAX_N_ENTITIES_TO_TRAIN];
+static Array GENERATIONS;
 
-static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES] = {
-    0};
+static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
 void init_genetic_training(GeneticTraining* genetic_training) {
     memset(genetic_training, 0, sizeof(GeneticTraining));
     genetic_training->simulation.dt_ms = 17.0;
     genetic_training->progress.status = SIMULATION_NOT_STARTED;
-    for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
-        genetic_training->progress.best_scores[e] = -FLT_MAX;
-    }
-    genetic_training->population.episode_time = 30.0;
-    genetic_training->population.n_episodes = 300;
+    genetic_training->population.episode_time = 45.0;
+    genetic_training->population.n_episodes = 1000;
     genetic_training->evolution.elite_ratio = 0.10;
-    genetic_training->evolution.mutation_rate = 0.1;
-    genetic_training->evolution.mutation_strength = 0.1;
+    genetic_training->evolution.mutation_rate = 0.05;
+    genetic_training->evolution.mutation_strength = 0.05;
 }
 
 void reset_genetic_training(GeneticTraining* genetic_training) {
@@ -45,11 +44,6 @@ void reset_genetic_training(GeneticTraining* genetic_training) {
         genetic_training->progress.generation = 0;
         genetic_training->progress.episode = 0;
         genetic_training->progress.episode_time = 0;
-        memset(
-            genetic_training->progress.best_scores,
-            0,
-            sizeof(genetic_training->progress.best_scores)
-        );
     }
 
     N_ENTITIES_WITHOUT_SCORER = 0;
@@ -82,7 +76,8 @@ static void update_evolution_history(void) {
     }
 
     for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-        float val = params->progress.best_scores[e];
+        Scorer* scorer = &params->progress.best_scorers[e];
+        float val = get_total_score(scorer);
 
         if (SCORES[e].length <= gen) {
             array_push(&SCORES[e], val);
@@ -100,11 +95,10 @@ static void update_evolution_history(void) {
 }
 
 static void start_genetic_training(void) {
-    pid_t pid;
-    pid = fork();
-    if (pid == -1) {
+    GENETIC_TRAINING_PID = fork();
+    if (GENETIC_TRAINING_PID == -1) {
         perror("ERROR: Can't start Genetic Training\n");
-    } else if (pid == 0) {
+    } else if (GENETIC_TRAINING_PID == 0) {
         ResultMessage res_msg = {0};
         save_scene(".tmp.xscene", &res_msg);
 
@@ -133,10 +127,10 @@ static void start_genetic_training(void) {
         while (*status == SIMULATION_RUNNING) {
             int episode = 0;
 
-            float* scores = params->progress.best_scores;
+            Scorer* best_scorers = params->progress.best_scorers;
             while (episode < params->population.n_episodes) {
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
-                    SCENE.scorers[ENTITIES_TO_TRAIN[e]].value = 0.0;
+                    reset_scorer(&SCENE.scorers[ENTITIES_TO_TRAIN[e]]);
                     int entity = ENTITIES_TO_TRAIN[e];
                     BrainAIController* ai
                         = &SCENE.controllers[entity].c.brain_ai;
@@ -175,7 +169,7 @@ static void start_genetic_training(void) {
                         exit(1);
                     }
                     Scorer* scorer = &SCENE.scorers[entity];
-                    float score = scorer->value;
+                    float score = get_total_score(scorer);
                     params->progress.min_score = min(
                         params->progress.min_score, score
                     );
@@ -183,8 +177,11 @@ static void start_genetic_training(void) {
                         params->progress.max_score, score
                     );
                     params->progress.episode_scores[e][episode] = score;
-                    scores[e] = max(scores[e], score);
-                    scorer->value = 0.0;
+                    if (episode == 0
+                        || score > get_total_score(&best_scorers[e])) {
+                        best_scorers[e] = *scorer;
+                    }
+                    reset_scorer(scorer);
                 }
 
                 params->progress.episode = ++episode;
@@ -255,7 +252,7 @@ static void start_genetic_training(void) {
 }
 
 static void render_genetic_training_menu_bar(void) {
-    if (igBeginMenu("Genetic Training Parameters", 1)) {
+    if (igBeginMenu("Genetic Training", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {}
             if (menu_item(
@@ -336,21 +333,22 @@ static void render_entities_without_scorer(void) {
 
 static void render_entities_to_train(void) {
     igText("%d Entities to train:", N_ENTITIES_TO_TRAIN);
-    for (int i = 0; i < N_ENTITIES_TO_TRAIN; ++i) {
-        int entity = ENTITIES_TO_TRAIN[i];
+    for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+        int entity = ENTITIES_TO_TRAIN[e];
         static char str[16];
         sprintf(str, "  Entity: %d", entity);
 
-        Scorer* scorer = &SCENE.scorers[entity];
         if (igBeginMenu(str, 1)) {
             SimulationStatus status = GENETIC_TRAINING->progress.status;
             if (status == SIMULATION_NOT_STARTED) {
+                Scorer* scorer = &SCENE.scorers[entity];
                 render_scorer_weights_inspector(scorer);
-            } else {
-                igTextColored(
-                    IG_YELLOW_COLOR,
-                    "Can't change scorer weights if simulation is started"
-                );
+            } else if (GENETIC_TRAINING->progress.episode > 0) {
+                Scorer* scorer
+                    = &GENETIC_TRAINING->progress.best_scorers[e];
+                igText("Total: %.2f", get_total_score(scorer));
+                igSeparator();
+                render_scorer_values_inspector(scorer);
             }
             igEndMenu();
         }
@@ -461,12 +459,20 @@ void render_genetic_training_controls(void) {
         }
     }
 
-    ig_same_line_with_offset(
-        igGetWindowWidth() - igGetCursorPosX() - 100.0
-    );
+    ig_same_line();
     if (igButton("Reset", IG_VEC2_ZERO)) {
         reset_genetic_training(GENETIC_TRAINING);
+        init_genetic_training(GENETIC_TRAINING);
         *status = SIMULATION_NOT_STARTED;
+    }
+
+    if (GENETIC_TRAINING_PID != 0 && GENETIC_TRAINING_PID != -1) {
+        ig_same_line();
+        if (igButton("Kill", IG_VEC2_ZERO)) {
+            reset_genetic_training(GENETIC_TRAINING);
+            *status = SIMULATION_NOT_STARTED;
+            kill(GENETIC_TRAINING_PID, SIGTERM);
+        }
     }
 }
 
@@ -515,7 +521,6 @@ static void render_evolution_plots(void) {
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
             float* ys = SCORES[e].data;
             char str[16];
-            sprintf(str, "Entity: %d", ENTITIES_TO_TRAIN[e]);
             ImPlot_PlotLine_FloatPtrFloatPtr(
                 str, xs, ys, n, 0, offset, stride
             );
@@ -537,23 +542,21 @@ static void render_evolution_plots(void) {
             min_score - fabs(0.05 * min_score),
             max_score + fabs(0.05 * max_score)};
 
-        int bins = 50;
+        int bins;
+        double width;
         float bar_scale = 1.0;
         int episode = GENETIC_TRAINING->progress.episode;
         int hist_flags = 0;
-        // ImPlotBin_Sqrt = -1,
-        // ImPlotBin_Sturges = -2,
-        // ImPlotBin_Rice = -3,
-        // ImPlotBin_Scott = -4,
-
-        // CIMGUI_API void ImPlot_CalculateBins_FloatPtr(const float*
-        // values,int count,ImPlotBin meth,const ImPlotRange range,int*
-        // bins_out,double* width_out);
 
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
             float* scores = GENETIC_TRAINING->progress.episode_scores[e];
             char str[16];
             sprintf(str, "Entity: %d", ENTITIES_TO_TRAIN[e]);
+
+            ImPlot_CalculateBins_FloatPtr(
+                scores, episode, ImPlotBin_Sturges, range, &bins, &width
+            );
+
             ImPlot_PlotHistogram_FloatPtr(
                 str, scores, episode, bins, bar_scale, range, hist_flags
             );

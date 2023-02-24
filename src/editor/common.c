@@ -8,10 +8,26 @@
 #include <float.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define IG_DRAG_FLOAT_SCORE(name) \
-    ig_drag_float(#name, &scorer->weight.name, -FLT_MAX, FLT_MAX, 0.1, 0)
+#define IG_DRAG_SCALAR_SCORE_WEIGHT(name) \
+    ig_drag_float( \
+        #name, &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
+    )
+
+#define IG_TEXT_SCORE_VALUE(name) \
+    igText("%.2f: " #name, scorer->scalars.name.value)
+
+static int N_SCALAR_SCORES = 7;
+#define CHECK_ALL_SCORES_HANDLED(scorer) \
+    do { \
+        int expected_size = N_SCALAR_SCORES * sizeof(ScalarScore); \
+        if (sizeof(scorer->scalars) != expected_size) { \
+            fprintf(stderr, "ERROR: Check if all scores are handled\n"); \
+            exit(1); \
+        } \
+    } while (0)
 
 nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
 nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
@@ -196,16 +212,28 @@ char* get_short_file_path(char* file_path) {
 }
 
 void render_scorer_weights_inspector(Scorer* scorer) {
-    IG_DRAG_FLOAT_SCORE(get_killed);
-    IG_DRAG_FLOAT_SCORE(kill_enemy);
-    IG_DRAG_FLOAT_SCORE(do_kinematic_move);
-    IG_DRAG_FLOAT_SCORE(do_shoot);
-    IG_DRAG_FLOAT_SCORE(receive_damage);
-    IG_DRAG_FLOAT_SCORE(deal_damage);
-    IG_DRAG_FLOAT_SCORE(hit_enemy);
-    IG_DRAG_FLOAT_SCORE(get_hit);
-    IG_DRAG_FLOAT_SCORE(get_rb_collided);
+    CHECK_ALL_SCORES_HANDLED(scorer);
+
+    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kill);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kinematic_move);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(do_shoot);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(do_hit);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(get_killed);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(get_hit);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(get_rb_collided);
     if (igButton("Reset", IG_VEC2_ZERO)) {
-        memset(&scorer->weight, 0, sizeof(scorer->weight));
+        memset(&scorer->scalars, 0, sizeof(scorer->scalars));
     }
+}
+
+void render_scorer_values_inspector(Scorer* scorer) {
+    CHECK_ALL_SCORES_HANDLED(scorer);
+
+    IG_TEXT_SCORE_VALUE(do_kill);
+    IG_TEXT_SCORE_VALUE(do_kinematic_move);
+    IG_TEXT_SCORE_VALUE(do_shoot);
+    IG_TEXT_SCORE_VALUE(do_hit);
+    IG_TEXT_SCORE_VALUE(get_killed);
+    IG_TEXT_SCORE_VALUE(get_hit);
+    IG_TEXT_SCORE_VALUE(get_rb_collided);
 }

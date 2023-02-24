@@ -45,7 +45,6 @@ void update_bullets(float dt) {
                 if (check_if_entity_has_component(
                         entity, SCORER_COMPONENT
                     )) {
-                    update_receive_damage_score(entity, damage);
                     update_get_hit_score(entity);
                 }
 
@@ -53,8 +52,7 @@ void update_bullets(float dt) {
                     && check_if_entity_has_component(
                         bullet_owner, SCORER_COMPONENT
                     )) {
-                    update_deal_damage_score(bullet_owner, damage);
-                    update_hit_enemy_score(bullet_owner);
+                    update_do_hit_score(bullet_owner);
                 }
             }
             destroy_entity(bullet);

@@ -563,11 +563,17 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case SCORER_COMPONENT: {
             Scorer* scorer = &SCENE.scorers[entity];
-            igText("Value: %.2f", scorer->value);
+            igText("Total: %.2f", get_total_score(scorer));
             ig_same_line();
             if (igButton("Reset", IG_VEC2_ZERO)) {
-                scorer->value = 0.0;
+                reset_scorer(scorer);
             }
+
+            if (igBeginMenu("Values", 1)) {
+                render_scorer_values_inspector(scorer);
+                igEndMenu();
+            }
+
             if (igBeginMenu("Weights", 1)) {
                 render_scorer_weights_inspector(scorer);
                 igEndMenu();

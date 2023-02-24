@@ -39,13 +39,11 @@ void update_ttls(float dt);
 void update_visions(void);
 void update_controllers(void);
 
-void update_get_killed_score(int entity);
-void update_kill_enemy_score(int entity);
+void update_do_kill_score(int entity);
 void update_do_kinematic_move_score(int entity, Vec2 step);
 void update_do_shoot_score(int entity);
-void update_receive_damage_score(int entity, float damage);
-void update_deal_damage_score(int entity, float damage);
-void update_hit_enemy_score(int entity);
+void update_do_hit_score(int entity);
+void update_get_killed_score(int entity);
 void update_get_hit_score(int entity);
 void update_get_rb_collided_score(int entity);
 

@@ -49,7 +49,7 @@ void render_main_menu_bar(void) {
 
         if (igBeginMenu("Assets", 1)) {
             if (igBeginMenu("Create", 1)) {
-                if (menu_item("Brain", "", false, true)) {
+                if (menu_item("Brain", "Ctrl+B", false, true)) {
                     EDITOR.is_editing_brain = 1;
                 }
                 igEndMenu();
@@ -84,6 +84,8 @@ void render_main_menu_bar(void) {
         save_editor_scene();
     } else if (proj_loaded && EDITOR.key.r && EDITOR.key.ctrl) {
         reload_editor_scene();
+    } else if (proj_loaded && EDITOR.key.b && EDITOR.key.ctrl) {
+        EDITOR.is_editing_brain = 1;
     } else if (proj_loaded && EDITOR.key.t && EDITOR.key.ctrl) {
         EDITOR.is_editing_genetic_training = 1;
     }
