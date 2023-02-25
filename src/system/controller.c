@@ -26,11 +26,14 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
+        // TODO: Below I set the velocity directory, so there is not need
+        // to pass max bullet speed and also acceleration_scalar.
         KinematicMovement movement = init_kinematic_movement(
-            gun->bullet.speed,
-            transformation.orientation,
-            transformation.orientation,
-            1
+            gun->bullet.speed, 0.0, 1000.0
+        );
+        movement.velocity = scale(
+            get_orientation_vec(transformation.orientation),
+            gun->bullet.speed
         );
         spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
 
@@ -356,7 +359,8 @@ void update_controllers() {
             continue;
         }
 
-        ControllerType type = SCENE.controllers[entity].type;
+        Controller controller = SCENE.controllers[entity];
+        ControllerType type = controller.type;
         ControllerAction action;
         switch (type) {
             case PLAYER_KEYBOARD_CONTROLLER: {
@@ -375,8 +379,15 @@ void update_controllers() {
 
         KinematicMovement* movement = &SCENE.kinematic_movements[entity];
         movement->watch_orientation = action.watch_orientation;
-        movement->move_orientation = action.move_orientation;
-        movement->is_moving = action.is_moving;
+        if (action.is_moving) {
+            movement->acceleration = scale(
+                get_orientation_vec(action.move_orientation),
+                movement->acceleration_scalar
+            );
+        } else {
+            movement->acceleration = vec2(0.0, 0.0);
+        }
+
         if (action.is_shooting) {
             try_shoot(entity);
         }

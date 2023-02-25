@@ -4,23 +4,11 @@
 #include <stdio.h>
 
 KinematicMovement init_kinematic_movement(
-    float speed,
-    float watch_orientation,
-    float move_orientation,
-    int is_moving
+    float max_speed, float friction_coefficient, float acceleration_scalar
 ) {
-    KinematicMovement movement;
-    movement.speed = speed;
-    movement.watch_orientation = watch_orientation;
-    movement.move_orientation = move_orientation;
-    movement.is_moving = is_moving;
+    KinematicMovement movement = {0};
+    movement.max_speed = max_speed;
+    movement.friction_coefficient = friction_coefficient;
+    movement.acceleration_scalar = acceleration_scalar;
     return movement;
-}
-
-Vec2 get_kinematic_velocity(KinematicMovement movement) {
-    if (!movement.is_moving) {
-        return vec2(0.0, 0.0);
-    }
-    Vec2 move_dir = get_orientation_vec(movement.move_orientation);
-    return scale(normalize(move_dir), movement.speed);
 }

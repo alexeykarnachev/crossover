@@ -6,7 +6,7 @@ void update_get_killed_score(int entity) {
     scorer->value += scorer->weight;
 }
 
-void update_kill_score(int entity) {
+void update_do_kill_score(int entity) {
     ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_kill;
     scorer->value += scorer->weight;
 }

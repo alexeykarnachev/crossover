@@ -16,7 +16,7 @@ void update_healths() {
                 && check_if_entity_has_component(
                     damage_dealler, SCORER_COMPONENT
                 )) {
-                update_kill_score(damage_dealler);
+                update_do_kill_score(damage_dealler);
             }
 
             // TODO: Think about this case. What should I do if I need a

@@ -24,7 +24,7 @@ void update_bullets(float dt) {
         }
         Transformation transformation = SCENE.transformations[bullet];
         KinematicMovement movement = SCENE.kinematic_movements[bullet];
-        Vec2 ray = scale(get_kinematic_velocity(movement), dt);
+        Vec2 ray = scale(movement.velocity, dt);
         int target_required_component = TRANSFORMATION_COMPONENT
                                         | COLLIDER_COMPONENT
                                         | RIGID_BODY_COMPONENT;
@@ -37,7 +37,7 @@ void update_bullets(float dt) {
         int entity = result.entity;
         if (entity != -1) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
-                float damage = movement.speed;
+                float damage = length(movement.velocity);
                 Health* health = &SCENE.healths[entity];
                 health->value -= damage;
                 health->damage_dealler = bullet_owner;
@@ -71,7 +71,7 @@ void render_bullets(float dt) {
 
         Transformation transformation = SCENE.transformations[bullet];
         KinematicMovement movement = SCENE.kinematic_movements[bullet];
-        Vec2 ray = scale(get_kinematic_velocity(movement), dt);
+        Vec2 ray = scale(movement.velocity, dt);
         render_debug_line(
             transformation.position,
             add(transformation.position, ray),

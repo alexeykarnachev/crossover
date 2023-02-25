@@ -33,16 +33,33 @@ void update_kinematic_movements(float dt) {
             continue;
         }
         Transformation* transformation = &SCENE.transformations[entity];
-        KinematicMovement movement = SCENE.kinematic_movements[entity];
-        transformation->orientation = movement.watch_orientation;
+        KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+        transformation->orientation = movement->watch_orientation;
 
-        if (movement.is_moving) {
-            Vec2 step = scale(get_kinematic_velocity(movement), dt);
-            transformation->position = add(transformation->position, step);
+        // TODO: It's not quiet correct to add acceleration and
+        // friction (as a scale verions of the velocity).
+        // Need to introduce net-force
+        movement->velocity = add(
+            movement->velocity,
+            scale(
+                sub(movement->acceleration,
+                    scale(
+                        movement->velocity, movement->friction_coefficient
+                    )),
+                dt
+            )
+        );
 
-            if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
-                update_do_kinematic_move_score(entity, step);
-            }
+        if (length(movement->velocity) > movement->max_speed) {
+            movement->velocity = scale(
+                normalize(movement->velocity), movement->max_speed
+            );
+        }
+
+        Vec2 step = scale(movement->velocity, dt);
+        transformation->position = add(transformation->position, step);
+        if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+            update_do_kinematic_move_score(entity, step);
         }
     }
 }

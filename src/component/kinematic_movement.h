@@ -2,16 +2,15 @@
 #include "../math.h"
 
 typedef struct KinematicMovement {
-    float speed;
+    Vec2 velocity;
+    Vec2 acceleration;
+    float max_speed;
+    float friction_coefficient;
+    float acceleration_scalar;
+
     float watch_orientation;
-    float move_orientation;
-    int is_moving;
 } KinematicMovement;
 
 KinematicMovement init_kinematic_movement(
-    float speed,
-    float watch_orientation,
-    float move_orientation,
-    int is_moving
+    float max_speed, float friction_coefficient, float acceleration_scalar
 );
-Vec2 get_kinematic_velocity(KinematicMovement movement);

@@ -506,8 +506,25 @@ static void render_component_inspector(int entity, ComponentType type) {
             KinematicMovement* movement
                 = &SCENE.kinematic_movements[entity];
 
-            igCheckbox("is moving", (bool*)(&movement->is_moving));
-            ig_drag_float("speed", &movement->speed, 0.0, FLT_MAX, 1.0, 0);
+            ig_drag_float(
+                "max_speed", &movement->max_speed, 0.0, FLT_MAX, 1.0, 0
+            );
+            ig_drag_float(
+                "friction",
+                &movement->friction_coefficient,
+                0.0,
+                FLT_MAX,
+                1.0,
+                0
+            );
+            ig_drag_float(
+                "acceleration",
+                &movement->acceleration_scalar,
+                0.0,
+                FLT_MAX,
+                1.0,
+                0
+            );
             ig_drag_float(
                 "orient.", &movement->watch_orientation, -PI, PI, 0.05, 0
             );

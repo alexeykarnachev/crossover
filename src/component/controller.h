@@ -37,6 +37,6 @@ typedef struct Controller {
 void change_controller_type(
     Controller* controller, ControllerType target_type
 );
-Controller init_player_keyboard_controller(void);
-Controller init_dummy_ai_controller(void);
-Controller init_brain_ai_controller(void);
+Controller init_player_keyboard_controller();
+Controller init_dummy_ai_controller();
+Controller init_brain_ai_controller();

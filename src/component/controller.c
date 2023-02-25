@@ -64,6 +64,7 @@ Controller init_dummy_ai_controller(void) {
 
 Controller init_brain_ai_controller(void) {
     Controller controller = {0};
+
     controller.type = BRAIN_AI_CONTROLLER;
     return controller;
 }
