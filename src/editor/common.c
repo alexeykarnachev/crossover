@@ -13,8 +13,8 @@
 
 #define IG_DRAG_SCALAR_SCORE_WEIGHT(name) \
     ig_drag_float( \
-        #name, &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
-    )
+        "#", &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
+    );
 
 #define IG_TEXT_SCORE_VALUE(name) \
     igText("%.2f: " #name, scorer->scalars.name.value)
@@ -33,6 +33,7 @@ nfdfilteritem_t SCENE_FILTER[1] = {{"Scene", "xscene"}};
 nfdfilteritem_t PROJECT_FILTER[1] = {{"Project", "xproj"}};
 nfdfilteritem_t BRAIN_FILTER[1] = {{"Brain", "xbrain"}};
 
+static float SLIDER_WIDTH = 150.0;
 static char STR_BUFFER[256];
 ResultMessage RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};
 int IG_UNIQUE_ID = 0;
@@ -80,9 +81,11 @@ int ig_drag_float(
     int flags
 ) {
     float init_value = *value;
+    igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
     igDragFloat(label, value, step, min_val, max_val, "%.2f", flags);
     igPopID();
+    igPopItemWidth();
     return *value != init_value;
 }
 
@@ -95,9 +98,11 @@ int ig_drag_float2(
     int flags
 ) {
     float init_values[2] = {values[0], values[1]};
+    igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
     igDragFloat2(label, values, step, min_val, max_val, "%.2f", flags);
     igPopID();
+    igPopItemWidth();
     return values[0] != init_values[0] || values[1] != init_values[1];
 }
 
@@ -105,9 +110,11 @@ int ig_drag_int(
     char* label, int* value, int min_val, int max_val, int step, int flags
 ) {
     int init_value = *value;
+    igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
     igDragInt(label, value, 1, min_val, max_val, "%d", flags);
     igPopID();
+    igPopItemWidth();
     return *value != init_value;
 }
 

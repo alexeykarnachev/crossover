@@ -73,13 +73,13 @@ Controller init_brain_ai_controller(float force_magnitude) {
 }
 
 Controller init_default_player_keyboard_controller(void) {
-    return init_player_keyboard_controller(15000);
+    return init_player_keyboard_controller(DEFAULT_CONTROLLER_FORCE);
 }
 
 Controller init_default_dummy_ai_controller(void) {
-    return init_dummy_ai_controller(15000);
+    return init_dummy_ai_controller(DEFAULT_CONTROLLER_FORCE);
 }
 
 Controller init_default_brain_ai_controller(void) {
-    return init_brain_ai_controller(15000);
+    return init_brain_ai_controller(DEFAULT_CONTROLLER_FORCE);
 }

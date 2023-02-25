@@ -512,7 +512,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 "linear_damping", &m->linear_damping, 0.0, FLT_MAX, 1.0, 0
             );
             ig_drag_float(
-                "moment_of_inertia",
+                "moment of inertia",
                 &m->moment_of_inertia,
                 0.0,
                 FLT_MAX,
@@ -520,7 +520,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 0
             );
             ig_drag_float(
-                "angular_damping",
+                "angular damping",
                 &m->angular_damping,
                 0.0,
                 FLT_MAX,
@@ -528,7 +528,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 0
             );
             ig_drag_float(
-                "angular_stiffness",
+                "angular stiffness",
                 &m->angular_stiffness,
                 0.0,
                 FLT_MAX,
@@ -536,15 +536,10 @@ static void render_component_inspector(int entity, ComponentType type) {
                 0
             );
             ig_drag_float(
-                "watch_orientation",
-                &m->watch_orientation,
-                -PI,
-                PI,
-                0.05,
-                0
+                "watch orient.", &m->watch_orientation, -PI, PI, 0.05, 0
             );
             ig_drag_float(
-                "target_watch_orientation",
+                "target watch orient.",
                 &m->target_watch_orientation,
                 -PI,
                 PI,
@@ -828,6 +823,8 @@ static void process_keys(void) {
 }
 
 void render_scene_editor(void) {
+    ImGuiStyle* style = igGetStyle();
+
     render_game_controls();
     set_next_window_at_up_left();
     if (igBegin("Inspector", NULL, 0)) {
