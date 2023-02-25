@@ -1,3 +1,0 @@
-- remove max_speed field (acceleration, velocity and friction is enough)
-- chech that brain output direction is computed correctly (the actual orientation from the direction enum)
-- add kinematic movement rotation inertia

@@ -26,11 +26,10 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
-        // TODO: Below I set the velocity directory, so there is not need
-        // to pass max bullet speed and also acceleration_scalar.
-        KinematicMovement movement = init_kinematic_movement(
-            gun->bullet.speed, 0.0, 1000.0
-        );
+        // TODO: Below I set the velocity directly. Maybe it makes sense
+        // to introduce something like
+        // `init_kinematic_movement_with_constant_velocity` or so...
+        KinematicMovement movement = init_kinematic_movement(0.0, 0.0);
         movement.velocity = scale(
             get_orientation_vec(transformation.orientation),
             gun->bullet.speed
@@ -255,6 +254,8 @@ static ControllerAction get_brain_ai_action(int entity) {
         BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
 
+        // TODO: Chech that brain output direction is computed
+        //  correctly (the actual orientation from the direction enum)
         switch (type) {
             case WATCH_ORIENTATION_OUTPUT: {
                 int best_ray_idx = argmax(out, n_view_rays);

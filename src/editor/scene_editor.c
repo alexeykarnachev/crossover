@@ -263,6 +263,8 @@ static void render_context_menu(void) {
         pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
     }
     if (menu_item("Delete", "Del", 0, EDITOR.picked_entity.entity != -1)) {
+        // TODO: Don't delete the object if "del" is pressed,
+        //  but some text input is active. it's annoying
         destroy_entity(EDITOR.picked_entity.entity);
     }
 
@@ -506,9 +508,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             KinematicMovement* movement
                 = &SCENE.kinematic_movements[entity];
 
-            ig_drag_float(
-                "max_speed", &movement->max_speed, 0.0, FLT_MAX, 1.0, 0
-            );
+            igText("speed: %f", length(movement->velocity));
             ig_drag_float(
                 "friction",
                 &movement->friction_coefficient,

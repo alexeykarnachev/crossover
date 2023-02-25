@@ -50,12 +50,6 @@ void update_kinematic_movements(float dt) {
             )
         );
 
-        if (length(movement->velocity) > movement->max_speed) {
-            movement->velocity = scale(
-                normalize(movement->velocity), movement->max_speed
-            );
-        }
-
         Vec2 step = scale(movement->velocity, dt);
         transformation->position = add(transformation->position, step);
         if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
