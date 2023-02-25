@@ -72,3 +72,5 @@ int intersect_line_with_circle_nearest(
 int intersect_line_with_polygon_nearest(
     Vec2 s, Vec2 e, Vec2 vertices[], int n, Vec2* out
 );
+
+void print_vec2(const char* name, Vec2 v);

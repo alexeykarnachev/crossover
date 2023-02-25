@@ -139,6 +139,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     reset_scene();
     destroy_assets();
 
+    // TODO: Also, check some kind of hash which should be saved as a
+    // Scene property. It will prevent scene from modifications through
+    // the file
     // Read version
     int version;
     int n_bytes = 0;
@@ -448,7 +451,7 @@ int spawn_default_ai_guy(
         init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
-        init_kinematic_movement(7.0, 25.0),
+        init_kinematic_movement(70.0, 500.0, 0.01, 0.1, 1.0),
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
@@ -457,12 +460,12 @@ int spawn_default_ai_guy(
 }
 
 int spawn_default_dummy_ai_guy(Transformation transformation) {
-    Controller controller = init_dummy_ai_controller(1.0);
+    Controller controller = init_default_dummy_ai_controller();
     return spawn_default_ai_guy(transformation, controller);
 }
 
 int spawn_default_brain_ai_guy(Transformation transformation) {
-    Controller controller = init_brain_ai_controller(1.0);
+    Controller controller = init_default_brain_ai_controller();
     return spawn_default_ai_guy(transformation, controller);
 }
 
@@ -474,10 +477,10 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_circle_primitive(),
         init_material(FOREST_GREEN_COLOR),
         0.0,
-        init_kinematic_movement(7.0, 25.0),
+        init_kinematic_movement(70.0, 500.0, 0.01, 0.1, 1.0),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
-        init_player_keyboard_controller(1.0),
+        init_default_player_keyboard_controller(),
         init_default_health()
     );
 }

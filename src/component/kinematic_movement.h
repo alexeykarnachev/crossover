@@ -3,14 +3,25 @@
 
 // TODO: Add kinematic movement rotation inertia
 typedef struct KinematicMovement {
-    Vec2 velocity;
-    Vec2 acceleration;
-    float friction_coefficient;
-    float acceleration_scalar;
+    float mass;
+    Vec2 linear_velocity;
+    Vec2 net_force;
+    float linear_damping;
+
+    float moment_of_inertia;
+    float angular_velocity;
+    float net_torque;
+    float angular_damping;
+    float angular_stiffness;
 
     float watch_orientation;
+    float target_watch_orientation;
 } KinematicMovement;
 
 KinematicMovement init_kinematic_movement(
-    float friction_coefficient, float acceleration_scalar
+    float mass,
+    float linear_damping,
+    float moment_of_inertia,
+    float angular_damping,
+    float angular_stiffness
 );

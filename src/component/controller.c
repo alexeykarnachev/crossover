@@ -30,31 +30,33 @@ void change_controller_type(
 
     switch (target_type) {
         case PLAYER_KEYBOARD_CONTROLLER:
-            *controller = init_player_keyboard_controller();
+            *controller = init_default_player_keyboard_controller();
             break;
         case DUMMY_AI_CONTROLLER:
-            *controller = init_dummy_ai_controller();
+            *controller = init_default_dummy_ai_controller();
             break;
         case BRAIN_AI_CONTROLLER:
-            *controller = init_brain_ai_controller();
+            *controller = init_default_brain_ai_controller();
             break;
         default:
             CONTROLLER_TYPE_ERROR("change_controller_type", source_type);
     }
 }
 
-Controller init_player_keyboard_controller(void) {
+Controller init_player_keyboard_controller(float force_magnitude) {
     Controller controller = {0};
 
+    controller.force_magnitude = force_magnitude;
     controller.type = PLAYER_KEYBOARD_CONTROLLER;
     PlayerKeyboardController player_keyboard_controller;
     controller.c.player_keyboard = player_keyboard_controller;
     return controller;
 }
 
-Controller init_dummy_ai_controller(void) {
+Controller init_dummy_ai_controller(float force_magnitude) {
     Controller controller = {0};
 
+    controller.force_magnitude = force_magnitude;
     controller.type = DUMMY_AI_CONTROLLER;
     DummyAIController dummy_ai_controller = {0};
     dummy_ai_controller.is_shooting = 1;
@@ -62,9 +64,22 @@ Controller init_dummy_ai_controller(void) {
     return controller;
 }
 
-Controller init_brain_ai_controller(void) {
+Controller init_brain_ai_controller(float force_magnitude) {
     Controller controller = {0};
 
+    controller.force_magnitude = force_magnitude;
     controller.type = BRAIN_AI_CONTROLLER;
     return controller;
+}
+
+Controller init_default_player_keyboard_controller(void) {
+    return init_player_keyboard_controller(15000);
+}
+
+Controller init_default_dummy_ai_controller(void) {
+    return init_dummy_ai_controller(15000);
+}
+
+Controller init_default_brain_ai_controller(void) {
+    return init_brain_ai_controller(15000);
 }

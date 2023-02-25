@@ -26,11 +26,10 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
-        // TODO: Below I set the velocity directly. Maybe it makes sense
-        // to introduce something like
-        // `init_kinematic_movement_with_constant_velocity` or so...
-        KinematicMovement movement = init_kinematic_movement(0.0, 0.0);
-        movement.velocity = scale(
+        KinematicMovement movement = init_kinematic_movement(
+            0.008, 0.0, 1000.0, 0.0, 0.0
+        );
+        movement.linear_velocity = scale(
             get_orientation_vec(transformation.orientation),
             gun->bullet.speed
         );
@@ -379,14 +378,13 @@ void update_controllers() {
         }
 
         KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-        movement->watch_orientation = action.watch_orientation;
+        movement->target_watch_orientation = action.watch_orientation;
         if (action.is_moving) {
-            movement->acceleration = scale(
+            Vec2 force = scale(
                 get_orientation_vec(action.move_orientation),
-                movement->acceleration_scalar
+                controller.force_magnitude
             );
-        } else {
-            movement->acceleration = vec2(0.0, 0.0);
+            movement->net_force = add(movement->net_force, force);
         }
 
         if (action.is_shooting) {

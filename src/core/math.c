@@ -1,6 +1,7 @@
 #include "../math.h"
 
 #include <math.h>
+#include <stdio.h>
 
 float sign(float x) {
     if (x < 0.0) {
@@ -71,10 +72,21 @@ int any(int vals[], int n) {
     return res;
 }
 
+float normalize_orientation(float orientation) {
+    float mod_orientation = fmod(orientation, 2.0f * M_PI);
+    return (mod_orientation < 0.0f) ? mod_orientation + 2.0f * M_PI
+                                    : mod_orientation;
+}
+
 float get_orientations_diff(float r0, float r1) {
-    float diff = fabs(r0 - r1);
-    diff = min(diff, fabs(diff - 2.0 * PI));
-    return diff;
+    float d = normalize_orientation(r0) - normalize_orientation(r1);
+    if (d > PI) {
+        d -= 2 * PI;
+    } else if (d < -PI) {
+        d += 2 * PI;
+    }
+
+    return d;
 }
 
 float get_vec_orientation(Vec2 v) {
@@ -361,4 +373,8 @@ int intersect_line_with_polygon_nearest(
     }
 
     return 0;
+}
+
+void print_vec2(const char* name, Vec2 v) {
+    printf("%s (x: %f, y: %f)\n", name, v.x, v.y);
 }

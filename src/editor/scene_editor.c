@@ -25,8 +25,8 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     MATERIAL_COMPONENT,
     RENDER_LAYER_COMPONENT,
     KINEMATIC_MOVEMENT_COMPONENT,
-    VISION_COMPONENT,
     CONTROLLER_COMPONENT,
+    VISION_COMPONENT,
     SCORER_COMPONENT,
     TTL_COMPONENT,
     HEALTH_COMPONENT,
@@ -505,29 +505,54 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case KINEMATIC_MOVEMENT_COMPONENT: {
-            KinematicMovement* movement
-                = &SCENE.kinematic_movements[entity];
+            KinematicMovement* m = &SCENE.kinematic_movements[entity];
 
-            igText("speed: %f", length(movement->velocity));
+            ig_drag_float("mass", &m->mass, 0.0, FLT_MAX, 1.0, 0);
             ig_drag_float(
-                "friction",
-                &movement->friction_coefficient,
+                "linear_damping", &m->linear_damping, 0.0, FLT_MAX, 1.0, 0
+            );
+            ig_drag_float(
+                "moment_of_inertia",
+                &m->moment_of_inertia,
                 0.0,
                 FLT_MAX,
                 1.0,
                 0
             );
             ig_drag_float(
-                "acceleration",
-                &movement->acceleration_scalar,
+                "angular_damping",
+                &m->angular_damping,
                 0.0,
                 FLT_MAX,
                 1.0,
                 0
             );
             ig_drag_float(
-                "orient.", &movement->watch_orientation, -PI, PI, 0.05, 0
+                "angular_stiffness",
+                &m->angular_stiffness,
+                0.0,
+                FLT_MAX,
+                1.0,
+                0
             );
+            ig_drag_float(
+                "watch_orientation",
+                &m->watch_orientation,
+                -PI,
+                PI,
+                0.05,
+                0
+            );
+            ig_drag_float(
+                "target_watch_orientation",
+                &m->target_watch_orientation,
+                -PI,
+                PI,
+                0.05,
+                0
+            );
+            igText("linear speed: %f", length(m->linear_velocity));
+            igText("angular speed: %f", m->angular_velocity);
             break;
         }
         case VISION_COMPONENT: {
@@ -549,6 +574,9 @@ static void render_component_inspector(int entity, ComponentType type) {
                 (int*)CONTROLLER_TYPES,
                 N_CONTROLLER_TYPES,
                 CONTROLLER_TYPE_NAMES
+            );
+            ig_drag_float(
+                "force", &controller->force_magnitude, 0.0, FLT_MAX, 0.1, 0
             );
             change_controller_type(controller, type);
 
@@ -801,25 +829,22 @@ static void process_keys(void) {
 
 void render_scene_editor(void) {
     render_game_controls();
-    if (!EDITOR.is_playing) {
-
-        set_next_window_at_up_left();
-        if (igBegin("Inspector", NULL, 0)) {
-            render_camera_inspector();
-            render_components_selector();
-            render_components_inspector();
-            render_debug_inspector();
-        }
-        igEnd();
-
-        set_next_window_at_up_right();
-        if (igBegin("Browser", NULL, 0)) {
-            render_entities_browser();
-            render_assets_browser();
-        }
-        igEnd();
-
-        render_context_menu();
-        process_keys();
+    set_next_window_at_up_left();
+    if (igBegin("Inspector", NULL, 0)) {
+        render_camera_inspector();
+        render_components_selector();
+        render_components_inspector();
+        render_debug_inspector();
     }
+    igEnd();
+
+    set_next_window_at_up_right();
+    if (igBegin("Browser", NULL, 0)) {
+        render_entities_browser();
+        render_assets_browser();
+    }
+    igEnd();
+
+    render_context_menu();
+    process_keys();
 }
