@@ -46,12 +46,13 @@ void read_scorer(FILE* fp, Scorer* scorer) {
     fread(explored_cells, sizeof(int), n_explored_cells, fp);
     for (int i = 0; i < n_explored_cells; ++i) {
         int cell = explored_cells[i];
-        int row = cell / MAX_EXPLORATION_GRID_WIDTH;
-        int col = cell - row * MAX_EXPLORATION_GRID_WIDTH;
+        int row = cell / EXPLORATION_GRID_WIDTH;
+        int col = cell - row * EXPLORATION_GRID_WIDTH;
         scorer->exploration.grid[row][col] = 1;
     }
 
     fread(&scorer->exploration.start_position, sizeof(int), 2, fp);
+    fread(&scorer->exploration.cell_size, sizeof(float), 1, fp);
     fread(&scorer->exploration.score, sizeof(ScalarScore), 1, fp);
 
     free(explored_cells);
@@ -60,11 +61,11 @@ void read_scorer(FILE* fp, Scorer* scorer) {
 void write_scorer(FILE* fp, Scorer* scorer) {
     int* explored_cells = (int*)malloc(sizeof(scorer->exploration.grid));
     int n_explored_cells = 0;
-    for (int i = 0; i < MAX_EXPLORATION_GRID_HEIGHT; ++i) {
-        for (int j = 0; j < MAX_EXPLORATION_GRID_WIDTH; ++j) {
+    for (int i = 0; i < EXPLORATION_GRID_HEIGHT; ++i) {
+        for (int j = 0; j < EXPLORATION_GRID_WIDTH; ++j) {
             int is_explored = scorer->exploration.grid[i][j];
             if (is_explored) {
-                int idx = i * MAX_EXPLORATION_GRID_WIDTH + j;
+                int idx = i * EXPLORATION_GRID_WIDTH + j;
                 explored_cells[n_explored_cells++] = idx;
             }
         }
@@ -74,6 +75,7 @@ void write_scorer(FILE* fp, Scorer* scorer) {
     fwrite(&n_explored_cells, sizeof(int), 1, fp);
     fwrite(explored_cells, sizeof(int), n_explored_cells, fp);
     fwrite(&scorer->exploration.start_position, sizeof(int), 2, fp);
+    fwrite(&scorer->exploration.cell_size, sizeof(float), 1, fp);
     fwrite(&scorer->exploration.score, sizeof(ScalarScore), 1, fp);
 
     free(explored_cells);

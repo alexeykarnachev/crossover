@@ -21,11 +21,12 @@ typedef struct Scorer {
     } scalars;
 
     struct {
-        int grid[MAX_EXPLORATION_GRID_HEIGHT][MAX_EXPLORATION_GRID_WIDTH];
+        int grid[EXPLORATION_GRID_HEIGHT][EXPLORATION_GRID_WIDTH];
         Vec2 start_position;
+        float cell_size;
+
         ScalarScore score;
     } exploration;
-
 } Scorer;
 
 void reset_scorer(Scorer* scorer);

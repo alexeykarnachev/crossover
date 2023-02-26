@@ -45,6 +45,16 @@ void update_get_rb_collided_score(int entity) {
 }
 
 void update_exploration_score(int entity) {
-    // TODO: Implement this
     Scorer* scorer = &SCENE.scorers[entity];
+    // if (scorer->exploration.is_initialized == 0) {
+    //     memset(
+    //         scorer->exploration.grid,
+    //         0,
+    //         sizeof(scorer->exploration.grid)
+    //     );
+    //     scorer->exploration.score.value = 0.0;
+    //     scorer->exploration.start_position
+    //         = SCENE.transformations[entity].position;
+    //     scorer->exploration.is_initialized = 1;
+    // }
 }

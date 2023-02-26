@@ -3,6 +3,7 @@
 
 #include "../component.h"
 #include "../editor.h"
+#include "../scene.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include <float.h>
@@ -228,6 +229,39 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_hit);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_rb_collided);
     IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.score);
+    ig_same_line();
+
+    if (scorer->exploration.cell_size < EPS) {
+        scorer->exploration.cell_size = 1.0;
+    }
+
+    float cell_size = scorer->exploration.cell_size;
+    if (igBeginMenu("##", 1)) {
+        ig_drag_float(
+            "cell_size",
+            &scorer->exploration.cell_size,
+            0.5,
+            100.0,
+            0.1,
+            1.0
+        );
+        igText(
+            "start_position: (%.2f, %.2f)",
+            scorer->exploration.start_position.x,
+            scorer->exploration.start_position.y
+        );
+
+        igEndMenu();
+    }
+    if (cell_size != scorer->exploration.cell_size) {
+        memset(
+            scorer->exploration.grid, 0, sizeof(scorer->exploration.grid)
+        );
+        scorer->exploration.score.value = 0.0;
+        int entity = EDITOR.picked_entity.entity;
+        Vec2 position = SCENE.transformations[entity].position;
+        scorer->exploration.start_position = position;
+    }
 
     // TODO: Move this Reset logic to the specific function in the
     //  Scorer translation unit
