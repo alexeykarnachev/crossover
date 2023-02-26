@@ -1,7 +1,6 @@
 #pragma once
 #include "../math.h"
 
-// TODO: Add kinematic movement rotation inertia
 typedef struct KinematicMovement {
     float mass;
     Vec2 linear_velocity;

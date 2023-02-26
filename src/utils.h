@@ -41,3 +41,4 @@ void sort(float arr[], int idx[], int length, int descending);
 
 int choose_idx(int to);
 void shuffle(int arr[], int n);
+void swap(void** p0, void** p1);

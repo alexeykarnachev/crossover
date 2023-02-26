@@ -41,6 +41,7 @@ void update_controllers(void);
 
 void update_do_kill_score(int entity);
 void update_do_kinematic_move_score(int entity, Vec2 step);
+void update_do_kinematic_rotation_score(int entity, float angular_step);
 void update_do_shoot_score(int entity);
 void update_do_hit_score(int entity);
 void update_get_killed_score(int entity);

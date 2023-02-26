@@ -8,9 +8,10 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
-static float BRAIN_INPUT[MAX_BRAIN_LAYER_SIZE];
-static float BRAIN_OUTPUT[MAX_BRAIN_LAYER_SIZE];
+static float BRAIN_INPUT[MAX_BRAIN_LAYER_SIZE] = {0};
+static float BRAIN_OUTPUT[MAX_BRAIN_LAYER_SIZE] = {0};
 
 static void try_shoot(int entity) {
     if (!check_if_entity_has_component(entity, GUN_COMPONENT)) {
@@ -173,6 +174,7 @@ static ControllerAction get_brain_ai_action(int entity) {
         return action;
     }
 
+    float orientation = SCENE.transformations[entity].orientation;
     // Construct Brain input array
     Vision* vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].position;
@@ -220,7 +222,6 @@ static ControllerAction get_brain_ai_action(int entity) {
 
     // Perform forward pass
     inp = BRAIN_INPUT;
-    float* out = BRAIN_OUTPUT;
     float* weights = brain->weights;
     int inp_size = get_brain_input_size(params);
 
@@ -235,56 +236,57 @@ static ControllerAction get_brain_ai_action(int entity) {
         for (int i = 0; i < layer_size; ++i) {
             float z = 0.0;
             for (int ix = 0; ix < inp_size + 1; ++ix) {
-                float x = ix == inp_size ? 1.0 : inp[ix];
+                float x = ix == inp_size ? 1.0 : BRAIN_INPUT[ix];
                 float w = *weights++;
                 z += x * w;
             }
 
             float y = i_layer == params.n_layers ? z : max(0.0, z);
-            *out++ = y;
+            BRAIN_OUTPUT[i] = y;
         }
         inp_size = layer_size;
-        inp = BRAIN_OUTPUT;
-        out = BRAIN_INPUT;
+        int n_bytes = MAX_BRAIN_LAYER_SIZE * sizeof(float);
+        memset(BRAIN_INPUT, 0.0, n_bytes);
+        memcpy(BRAIN_INPUT, BRAIN_OUTPUT, n_bytes);
+        memset(BRAIN_OUTPUT, 0.0, n_bytes);
+
+        // swap((void*)&BRAIN_OUTPUT, (void*)&BRAIN_INPUT);
     }
 
     // Construct controller action based on the brain output
+    inp = BRAIN_INPUT;
     for (int i = 0; i < params.n_outputs; ++i) {
         BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
-
-        // TODO: Chech that brain output direction is computed
+        // TODO: Check that brain input direction is computed
         //  correctly (the actual orientation from the direction enum)
         switch (type) {
             case WATCH_ORIENTATION_OUTPUT: {
-                int best_ray_idx = argmax(out, n_view_rays);
+                int best_ray_idx = argmax(inp, n_view_rays);
                 Vec2 look_at = vision->observations[best_ray_idx].position;
                 action.watch_orientation = get_vec_orientation(
                     sub(look_at, position)
                 );
-
-                out += n_view_rays;
+                inp += n_view_rays;
                 break;
             }
             case MOVE_ORIENTATION_OUTPUT: {
                 int n_dirs = output.o.move_orientation.n_directions;
-                int best_dir_idx = argmax(out, n_dirs);
+                int best_dir_idx = argmax(inp, n_dirs);
                 float dir_step = 2.0 * PI / n_dirs;
-                action.move_orientation = dir_step * best_dir_idx;
-
-                out += n_dirs;
+                action.move_orientation = dir_step * best_dir_idx
+                                          + orientation;
+                inp += n_dirs;
                 break;
             }
             case IS_SHOOTING_OUTPUT: {
-                action.is_shooting = *out > 0.0;
-
-                out += 1;
+                action.is_shooting = *inp > 0.0;
+                inp += 1;
                 break;
             }
             case IS_MOVING_OUTPUT: {
-                action.is_moving = *out > 0.0;
-
-                out += 1;
+                action.is_moving = *inp > 0.0;
+                inp += 1;
                 break;
             }
             default:

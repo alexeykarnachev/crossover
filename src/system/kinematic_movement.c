@@ -81,8 +81,8 @@ void update_kinematic_movements(float dt) {
         // Update scores
         if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
             update_do_kinematic_move_score(entity, linear_step);
+            update_do_kinematic_rotation_score(entity, angular_step);
         }
-        // TODO: Introduce `update_do_kinematic_rotation_score`
     }
 }
 

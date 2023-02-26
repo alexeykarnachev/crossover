@@ -13,13 +13,13 @@
 
 #define IG_DRAG_SCALAR_SCORE_WEIGHT(name) \
     ig_drag_float( \
-        "#", &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
-    );
+        #name, &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
+    )
 
 #define IG_TEXT_SCORE_VALUE(name) \
     igText("%.2f: " #name, scorer->scalars.name.value)
 
-static int N_SCALAR_SCORES = 7;
+static int N_SCALAR_SCORES = 8;
 #define CHECK_ALL_SCORES_HANDLED(scorer) \
     do { \
         int expected_size = N_SCALAR_SCORES * sizeof(ScalarScore); \
@@ -223,6 +223,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
 
     IG_DRAG_SCALAR_SCORE_WEIGHT(do_kill);
     IG_DRAG_SCALAR_SCORE_WEIGHT(do_kinematic_move);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kinematic_rotation);
     IG_DRAG_SCALAR_SCORE_WEIGHT(do_shoot);
     IG_DRAG_SCALAR_SCORE_WEIGHT(do_hit);
     IG_DRAG_SCALAR_SCORE_WEIGHT(get_killed);
@@ -238,6 +239,7 @@ void render_scorer_values_inspector(Scorer* scorer) {
 
     IG_TEXT_SCORE_VALUE(do_kill);
     IG_TEXT_SCORE_VALUE(do_kinematic_move);
+    IG_TEXT_SCORE_VALUE(do_kinematic_rotation);
     IG_TEXT_SCORE_VALUE(do_shoot);
     IG_TEXT_SCORE_VALUE(do_hit);
     IG_TEXT_SCORE_VALUE(get_killed);

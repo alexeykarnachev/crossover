@@ -9,6 +9,7 @@ typedef struct Scorer {
     struct {
         ScalarScore do_kill;
         ScalarScore do_kinematic_move;
+        ScalarScore do_kinematic_rotation;
         ScalarScore do_shoot;
         ScalarScore do_hit;
         ScalarScore get_killed;

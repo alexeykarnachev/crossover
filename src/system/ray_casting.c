@@ -56,5 +56,9 @@ RayCastResult cast_ray(
         }
     }
 
+    if (result.entity == -1) {
+        result.position = add(start, ray);
+    }
+
     return result;
 }
