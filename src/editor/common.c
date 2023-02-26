@@ -12,12 +12,10 @@
 #include <string.h>
 
 #define IG_DRAG_SCALAR_SCORE_WEIGHT(name) \
-    ig_drag_float( \
-        #name, &scorer->scalars.name.weight, -FLT_MAX, FLT_MAX, 0.1, 0 \
-    )
+    ig_drag_float(#name, &scorer->name.weight, -FLT_MAX, FLT_MAX, 0.1, 0)
 
 #define IG_TEXT_SCORE_VALUE(name) \
-    igText("%.2f: " #name, scorer->scalars.name.value)
+    igText("%.2f: " #name, scorer->name.value)
 
 static int N_SCALAR_SCORES = 8;
 #define CHECK_ALL_SCORES_HANDLED(scorer) \
@@ -221,28 +219,34 @@ char* get_short_file_path(char* file_path) {
 void render_scorer_weights_inspector(Scorer* scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
-    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kill);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kinematic_move);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(do_kinematic_rotation);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(do_shoot);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(do_hit);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(get_killed);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(get_hit);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(get_rb_collided);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kill);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kinematic_move);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kinematic_rotation);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_shoot);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_hit);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_killed);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_hit);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_rb_collided);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.score);
+
+    // TODO: Move this Reset logic to the specific function in the
+    //  Scorer translation unit
     if (igButton("Reset", IG_VEC2_ZERO)) {
         memset(&scorer->scalars, 0, sizeof(scorer->scalars));
+        memset(&scorer->exploration, 0, sizeof(scorer->exploration));
     }
 }
 
 void render_scorer_values_inspector(Scorer* scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
-    IG_TEXT_SCORE_VALUE(do_kill);
-    IG_TEXT_SCORE_VALUE(do_kinematic_move);
-    IG_TEXT_SCORE_VALUE(do_kinematic_rotation);
-    IG_TEXT_SCORE_VALUE(do_shoot);
-    IG_TEXT_SCORE_VALUE(do_hit);
-    IG_TEXT_SCORE_VALUE(get_killed);
-    IG_TEXT_SCORE_VALUE(get_hit);
-    IG_TEXT_SCORE_VALUE(get_rb_collided);
+    IG_TEXT_SCORE_VALUE(scalars.do_kill);
+    IG_TEXT_SCORE_VALUE(scalars.do_kinematic_move);
+    IG_TEXT_SCORE_VALUE(scalars.do_kinematic_rotation);
+    IG_TEXT_SCORE_VALUE(scalars.do_shoot);
+    IG_TEXT_SCORE_VALUE(scalars.do_hit);
+    IG_TEXT_SCORE_VALUE(scalars.get_killed);
+    IG_TEXT_SCORE_VALUE(scalars.get_hit);
+    IG_TEXT_SCORE_VALUE(scalars.get_rb_collided);
+    IG_TEXT_SCORE_VALUE(exploration.score);
 }

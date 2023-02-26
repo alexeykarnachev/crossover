@@ -99,8 +99,7 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     reset_editor();
 
     int version;
-    int n_bytes = 0;
-    n_bytes += fread(&version, sizeof(int), 1, fp);
+    fread(&version, sizeof(int), 1, fp);
     if (version != PROJECT_VERSION) {
         sprintf(
             res_msg->msg,
@@ -113,9 +112,9 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     }
 
     Project* project = &EDITOR.project;
-    n_bytes += read_str_from_file(&project->project_file_path, fp, 0);
-    n_bytes += read_str_from_file(&project->scene_file_path, fp, 1);
-    n_bytes += read_str_from_file(&project->default_search_path, fp, 1);
+    read_str_from_file(&project->project_file_path, fp, 0);
+    read_str_from_file(&project->scene_file_path, fp, 1);
+    read_str_from_file(&project->default_search_path, fp, 1);
 
     fclose(fp);
 
@@ -128,7 +127,7 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     update_recent_project(project->project_file_path);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Project is loaded (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Project is loaded");
     return;
 }
 
@@ -141,18 +140,16 @@ void save_editor_project(ResultMessage* res_msg) {
     Project project = EDITOR.project;
     save_scene(project.scene_file_path, &RESULT_MESSAGE);
 
-    int n_bytes = 0;
     int version = PROJECT_VERSION;
-
-    n_bytes += fwrite(&version, sizeof(int), 1, fp);
-    n_bytes += write_str_to_file(project.project_file_path, fp, 0);
-    n_bytes += write_str_to_file(project.scene_file_path, fp, 1);
-    n_bytes += write_str_to_file(project.default_search_path, fp, 1);
+    fwrite(&version, sizeof(int), 1, fp);
+    write_str_to_file(project.project_file_path, fp, 0);
+    write_str_to_file(project.scene_file_path, fp, 1);
+    write_str_to_file(project.default_search_path, fp, 1);
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Project is saved (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Project is saved");
     return;
 }
 

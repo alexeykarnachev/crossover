@@ -31,6 +31,7 @@ Vec2 get_cursor_scene_pos(void) {
 void reset_scene(void) {
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     memset(SCENE.owners, -1, sizeof(int) * MAX_N_ENTITIES);
+    memset(SCENE.scorers, 0, sizeof(Scorer) * MAX_N_ENTITIES);
     reset_camera();
 
     SCENE.n_entities = 0;
@@ -43,59 +44,39 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     }
 
     int version = SCENE_VERSION;
-    int n_bytes = 0;
 
     // Write version
-    n_bytes += fwrite(&version, sizeof(int), 1, fp);
-
-    // Write Scene itself
-    n_bytes += fwrite(&SCENE.time, sizeof(float), 1, fp);
-    n_bytes += fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
-    n_bytes += fwrite(
-        SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
-    );
-
-    n_bytes += fwrite(
-        SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(
+    fwrite(&version, sizeof(int), 1, fp);
+    fwrite(&SCENE.time, sizeof(float), 1, fp);
+    fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
+    fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
+    fwrite(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
+    fwrite(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
-    n_bytes += fwrite(
-        SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(
+    fwrite(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
+    fwrite(
         SCENE.kinematic_movements,
         sizeof(KinematicMovement),
         SCENE.n_entities,
         fp
     );
-    n_bytes += fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
-    n_bytes += fwrite(
-        SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(
-        SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(
-        SCENE.materials, sizeof(Material), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
-    n_bytes += fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    n_bytes += fwrite(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
-    n_bytes += fwrite(
-        SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
-    n_bytes += fwrite(
-        SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
-    );
-    n_bytes += fwrite(SCENE.scorers, sizeof(Scorer), SCENE.n_entities, fp);
-    n_bytes += fwrite(&SCENE.camera, sizeof(int), 1, fp);
-    n_bytes += fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
+    fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
+    fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
+    fwrite(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    fwrite(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
+    fwrite(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
+    fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fwrite(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
+    write_n_scorers(fp, SCENE.scorers, SCENE.n_entities);
+    fwrite(&SCENE.camera, sizeof(int), 1, fp);
+    fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     // Write Brains
-    n_bytes += fwrite(&N_BRAINS, sizeof(int), 1, fp);
+    fwrite(&N_BRAINS, sizeof(int), 1, fp);
     int n_brains = 0;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
         Brain* brain = &BRAINS[i];
@@ -103,7 +84,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
             continue;
         }
 
-        n_bytes += write_str_to_file(brain->params.key, fp, 0);
+        write_str_to_file(brain->params.key, fp, 0);
         n_brains += 1;
     }
 
@@ -120,13 +101,13 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     }
 
     // Write debug info
-    n_bytes += fwrite(&DEBUG, sizeof(DEBUG), 1, fp);
+    fwrite(&DEBUG, sizeof(DEBUG), 1, fp);
 
     // Close the file
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Scene is saved (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Scene is saved");
     return;
 }
 
@@ -144,8 +125,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     // the file
     // Read version
     int version;
-    int n_bytes = 0;
-    n_bytes += fread(&version, sizeof(int), 1, fp);
+    fread(&version, sizeof(int), 1, fp);
     if (version != SCENE_VERSION) {
         sprintf(
             res_msg->msg,
@@ -158,58 +138,41 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     }
 
     // Read Scene itself
-    n_bytes += fread(&SCENE.time, sizeof(float), 1, fp);
-    n_bytes += fread(&SCENE.n_entities, sizeof(int), 1, fp);
-    n_bytes += fread(
-        SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp
-    );
+    fread(&SCENE.time, sizeof(float), 1, fp);
+    fread(&SCENE.n_entities, sizeof(int), 1, fp);
+    fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
 
-    n_bytes += fread(
-        SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp
-    );
-    n_bytes += fread(
+    fread(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
+    fread(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
-    n_bytes += fread(
-        SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp
-    );
-    n_bytes += fread(
+    fread(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
+    fread(
         SCENE.kinematic_movements,
         sizeof(KinematicMovement),
         SCENE.n_entities,
         fp
     );
-    n_bytes += fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
-    n_bytes += fread(
-        SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp
-    );
-    n_bytes += fread(
-        SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp
-    );
-    n_bytes += fread(
-        SCENE.materials, sizeof(Material), SCENE.n_entities, fp
-    );
-    n_bytes += fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
-    n_bytes += fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
-    n_bytes += fread(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
-    n_bytes += fread(
-        SCENE.render_layers, sizeof(float), SCENE.n_entities, fp
-    );
-    n_bytes += fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
-    n_bytes += fread(
-        SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp
-    );
-    n_bytes += fread(SCENE.scorers, sizeof(Scorer), SCENE.n_entities, fp);
-    n_bytes += fread(&SCENE.camera, sizeof(int), 1, fp);
-    n_bytes += fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
-    int scene_n_bytes = n_bytes;
+    fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
+    fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
+    fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
+    fread(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
+    fread(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
+    fread(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
+    fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
+    fread(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
+    read_n_scorers(fp, SCENE.scorers, SCENE.n_entities);
+    fread(&SCENE.camera, sizeof(int), 1, fp);
+    fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
     // Read Brains
     int n_brains;
-    n_bytes = fread(&n_brains, sizeof(int), 1, fp);
+    fread(&n_brains, sizeof(int), 1, fp);
     for (int i = 0; i < n_brains; ++i) {
         char* key;
-        n_bytes += read_str_from_file(&key, fp, 0);
+        read_str_from_file(&key, fp, 0);
         Brain* brain = load_brain(key, res_msg, 0);
         // TODO: Currently `get_brain_size` returns the number weights.
         // It may be confusing. It's better to make the explicitly named
@@ -218,21 +181,15 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         // n_bytes += get_brain_size(brain->params) * sizeof(float)
         //            + sizeof(Brain);
     }
-    int brains_n_bytes = n_bytes;
 
     // Read debug info
-    n_bytes += fread(&DEBUG, sizeof(DEBUG), 1, fp);
+    fread(&DEBUG, sizeof(DEBUG), 1, fp);
 
     // Close the file
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(
-        res_msg->msg,
-        "INFO: Scene is loaded (%dB) with Brains (%dB)",
-        scene_n_bytes,
-        brains_n_bytes
-    );
+    sprintf(res_msg->msg, "INFO: Scene is loaded");
     return;
 }
 

@@ -31,8 +31,8 @@ nfdchar_t* save_nfd(
     nfdfilteritem_t* filter_items,
     int n_filter_items
 );
-int write_str_to_file(const char* str, FILE* fp, int allow_null);
-int read_str_from_file(char** str_p, FILE* fp, int allow_null);
+void read_str_from_file(char** str_p, FILE* fp, int allow_null);
+void write_str_to_file(const char* str, FILE* fp, int allow_null);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);
 float frand01(void);
 

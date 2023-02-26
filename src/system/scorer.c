@@ -43,3 +43,8 @@ void update_get_rb_collided_score(int entity) {
     ScalarScore* scorer = &SCENE.scorers[entity].scalars.get_rb_collided;
     scorer->value += scorer->weight;
 }
+
+void update_exploration_score(int entity) {
+    // TODO: Implement this
+    Scorer* scorer = &SCENE.scorers[entity];
+}

@@ -49,7 +49,7 @@ void destroy_brain(Brain* brain) {
 
 void destroy_brains(void) {
     int n_brains = 0;
-    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i, n_brains) {
+    for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
         Brain* brain = &BRAINS[i];
         if (brain->params.key[0] == '\0') {
             if (brain->weights != NULL) {
@@ -281,8 +281,7 @@ Brain load_local_brain(char* file_path, ResultMessage* res_msg) {
     }
 
     int version;
-    int n_bytes = 0;
-    n_bytes += fread(&version, sizeof(int), 1, fp);
+    fread(&version, sizeof(int), 1, fp);
     if (version != BRAIN_VERSION) {
         sprintf(
             res_msg->msg,
@@ -295,15 +294,15 @@ Brain load_local_brain(char* file_path, ResultMessage* res_msg) {
     }
 
     BrainParams params;
-    n_bytes += fread(&params, sizeof(BrainParams), 1, fp);
+    fread(&params, sizeof(BrainParams), 1, fp);
     Brain brain = init_local_brain(params);
     int n_weights = get_brain_size(params);
-    n_bytes += fread(brain.weights, sizeof(float), n_weights, fp);
+    fread(brain.weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Brain is loaded (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Brain is loaded");
     return brain;
 }
 
@@ -325,15 +324,14 @@ void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
     }
 
     int version = BRAIN_VERSION;
-    int n_bytes = 0;
-    n_bytes += fwrite(&version, sizeof(int), 1, fp);
-    n_bytes += fwrite(&brain->params, sizeof(BrainParams), 1, fp);
-    n_bytes += fwrite(weights, sizeof(float), n_weights, fp);
+    fwrite(&version, sizeof(int), 1, fp);
+    fwrite(&brain->params, sizeof(BrainParams), 1, fp);
+    fwrite(weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
-    sprintf(res_msg->msg, "INFO: Brain is saved (%dB)", n_bytes);
+    sprintf(res_msg->msg, "INFO: Brain is saved");
     return;
 }
 

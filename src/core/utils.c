@@ -124,7 +124,7 @@ nfdchar_t* save_nfd(
     return file_path;
 }
 
-int write_str_to_file(const char* str, FILE* fp, int allow_null) {
+void write_str_to_file(const char* str, FILE* fp, int allow_null) {
     if (str == NULL && !allow_null) {
         fprintf(
             stderr,
@@ -135,25 +135,21 @@ int write_str_to_file(const char* str, FILE* fp, int allow_null) {
     }
 
     int str_len = 0;
-    int n_bytes = 0;
     if (str == NULL) {
-        n_bytes += fwrite(&str_len, sizeof(int), 1, fp);
+        fwrite(&str_len, sizeof(int), 1, fp);
     } else {
         str_len = strlen(str) + 1;
-        n_bytes += fwrite(&str_len, sizeof(int), 1, fp);
-        n_bytes += fwrite(str, sizeof(char), str_len, fp);
+        fwrite(&str_len, sizeof(int), 1, fp);
+        fwrite(str, sizeof(char), str_len, fp);
     }
-
-    return n_bytes;
 }
 
-int read_str_from_file(char** str_p, FILE* fp, int allow_null) {
+void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
     uint32_t str_len;
-    int n_bytes = 0;
-    n_bytes += fread(&str_len, sizeof(uint32_t), 1, fp);
+    fread(&str_len, sizeof(uint32_t), 1, fp);
     if (str_len > 0) {
         char* buffer = (char*)malloc(str_len + 1);
-        n_bytes += fread(buffer, sizeof(char), str_len, fp);
+        fread(buffer, sizeof(char), str_len, fp);
         buffer[str_len] = '\0';
         *str_p = buffer;
     } else if (allow_null) {
@@ -166,8 +162,6 @@ int read_str_from_file(char** str_p, FILE* fp, int allow_null) {
         );
         exit(1);
     }
-
-    return n_bytes;
 }
 
 uint64_t get_bytes_hash(const char* bytes, int n_bytes) {
