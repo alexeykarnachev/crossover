@@ -228,18 +228,22 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_killed);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_hit);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_rb_collided);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.score);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.score);
     ig_same_line();
 
-    if (scorer->exploration.cell_size < EPS) {
-        scorer->exploration.cell_size = 1.0;
+    int entity = EDITOR.picked_entity.entity;
+    Vec2 position = SCENE.transformations[entity].position;
+
+    if (scorer->kinematic_exploration.cell_size < EPS) {
+        scorer->kinematic_exploration.cell_size = 1.0;
+        scorer->kinematic_exploration.start_position = position;
     }
 
-    float cell_size = scorer->exploration.cell_size;
+    float cell_size = scorer->kinematic_exploration.cell_size;
     if (igBeginMenu("##", 1)) {
         ig_drag_float(
             "cell_size",
-            &scorer->exploration.cell_size,
+            &scorer->kinematic_exploration.cell_size,
             0.5,
             100.0,
             0.1,
@@ -247,27 +251,31 @@ void render_scorer_weights_inspector(Scorer* scorer) {
         );
         igText(
             "start_position: (%.2f, %.2f)",
-            scorer->exploration.start_position.x,
-            scorer->exploration.start_position.y
+            scorer->kinematic_exploration.start_position.x,
+            scorer->kinematic_exploration.start_position.y
         );
 
         igEndMenu();
     }
-    if (cell_size != scorer->exploration.cell_size) {
+    if (cell_size != scorer->kinematic_exploration.cell_size) {
         memset(
-            scorer->exploration.grid, 0, sizeof(scorer->exploration.grid)
+            scorer->kinematic_exploration.grid,
+            0,
+            sizeof(scorer->kinematic_exploration.grid)
         );
-        scorer->exploration.score.value = 0.0;
-        int entity = EDITOR.picked_entity.entity;
-        Vec2 position = SCENE.transformations[entity].position;
-        scorer->exploration.start_position = position;
+        scorer->kinematic_exploration.score.value = 0.0;
+        scorer->kinematic_exploration.start_position = position;
     }
 
     // TODO: Move this Reset logic to the specific function in the
     //  Scorer translation unit
     if (igButton("Reset", IG_VEC2_ZERO)) {
         memset(&scorer->scalars, 0, sizeof(scorer->scalars));
-        memset(&scorer->exploration, 0, sizeof(scorer->exploration));
+        memset(
+            &scorer->kinematic_exploration,
+            0,
+            sizeof(scorer->kinematic_exploration)
+        );
     }
 }
 
@@ -282,5 +290,5 @@ void render_scorer_values_inspector(Scorer* scorer) {
     IG_TEXT_SCORE_VALUE(scalars.get_killed);
     IG_TEXT_SCORE_VALUE(scalars.get_hit);
     IG_TEXT_SCORE_VALUE(scalars.get_rb_collided);
-    IG_TEXT_SCORE_VALUE(exploration.score);
+    IG_TEXT_SCORE_VALUE(kinematic_exploration.score);
 }

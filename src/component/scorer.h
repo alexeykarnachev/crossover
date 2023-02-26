@@ -26,7 +26,7 @@ typedef struct Scorer {
         float cell_size;
 
         ScalarScore score;
-    } exploration;
+    } kinematic_exploration;
 } Scorer;
 
 void reset_scorer(Scorer* scorer);

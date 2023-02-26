@@ -44,17 +44,37 @@ void update_get_rb_collided_score(int entity) {
     scorer->value += scorer->weight;
 }
 
-void update_exploration_score(int entity) {
+void update_kinematic_exploration_score(int entity) {
     Scorer* scorer = &SCENE.scorers[entity];
-    // if (scorer->exploration.is_initialized == 0) {
-    //     memset(
-    //         scorer->exploration.grid,
-    //         0,
-    //         sizeof(scorer->exploration.grid)
-    //     );
-    //     scorer->exploration.score.value = 0.0;
-    //     scorer->exploration.start_position
-    //         = SCENE.transformations[entity].position;
-    //     scorer->exploration.is_initialized = 1;
-    // }
+    Vec2 start_position = scorer->kinematic_exploration.start_position;
+    Vec2 current_position = SCENE.transformations[entity].position;
+    Vec2 diff = sub(current_position, start_position);
+    float cell_size = scorer->kinematic_exploration.cell_size;
+
+    // TODO: Maybe reduce duplication somehow? Or maybe not...
+    float diff_x = fabs(diff.x) - 0.5 * cell_size;
+    int cell_x = 0;
+    if (diff_x > 0) {
+        cell_x = sign(diff.x) * (int)ceil(diff_x / cell_size);
+    }
+
+    float diff_y = fabs(diff.y) - 0.5 * cell_size;
+    int cell_y = 0;
+    if (diff_y > 0) {
+        cell_y = sign(diff.y) * (int)ceil(diff_y / cell_size);
+    }
+
+    cell_x += EXPLORATION_GRID_WIDTH / 2;
+    cell_y += EXPLORATION_GRID_HEIGHT / 2;
+
+    if (min(cell_x, cell_y) >= 0 && cell_x < EXPLORATION_GRID_WIDTH
+        && cell_y < EXPLORATION_GRID_HEIGHT) {
+        int* is_visited
+            = &scorer->kinematic_exploration.grid[cell_x][cell_y];
+        if (*is_visited == 0) {
+            *is_visited = 1;
+            float weight = scorer->kinematic_exploration.score.weight;
+            scorer->kinematic_exploration.score.value += weight;
+        }
+    }
 }
