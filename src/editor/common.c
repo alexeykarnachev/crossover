@@ -228,8 +228,6 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_killed);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_hit);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_rb_collided);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.score);
-    ig_same_line();
 
     int entity = EDITOR.picked_entity.entity;
     Vec2 position = SCENE.transformations[entity].position;
@@ -237,10 +235,17 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     if (scorer->kinematic_exploration.cell_size < EPS) {
         scorer->kinematic_exploration.cell_size = 1.0;
         scorer->kinematic_exploration.start_position = position;
+        scorer->kinematic_exploration.prev_cell = vec2(
+            (int)EXPLORATION_GRID_HEIGHT / 2,
+            (int)EXPLORATION_GRID_WIDTH / 2
+        );
     }
 
     float cell_size = scorer->kinematic_exploration.cell_size;
-    if (igBeginMenu("##", 1)) {
+    if (igBeginMenu("kinematic_exploration", 1)) {
+        IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.new_area_score);
+        IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.old_area_score);
+        IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.same_area_score);
         ig_drag_float(
             "cell_size",
             &scorer->kinematic_exploration.cell_size,
@@ -254,6 +259,11 @@ void render_scorer_weights_inspector(Scorer* scorer) {
             scorer->kinematic_exploration.start_position.x,
             scorer->kinematic_exploration.start_position.y
         );
+        igText(
+            "prev_cell: (%d, %d)",
+            (int)scorer->kinematic_exploration.prev_cell.x,
+            (int)scorer->kinematic_exploration.prev_cell.y
+        );
 
         igEndMenu();
     }
@@ -263,8 +273,14 @@ void render_scorer_weights_inspector(Scorer* scorer) {
             0,
             sizeof(scorer->kinematic_exploration.grid)
         );
-        scorer->kinematic_exploration.score.value = 0.0;
+        scorer->kinematic_exploration.new_area_score.value = 0.0;
+        scorer->kinematic_exploration.old_area_score.value = 0.0;
+        scorer->kinematic_exploration.same_area_score.value = 0.0;
         scorer->kinematic_exploration.start_position = position;
+        scorer->kinematic_exploration.prev_cell = vec2(
+            (int)EXPLORATION_GRID_HEIGHT / 2,
+            (int)EXPLORATION_GRID_WIDTH / 2
+        );
     }
 
     // TODO: Move this Reset logic to the specific function in the
@@ -290,5 +306,7 @@ void render_scorer_values_inspector(Scorer* scorer) {
     IG_TEXT_SCORE_VALUE(scalars.get_killed);
     IG_TEXT_SCORE_VALUE(scalars.get_hit);
     IG_TEXT_SCORE_VALUE(scalars.get_rb_collided);
-    IG_TEXT_SCORE_VALUE(kinematic_exploration.score);
+    IG_TEXT_SCORE_VALUE(kinematic_exploration.new_area_score);
+    IG_TEXT_SCORE_VALUE(kinematic_exploration.old_area_score);
+    IG_TEXT_SCORE_VALUE(kinematic_exploration.same_area_score);
 }

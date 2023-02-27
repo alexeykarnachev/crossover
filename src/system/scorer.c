@@ -44,7 +44,7 @@ void update_get_rb_collided_score(int entity) {
     scorer->value += scorer->weight;
 }
 
-void update_kinematic_exploration_score(int entity) {
+void update_kinematic_exploration_score(int entity, float dt) {
     Scorer* scorer = &SCENE.scorers[entity];
     Vec2 start_position = scorer->kinematic_exploration.start_position;
     Vec2 current_position = SCENE.transformations[entity].position;
@@ -66,6 +66,8 @@ void update_kinematic_exploration_score(int entity) {
 
     cell_x += EXPLORATION_GRID_WIDTH / 2;
     cell_y += EXPLORATION_GRID_HEIGHT / 2;
+    int prev_cell_x = scorer->kinematic_exploration.prev_cell.x;
+    int prev_cell_y = scorer->kinematic_exploration.prev_cell.y;
 
     if (min(cell_x, cell_y) >= 0 && cell_x < EXPLORATION_GRID_WIDTH
         && cell_y < EXPLORATION_GRID_HEIGHT) {
@@ -73,8 +75,20 @@ void update_kinematic_exploration_score(int entity) {
             = &scorer->kinematic_exploration.grid[cell_x][cell_y];
         if (*is_visited == 0) {
             *is_visited = 1;
-            float weight = scorer->kinematic_exploration.score.weight;
-            scorer->kinematic_exploration.score.value += weight;
+            float weight
+                = scorer->kinematic_exploration.new_area_score.weight;
+            scorer->kinematic_exploration.new_area_score.value += weight;
+        } else if (cell_x != prev_cell_x || cell_y != prev_cell_y) {
+            float weight
+                = scorer->kinematic_exploration.old_area_score.weight;
+            scorer->kinematic_exploration.old_area_score.value += weight;
+        } else {
+            float weight
+                = scorer->kinematic_exploration.same_area_score.weight;
+            scorer->kinematic_exploration.same_area_score.value += weight
+                                                                   * dt;
         }
     }
+
+    scorer->kinematic_exploration.prev_cell = vec2(cell_x, cell_y);
 }

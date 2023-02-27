@@ -23,9 +23,12 @@ typedef struct Scorer {
     struct {
         int grid[EXPLORATION_GRID_HEIGHT][EXPLORATION_GRID_WIDTH];
         Vec2 start_position;
+        Vec2 prev_cell;
         float cell_size;
 
-        ScalarScore score;
+        ScalarScore new_area_score;
+        ScalarScore old_area_score;
+        ScalarScore same_area_score;
     } kinematic_exploration;
 } Scorer;
 

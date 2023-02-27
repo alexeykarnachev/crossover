@@ -280,7 +280,7 @@ static void update_counters(void) {
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(entity, COLLIDER_COMPONENT)) {
+        if (!check_if_entity_has_component(entity, CONTROLLER_COMPONENT)) {
             continue;
         }
 
@@ -503,6 +503,8 @@ static void render_evolution_plots(void) {
     float min_score = GENETIC_TRAINING->progress.min_score;
     float max_score = GENETIC_TRAINING->progress.max_score;
 
+    // TODO: For some reason these line plots are all the same
+    // color and also, the are no legend labels for them...
     if (ImPlot_BeginPlot("Best scores", IG_VEC2_ZERO, 0)) {
         int offset = 0;
         int stride = sizeof(float);

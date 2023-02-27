@@ -20,7 +20,9 @@ void reset_scorer(Scorer* scorer) {
         0,
         sizeof(scorer->kinematic_exploration.grid)
     );
-    scorer->kinematic_exploration.score.value = 0.0;
+    scorer->kinematic_exploration.new_area_score.value = 0.0;
+    scorer->kinematic_exploration.old_area_score.value = 0.0;
+    scorer->kinematic_exploration.same_area_score.value = 0.0;
 }
 
 // TODO: Could be generalized with macros or loop or something like this
@@ -34,7 +36,9 @@ float get_total_score(Scorer* scorer) {
     total_score += scorer->scalars.get_killed.value;
     total_score += scorer->scalars.get_hit.value;
     total_score += scorer->scalars.get_rb_collided.value;
-    total_score += scorer->kinematic_exploration.score.value;
+    total_score += scorer->kinematic_exploration.new_area_score.value;
+    total_score += scorer->kinematic_exploration.old_area_score.value;
+    total_score += scorer->kinematic_exploration.same_area_score.value;
 
     return total_score;
 }
@@ -58,9 +62,25 @@ void read_scorer(FILE* fp, Scorer* scorer) {
     fread(
         &scorer->kinematic_exploration.start_position, sizeof(int), 2, fp
     );
+    fread(&scorer->kinematic_exploration.prev_cell, sizeof(int), 2, fp);
     fread(&scorer->kinematic_exploration.cell_size, sizeof(float), 1, fp);
     fread(
-        &scorer->kinematic_exploration.score, sizeof(ScalarScore), 1, fp
+        &scorer->kinematic_exploration.new_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
+    );
+    fread(
+        &scorer->kinematic_exploration.old_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
+    );
+    fread(
+        &scorer->kinematic_exploration.same_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
     );
 
     free(explored_cells);
@@ -87,9 +107,25 @@ void write_scorer(FILE* fp, Scorer* scorer) {
     fwrite(
         &scorer->kinematic_exploration.start_position, sizeof(int), 2, fp
     );
+    fwrite(&scorer->kinematic_exploration.prev_cell, sizeof(int), 2, fp);
     fwrite(&scorer->kinematic_exploration.cell_size, sizeof(float), 1, fp);
     fwrite(
-        &scorer->kinematic_exploration.score, sizeof(ScalarScore), 1, fp
+        &scorer->kinematic_exploration.new_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
+    );
+    fwrite(
+        &scorer->kinematic_exploration.old_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
+    );
+    fwrite(
+        &scorer->kinematic_exploration.same_area_score,
+        sizeof(ScalarScore),
+        1,
+        fp
     );
 
     free(explored_cells);

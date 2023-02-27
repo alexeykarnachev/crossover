@@ -47,7 +47,7 @@ void update_do_hit_score(int entity);
 void update_get_killed_score(int entity);
 void update_get_hit_score(int entity);
 void update_get_rb_collided_score(int entity);
-void update_kinematic_exploration_score(int entity);
+void update_kinematic_exploration_score(int entity, float dt);
 
 void render_debug_player(void);
 void render_debug_kinematic_movements(void);
