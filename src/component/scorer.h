@@ -25,10 +25,12 @@ typedef struct Scorer {
         Vec2 start_position;
         Vec2 prev_cell;
         float cell_size;
+        float cell_enter_time;
+        float stay_in_cell_delay;
 
-        ScalarScore new_area_score;
-        ScalarScore old_area_score;
-        ScalarScore same_area_score;
+        ScalarScore new_cell_score;
+        ScalarScore old_cell_score;
+        ScalarScore stay_in_cell_score;
     } kinematic_exploration;
 } Scorer;
 

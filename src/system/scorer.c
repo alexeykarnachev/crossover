@@ -76,17 +76,25 @@ void update_kinematic_exploration_score(int entity, float dt) {
         if (*is_visited == 0) {
             *is_visited = 1;
             float weight
-                = scorer->kinematic_exploration.new_area_score.weight;
-            scorer->kinematic_exploration.new_area_score.value += weight;
+                = scorer->kinematic_exploration.new_cell_score.weight;
+            scorer->kinematic_exploration.new_cell_score.value += weight;
+            scorer->kinematic_exploration.cell_enter_time = SCENE.time;
         } else if (cell_x != prev_cell_x || cell_y != prev_cell_y) {
             float weight
-                = scorer->kinematic_exploration.old_area_score.weight;
-            scorer->kinematic_exploration.old_area_score.value += weight;
+                = scorer->kinematic_exploration.old_cell_score.weight;
+            scorer->kinematic_exploration.old_cell_score.value += weight;
+            scorer->kinematic_exploration.cell_enter_time = SCENE.time;
         } else {
             float weight
-                = scorer->kinematic_exploration.same_area_score.weight;
-            scorer->kinematic_exploration.same_area_score.value += weight
-                                                                   * dt;
+                = scorer->kinematic_exploration.stay_in_cell_score.weight;
+            float stay_in_cell_time
+                = SCENE.time
+                  - scorer->kinematic_exploration.cell_enter_time;
+            if (stay_in_cell_time
+                > scorer->kinematic_exploration.stay_in_cell_delay) {
+                scorer->kinematic_exploration.stay_in_cell_score.value
+                    += weight * dt;
+            }
         }
     }
 
