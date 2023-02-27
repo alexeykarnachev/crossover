@@ -2,6 +2,8 @@
 
 #include "nfd.h"
 #include <errno.h>
+#include <float.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -222,27 +224,27 @@ static void merge(
     }
 }
 
-void sort(float arr[], int idx[], int length, int descending) {
-    if (length < 2) {
+void sort(float arr[], int idx[], int n, int descending) {
+    if (n < 2) {
         return;
     }
 
-    int mid = length / 2;
-    float left[mid], right[length - mid];
-    int left_idx[mid], right_idx[length - mid];
+    int mid = n / 2;
+    float left[mid], right[n - mid];
+    int left_idx[mid], right_idx[n - mid];
 
     for (int i = 0; i < mid; i++) {
         left[i] = arr[i];
         left_idx[i] = idx[i];
     }
 
-    for (int i = mid; i < length; i++) {
+    for (int i = mid; i < n; i++) {
         right[i - mid] = arr[i];
         right_idx[i - mid] = idx[i];
     }
 
     sort(left, left_idx, mid, descending);
-    sort(right, right_idx, length - mid, descending);
+    sort(right, right_idx, n - mid, descending);
     merge(
         arr,
         idx,
@@ -251,22 +253,95 @@ void sort(float arr[], int idx[], int length, int descending) {
         mid,
         right,
         right_idx,
-        length - mid,
+        n - mid,
         descending
     );
 }
 
-void argsort(float arr[], int idx[], int length, int descending) {
-    for (int i = 0; i < length; i++) {
+void argsort(float arr[], int idx[], int n, int descending) {
+    for (int i = 0; i < n; i++) {
         idx[i] = i;
     }
 
-    sort(arr, idx, length, descending);
+    sort(arr, idx, n, descending);
 }
 
-int choose_idx(int to) {
+int choose_idx(int n) {
     float r = frand01();
-    return (int)(r * to);
+    return (int)(r * n);
+}
+
+int argmax(float* vals, int n) {
+    float max_val = -FLT_MAX;
+    int max_val_idx = 0;
+    for (int i = 0; i < n; ++i) {
+        float val = *vals++;
+        if (val > max_val) {
+            max_val_idx = i;
+            max_val = val;
+        }
+    }
+
+    return max_val_idx;
+}
+
+float sigmoid(float x) {
+    return 1.0 / (1.0 + exp(-x));
+}
+
+void softmax(float* x, int n) {
+    float max_x = x[0];
+    for (int i = 1; i < n; i++) {
+        if (x[i] > max_x) {
+            max_x = x[i];
+        }
+    }
+
+    float sum_exp_x = 0.0;
+    for (int i = 0; i < n; i++) {
+        sum_exp_x += exp(x[i] - max_x);
+    }
+
+    for (int i = 0; i < n; i++) {
+        x[i] = exp(x[i] - max_x) / sum_exp_x;
+    }
+}
+
+// TODO: Introduce temperature for sampling
+int sample_binary(float weight) {
+    return frand01() < sigmoid(weight) ? 1 : 0;
+}
+
+// TODO: Introduce temperature for sampling
+int sample_multinomial(float* weights, int n) {
+    static int* _idx = NULL;
+    static float* _weights = NULL;
+    static int _n = 0;
+    if (_n < n) {
+        _n = n;
+        if (_idx != NULL) {
+            free(_idx);
+        }
+        _idx = malloc(_n * sizeof(int));
+        _weights = malloc(_n * sizeof(float));
+    }
+    memcpy(_weights, weights, n * sizeof(float));
+    softmax(_weights, n);
+    argsort(_weights, _idx, n, 0);
+
+    float rnd = frand01();
+    float cdf = 0.0;
+    for (int i = 0; i < n; ++i) {
+        cdf += _weights[i];
+        if (rnd <= cdf || i == n - 1) {
+            return _idx[i];
+        }
+    }
+
+    fprintf(
+        stderr, "ERROR: Unreachable in `weighted_argmax`. It's a bug\n"
+    );
+    exit(1);
 }
 
 void shuffle(int arr[], int n) {

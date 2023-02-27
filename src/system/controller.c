@@ -143,20 +143,6 @@ static ControllerAction get_dummy_ai_action(int entity) {
     return action;
 }
 
-static int argmax(float* ptr, int n_vals) {
-    float max_val = -FLT_MAX;
-    int max_val_idx = 0;
-    for (int i = 0; i < n_vals; ++i) {
-        float val = *ptr++;
-        if (val > max_val) {
-            max_val_idx = i;
-            max_val = val;
-        }
-    }
-
-    return max_val_idx;
-}
-
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
     BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
@@ -246,6 +232,8 @@ static ControllerAction get_brain_ai_action(int entity) {
         }
         inp_size = layer_size;
         int n_bytes = MAX_BRAIN_LAYER_SIZE * sizeof(float);
+        // TODO: A lot of memory hassle. Optimize with alterating
+        // pointers swap
         memset(BRAIN_INPUT, 0.0, n_bytes);
         memcpy(BRAIN_INPUT, BRAIN_OUTPUT, n_bytes);
         memset(BRAIN_OUTPUT, 0.0, n_bytes);
@@ -258,11 +246,9 @@ static ControllerAction get_brain_ai_action(int entity) {
     for (int i = 0; i < params.n_outputs; ++i) {
         BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
-        // TODO: Check that brain input direction is computed
-        //  correctly (the actual orientation from the direction enum)
         switch (type) {
             case WATCH_ORIENTATION_OUTPUT: {
-                int best_ray_idx = argmax(inp, n_view_rays);
+                int best_ray_idx = sample_multinomial(inp, n_view_rays);
                 Vec2 look_at = vision->observations[best_ray_idx].position;
                 action.watch_orientation = get_vec_orientation(
                     sub(look_at, position)
@@ -272,7 +258,7 @@ static ControllerAction get_brain_ai_action(int entity) {
             }
             case MOVE_ORIENTATION_OUTPUT: {
                 int n_dirs = output.o.move_orientation.n_directions;
-                int best_dir_idx = argmax(inp, n_dirs);
+                int best_dir_idx = sample_multinomial(inp, n_dirs);
                 float dir_step = 2.0 * PI / n_dirs;
                 action.move_orientation = dir_step * best_dir_idx
                                           + orientation;
@@ -280,12 +266,12 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case IS_SHOOTING_OUTPUT: {
-                action.is_shooting = *inp > 0.0;
+                action.is_shooting = sample_binary(*inp);
                 inp += 1;
                 break;
             }
             case IS_MOVING_OUTPUT: {
-                action.is_moving = *inp > 0.0;
+                action.is_moving = sample_binary(*inp);
                 inp += 1;
                 break;
             }

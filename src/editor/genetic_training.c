@@ -31,8 +31,8 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     memset(genetic_training, 0, sizeof(GeneticTraining));
     genetic_training->simulation.dt_ms = 17.0;
     genetic_training->progress.status = SIMULATION_NOT_STARTED;
-    genetic_training->population.episode_time = 45.0;
-    genetic_training->population.n_episodes = 1000;
+    genetic_training->population.episode_time = 60.0;
+    genetic_training->population.n_episodes = 500;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.05;
     genetic_training->evolution.mutation_strength = 0.05;
@@ -170,6 +170,10 @@ static void start_genetic_training(void) {
                     }
                     Scorer* scorer = &SCENE.scorers[entity];
                     float score = get_total_score(scorer);
+
+                    // TODO: Reset these values (max and min) on each
+                    // generation. This will improve plots quality, as they
+                    // will not expand infinitely
                     params->progress.min_score = min(
                         params->progress.min_score, score
                     );

@@ -36,9 +36,14 @@ void write_str_to_file(const char* str, FILE* fp, int allow_null);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);
 float frand01(void);
 
-void argsort(float arr[], int idx[], int length, int descending);
-void sort(float arr[], int idx[], int length, int descending);
+void argsort(float arr[], int idx[], int n, int descending);
+void sort(float arr[], int idx[], int n, int descending);
 
-int choose_idx(int to);
+int choose_idx(int n);
+int argmax(float* vals, int n);
+void softmax(float* x, int n);
+float sigmoid(float x);
+int sample_binary(float weight);
+int sample_multinomial(float* weights, int n);
 void shuffle(int arr[], int n);
 void swap(void** p0, void** p1);
