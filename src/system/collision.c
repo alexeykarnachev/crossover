@@ -208,6 +208,8 @@ static void compute_collisions() {
     DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 
+// TODO: Collisions resolving is not perfect:
+// Moving objects can squeeze through narrowing areas.
 static void resolve_collisions(int is_playing) {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;

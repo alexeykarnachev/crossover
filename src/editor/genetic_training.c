@@ -32,7 +32,7 @@ void init_genetic_training(GeneticTraining* genetic_training) {
     genetic_training->simulation.dt_ms = 17.0;
     genetic_training->progress.status = SIMULATION_NOT_STARTED;
     genetic_training->population.episode_time = 60.0;
-    genetic_training->population.n_episodes = 500;
+    genetic_training->population.n_episodes = 50;
     genetic_training->evolution.elite_ratio = 0.10;
     genetic_training->evolution.mutation_rate = 0.05;
     genetic_training->evolution.mutation_strength = 0.05;
@@ -204,7 +204,21 @@ static void start_genetic_training(void) {
                 int best_idx = indices[0];
                 Brain* best_brain = &GENERATION_BRAINS[e][best_idx];
                 ResultMessage res_msg = {0};
+
+                // TODO: Add an option to save the brain only if it's
+                // the best over all generations.
+                // It makes sense to make it optional because some times
+                // saving only the overall best brain is not the best
+                // decision (I think...).
+                // For example, if we train multiple brains,
+                // It's a normal situation when the brain has less score,
+                // but performs better, because there may be another
+                // brains which compete with each other.
+                // Or maybe it makes sense to save best brain in the
+                // current generation and the best on over all
+                // generations...
                 save_brain(best_brain->params.key, best_brain, &res_msg);
+
                 if (res_msg.flag != SUCCESS_RESULT) {
                     fprintf(
                         stderr,
@@ -500,6 +514,9 @@ static void render_evolution_progress_bar(void) {
     );
 }
 
+// TODO: Bug! Plots are drawn for entities which are present in the
+// main process. E.g if the entity in main process dies, it disappears
+// from the genetic training process (or at lease genetic training plot)
 static void render_evolution_plots(void) {
     ImPlotContext* ctx = ImPlot_CreateContext();
     ImPlot_SetCurrentContext(ctx);
