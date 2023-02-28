@@ -31,9 +31,14 @@ const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
     } while (0)
 
 Editor EDITOR;
+
 GeneticTraining* GENETIC_TRAINING;
 static int GENETIC_TRAINING_SHMID;
 const int GENETIC_TRAINING_SHMKEY;
+
+Profiler* PROFILER;
+static int PROFILER_SHMID;
+const int PROFILER_SHMKEY;
 
 void init_editor(void) {
     reset_editor();
@@ -44,30 +49,55 @@ void init_editor(void) {
         load_editor_project(file_path, &RESULT_MESSAGE);
     }
 
-    // Get uinique key for the GENETIC_TRAINING
-    key_t GENETIC_TRAINING_SHMKEY = ftok("GENETIC_TRAINING", 'X');
+    // TODO: Creation of the shared memory for the GeneticTraining and
+    // Profiler could be factored out (function or macros)
 
-    // Create the shared memory segment
-    GENETIC_TRAINING_SHMID = shmget(
-        GENETIC_TRAINING_SHMKEY, sizeof(GeneticTraining), 0666 | IPC_CREAT
-    );
-    if (GENETIC_TRAINING_SHMID == -1) {
-        perror("ERROR: Failed to create shared memory segment for the "
-               "GeneticTraining\n");
-        exit(1);
+    // Initialize GeneticTraining shared object
+    {
+        key_t GENETIC_TRAINING_SHMKEY = ftok("GENETIC_TRAINING", 'X');
+        GENETIC_TRAINING_SHMID = shmget(
+            GENETIC_TRAINING_SHMKEY,
+            sizeof(GeneticTraining),
+            0666 | IPC_CREAT
+        );
+        if (GENETIC_TRAINING_SHMID == -1) {
+            perror("ERROR: Failed to create shared memory segment for the "
+                   "GeneticTraining\n");
+            exit(1);
+        }
+
+        GENETIC_TRAINING = (GeneticTraining*)shmat(
+            GENETIC_TRAINING_SHMID, NULL, 0
+        );
+        if (GENETIC_TRAINING == (GeneticTraining*)-1) {
+            perror("ERROR: Failed to create shared memory segment for the "
+                   "GeneticTraining\n");
+            exit(1);
+        }
     }
 
-    // Attach the shared memory segment to the current process
-    GENETIC_TRAINING = (GeneticTraining*)shmat(
-        GENETIC_TRAINING_SHMID, NULL, 0
-    );
-    if (GENETIC_TRAINING == (GeneticTraining*)-1) {
-        perror("ERROR: Failed to create shared memory segment for the "
-               "GeneticTraining\n");
-        exit(1);
+    // Initialize Profiler shared object
+    {
+        key_t PROFILER_SHMKEY = ftok("PROFILER", 'X');
+        PROFILER_SHMID = shmget(
+            PROFILER_SHMKEY, sizeof(Profiler), 0666 | IPC_CREAT
+        );
+        if (PROFILER_SHMID == -1) {
+            perror("ERROR: Failed to create shared memory segment for the "
+                   "Profiler\n");
+            exit(1);
+        }
+
+        PROFILER = (Profiler*)shmat(PROFILER_SHMID, NULL, 0);
+        if (PROFILER == (Profiler*)-1) {
+            perror("ERROR: Failed to create shared memory segment for the "
+                   "Profiler\n");
+            exit(1);
+        }
     }
 
-    init_genetic_training(GENETIC_TRAINING);
+    init_genetic_training();
+    init_profiler();
 }
 
 void reset_editor(void) {
@@ -76,12 +106,15 @@ void reset_editor(void) {
     EDITOR.entity_to_copy = -1;
     EDITOR.project.scene_file_path = NULL;
 
-    reset_genetic_training(GENETIC_TRAINING);
+    reset_genetic_training();
 }
 
 void close_editor(void) {
     shmdt(GENETIC_TRAINING);
     shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
+
+    shmdt(PROFILER);
+    shmctl(PROFILER_SHMID, IPC_RMID, NULL);
 }
 
 static void update_recent_project(const char* recent_project_file_path) {
@@ -295,6 +328,7 @@ void render_editor(void) {
     EDITOR.key.b = igIsKeyPressed_Bool(ImGuiKey_B, 0);
     EDITOR.key.n = igIsKeyPressed_Bool(ImGuiKey_N, 0);
     EDITOR.key.o = igIsKeyPressed_Bool(ImGuiKey_O, 0);
+    EDITOR.key.p = igIsKeyPressed_Bool(ImGuiKey_P, 0);
     EDITOR.key.r = igIsKeyPressed_Bool(ImGuiKey_R, 0);
     EDITOR.key.s = igIsKeyPressed_Bool(ImGuiKey_S, 0);
     EDITOR.key.t = igIsKeyPressed_Bool(ImGuiKey_T, 0);
@@ -308,6 +342,7 @@ void render_editor(void) {
     if (EDITOR.project.project_file_path != NULL) {
         render_scene_editor();
     }
+
     if (EDITOR.is_editing_brain) {
         ig_center_next_window();
         igOpenPopup_Str("render_brain_editor", 0);
@@ -315,14 +350,22 @@ void render_editor(void) {
             render_brain_editor();
             igEndPopup();
         }
-    }
-    if (EDITOR.is_editing_genetic_training) {
+    } else if (EDITOR.is_editing_genetic_training) {
         ig_center_next_window();
         igOpenPopup_Str("render_genetic_training_editor", 0);
         if (igBeginPopup(
                 "render_genetic_training_editor", ImGuiWindowFlags_Modal
             )) {
             render_genetic_training_editor();
+            igEndPopup();
+        }
+    } else if (EDITOR.is_editing_profiler) {
+        ig_center_next_window();
+        igOpenPopup_Str("render_profiler_editor", 0);
+        if (igBeginPopup(
+                "render_profiler_editor", ImGuiWindowFlags_Modal
+            )) {
+            render_profiler_editor();
             igEndPopup();
         }
     }

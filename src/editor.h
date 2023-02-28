@@ -24,6 +24,7 @@ typedef struct Editor {
         int b;
         int n;
         int o;
+        int p;
         int r;
         int s;
         int t;
@@ -44,6 +45,7 @@ typedef struct Editor {
     int entity_to_copy;
     int is_editing_brain;
     int is_editing_genetic_training;
+    int is_editing_profiler;
 } Editor;
 
 typedef enum SimulationStatus {
@@ -81,9 +83,21 @@ typedef struct GeneticTraining {
     } evolution;
 } GeneticTraining;
 
+typedef struct Profiler {
+    struct {
+        SimulationStatus status;
+    } progress;
+
+    struct {
+        float dt_ms;
+    } simulation;
+
+    char scene_file_path[MAX_PATH_LENGTH];
+} Profiler;
+
 extern Editor EDITOR;
 extern GeneticTraining* GENETIC_TRAINING;
-const int GENETIC_TRAINING_SHMKEY;
+extern Profiler* PROFILER;
 
 Vec2 get_cursor_scene_pos(void);
 
@@ -91,8 +105,11 @@ void init_editor(void);
 void close_editor(void);
 void reset_editor(void);
 
-void init_genetic_training(GeneticTraining* genetic_training);
-void reset_genetic_training(GeneticTraining* genetic_training);
+void init_genetic_training(void);
+void reset_genetic_training(void);
+
+void init_profiler(void);
+void reset_profiler(void);
 
 void new_editor_project(void);
 void new_editor_scene(void);
@@ -120,4 +137,5 @@ void render_debug_overlay(void);
 void render_scene_editor(void);
 void render_brain_editor(void);
 void render_genetic_training_editor(void);
+void render_profiler_editor(void);
 void render_entity_handles(void);

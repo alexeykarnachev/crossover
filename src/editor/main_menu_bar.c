@@ -65,6 +65,14 @@ void render_main_menu_bar(void) {
             igEndMenu();
         }
 
+        if (igBeginMenu("Profiler", 1)) {
+            if (menu_item("Edit", "Ctrl+P", false, 1)) {
+                EDITOR.is_editing_profiler = 1;
+            }
+
+            igEndMenu();
+        }
+
         igEndMainMenuBar();
     }
 
@@ -88,5 +96,7 @@ void render_main_menu_bar(void) {
         EDITOR.is_editing_brain = 1;
     } else if (proj_loaded && EDITOR.key.t && EDITOR.key.ctrl) {
         EDITOR.is_editing_genetic_training = 1;
+    } else if (EDITOR.key.p && EDITOR.key.ctrl) {
+        EDITOR.is_editing_profiler = 1;
     }
 }

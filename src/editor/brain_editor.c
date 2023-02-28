@@ -23,7 +23,7 @@ static void init_and_save_as(void) {
 }
 
 static void render_brain_menu_bar(void) {
-    if (igBeginMenu("Brain Editor", 1)) {
+    if (igBeginMenu("Brain", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open", "", false, 1)) {
                 char* fp = open_nfd(

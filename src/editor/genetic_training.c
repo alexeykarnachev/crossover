@@ -27,23 +27,25 @@ static Array GENERATIONS;
 
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
-void init_genetic_training(GeneticTraining* genetic_training) {
-    memset(genetic_training, 0, sizeof(GeneticTraining));
-    genetic_training->simulation.dt_ms = 17.0;
-    genetic_training->progress.status = SIMULATION_NOT_STARTED;
-    genetic_training->population.episode_time = 60.0;
-    genetic_training->population.n_episodes = 50;
-    genetic_training->evolution.elite_ratio = 0.10;
-    genetic_training->evolution.mutation_rate = 0.05;
-    genetic_training->evolution.mutation_strength = 0.05;
+void init_genetic_training(void) {
+    GeneticTraining* training = GENETIC_TRAINING;
+    memset(training, 0, sizeof(GeneticTraining));
+    training->simulation.dt_ms = 17.0;
+    training->progress.status = SIMULATION_NOT_STARTED;
+    training->population.episode_time = 60.0;
+    training->population.n_episodes = 50;
+    training->evolution.elite_ratio = 0.10;
+    training->evolution.mutation_rate = 0.05;
+    training->evolution.mutation_strength = 0.05;
 }
 
-void reset_genetic_training(GeneticTraining* genetic_training) {
-    if (genetic_training != NULL) {
-        genetic_training->progress.status = SIMULATION_NOT_STARTED;
-        genetic_training->progress.generation = 0;
-        genetic_training->progress.episode = 0;
-        genetic_training->progress.episode_time = 0;
+void reset_genetic_training(void) {
+    GeneticTraining* training = GENETIC_TRAINING;
+    if (training != NULL) {
+        training->progress.status = SIMULATION_NOT_STARTED;
+        training->progress.generation = 0;
+        training->progress.episode = 0;
+        training->progress.episode_time = 0;
     }
 
     N_ENTITIES_WITHOUT_SCORER = 0;
@@ -280,8 +282,6 @@ static void render_genetic_training_menu_bar(void) {
         }
 
         igSeparator();
-        if (menu_item("Reset (TODO: Not implemented)", "", false, 1)) {}
-
         if (menu_item("Quit", "Ctrl+Q", false, 1)) {
             EDITOR.is_editing_genetic_training = 0;
         }
@@ -430,7 +430,7 @@ static void render_genetic_training_parameters(void) {
     );
 }
 
-void render_genetic_training_controls(void) {
+static void render_genetic_training_controls(void) {
     SimulationStatus* status = &GENETIC_TRAINING->progress.status;
     switch (*status) {
         case SIMULATION_RUNNING: {
@@ -446,7 +446,6 @@ void render_genetic_training_controls(void) {
             break;
         }
         case SIMULATION_NOT_STARTED: {
-            char* str[128];
             int can_start = 1;
 
             if (N_ENTITIES_TO_TRAIN > MAX_N_ENTITIES_TO_TRAIN) {
@@ -479,15 +478,15 @@ void render_genetic_training_controls(void) {
 
     ig_same_line();
     if (igButton("Reset", IG_VEC2_ZERO)) {
-        reset_genetic_training(GENETIC_TRAINING);
-        init_genetic_training(GENETIC_TRAINING);
+        reset_genetic_training();
+        init_genetic_training();
         *status = SIMULATION_NOT_STARTED;
     }
 
     if (GENETIC_TRAINING_PID != 0 && GENETIC_TRAINING_PID != -1) {
         ig_same_line();
         if (igButton("Kill", IG_VEC2_ZERO)) {
-            reset_genetic_training(GENETIC_TRAINING);
+            reset_genetic_training();
             *status = SIMULATION_NOT_STARTED;
             kill(GENETIC_TRAINING_PID, SIGTERM);
         }
@@ -591,7 +590,7 @@ static void render_evolution_plots(void) {
     ImPlot_DestroyContext(ctx);
 }
 
-void render_genetic_training_progress(void) {
+static void render_genetic_training_progress(void) {
     SimulationStatus status = GENETIC_TRAINING->progress.status;
 
     igText("Progress:");
@@ -609,6 +608,9 @@ void render_genetic_training_editor(void) {
 
     render_genetic_training_menu_bar();
     igSeparator();
+
+    // TODO: Add possibility to selecte a specific scene to perform
+    // genetic training on (like in profiler)
 
     render_entities_without_scorer();
     igSeparator();
