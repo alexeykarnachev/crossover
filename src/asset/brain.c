@@ -192,6 +192,7 @@ void reload_all_brains(ResultMessage* res_msg) {
 }
 
 Brain* get_brain(char* key, int allow_null) {
+    // TODO: Reuse HashMap struct here
     uint64_t hash = get_bytes_hash(key, strlen(key));
     int idx = hash % BRAINS_ARRAY_CAPACITY;
     while (strlen(BRAINS[idx].params.key) != 0) {

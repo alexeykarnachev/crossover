@@ -36,6 +36,8 @@
 
 #define DEBUG_RENDER_LAYER -1.0
 
+#define MAX_HASHMAP_KEY_LENGTH 64
+
 #if defined(_WIN32) || defined(_WIN64)
 #define PATH_SEPARATOR '\\'
 #elif defined(__unix__) || defined(__APPLE__)

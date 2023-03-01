@@ -160,6 +160,21 @@ static void render_profiler_controls(void) {
     }
 }
 
+void static finish_current_stage(void) {
+    // if (PROFILER->stage.name != NULL) {
+    //
+    // }
+}
+
+// TODO: Add ENABLE_PROFILER define macro which disables this function
+// if it's not set
+void profile(char* stage) {
+    finish_current_stage();
+    if (PROFILER->progress.status == SIMULATION_RUNNING) {
+        printf("asdf\n");
+    }
+}
+
 void render_profiler_editor(void) {
     render_profiler_menu_bar();
     igSeparator();

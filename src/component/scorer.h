@@ -8,6 +8,8 @@ typedef struct ScalarScore {
     float weight;
 } ScalarScore;
 
+// TODO: Add scores:
+// - Penalty for small view angle
 typedef struct Scorer {
     struct {
         ScalarScore do_kill;

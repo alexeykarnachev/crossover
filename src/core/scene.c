@@ -5,6 +5,7 @@
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
+#include "../editor.h";
 #include "../math.h"
 #include "../system.h"
 #include "../utils.h"
@@ -244,6 +245,8 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     SCENE.components[entity_copy] |= TRANSFORMATION_COMPONENT;
     SCENE.transformations[entity_copy] = transformation;
 
+    // TODO: Spawn entity and preserve source entity orientation.
+    // Now the orientation is set to default, it's not convenient
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
         ComponentType type = COMPONENT_TYPES[i];
         if (check_if_entity_has_component(entity, type)) {
@@ -529,18 +532,36 @@ static void update_entities_scene_counter() {
 }
 
 void update_scene(float dt, int is_playing) {
+    profile("visions");
     update_visions();
+
+    profile("camera");
     update_camera();
 
     if (is_playing) {
         SCENE.time += dt;
+
+        profile("ttls");
         update_ttls(dt);
+
+        profile("healths");
         update_healths();
+
+        profile("controllers");
         update_controllers();
+
+        profile("bullets");
         update_bullets(dt);
+
+        profile("kinematic_movements");
         update_kinematic_movements(dt);
+
+        profile("entities_scene_counter");
         update_entities_scene_counter();
     }
 
+    profile("collisions");
     update_collisions(is_playing);
+
+    profile(NULL);
 }

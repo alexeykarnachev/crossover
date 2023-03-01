@@ -1,6 +1,7 @@
 #pragma once
 #include "array.h"
 #include "component.h"
+#include "hashmap.h"
 #include "math.h"
 #include "nfd.h"
 
@@ -86,7 +87,13 @@ typedef struct GeneticTraining {
 typedef struct Profiler {
     struct {
         SimulationStatus status;
+        HashMap stage_times;
     } progress;
+
+    struct {
+        float name;
+        float start_time;
+    } stage;
 
     struct {
         float dt_ms;
@@ -110,6 +117,8 @@ void reset_genetic_training(void);
 
 void init_profiler(void);
 void reset_profiler(void);
+
+void profile(char* stage);
 
 void new_editor_project(void);
 void new_editor_scene(void);

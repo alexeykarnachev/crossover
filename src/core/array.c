@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int INITIAL_ARRAY_CAPACITY = 1024;
+#define INITIAL_ARRAY_CAPACITY 1024
 
 Array init_array(void) {
     int size = INITIAL_ARRAY_CAPACITY * sizeof(float);
