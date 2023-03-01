@@ -47,3 +47,5 @@ int sample_binary(float weight);
 int sample_multinomial(float* weights, int n);
 void shuffle(int arr[], int n);
 void swap(void** p0, void** p1);
+
+double get_current_time(void);

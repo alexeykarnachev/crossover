@@ -10,6 +10,12 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <sys/time.h>
+#endif
+
 FILE* open_file(
     const char* file_path, ResultMessage* res_msg, const char* mode
 ) {
@@ -358,4 +364,22 @@ void swap(void** p0, void** p1) {
     void* tmp = *p0;
     *p0 = *p1;
     *p1 = tmp;
+}
+
+double get_current_time(void) {
+    double seconds;
+#ifdef _WIN32
+    FILETIME ft;
+    ULARGE_INTEGER uli;
+
+    GetSystemTimeAsFileTime(&ft);
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+    seconds = uli.QuadPart / 10000000.0;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    seconds = tv.tv_sec + tv.tv_usec / 1000000.0;
+#endif
+    return seconds;
 }

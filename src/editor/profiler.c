@@ -1,4 +1,5 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "../app.h"
 #include "../editor.h"
 #include "../scene.h"
 #include "../utils.h"
@@ -10,7 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 
-pid_t PROFILER_PID;
+pid_t PROFILER_PID = -1;
 
 void init_profiler() {
     Profiler* profiler = PROFILER;
@@ -161,17 +162,26 @@ static void render_profiler_controls(void) {
 }
 
 void static finish_current_stage(void) {
-    // if (PROFILER->stage.name != NULL) {
-    //
-    // }
+    if (PROFILER->stage.name != NULL) {
+        double current_time = get_current_time();
+        double dt = current_time - PROFILER->stage.start_time;
+    }
 }
 
-// TODO: Add ENABLE_PROFILER define macro which disables this function
-// if it's not set
-void profile(char* stage) {
-    finish_current_stage();
-    if (PROFILER->progress.status == SIMULATION_RUNNING) {
-        printf("asdf\n");
+void static start_stage(char* name) {
+    PROFILER->stage.name = name;
+    PROFILER->stage.start_time = get_current_time();
+}
+
+// TODO: Add ENABLE_PROFILER define macro which enagles (if set)
+// this function, otherwise the profiler is disabled and doesn't affect
+// the application performance
+void profile(char* name) {
+    if (PROFILER_PID != 0) {
+        return;
+    } else {
+        finish_current_stage();
+        start_stage(name);
     }
 }
 

@@ -91,8 +91,8 @@ typedef struct Profiler {
     } progress;
 
     struct {
-        float name;
-        float start_time;
+        char* name;
+        double start_time;
     } stage;
 
     struct {
@@ -118,7 +118,7 @@ void reset_genetic_training(void);
 void init_profiler(void);
 void reset_profiler(void);
 
-void profile(char* stage);
+void profile(char* name);
 
 void new_editor_project(void);
 void new_editor_scene(void);
