@@ -25,6 +25,17 @@ void destroy_hashmap(HashMap* hashmap) {
     hashmap->capacity = 0;
 }
 
+void destroy_hashmap_and_values(HashMap* hashmap) {
+    for (int i = 0; i < hashmap->length; ++i) {
+        HashMapItem item = hashmap->items[i];
+        if (item.key[0] != '\0') {
+            free(item.value);
+        }
+    }
+
+    destroy_hashmap(hashmap);
+}
+
 static uint64_t get_key_hash(char* key) {
     int key_length = strlen(key);
     if (key_length > MAX_HASHMAP_KEY_LENGTH) {
@@ -77,7 +88,7 @@ static void resize_hashmap(HashMap* hashmap) {
     free(old_items);
 }
 
-void hashmap_put(HashMap* hashmap, char* key, float value) {
+void hashmap_put(HashMap* hashmap, char* key, void* value) {
     uint64_t hash = get_key_hash(key);
     int idx = hash % hashmap->capacity;
     while (hashmap->items[idx].key[0] != '\0') {
@@ -100,7 +111,16 @@ void hashmap_put(HashMap* hashmap, char* key, float value) {
     }
 }
 
-float hashmap_get(HashMap* hashmap, char* key) {
+void* hashmap_get(HashMap* hashmap, char* key) {
+    void* item = hashmap_try_get(hashmap, key);
+    if (item == NULL) {
+        fprintf(stderr, "ERROR: No such key in hashmap: %s\n", key);
+        exit(1);
+    }
+    return item;
+}
+
+void* hashmap_try_get(HashMap* hashmap, char* key) {
     uint64_t hash = get_key_hash(key);
     int idx = hash % hashmap->capacity;
     char* candidate_key = hashmap->items[idx].key;
@@ -110,12 +130,22 @@ float hashmap_get(HashMap* hashmap, char* key) {
 
     do {
         if (candidate_key[0] == '\0' || items_checked == hashmap_length) {
-            fprintf(stderr, "ERROR: No such key in hashmap: %s\n", key);
-            exit(1);
+            return NULL;
         } else if (strcmp(candidate_key, key) == 0) {
             return hashmap->items[idx].value;
         }
         idx = (idx + 1) % hashmap_capacity;
         items_checked++;
     } while (1);
+}
+
+void print_hashmap(HashMap* hashmap) {
+    printf("{\n");
+    for (int i = 0; i < hashmap->capacity; ++i) {
+        HashMapItem item = hashmap->items[i];
+        if (item.key[0] != '\0') {
+            printf("    %s: %p,\n", item.key, item.value);
+        }
+    }
+    printf("}\n");
 }

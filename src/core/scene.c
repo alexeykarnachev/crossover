@@ -5,7 +5,7 @@
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
-#include "../editor.h";
+#include "../editor.h"
 #include "../math.h"
 #include "../system.h"
 #include "../utils.h"

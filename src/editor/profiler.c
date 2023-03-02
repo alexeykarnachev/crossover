@@ -1,6 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../app.h"
 #include "../editor.h"
+#include "../ring_buffer.h"
 #include "../scene.h"
 #include "../utils.h"
 #include "cimgui.h"
@@ -11,6 +12,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#define PROFILER_HISTORY_LENGTH 1 << 14
+
 pid_t PROFILER_PID = -1;
 
 void init_profiler() {
@@ -18,6 +21,7 @@ void init_profiler() {
     memset(profiler, 0, sizeof(Profiler));
     profiler->simulation.dt_ms = 17.0;
     profiler->progress.status = SIMULATION_NOT_STARTED;
+    profiler->progress.stage_times = init_hashmap();
 }
 
 static void start_profiler(void) {
@@ -112,6 +116,7 @@ void reset_profiler(void) {
     Profiler* profiler = PROFILER;
     if (profiler != NULL) {
         profiler->progress.status = SIMULATION_NOT_STARTED;
+        destroy_hashmap_and_values(&profiler->progress.stage_times);
     }
 }
 
@@ -162,22 +167,38 @@ static void render_profiler_controls(void) {
 }
 
 void static finish_current_stage(void) {
-    if (PROFILER->stage.name != NULL) {
+    char* stage = PROFILER->stage.name;
+    if (stage != NULL) {
         double current_time = get_current_time();
         double dt = current_time - PROFILER->stage.start_time;
+        HashMap* times_map = &PROFILER->progress.stage_times;
+        RingBuffer* times = (RingBuffer*)hashmap_get(times_map, stage);
+        ring_buffer_push(times, dt);
+        PROFILER->stage.name = NULL;
     }
 }
 
 void static start_stage(char* name) {
     PROFILER->stage.name = name;
     PROFILER->stage.start_time = get_current_time();
+    if (name == NULL) {
+        return;
+    }
+
+    HashMap* times_map = &PROFILER->progress.stage_times;
+    void* times = hashmap_try_get(times_map, name);
+    if (times == NULL) {
+        times = alloc_ring_buffer(PROFILER_HISTORY_LENGTH);
+        hashmap_put(times_map, name, times);
+    }
 }
 
-// TODO: Add ENABLE_PROFILER define macro which enagles (if set)
+// TODO: Add ENABLE_PROFILER define macro which enables (if set)
 // this function, otherwise the profiler is disabled and doesn't affect
 // the application performance
 void profile(char* name) {
-    if (PROFILER_PID != 0) {
+    print_hashmap(&PROFILER->progress.stage_times);
+    if (PROFILER_PID == 0) {
         return;
     } else {
         finish_current_stage();
