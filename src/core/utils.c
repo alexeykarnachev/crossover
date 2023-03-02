@@ -1,6 +1,5 @@
 #include "../utils.h"
 
-#include "nfd.h"
 #include <errno.h>
 #include <float.h>
 #include <math.h>
@@ -87,51 +86,6 @@ fail:
     return NULL;
 }
 
-nfdchar_t* open_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
-) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdresult_t result = NFD_OpenDialog(
-        &file_path, filter_items, n_filter_items, search_path
-    );
-
-    if (result == NFD_OKAY) {
-        NFD_Quit();
-    } else if (result == NFD_CANCEL) {
-        file_path = NULL;
-    } else {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
-
-    return file_path;
-}
-
-nfdchar_t* save_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
-) {
-    NFD_Init();
-    nfdchar_t* file_path;
-    nfdresult_t result = NFD_SaveDialogN(
-        &file_path, filter_items, n_filter_items, search_path, NULL
-    );
-    if (result == NFD_OKAY) {
-        NFD_Quit();
-    } else if (result == NFD_CANCEL) {
-        file_path = NULL;
-    } else {
-        fprintf(stderr, "ERROR: %s\n", NFD_GetError());
-        exit(1);
-    }
-
-    return file_path;
-}
-
 void write_str_to_file(const char* str, FILE* fp, int allow_null) {
     if (str == NULL && !allow_null) {
         fprintf(
@@ -177,7 +131,7 @@ uint64_t get_bytes_hash(const char* bytes, int n_bytes) {
     uint64_t p2 = 31;
 
     uint64_t hash = p1;
-    for (const char* p = bytes; n_bytes != 0; n_bytes--) {
+    for (const char* p = bytes; n_bytes != 0; n_bytes--, p++) {
         hash = hash * p2 + *p;
     }
 

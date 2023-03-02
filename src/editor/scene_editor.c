@@ -6,6 +6,7 @@
 #include "../debug.h"
 #include "../editor.h"
 #include "../math.h"
+#include "../nfd_utils.h"
 #include "../scene.h"
 #include "../system.h"
 #include "cimgui.h"

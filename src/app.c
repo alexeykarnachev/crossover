@@ -2,11 +2,11 @@
 
 #include <glad/glad.h>
 
-#include "../app.h"
-#include "../debug.h"
-#include "../math.h"
+#include "app.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
+#include "debug.h"
+#include "math.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <string.h>

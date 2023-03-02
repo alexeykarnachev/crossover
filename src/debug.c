@@ -1,11 +1,11 @@
-#include "../debug.h"
+#include "debug.h"
 
-#include "../app.h"
-#include "../component.h"
-#include "../const.h"
-#include "../gl.h"
-#include "../scene.h"
-#include "../system.h"
+#include "app.h"
+#include "component.h"
+#include "const.h"
+#include "gl.h"
+#include "scene.h"
+#include "system.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,6 +1,5 @@
 #pragma once
 #include "const.h"
-#include "nfd.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -20,16 +19,6 @@ FILE* open_file(
 );
 char* read_cstr_file(
     const char* restrict file_path, const char* mode, long* n_bytes
-);
-nfdchar_t* open_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
-);
-nfdchar_t* save_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
 );
 void read_str_from_file(char** str_p, FILE* fp, int allow_null);
 void write_str_to_file(const char* str, FILE* fp, int allow_null);

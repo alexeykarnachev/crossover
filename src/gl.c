@@ -1,14 +1,14 @@
-#include "../gl.h"
+#include "gl.h"
 #include <glad/glad.h>
 
-#include "../app.h"
-#include "../component.h"
-#include "../debug.h"
-#include "../editor.h"
-#include "../math.h"
-#include "../scene.h"
-#include "../system.h"
-#include "../utils.h"
+#include "app.h"
+#include "component.h"
+#include "debug.h"
+#include "editor.h"
+#include "math.h"
+#include "scene.h"
+#include "system.h"
+#include "utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

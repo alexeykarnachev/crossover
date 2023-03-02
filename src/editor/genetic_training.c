@@ -115,7 +115,7 @@ static void start_genetic_training(void) {
             int entity = ENTITIES_TO_TRAIN[e];
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
 
-            static char new_key[MAX_PATH_LENGTH + 32] = {0};
+            static char new_key[MAX_PATH_LENGTH + 128] = {0};
             sprintf(new_key, "%s.%d.xbrain", ai->key, entity);
 
             for (int i = 0; i < params->population.n_episodes; ++i) {

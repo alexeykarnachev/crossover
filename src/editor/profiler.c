@@ -1,6 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../app.h"
 #include "../editor.h"
+#include "../nfd_utils.h"
 #include "../ring_buffer.h"
 #include "../scene.h"
 #include "../utils.h"

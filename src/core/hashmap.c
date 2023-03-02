@@ -102,6 +102,7 @@ void hashmap_put(HashMap* hashmap, char* key, void* value) {
     HashMapItem item = {0};
     strcpy(item.key, key);
     item.value = value;
+
     hashmap->items[idx] = item;
     hashmap->length += 1;
 
@@ -112,12 +113,12 @@ void hashmap_put(HashMap* hashmap, char* key, void* value) {
 }
 
 void* hashmap_get(HashMap* hashmap, char* key) {
-    void* item = hashmap_try_get(hashmap, key);
-    if (item == NULL) {
+    void* value = hashmap_try_get(hashmap, key);
+    if (value == NULL) {
         fprintf(stderr, "ERROR: No such key in hashmap: %s\n", key);
         exit(1);
     }
-    return item;
+    return value;
 }
 
 void* hashmap_try_get(HashMap* hashmap, char* key) {
@@ -135,6 +136,7 @@ void* hashmap_try_get(HashMap* hashmap, char* key) {
             return hashmap->items[idx].value;
         }
         idx = (idx + 1) % hashmap_capacity;
+        candidate_key = hashmap->items[idx].key;
         items_checked++;
     } while (1);
 }

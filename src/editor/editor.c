@@ -5,6 +5,7 @@
 #include "../app.h"
 #include "../component.h"
 #include "../const.h"
+#include "../nfd_utils.h"
 #include "../scene.h"
 #include "../utils.h"
 #include "cimgui.h"

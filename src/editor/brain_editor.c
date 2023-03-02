@@ -1,6 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../asset.h"
 #include "../editor.h"
+#include "../nfd_utils.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "common.h"
