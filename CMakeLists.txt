@@ -95,10 +95,11 @@ add_subdirectory(${CMAKE_BINARY_DIR}/../dependencies/nativefiledialog-extended/)
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 file(GLOB SOURCES "src/**/*.c" "src/*.c")
 file(GLOB CORE_SOURCES "src/core/*.c")
+file(GLOB TEST_SOURCES "tests/*.c")
 set(SOURCES ${SOURCES})
 
 add_executable(${PROJECT_NAME} ${SOURCES} "../dependencies/glad/glad.c")
-add_executable(tests ${CORE_SOURCES} "tests/test_hashmap.c")
+add_executable(tests ${CORE_SOURCES} ${TEST_SOURCES} "tests/test_all.c")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 target_link_libraries(tests m)
 

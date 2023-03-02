@@ -1,8 +1,9 @@
 #include <assert.h>
 #include <stdio.h>
+#include "tests.h"
 #include "../src/hashmap.h"
 
-void test_init_hashmap() {
+static void test_init_hashmap() {
     HashMap hm = init_hashmap();
     assert(hm.length == 0);
     assert(hm.capacity == 16);
@@ -10,7 +11,7 @@ void test_init_hashmap() {
     destroy_hashmap(&hm);
 }
 
-void test_hashmap_put() {
+static void test_hashmap_put() {
     HashMap hm = init_hashmap();
     int value1 = 42, value2 = 24, value3 = 69;
 
@@ -35,7 +36,7 @@ void test_hashmap_put() {
     destroy_hashmap_and_values(&hm);
 }
 
-void test_hashmap_get() {
+static void test_hashmap_get() {
     HashMap hm = init_hashmap();
     int value1 = 42, value2 = 24;
     hashmap_put(&hm, "key1", &value1);
@@ -45,7 +46,7 @@ void test_hashmap_get() {
     destroy_hashmap_and_values(&hm);
 }
 
-void test_hashmap_try_get() {
+static void test_hashmap_try_get() {
     HashMap hm = init_hashmap();
     int value1 = 42, value2 = 24;
     hashmap_put(&hm, "key1", &value1);
@@ -56,11 +57,11 @@ void test_hashmap_try_get() {
     destroy_hashmap_and_values(&hm);
 }
 
-int main() {
+int test_hashmap(void) {
     test_init_hashmap();
     test_hashmap_put();
     test_hashmap_get();
     test_hashmap_try_get();
-    printf("INFO: HashMap tests passed!\n");
+    printf("INFO: HashMap tests passed\n");
     return 0;
 }
