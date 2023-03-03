@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-pid_t GENETIC_TRAINING_PID;
+pid_t GENETIC_TRAINING_PID = -1;
 
 static char* BRAINS_TO_TRAIN_FILE_PATHS[MAX_N_BRAINS];
 static int ENTITIES_WITHOUT_SCORERS[MAX_N_ENTITIES];
@@ -37,17 +37,22 @@ void init_genetic_training(void) {
     training->evolution.elite_ratio = 0.10;
     training->evolution.mutation_rate = 0.05;
     training->evolution.mutation_strength = 0.05;
+
+    printf("DEBUG: GeneticTraining initialized\n");
 }
 
-void reset_genetic_training(void) {
+void destroy_genetic_training(void) {
     GeneticTraining* training = GENETIC_TRAINING;
     if (training != NULL) {
         training->progress.status = SIMULATION_NOT_STARTED;
         training->progress.generation = 0;
         training->progress.episode = 0;
         training->progress.episode_time = 0;
+
+        printf("DEBUG: GeneticTraining destroyed\n");
     }
 
+    // TODO: Move these array to the GeneticTraining structure
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
 
@@ -59,6 +64,16 @@ void reset_genetic_training(void) {
 
     if (GENERATIONS.data != NULL) {
         destroy_array(&GENERATIONS);
+    }
+}
+
+void kill_genetic_training(void) {
+    if (GENETIC_TRAINING_PID > 0) {
+        GENETIC_TRAINING->progress.status = SIMULATION_NOT_STARTED;
+        kill(GENETIC_TRAINING_PID, SIGTERM);
+        GENETIC_TRAINING_PID = -1;
+
+        printf("DEBUG: GeneticTraining killed\n");
     }
 }
 
@@ -97,6 +112,9 @@ static void update_evolution_history(void) {
 }
 
 static void start_genetic_training(void) {
+    destroy_genetic_training();
+    init_genetic_training();
+
     GENETIC_TRAINING_PID = fork();
     if (GENETIC_TRAINING_PID == -1) {
         perror("ERROR: Can't start Genetic Training\n");
@@ -476,19 +494,10 @@ static void render_genetic_training_controls(void) {
         }
     }
 
-    ig_same_line();
-    if (igButton("Reset", IG_VEC2_ZERO)) {
-        reset_genetic_training();
-        init_genetic_training();
-        *status = SIMULATION_NOT_STARTED;
-    }
-
     if (GENETIC_TRAINING_PID != 0 && GENETIC_TRAINING_PID != -1) {
         ig_same_line();
-        if (igButton("Kill", IG_VEC2_ZERO)) {
-            reset_genetic_training();
-            *status = SIMULATION_NOT_STARTED;
-            kill(GENETIC_TRAINING_PID, SIGTERM);
+        if (igButton("Stop", IG_VEC2_ZERO)) {
+            kill_genetic_training();
         }
     }
 }

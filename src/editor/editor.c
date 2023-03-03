@@ -97,9 +97,6 @@ void init_editor(void) {
             exit(1);
         }
     }
-
-    init_genetic_training();
-    init_profiler();
 }
 
 void reset_editor(void) {
@@ -108,8 +105,11 @@ void reset_editor(void) {
     EDITOR.entity_to_copy = -1;
     EDITOR.project.scene_file_path = NULL;
 
-    reset_genetic_training();
-    reset_profiler();
+    kill_genetic_training();
+    destroy_genetic_training();
+
+    kill_profiler();
+    destroy_profiler();
 }
 
 void close_editor(void) {

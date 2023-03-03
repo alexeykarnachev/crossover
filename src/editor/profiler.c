@@ -23,9 +23,42 @@ void init_profiler() {
     profiler->simulation.dt_ms = 17.0;
     profiler->progress.status = SIMULATION_NOT_STARTED;
     profiler->progress.stage_times = init_hashmap();
+
+    printf("DEBUG: Prifiler initialized\n");
+}
+
+void destroy_profiler(void) {
+    Profiler* profiler = PROFILER;
+    if (profiler != NULL) {
+        profiler->progress.status = SIMULATION_NOT_STARTED;
+        HashMap* stage_times = &profiler->progress.stage_times;
+        for (int i = 0; i < stage_times->capacity; ++i) {
+            RingBuffer* rbp = stage_times->items[i].value;
+            if (rbp != NULL) {
+                destroy_ring_buffer_data(rbp);
+                free(rbp);
+            }
+        }
+
+        destroy_hashmap(stage_times);
+        printf("DEBUG: Prifiler destroyed\n");
+    }
+}
+
+void kill_profiler(void) {
+    if (PROFILER_PID > 0) {
+        PROFILER->progress.status = SIMULATION_NOT_STARTED;
+        kill(PROFILER_PID, SIGTERM);
+        PROFILER_PID = -1;
+
+        printf("DEBUG: Prifiler killed\n");
+    }
 }
 
 static void start_profiler(void) {
+    destroy_profiler();
+    init_profiler();
+
     PROFILER_PID = fork();
     if (PROFILER_PID == -1) {
         perror("ERROR: Can't start Profiler\n");
@@ -113,24 +146,6 @@ static void render_scene_selection(void) {
     }
 }
 
-void reset_profiler(void) {
-    Profiler* profiler = PROFILER;
-    if (profiler != NULL) {
-        profiler->progress.status = SIMULATION_NOT_STARTED;
-        HashMap* stage_times = &profiler->progress.stage_times;
-        for (int i = 0; i < stage_times->capacity; ++i) {
-            RingBuffer* rbp = stage_times->items[i].value;
-            if (rbp != NULL) {
-                destroy_ring_buffer_data(rbp);
-                free(rbp);
-            }
-        }
-
-        destroy_hashmap(stage_times);
-        printf("DEBUG: Prifiler reset\n");
-    }
-}
-
 // TODO: I place it here, but this related in general to the Profiler
 // and GeneticTraining code. These two modules could be factored out.
 // They have a lot of common functions which are related to the Scene
@@ -160,19 +175,10 @@ static void render_profiler_controls(void) {
         }
     }
 
-    ig_same_line();
-    if (igButton("Reset", IG_VEC2_ZERO)) {
-        reset_profiler();
-        init_profiler();
-        *status = SIMULATION_NOT_STARTED;
-    }
-
     if (PROFILER_PID != 0 && PROFILER_PID != -1) {
         ig_same_line();
-        if (igButton("Kill", IG_VEC2_ZERO)) {
-            reset_profiler();
-            *status = SIMULATION_NOT_STARTED;
-            kill(PROFILER_PID, SIGTERM);
+        if (igButton("Stop", IG_VEC2_ZERO)) {
+            kill_profiler();
         }
     }
 }
@@ -208,7 +214,7 @@ void static start_stage(char* name) {
 // this function, otherwise the profiler is disabled and doesn't affect
 // the application performance
 void profile(char* name) {
-    if (PROFILER_PID == 0) {
+    if (PROFILER_PID != 0) {
         return;
     } else {
         finish_current_stage();

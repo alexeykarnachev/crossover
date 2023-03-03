@@ -113,10 +113,12 @@ void close_editor(void);
 void reset_editor(void);
 
 void init_genetic_training(void);
-void reset_genetic_training(void);
+void destroy_genetic_training(void);
+void kill_genetic_training(void);
 
 void init_profiler(void);
-void reset_profiler(void);
+void destroy_profiler(void);
+void kill_profiler(void);
 
 void profile(char* name);
 
