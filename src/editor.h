@@ -84,16 +84,22 @@ typedef struct GeneticTraining {
     } evolution;
 } GeneticTraining;
 
+typedef struct ProfilerStage {
+    double time;
+    char name[MAX_PROFILER_STAGE_NAME_LENGTH];
+} ProfilerStage;
+
 typedef struct Profiler {
     struct {
         SimulationStatus status;
-        HashMap stage_times;
+        HashMap stages_map;
+        ProfilerStage stages_stack[MAX_PROFILER_STAGES_DEPTH];
+        char stages_names[MAX_N_PROFILER_STAGES]
+                         [MAX_PROFILER_STAGE_NAME_LENGTH];
+        ProfilerStage stages_summary[MAX_N_PROFILER_STAGES];
+        int n_stages;
+        int depth;
     } progress;
-
-    struct {
-        char* name;
-        double start_time;
-    } stage;
 
     struct {
         float dt_ms;
@@ -120,7 +126,8 @@ void init_profiler(void);
 void destroy_profiler(void);
 void kill_profiler(void);
 
-void profile(char* name);
+void profiler_push(char* name);
+void profiler_pop(void);
 
 void new_editor_project(void);
 void new_editor_scene(void);

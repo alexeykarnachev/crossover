@@ -531,36 +531,18 @@ static void update_entities_scene_counter() {
 }
 
 void update_scene(float dt, int is_playing) {
-    profile("visions");
     update_visions();
-
-    profile("camera");
     update_camera();
 
     if (is_playing) {
         SCENE.time += dt;
 
-        profile("ttls");
         update_ttls(dt);
-
-        profile("healths");
         update_healths();
-
-        profile("controllers");
         update_controllers();
-
-        profile("bullets");
         update_bullets(dt);
-
-        profile("kinematic_movements");
         update_kinematic_movements(dt);
-
-        profile("entities_scene_counter");
         update_entities_scene_counter();
     }
-
-    profile("collisions");
     update_collisions(is_playing);
-
-    profile(NULL);
 }

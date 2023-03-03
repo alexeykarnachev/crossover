@@ -2,7 +2,6 @@
 #include "../app.h"
 #include "../editor.h"
 #include "../nfd_utils.h"
-#include "../ring_buffer.h"
 #include "../scene.h"
 #include "../utils.h"
 #include "cimgui.h"
@@ -30,7 +29,8 @@ void init_profiler() {
     memset(profiler, 0, sizeof(Profiler));
     profiler->simulation.dt_ms = 17.0;
     profiler->progress.status = SIMULATION_NOT_STARTED;
-    profiler->progress.stage_times = init_hashmap();
+    profiler->progress.stages_map = init_hashmap();
+    profiler->progress.depth = 0;
 
     PROFILER_INITIALIZED = 1;
     printf("DEBUG: PROFILER initialized\n");
@@ -50,16 +50,15 @@ void destroy_profiler(void) {
 
     Profiler* profiler = PROFILER;
     profiler->progress.status = SIMULATION_NOT_STARTED;
-    HashMap* stage_times = &profiler->progress.stage_times;
-    for (int i = 0; i < stage_times->capacity; ++i) {
-        RingBuffer* rbp = stage_times->items[i].value;
-        if (rbp != NULL) {
-            destroy_ring_buffer_data(rbp);
-            free(rbp);
+    HashMap* stages_map = &profiler->progress.stages_map;
+    for (int i = 0; i < stages_map->capacity; ++i) {
+        void* stage = stages_map->items[i].value;
+        if (stage != NULL) {
+            free(stage);
         }
     }
 
-    destroy_hashmap(stage_times);
+    destroy_hashmap(stages_map);
     PROFILER_DESTROYED = 1;
     printf("DEBUG: PROFILER destroyed\n");
 }
@@ -96,6 +95,14 @@ static void start_profiler(void) {
         while (1) {
             float dt = params->simulation.dt_ms / 1000.0;
             update_scene(dt, 1);
+
+            for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
+                char* name = PROFILER->progress.stages_names[i];
+                ProfilerStage* stage = (ProfilerStage*)hashmap_get(
+                    &PROFILER->progress.stages_map, name
+                );
+                PROFILER->progress.stages_summary[i] = *stage;
+            }
 
             while (*status == SIMULATION_PAUSED) {
                 sleep(0.1);
@@ -199,43 +206,76 @@ static void render_profiler_controls(void) {
     }
 }
 
-void static finish_current_stage(void) {
-    char* stage = PROFILER->stage.name;
-    if (stage != NULL) {
-        double current_time = get_current_time();
-        double dt = current_time - PROFILER->stage.start_time;
-        HashMap* times_map = &PROFILER->progress.stage_times;
-        RingBuffer* times = (RingBuffer*)hashmap_get(times_map, stage);
-        ring_buffer_push(times, dt);
-        PROFILER->stage.name = NULL;
-    }
-}
-
-void static start_stage(char* name) {
-    PROFILER->stage.name = name;
-    PROFILER->stage.start_time = get_current_time();
-    if (name == NULL) {
-        return;
-    }
-
-    HashMap* times_map = &PROFILER->progress.stage_times;
-    void* times = hashmap_try_get(times_map, name);
-    if (times == NULL) {
-        times = alloc_ring_buffer(PROFILER_HISTORY_LENGTH);
-        hashmap_put(times_map, name, times);
-    }
-}
-
 // TODO: Add ENABLE_PROFILER define macro which enables (if set)
 // this function, otherwise the profiler is disabled and doesn't affect
 // the application performance
-void profile(char* name) {
+void profiler_push(char* name) {
     if (PROFILER_PID != 0) {
         return;
-    } else {
-        finish_current_stage();
-        start_stage(name);
     }
+
+    if (PROFILER->progress.depth == MAX_PROFILER_STAGES_DEPTH) {
+        fprintf(
+            stderr,
+            "ERROR: The maximum profiling depth is reached: %d. Can't "
+            "profile any deeper\n",
+            MAX_PROFILER_STAGES_DEPTH
+        );
+        exit(1);
+    }
+
+    ProfilerStage stage = {0};
+    stage.time = get_current_time();
+
+    // TODO: Add check for not exceeding the MAX_PROFILER_STAGE_NAME_LENGTH
+    int curr_name_length = 0;
+    if (PROFILER->progress.depth > 0) {
+        char* prev_stage_name
+            = PROFILER->progress.stages_stack[PROFILER->progress.depth - 1]
+                  .name;
+        strcpy(stage.name, prev_stage_name);
+        curr_name_length = strlen(prev_stage_name);
+        stage.name[curr_name_length++] = '.';
+    }
+    strcpy(&stage.name[curr_name_length], name);
+
+    PROFILER->progress.stages_stack[PROFILER->progress.depth++] = stage;
+}
+
+void profiler_pop(void) {
+    if (PROFILER_PID != 0) {
+        return;
+    }
+
+    if (PROFILER->progress.depth == 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't pop a stage from the empty Profiler stack\n"
+        );
+        exit(1);
+    }
+
+    int depth = --PROFILER->progress.depth;
+    ProfilerStage current_stage = PROFILER->progress.stages_stack[depth];
+    double current_time = get_current_time();
+
+    HashMap* stages_map = &PROFILER->progress.stages_map;
+    ProfilerStage* stage = (ProfilerStage*)hashmap_try_get(
+        stages_map, current_stage.name
+    );
+    if (stage == NULL) {
+        stage = (ProfilerStage*)malloc(sizeof(ProfilerStage));
+        memcpy(stage, &current_stage, sizeof(ProfilerStage));
+        stage->time = 0;
+        hashmap_put(stages_map, stage->name, (void*)stage);
+        // TODO: Check that PROFILER->n_stages doesn't exceed
+        // the `MAX_N_PROFILER_STAGES`
+        strcpy(
+            PROFILER->progress.stages_names[PROFILER->progress.n_stages++],
+            stage->name
+        );
+    }
+    stage->time += current_time - current_stage.time;
 }
 
 void render_profiler_editor(void) {
@@ -246,4 +286,9 @@ void render_profiler_editor(void) {
     igSeparator();
 
     render_profiler_controls();
+
+    for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
+        ProfilerStage* stage = &PROFILER->progress.stages_summary[i];
+        printf("%s: %f\n", stage->name, stage->time);
+    }
 }

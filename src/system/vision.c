@@ -1,5 +1,6 @@
 #include "../component.h"
 #include "../debug.h"
+#include "../editor.h"
 #include "../gl.h"
 #include "../scene.h"
 #include "../system.h"
@@ -26,6 +27,8 @@ static int get_view_rays(Vision vision, float orientation, Vec2* out) {
 }
 
 void update_visions() {
+    profiler_push("update_visions");
+
     int required_component = TRANSFORMATION_COMPONENT | VISION_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
@@ -47,6 +50,8 @@ void update_visions() {
             vision->observations[i] = observation;
         }
     }
+
+    profiler_pop();
 }
 
 void render_debug_visions() {

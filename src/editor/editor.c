@@ -38,6 +38,7 @@ static int GENETIC_TRAINING_SHMID;
 
 Profiler* PROFILER;
 static int PROFILER_SHMID;
+static int PROFILER_STAGES_MAP_SHMID;
 
 static int EDITOR_INITIALIZED = 0;
 void init_editor(void) {

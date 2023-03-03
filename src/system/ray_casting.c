@@ -1,10 +1,13 @@
 #include "../component.h"
+#include "../editor.h"
 #include "../math.h"
 #include "../scene.h"
 
 RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner
 ) {
+    profiler_push("cast_ray");
+
     RayCastResult result;
     result.entity = -1;
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
@@ -60,5 +63,6 @@ RayCastResult cast_ray(
         result.position = add(start, ray);
     }
 
+    profiler_pop();
     return result;
 }
