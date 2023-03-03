@@ -17,32 +17,51 @@
 
 pid_t PROFILER_PID = -1;
 
+static int PROFILER_INITIALIZED = 0;
 void init_profiler() {
+    if (PROFILER_INITIALIZED == 1) {
+        fprintf(
+            stderr, "ERROR: PROFILER could be initialized only once\n"
+        );
+        exit(1);
+    }
+
     Profiler* profiler = PROFILER;
     memset(profiler, 0, sizeof(Profiler));
     profiler->simulation.dt_ms = 17.0;
     profiler->progress.status = SIMULATION_NOT_STARTED;
     profiler->progress.stage_times = init_hashmap();
 
-    printf("DEBUG: Prifiler initialized\n");
+    PROFILER_INITIALIZED = 1;
+    printf("DEBUG: PROFILER initialized\n");
 }
 
+static int PROFILER_DESTROYED = 0;
 void destroy_profiler(void) {
-    Profiler* profiler = PROFILER;
-    if (profiler != NULL) {
-        profiler->progress.status = SIMULATION_NOT_STARTED;
-        HashMap* stage_times = &profiler->progress.stage_times;
-        for (int i = 0; i < stage_times->capacity; ++i) {
-            RingBuffer* rbp = stage_times->items[i].value;
-            if (rbp != NULL) {
-                destroy_ring_buffer_data(rbp);
-                free(rbp);
-            }
-        }
-
-        destroy_hashmap(stage_times);
-        printf("DEBUG: Prifiler destroyed\n");
+    if (PROFILER_DESTROYED == 1) {
+        fprintf(stderr, "ERROR: PROFILER could be destroyed only once\n");
+        exit(1);
     }
+
+    if (PROFILER_INITIALIZED == 0) {
+        fprintf(stderr, "ERROR: Can't destroy uninitialized PROFILER\n");
+        exit(1);
+    }
+
+    Profiler* profiler = PROFILER;
+    profiler->progress.status = SIMULATION_NOT_STARTED;
+    HashMap* stage_times = &profiler->progress.stage_times;
+    for (int i = 0; i < stage_times->capacity; ++i) {
+        RingBuffer* rbp = stage_times->items[i].value;
+        if (rbp != NULL) {
+            destroy_ring_buffer_data(rbp);
+            free(rbp);
+        }
+    }
+
+    destroy_hashmap(stage_times);
+    PROFILER_DESTROYED = 1;
+    printf("DEBUG: PROFILER destroyed\n");
 }
 
 void kill_profiler(void) {
@@ -51,17 +70,14 @@ void kill_profiler(void) {
         kill(PROFILER_PID, SIGTERM);
         PROFILER_PID = -1;
 
-        printf("DEBUG: Prifiler killed\n");
+        printf("DEBUG: PROFILER killed\n");
     }
 }
 
 static void start_profiler(void) {
-    destroy_profiler();
-    init_profiler();
-
     PROFILER_PID = fork();
     if (PROFILER_PID == -1) {
-        perror("ERROR: Can't start Profiler\n");
+        perror("ERROR: Can't start PROFILER\n");
     } else if (PROFILER_PID == 0) {
         Profiler* params = PROFILER;
 

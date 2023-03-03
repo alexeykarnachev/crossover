@@ -50,7 +50,7 @@ typedef struct Editor {
 } Editor;
 
 typedef enum SimulationStatus {
-    SIMULATION_NOT_STARTED,
+    SIMULATION_NOT_STARTED = 0,
     SIMULATION_RUNNING,
     SIMULATION_PAUSED
 } SimulationStatus;
@@ -109,7 +109,7 @@ extern Profiler* PROFILER;
 Vec2 get_cursor_scene_pos(void);
 
 void init_editor(void);
-void close_editor(void);
+void destroy_editor(void);
 void reset_editor(void);
 
 void init_genetic_training(void);

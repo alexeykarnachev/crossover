@@ -175,12 +175,11 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         char* key;
         read_str_from_file(&key, fp, 0);
         Brain* brain = load_brain(key, res_msg, 0);
+        free(key);
         // TODO: Currently `get_brain_size` returns the number weights.
         // It may be confusing. It's better to make the explicitly named
         // function `get_brain_n_weights` as well as `get_brain_size`
         // which returns the real total size in bytes
-        // n_bytes += get_brain_size(brain->params) * sizeof(float)
-        //            + sizeof(Brain);
     }
 
     // Read debug info

@@ -10,7 +10,7 @@
 
 static void shutdown(int sig) {
     printf("DEBUG: Shutdown...\n");
-    close_editor();
+    destroy_editor();
     destroy_app();
     kill(0, SIGTERM);
 }
@@ -19,6 +19,8 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, shutdown);
 
     init_editor();
+    init_genetic_training();
+    init_profiler();
 
     init_app(1600, 1200);
     init_renderer();

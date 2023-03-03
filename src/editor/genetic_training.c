@@ -27,21 +27,59 @@ static Array GENERATIONS;
 
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
-void init_genetic_training(void) {
+static void reset_genetic_training(void) {
     GeneticTraining* training = GENETIC_TRAINING;
-    memset(training, 0, sizeof(GeneticTraining));
+
+    memset(&training->progress, 0, sizeof(training->progress));
+
+    // TODO: Move these array to the GeneticTraining structure
+    for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+        SCORES[e].length = 0;
+    }
+    GENERATIONS.length = 0;
+
     training->simulation.dt_ms = 17.0;
-    training->progress.status = SIMULATION_NOT_STARTED;
-    training->population.episode_time = 60.0;
-    training->population.n_episodes = 50;
+
+    training->population.episode_time = 5.0;
+    training->population.n_episodes = 8;
     training->evolution.elite_ratio = 0.10;
     training->evolution.mutation_rate = 0.05;
     training->evolution.mutation_strength = 0.05;
-
-    printf("DEBUG: GeneticTraining initialized\n");
 }
 
+static int GENETIC_TRAINING_INITIALIZED = 0;
+void init_genetic_training(void) {
+    if (GENETIC_TRAINING_INITIALIZED == 1) {
+        fprintf(
+            stderr,
+            "ERROR: GENETIC_TRAINING could be initialized only once\n"
+        );
+        exit(1);
+    }
+    memset(GENETIC_TRAINING, 0, sizeof(GeneticTraining));
+    reset_genetic_training();
+
+    GENETIC_TRAINING_INITIALIZED = 1;
+    printf("DEBUG: GENETIC_TRAINING initialized\n");
+}
+
+static int GENETIC_TRAINING_DESTROYED = 0;
 void destroy_genetic_training(void) {
+    if (GENETIC_TRAINING_DESTROYED == 1) {
+        fprintf(
+            stderr,
+            "ERROR: GENETIC_TRAINING could be destroyed only once\n"
+        );
+        exit(1);
+    }
+
+    if (GENETIC_TRAINING_INITIALIZED == 0) {
+        fprintf(
+            stderr, "ERROR: Can't destroy uninitialized GENETIC_TRAINING\n"
+        );
+        exit(1);
+    }
+
     GeneticTraining* training = GENETIC_TRAINING;
     if (training != NULL) {
         training->progress.status = SIMULATION_NOT_STARTED;
@@ -49,13 +87,12 @@ void destroy_genetic_training(void) {
         training->progress.episode = 0;
         training->progress.episode_time = 0;
 
-        printf("DEBUG: GeneticTraining destroyed\n");
+        printf("DEBUG: GENETIC_TRAINING destroyed\n");
     }
 
-    // TODO: Move these array to the GeneticTraining structure
     N_ENTITIES_WITHOUT_SCORER = 0;
     N_ENTITIES_TO_TRAIN = 0;
-
+    // TODO: Move these array to the GeneticTraining structure
     for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
         if (SCORES[e].data != NULL) {
             destroy_array(&SCORES[e]);
@@ -65,6 +102,8 @@ void destroy_genetic_training(void) {
     if (GENERATIONS.data != NULL) {
         destroy_array(&GENERATIONS);
     }
+
+    GENETIC_TRAINING_DESTROYED = 1;
 }
 
 void kill_genetic_training(void) {
@@ -73,7 +112,7 @@ void kill_genetic_training(void) {
         kill(GENETIC_TRAINING_PID, SIGTERM);
         GENETIC_TRAINING_PID = -1;
 
-        printf("DEBUG: GeneticTraining killed\n");
+        printf("DEBUG: GENETIC_TRAINING killed\n");
     }
 }
 
@@ -112,9 +151,6 @@ static void update_evolution_history(void) {
 }
 
 static void start_genetic_training(void) {
-    destroy_genetic_training();
-    init_genetic_training();
-
     GENETIC_TRAINING_PID = fork();
     if (GENETIC_TRAINING_PID == -1) {
         perror("ERROR: Can't start Genetic Training\n");
@@ -498,6 +534,7 @@ static void render_genetic_training_controls(void) {
         ig_same_line();
         if (igButton("Stop", IG_VEC2_ZERO)) {
             kill_genetic_training();
+            reset_genetic_training();
         }
     }
 }
@@ -532,8 +569,6 @@ static void render_evolution_plots(void) {
     float min_score = GENETIC_TRAINING->progress.min_score;
     float max_score = GENETIC_TRAINING->progress.max_score;
 
-    // TODO: For some reason these line plots are all the same
-    // color and also, the are no legend labels for them...
     if (ImPlot_BeginPlot("Best scores", IG_VEC2_ZERO, 0)) {
         int offset = 0;
         int stride = sizeof(float);
@@ -552,6 +587,7 @@ static void render_evolution_plots(void) {
         for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
             float* ys = SCORES[e].data;
             char str[16];
+            sprintf(str, "Entity: %d", ENTITIES_TO_TRAIN[e]);
             ImPlot_PlotLine_FloatPtrFloatPtr(
                 str, xs, ys, n, 0, offset, stride
             );

@@ -35,14 +35,19 @@ Editor EDITOR;
 
 GeneticTraining* GENETIC_TRAINING;
 static int GENETIC_TRAINING_SHMID;
-const int GENETIC_TRAINING_SHMKEY;
 
 Profiler* PROFILER;
 static int PROFILER_SHMID;
-const int PROFILER_SHMKEY;
 
+static int EDITOR_INITIALIZED = 0;
 void init_editor(void) {
+    if (EDITOR_INITIALIZED == 1) {
+        fprintf(stderr, "ERROR: EDITOR could be initialized only once\n");
+        exit(1);
+    }
+
     reset_editor();
+
     FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "rb");
     if (fp) {
         char* file_path;
@@ -56,11 +61,8 @@ void init_editor(void) {
 
     // Initialize GeneticTraining shared object
     {
-        key_t GENETIC_TRAINING_SHMKEY = ftok("GENETIC_TRAINING", 'X');
         GENETIC_TRAINING_SHMID = shmget(
-            GENETIC_TRAINING_SHMKEY,
-            sizeof(GeneticTraining),
-            0666 | IPC_CREAT
+            IPC_PRIVATE, sizeof(GeneticTraining), 0666 | IPC_CREAT
         );
         if (GENETIC_TRAINING_SHMID == -1) {
             perror("ERROR: Failed to create shared memory segment for the "
@@ -71,6 +73,7 @@ void init_editor(void) {
         GENETIC_TRAINING = (GeneticTraining*)shmat(
             GENETIC_TRAINING_SHMID, NULL, 0
         );
+
         if (GENETIC_TRAINING == (GeneticTraining*)-1) {
             perror("ERROR: Failed to create shared memory segment for the "
                    "GeneticTraining\n");
@@ -80,9 +83,8 @@ void init_editor(void) {
 
     // Initialize Profiler shared object
     {
-        key_t PROFILER_SHMKEY = ftok("PROFILER", 'X');
         PROFILER_SHMID = shmget(
-            PROFILER_SHMKEY, sizeof(Profiler), 0666 | IPC_CREAT
+            IPC_PRIVATE, sizeof(Profiler), 0666 | IPC_CREAT
         );
         if (PROFILER_SHMID == -1) {
             perror("ERROR: Failed to create shared memory segment for the "
@@ -91,35 +93,50 @@ void init_editor(void) {
         }
 
         PROFILER = (Profiler*)shmat(PROFILER_SHMID, NULL, 0);
+
         if (PROFILER == (Profiler*)-1) {
             perror("ERROR: Failed to create shared memory segment for the "
                    "Profiler\n");
             exit(1);
         }
     }
+
+    EDITOR_INITIALIZED = 1;
 }
 
 void reset_editor(void) {
+    if (EDITOR.project.scene_file_path != NULL) {
+        free(EDITOR.project.scene_file_path);
+    }
+
     EDITOR.picked_entity.entity = -1;
     EDITOR.picked_entity.component_type = TRANSFORMATION_COMPONENT;
     EDITOR.entity_to_copy = -1;
     EDITOR.project.scene_file_path = NULL;
+}
+
+static int EDITOR_DESTROYED = 0;
+void destroy_editor(void) {
+    if (EDITOR_DESTROYED == 1) {
+        fprintf(stderr, "ERROR: EDITOR could be destroyed only once\n");
+        exit(1);
+    }
+
+    free(EDITOR.project.project_file_path);
+    free(EDITOR.project.scene_file_path);
+    free(EDITOR.project.default_search_path);
 
     kill_genetic_training();
     destroy_genetic_training();
-
-    kill_profiler();
-    destroy_profiler();
-}
-
-void close_editor(void) {
-    reset_editor();
-
     shmdt(GENETIC_TRAINING);
     shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
 
+    kill_profiler();
+    destroy_profiler();
     shmdt(PROFILER);
     shmctl(PROFILER_SHMID, IPC_RMID, NULL);
+
+    EDITOR_DESTROYED = 1;
 }
 
 static void update_recent_project(const char* recent_project_file_path) {
