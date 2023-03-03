@@ -7,6 +7,7 @@ if(WIN32) # to mingw work as all the others
 endif(WIN32)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_BUILD_TYPE Release)
 
 # Cimgui settings
 set(BAKENDS_FOLDER "${CMAKE_BINARY_DIR}/../dependencies/cimgui/imgui/backends/")
@@ -103,13 +104,12 @@ add_executable(tests ${CORE_SOURCES} ${TEST_SOURCES} "tests/test_all.c")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 target_link_libraries(tests m)
 
-target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-target_link_libraries(${PROJECT_NAME} -fsanitize=address)
-target_compile_options(tests PRIVATE -fsanitize=address)
-target_link_libraries(tests -fsanitize=address)
+# target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+# target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+# target_compile_options(tests PRIVATE -fsanitize=address)
+# target_link_libraries(tests -fsanitize=address)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_GLFW)
-set_target_properties(${PROJECT_NAME} PROPERTIES CMAKE_BUILD_TYPE Release)
 
 if (MINGW)
 	target_link_options(${PROJECT_NAME} PRIVATE "-mconsole")

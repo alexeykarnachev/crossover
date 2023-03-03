@@ -40,8 +40,9 @@ static void reset_genetic_training(void) {
 
     training->simulation.dt_ms = 17.0;
 
-    training->population.episode_time = 5.0;
-    training->population.n_episodes = 8;
+    training->population.episode_time = 60.0;
+    training->population.n_episodes = 50;
+
     training->evolution.elite_ratio = 0.10;
     training->evolution.mutation_rate = 0.05;
     training->evolution.mutation_strength = 0.05;
