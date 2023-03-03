@@ -33,7 +33,7 @@ static void test_hashmap_put() {
     assert(*(int*)hashmap_get(&hm, "key2") == 42);
     assert(*(int*)hashmap_get(&hm, "key3") == 69);
 
-    destroy_hashmap_and_values(&hm);
+    destroy_hashmap(&hm);
 }
 
 static void test_hashmap_get() {
@@ -43,7 +43,7 @@ static void test_hashmap_get() {
     hashmap_put(&hm, "key2", &value2);
     assert(*(int*)hashmap_get(&hm, "key1") == 42);
     assert(*(int*)hashmap_get(&hm, "key2") == 24);
-    destroy_hashmap_and_values(&hm);
+    destroy_hashmap(&hm);
 }
 
 static void test_hashmap_try_get() {
@@ -54,7 +54,7 @@ static void test_hashmap_try_get() {
     assert(*(int*)hashmap_try_get(&hm, "key1") == 42);
     assert(*(int*)hashmap_try_get(&hm, "key2") == 24);
     assert(hashmap_try_get(&hm, "key3") == NULL);
-    destroy_hashmap_and_values(&hm);
+    destroy_hashmap(&hm);
 }
 
 int test_hashmap(void) {

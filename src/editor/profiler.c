@@ -117,7 +117,17 @@ void reset_profiler(void) {
     Profiler* profiler = PROFILER;
     if (profiler != NULL) {
         profiler->progress.status = SIMULATION_NOT_STARTED;
-        destroy_hashmap_and_values(&profiler->progress.stage_times);
+        HashMap* stage_times = &profiler->progress.stage_times;
+        for (int i = 0; i < stage_times->capacity; ++i) {
+            RingBuffer* rbp = stage_times->items[i].value;
+            if (rbp != NULL) {
+                destroy_ring_buffer_data(rbp);
+                free(rbp);
+            }
+        }
+
+        destroy_hashmap(stage_times);
+        printf("DEBUG: Prifiler reset\n");
     }
 }
 
@@ -198,7 +208,6 @@ void static start_stage(char* name) {
 // this function, otherwise the profiler is disabled and doesn't affect
 // the application performance
 void profile(char* name) {
-    print_hashmap(&PROFILER->progress.stage_times);
     if (PROFILER_PID == 0) {
         return;
     } else {

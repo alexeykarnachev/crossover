@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 static void shutdown(int sig) {
+    printf("DEBUG: Shutdown...\n");
     close_editor();
     destroy_app();
     kill(0, SIGTERM);

@@ -25,17 +25,6 @@ void destroy_hashmap(HashMap* hashmap) {
     hashmap->capacity = 0;
 }
 
-void destroy_hashmap_and_values(HashMap* hashmap) {
-    for (int i = 0; i < hashmap->length; ++i) {
-        HashMapItem item = hashmap->items[i];
-        if (item.key[0] != '\0') {
-            free(item.value);
-        }
-    }
-
-    destroy_hashmap(hashmap);
-}
-
 static uint64_t get_key_hash(char* key) {
     int key_length = strlen(key);
     if (key_length > MAX_HASHMAP_KEY_LENGTH) {

@@ -103,8 +103,10 @@ add_executable(tests ${CORE_SOURCES} ${TEST_SOURCES} "tests/test_all.c")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 target_link_libraries(tests m)
 
-# target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-# target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+target_compile_options(tests PRIVATE -fsanitize=address)
+target_link_libraries(tests -fsanitize=address)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DCIMGUI_USE_OPENGL3 -DCIMGUI_USE_GLFW)
 set_target_properties(${PROJECT_NAME} PROPERTIES CMAKE_BUILD_TYPE Release)

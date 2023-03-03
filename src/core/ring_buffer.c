@@ -14,10 +14,9 @@ RingBuffer init_ring_buffer(int capacity) {
 
 RingBuffer* alloc_ring_buffer(int capacity) {
     RingBuffer rb = init_ring_buffer(capacity);
-    RingBuffer* p = (RingBuffer*)malloc(sizeof(RingBuffer));
-    *p = rb;
-    destroy_ring_buffer(&rb);
-    return p;
+    RingBuffer* rbp = (RingBuffer*)malloc(sizeof(RingBuffer));
+    *rbp = rb;
+    return rbp;
 }
 
 float* linearize_ring_buffer(RingBuffer* ring_buffer) {
@@ -35,7 +34,7 @@ float* linearize_ring_buffer(RingBuffer* ring_buffer) {
     return linear_buffer;
 }
 
-void destroy_ring_buffer(RingBuffer* ring_buffer) {
+void destroy_ring_buffer_data(RingBuffer* ring_buffer) {
     free(ring_buffer->data);
     ring_buffer->data = NULL;
     ring_buffer->start = 0;

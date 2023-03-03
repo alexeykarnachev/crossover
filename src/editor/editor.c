@@ -48,6 +48,7 @@ void init_editor(void) {
         char* file_path;
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
+        free(file_path);
     }
 
     // TODO: Creation of the shared memory for the GeneticTraining and
@@ -108,9 +109,12 @@ void reset_editor(void) {
     EDITOR.project.scene_file_path = NULL;
 
     reset_genetic_training();
+    reset_profiler();
 }
 
 void close_editor(void) {
+    reset_editor();
+
     shmdt(GENETIC_TRAINING);
     shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
 
