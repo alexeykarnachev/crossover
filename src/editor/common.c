@@ -40,6 +40,7 @@ int IG_UNIQUE_ID = 0;
 ImVec2 IG_VEC2_ZERO = {0, 0};
 ImVec4 IG_RED_COLOR = {1.0, 0.0, 0.0, 1.0};
 ImVec4 IG_GREEN_COLOR = {0.0, 1.0, 0.0, 1.0};
+ImVec4 IG_GRAY_COLOR = {0.5, 0.5, 0.5, 1.0};
 ImVec4 IG_YELLOW_COLOR = {1.0, 1.0, 0.0, 1.0};
 ImVec4 IG_PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 

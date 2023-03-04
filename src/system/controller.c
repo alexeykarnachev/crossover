@@ -1,6 +1,7 @@
 #include "../app.h"
 #include "../component.h"
 #include "../debug.h"
+#include "../editor.h"
 #include "../gl.h"
 #include "../math.h"
 #include "../scene.h"
@@ -360,7 +361,9 @@ void update_controllers() {
                 break;
             }
             case BRAIN_AI_CONTROLLER: {
+                profiler_push("get_brain_ai_action");
                 action = get_brain_ai_action(entity);
+                profiler_pop();
                 break;
             }
         }

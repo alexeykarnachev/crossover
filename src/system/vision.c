@@ -39,14 +39,19 @@ void update_visions() {
         Transformation t0 = SCENE.transformations[entity];
         Vec2 start = t0.position;
         reset_vision(vision);
+
+        profiler_push("get_view_rays");
         int n_view_rays = get_view_rays(
             *vision, t0.orientation, VIEW_RAYS_ARENA
         );
+        profiler_pop();
 
         for (int i = 0; i < n_view_rays; ++i) {
+            profiler_push("cast_ray");
             RayCastResult observation = cast_ray(
                 start, VIEW_RAYS_ARENA[i], OBSERVABLE_COMPONENT, entity
             );
+            profiler_pop();
             vision->observations[i] = observation;
         }
     }

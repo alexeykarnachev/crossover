@@ -16,6 +16,23 @@
 
 pid_t PROFILER_PID = -1;
 
+static void reset_profiler(void) {
+    Profiler* profiler = PROFILER;
+    HashMap* stages_map = &profiler->progress.stages_map;
+    for (int i = 0; i < stages_map->capacity; ++i) {
+        void* stage = stages_map->items[i].value;
+        if (stage != NULL) {
+            free(stage);
+        }
+        stages_map->items[i].value = NULL;
+    }
+
+    stages_map->length = 0;
+    profiler->progress.depth = 0;
+    profiler->progress.n_stages = 0;
+    profiler->progress.status = SIMULATION_NOT_STARTED;
+}
+
 static int PROFILER_INITIALIZED = 0;
 void init_profiler() {
     if (PROFILER_INITIALIZED == 1) {
@@ -48,17 +65,8 @@ void destroy_profiler(void) {
         exit(1);
     }
 
-    Profiler* profiler = PROFILER;
-    profiler->progress.status = SIMULATION_NOT_STARTED;
-    HashMap* stages_map = &profiler->progress.stages_map;
-    for (int i = 0; i < stages_map->capacity; ++i) {
-        void* stage = stages_map->items[i].value;
-        if (stage != NULL) {
-            free(stage);
-        }
-    }
-
-    destroy_hashmap(stages_map);
+    reset_profiler();
+    destroy_hashmap(&PROFILER->progress.stages_map);
     PROFILER_DESTROYED = 1;
     printf("DEBUG: PROFILER destroyed\n");
 }
@@ -94,7 +102,10 @@ static void start_profiler(void) {
 
         while (1) {
             float dt = params->simulation.dt_ms / 1000.0;
+
+            profiler_push("update_scene");
             update_scene(dt, 1);
+            profiler_pop();
 
             for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
                 char* name = PROFILER->progress.stages_names[i];
@@ -202,7 +213,88 @@ static void render_profiler_controls(void) {
         ig_same_line();
         if (igButton("Stop", IG_VEC2_ZERO)) {
             kill_profiler();
+            reset_profiler();
         }
+    }
+}
+
+static int compare_stages(const void* a, const void* b) {
+    const ProfilerStage* s1 = (const ProfilerStage*)a;
+    const ProfilerStage* s2 = (const ProfilerStage*)b;
+    return strcmp(s1->name, s2->name);
+}
+
+static void render_stages_summary(void) {
+    if (PROFILER->progress.n_stages == 0) {
+        igTextColored(IG_YELLOW_COLOR, "Profiler not started");
+        return;
+    }
+
+    static ProfilerStage stages[MAX_N_PROFILER_STAGES];
+    static int depths[MAX_N_PROFILER_STAGES];
+    static int last_dot_positions[MAX_N_PROFILER_STAGES];
+    static char display_name
+        [MAX_PROFILER_STAGE_NAME_LENGTH + MAX_PROFILER_STAGES_DEPTH * 4];
+
+    memcpy(
+        stages,
+        PROFILER->progress.stages_summary,
+        sizeof(ProfilerStage) * PROFILER->progress.n_stages
+    );
+    qsort(
+        stages,
+        PROFILER->progress.n_stages,
+        sizeof(ProfilerStage),
+        compare_stages
+    );
+
+    float total_time = 0;
+    for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
+        ProfilerStage stage = stages[i];
+        int depth = 0;
+        int last_dot_position = -1;
+        for (int i = 0; stage.name[i] != '\0'; ++i) {
+            if (stage.name[i] == '.') {
+                depth += 4;
+                last_dot_position = i;
+            }
+        }
+
+        if (depth == 0) {
+            total_time += stage.time;
+        }
+
+        depths[i] = depth;
+        last_dot_positions[i] = last_dot_position;
+    }
+
+    for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
+        ProfilerStage stage = stages[i];
+        int last_dot_position = last_dot_positions[i];
+        int depth = depths[i];
+        char* name = &stage.name[last_dot_position + 1];
+        memset(display_name, '\0', sizeof(display_name));
+
+        if (depth > 0) {
+            strcpy(&display_name[depth + 1], name);
+            memset(display_name, '-', depth);
+            display_name[depth] = ' ';
+        } else {
+            strcpy(&display_name[depth], name);
+        }
+
+        igText("%s", display_name);
+        ig_same_line();
+        igTextColored(IG_GRAY_COLOR, "%.02fs", stage.time);
+        ig_same_line();
+
+        float percentage = stage.time / total_time;
+        float hue = (1.0 - percentage) * 120.0 / 360.0;
+        ImVec4 color = {0.0, 0.0, 0.0, 1.0};
+        igColorConvertHSVtoRGB(
+            hue, 1.0, 1.0, &color.x, &color.y, &color.z
+        );
+        igTextColored(color, "(%.01f%%)", 100.0 * percentage);
     }
 }
 
@@ -285,10 +377,8 @@ void render_profiler_editor(void) {
     render_scene_selection();
     igSeparator();
 
-    render_profiler_controls();
+    render_stages_summary();
+    igSeparator();
 
-    for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
-        ProfilerStage* stage = &PROFILER->progress.stages_summary[i];
-        printf("%s: %f\n", stage->name, stage->time);
-    }
+    render_profiler_controls();
 }

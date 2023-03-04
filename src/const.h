@@ -39,7 +39,7 @@
 
 #define DEBUG_RENDER_LAYER -1.0
 
-#define MAX_HASHMAP_KEY_LENGTH 64
+#define MAX_HASHMAP_KEY_LENGTH 1024
 
 #if defined(_WIN32) || defined(_WIN64)
 #define PATH_SEPARATOR '\\'

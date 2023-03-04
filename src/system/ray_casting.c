@@ -6,8 +6,6 @@
 RayCastResult cast_ray(
     Vec2 start, Vec2 ray, int target_components, int ray_owner
 ) {
-    profiler_push("cast_ray");
-
     RayCastResult result;
     result.entity = -1;
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
@@ -25,6 +23,7 @@ RayCastResult cast_ray(
         int is_collided = 0;
         switch (entity_collider.type) {
             case CIRCLE_PRIMITIVE:
+                profiler_push("intersect_line_with_circle_nearest");
                 is_collided = intersect_line_with_circle_nearest(
                     start,
                     add(start, ray),
@@ -32,11 +31,13 @@ RayCastResult cast_ray(
                     entity_collider.p.circle.radius,
                     &collision_position
                 );
+                profiler_pop();
                 break;
             default: {
                 Vec2 vertices[MAX_N_POLYGON_VERTICES];
                 int nv = get_primitive_vertices(entity_collider, vertices);
                 apply_transformation(vertices, nv, entity_transformation);
+                profiler_push("intersect_line_with_polygon_nearest");
                 is_collided = intersect_line_with_polygon_nearest(
                     start,
                     add(start, ray),
@@ -44,6 +45,7 @@ RayCastResult cast_ray(
                     nv,
                     &collision_position
                 );
+                profiler_pop();
             }
         }
 
@@ -63,6 +65,5 @@ RayCastResult cast_ray(
         result.position = add(start, ray);
     }
 
-    profiler_pop();
     return result;
 }

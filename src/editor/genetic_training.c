@@ -43,9 +43,9 @@ static void reset_genetic_training(void) {
     training->population.episode_time = 60.0;
     training->population.n_episodes = 50;
 
-    training->evolution.elite_ratio = 0.10;
-    training->evolution.mutation_rate = 0.05;
-    training->evolution.mutation_strength = 0.05;
+    training->evolution.elite_ratio = 0.18;
+    training->evolution.mutation_rate = 0.18;
+    training->evolution.mutation_strength = 0.18;
 }
 
 static int GENETIC_TRAINING_INITIALIZED = 0;
@@ -141,6 +141,14 @@ static void update_evolution_history(void) {
         } else if (SCORES[e].length == gen + 1) {
             SCORES[e].data[SCORES[e].length - 1] = val;
         } else {
+            // TODO: Sometimes this is reachable.
+            // Reproduce it like this:
+            // Start genetic training -> pause it ->
+            // -> remove some guy with brain from a scene
+            // (the guy will also be removed from the genetic training,
+            // which is another bug) -> resume training.
+            // Maybe these are not precise steps.
+            // Needs to be investigated...
             fprintf(
                 stderr,
                 "ERROR: Generations are in descending order. This is a "

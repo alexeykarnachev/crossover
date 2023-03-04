@@ -20,6 +20,7 @@ extern int IG_UNIQUE_ID;
 extern ImVec2 IG_VEC2_ZERO;
 extern ImVec4 IG_RED_COLOR;
 extern ImVec4 IG_GREEN_COLOR;
+extern ImVec4 IG_GRAY_COLOR;
 extern ImVec4 IG_YELLOW_COLOR;
 extern ImVec4 IG_PRESSED_BUTTON_COLOR;
 
