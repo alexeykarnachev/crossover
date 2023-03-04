@@ -111,7 +111,10 @@ Brain* add_brain_clone(Brain* brain, int allow_replacement) {
             fprintf(
                 stderr,
                 "ERROR: Brain with this key has been already initialized: "
-                "%s. You can set `allow_replacement`=true to replace "
+                "%s. This could happen if you have several Brain files "
+                "with different file names, but the internal Brain keys "
+                "which are written in the files are different. You can "
+                "set `allow_replacement`=true to replace "
                 "existing Brain with the new one\n",
                 BRAINS[idx].params.key
             );

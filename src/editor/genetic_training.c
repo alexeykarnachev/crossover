@@ -136,24 +136,31 @@ static void update_evolution_history(void) {
         Scorer* scorer = &params->progress.best_scorers[e];
         float val = get_total_score(scorer);
 
-        if (SCORES[e].length <= gen) {
+        int n_scores = SCORES[e].length;
+        if (n_scores == gen) {
             array_push(&SCORES[e], val);
-        } else if (SCORES[e].length == gen + 1) {
-            SCORES[e].data[SCORES[e].length - 1] = val;
-        } else {
-            // TODO: Sometimes this is reachable.
-            // Reproduce it like this:
-            // Start genetic training -> pause it ->
-            // -> remove some guy with brain from a scene
-            // (the guy will also be removed from the genetic training,
-            // which is another bug) -> resume training.
-            // Maybe these are not precise steps.
-            // Needs to be investigated...
+        } else if (n_scores == gen + 1) {
+            SCORES[e].data[n_scores - 1] = val;
+        } else if (n_scores > gen + 1) {
             fprintf(
                 stderr,
-                "ERROR: Generations are in descending order. This is a "
-                "bug\n"
+                "ERROR: Number of scores (%d) is greater than the number "
+                "of passed generations (%d). This is a bug\n",
+                n_scores,
+                gen + 1
             );
+            exit(1);
+        } else if (n_scores < gen) {
+            fprintf(
+                stderr,
+                "ERROR: Number of scores (%d) is less than the number of "
+                "prefiously passed generations (%d). This is a bug\n",
+                n_scores,
+                gen
+            );
+            exit(1);
+        } else {
+            fprintf(stderr, "ERROR: Unreachable. This is a bug\n");
             exit(1);
         }
     }
