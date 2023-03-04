@@ -86,6 +86,7 @@ typedef struct GeneticTraining {
 
 typedef struct ProfilerStage {
     double time;
+    int n_calls;
     char name[MAX_PROFILER_STAGE_NAME_LENGTH];
 } ProfilerStage;
 

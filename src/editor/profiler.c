@@ -230,6 +230,13 @@ static void render_stages_summary(void) {
         return;
     }
 
+    static int show_abs_percentage = 1;
+    static int show_abs_time = 1;
+    static int show_step_time = 1;
+    igCheckbox("Absolute percentage", (bool*)(&show_abs_percentage));
+    igCheckbox("Absolute time", (bool*)(&show_abs_time));
+    igCheckbox("Step time", (bool*)(&show_step_time));
+
     static ProfilerStage stages[MAX_N_PROFILER_STAGES];
     static int depths[MAX_N_PROFILER_STAGES];
     static int last_dot_positions[MAX_N_PROFILER_STAGES];
@@ -284,23 +291,46 @@ static void render_stages_summary(void) {
         }
 
         igText("%s", display_name);
-        ig_same_line();
-        igTextColored(IG_GRAY_COLOR, "%.02fs", stage.time);
-        ig_same_line();
 
-        float percentage = stage.time / total_time;
-        float hue = (1.0 - percentage) * 120.0 / 360.0;
-        ImVec4 color = {0.0, 0.0, 0.0, 1.0};
-        igColorConvertHSVtoRGB(
-            hue, 1.0, 1.0, &color.x, &color.y, &color.z
-        );
-        igTextColored(color, "(%.01f%%)", 100.0 * percentage);
+        if (show_abs_percentage) {
+            ig_same_line();
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+
+            ig_same_line();
+            float percentage = stage.time / total_time;
+            float hue = (1.0 - percentage) * 120.0 / 360.0;
+            ImVec4 color = {0.0, 0.0, 0.0, 1.0};
+            igColorConvertHSVtoRGB(
+                hue, 1.0, 1.0, &color.x, &color.y, &color.z
+            );
+            igTextColored(color, " %.01f %% ", 100.0 * percentage);
+        }
+
+        if (show_abs_time) {
+            ig_same_line();
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ig_same_line();
+            igTextColored(IG_GRAY_COLOR, " %.01f s ", stage.time);
+        }
+
+        if (show_step_time) {
+            ig_same_line();
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ig_same_line();
+            igTextColored(
+                IG_GRAY_COLOR,
+                " %d ms/step ",
+                (int)(1000.0 * stage.time / stage.n_calls)
+            );
+        }
     }
 }
 
 // TODO: Add ENABLE_PROFILER define macro which enables (if set)
 // this function, otherwise the profiler is disabled and doesn't affect
 // the application performance
+// TODO: Decouple profiler operations (push, pop, etc) from the
+// actual rendering (move them in different translation units)
 void profiler_push(char* name) {
     if (PROFILER_PID != 0) {
         return;
@@ -368,6 +398,7 @@ void profiler_pop(void) {
         );
     }
     stage->time += current_time - current_stage.time;
+    stage->n_calls += 1;
 }
 
 void render_profiler_editor(void) {
