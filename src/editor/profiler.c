@@ -232,10 +232,13 @@ static void render_stages_summary(void) {
 
     static int show_abs_percentage = 1;
     static int show_abs_time = 1;
-    static int show_step_time = 1;
+    static int show_call_time = 1;
+    static int show_n_calls = 1;
     igCheckbox("Absolute percentage", (bool*)(&show_abs_percentage));
     igCheckbox("Absolute time", (bool*)(&show_abs_time));
-    igCheckbox("Step time", (bool*)(&show_step_time));
+    igCheckbox("Call time", (bool*)(&show_call_time));
+    igCheckbox("N calls", (bool*)(&show_n_calls));
+    igSeparator();
 
     static ProfilerStage stages[MAX_N_PROFILER_STAGES];
     static int depths[MAX_N_PROFILER_STAGES];
@@ -290,7 +293,7 @@ static void render_stages_summary(void) {
             strcpy(&display_name[depth], name);
         }
 
-        igText("%s", display_name);
+        igText("%s ", display_name);
 
         if (show_abs_percentage) {
             ig_same_line();
@@ -313,14 +316,25 @@ static void render_stages_summary(void) {
             igTextColored(IG_GRAY_COLOR, " %.01f s ", stage.time);
         }
 
-        if (show_step_time) {
+        if (show_call_time) {
             ig_same_line();
             igSeparatorEx(ImGuiSeparatorFlags_Vertical);
             ig_same_line();
             igTextColored(
                 IG_GRAY_COLOR,
-                " %d ms/step ",
-                (int)(1000.0 * stage.time / stage.n_calls)
+                " %.2f ms/call ",
+                1000.0 * stage.time / stage.n_calls
+            );
+        }
+
+        if (show_n_calls) {
+            ig_same_line();
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ig_same_line();
+            igTextColored(
+                IG_GRAY_COLOR,
+                " %.2e calls ",
+                (double)stage.n_calls
             );
         }
     }

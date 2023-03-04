@@ -23,7 +23,6 @@ RayCastResult cast_ray(
         int is_collided = 0;
         switch (entity_collider.type) {
             case CIRCLE_PRIMITIVE:
-                profiler_push("intersect_line_with_circle_nearest");
                 is_collided = intersect_line_with_circle_nearest(
                     start,
                     add(start, ray),
@@ -31,13 +30,12 @@ RayCastResult cast_ray(
                     entity_collider.p.circle.radius,
                     &collision_position
                 );
-                profiler_pop();
                 break;
             default: {
                 Vec2 vertices[MAX_N_POLYGON_VERTICES];
                 int nv = get_primitive_vertices(entity_collider, vertices);
                 apply_transformation(vertices, nv, entity_transformation);
-                profiler_push("intersect_line_with_polygon_nearest");
+
                 is_collided = intersect_line_with_polygon_nearest(
                     start,
                     add(start, ray),
@@ -45,7 +43,6 @@ RayCastResult cast_ray(
                     nv,
                     &collision_position
                 );
-                profiler_pop();
             }
         }
 
