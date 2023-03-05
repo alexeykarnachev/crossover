@@ -16,61 +16,6 @@
 
 pid_t PROFILER_PID = -1;
 
-static void reset_profiler(void) {
-    Profiler* profiler = PROFILER;
-    HashMap* stages_map = &profiler->progress.stages_map;
-    for (int i = 0; i < stages_map->capacity; ++i) {
-        void* stage = stages_map->items[i].value;
-        if (stage != NULL) {
-            free(stage);
-        }
-        stages_map->items[i].value = NULL;
-    }
-
-    stages_map->length = 0;
-    profiler->progress.depth = 0;
-    profiler->progress.n_stages = 0;
-    profiler->progress.status = SIMULATION_NOT_STARTED;
-}
-
-static int PROFILER_INITIALIZED = 0;
-void init_profiler() {
-    if (PROFILER_INITIALIZED == 1) {
-        fprintf(
-            stderr, "ERROR: PROFILER could be initialized only once\n"
-        );
-        exit(1);
-    }
-
-    Profiler* profiler = PROFILER;
-    memset(profiler, 0, sizeof(Profiler));
-    profiler->simulation.dt_ms = 17.0;
-    profiler->progress.status = SIMULATION_NOT_STARTED;
-    profiler->progress.stages_map = init_hashmap();
-    profiler->progress.depth = 0;
-
-    PROFILER_INITIALIZED = 1;
-    printf("DEBUG: PROFILER initialized\n");
-}
-
-static int PROFILER_DESTROYED = 0;
-void destroy_profiler(void) {
-    if (PROFILER_DESTROYED == 1) {
-        fprintf(stderr, "ERROR: PROFILER could be destroyed only once\n");
-        exit(1);
-    }
-
-    if (PROFILER_INITIALIZED == 0) {
-        fprintf(stderr, "ERROR: Can't destroy uninitialized PROFILER\n");
-        exit(1);
-    }
-
-    reset_profiler();
-    destroy_hashmap(&PROFILER->progress.stages_map);
-    PROFILER_DESTROYED = 1;
-    printf("DEBUG: PROFILER destroyed\n");
-}
-
 void kill_profiler(void) {
     if (PROFILER_PID > 0) {
         PROFILER->progress.status = SIMULATION_NOT_STARTED;
@@ -86,26 +31,25 @@ static void start_profiler(void) {
     if (PROFILER_PID == -1) {
         perror("ERROR: Can't start PROFILER\n");
     } else if (PROFILER_PID == 0) {
-        Profiler* params = PROFILER;
-
+        PROFILER_ENABLED = 1;
         ResultMessage res_msg = {0};
-        if (params->scene_file_path[0] != '\0') {
-            load_scene(params->scene_file_path, &res_msg);
+        if (PROFILER->scene_file_path[0] != '\0') {
+            load_scene(PROFILER->scene_file_path, &res_msg);
             if (res_msg.flag != SUCCESS_RESULT) {
                 fprintf(stderr, "%s\n", res_msg.msg);
                 exit(1);
             }
         }
 
-        SimulationStatus* status = &params->progress.status;
+        SimulationStatus* status = &PROFILER->progress.status;
         *status = SIMULATION_RUNNING;
 
         while (1) {
-            float dt = params->simulation.dt_ms / 1000.0;
+            float dt = PROFILER->simulation.dt_ms / 1000.0;
 
-            profiler_push("update_scene");
+            profiler_push(PROFILER, "update_scene");
             update_scene(dt, 1);
-            profiler_pop();
+            profiler_pop(PROFILER);
 
             for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
                 char* name = PROFILER->progress.stages_names[i];
@@ -213,7 +157,7 @@ static void render_profiler_controls(void) {
         ig_same_line();
         if (igButton("Stop", IG_VEC2_ZERO)) {
             kill_profiler();
-            reset_profiler();
+            reset_profiler(PROFILER);
         }
     }
 }
@@ -332,87 +276,10 @@ static void render_stages_summary(void) {
             igSeparatorEx(ImGuiSeparatorFlags_Vertical);
             ig_same_line();
             igTextColored(
-                IG_GRAY_COLOR,
-                " %.2e calls ",
-                (double)stage.n_calls
+                IG_GRAY_COLOR, " %.2e calls ", (double)stage.n_calls
             );
         }
     }
-}
-
-// TODO: Add ENABLE_PROFILER define macro which enables (if set)
-// this function, otherwise the profiler is disabled and doesn't affect
-// the application performance
-// TODO: Decouple profiler operations (push, pop, etc) from the
-// actual rendering (move them in different translation units)
-void profiler_push(char* name) {
-    if (PROFILER_PID != 0) {
-        return;
-    }
-
-    if (PROFILER->progress.depth == MAX_PROFILER_STAGES_DEPTH) {
-        fprintf(
-            stderr,
-            "ERROR: The maximum profiling depth is reached: %d. Can't "
-            "profile any deeper\n",
-            MAX_PROFILER_STAGES_DEPTH
-        );
-        exit(1);
-    }
-
-    ProfilerStage stage = {0};
-    stage.time = get_current_time();
-
-    // TODO: Add check for not exceeding the MAX_PROFILER_STAGE_NAME_LENGTH
-    int curr_name_length = 0;
-    if (PROFILER->progress.depth > 0) {
-        char* prev_stage_name
-            = PROFILER->progress.stages_stack[PROFILER->progress.depth - 1]
-                  .name;
-        strcpy(stage.name, prev_stage_name);
-        curr_name_length = strlen(prev_stage_name);
-        stage.name[curr_name_length++] = '.';
-    }
-    strcpy(&stage.name[curr_name_length], name);
-
-    PROFILER->progress.stages_stack[PROFILER->progress.depth++] = stage;
-}
-
-void profiler_pop(void) {
-    if (PROFILER_PID != 0) {
-        return;
-    }
-
-    if (PROFILER->progress.depth == 0) {
-        fprintf(
-            stderr,
-            "ERROR: Can't pop a stage from the empty Profiler stack\n"
-        );
-        exit(1);
-    }
-
-    int depth = --PROFILER->progress.depth;
-    ProfilerStage current_stage = PROFILER->progress.stages_stack[depth];
-    double current_time = get_current_time();
-
-    HashMap* stages_map = &PROFILER->progress.stages_map;
-    ProfilerStage* stage = (ProfilerStage*)hashmap_try_get(
-        stages_map, current_stage.name
-    );
-    if (stage == NULL) {
-        stage = (ProfilerStage*)malloc(sizeof(ProfilerStage));
-        memcpy(stage, &current_stage, sizeof(ProfilerStage));
-        stage->time = 0;
-        hashmap_put(stages_map, stage->name, (void*)stage);
-        // TODO: Check that PROFILER->n_stages doesn't exceed
-        // the `MAX_N_PROFILER_STAGES`
-        strcpy(
-            PROFILER->progress.stages_names[PROFILER->progress.n_stages++],
-            stage->name
-        );
-    }
-    stage->time += current_time - current_stage.time;
-    stage->n_calls += 1;
 }
 
 void render_profiler_editor(void) {

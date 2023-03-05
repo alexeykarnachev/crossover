@@ -4,6 +4,7 @@
 #include "hashmap.h"
 #include "math.h"
 #include "nfd.h"
+#include "profiler.h"
 
 typedef struct Project {
     char* project_file_path;
@@ -49,12 +50,6 @@ typedef struct Editor {
     int is_editing_profiler;
 } Editor;
 
-typedef enum SimulationStatus {
-    SIMULATION_NOT_STARTED = 0,
-    SIMULATION_RUNNING,
-    SIMULATION_PAUSED
-} SimulationStatus;
-
 typedef struct GeneticTraining {
     struct {
         Scorer best_scorers[MAX_N_ENTITIES_TO_TRAIN];
@@ -84,34 +79,8 @@ typedef struct GeneticTraining {
     } evolution;
 } GeneticTraining;
 
-typedef struct ProfilerStage {
-    double time;
-    int n_calls;
-    char name[MAX_PROFILER_STAGE_NAME_LENGTH];
-} ProfilerStage;
-
-typedef struct Profiler {
-    struct {
-        SimulationStatus status;
-        HashMap stages_map;
-        ProfilerStage stages_stack[MAX_PROFILER_STAGES_DEPTH];
-        char stages_names[MAX_N_PROFILER_STAGES]
-                         [MAX_PROFILER_STAGE_NAME_LENGTH];
-        ProfilerStage stages_summary[MAX_N_PROFILER_STAGES];
-        int n_stages;
-        int depth;
-    } progress;
-
-    struct {
-        float dt_ms;
-    } simulation;
-
-    char scene_file_path[MAX_PATH_LENGTH];
-} Profiler;
-
 extern Editor EDITOR;
 extern GeneticTraining* GENETIC_TRAINING;
-extern Profiler* PROFILER;
 
 Vec2 get_cursor_scene_pos(void);
 
@@ -123,12 +92,7 @@ void init_genetic_training(void);
 void destroy_genetic_training(void);
 void kill_genetic_training(void);
 
-void init_profiler(void);
-void destroy_profiler(void);
 void kill_profiler(void);
-
-void profiler_push(char* name);
-void profiler_pop(void);
 
 void new_editor_project(void);
 void new_editor_scene(void);

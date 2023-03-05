@@ -19,8 +19,6 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, shutdown);
 
     init_editor();
-    init_genetic_training();
-    init_profiler();
 
     init_app(1600, 1200);
     init_renderer();

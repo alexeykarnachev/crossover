@@ -531,7 +531,10 @@ static void update_entities_scene_counter() {
 }
 
 void update_scene(float dt, int is_playing) {
+    profiler_push(PROFILER, "update_visions");
     update_visions();
+    profiler_pop(PROFILER);
+
     update_camera();
 
     if (is_playing) {

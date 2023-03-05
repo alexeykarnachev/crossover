@@ -103,6 +103,9 @@ void init_editor(void) {
     }
 
     EDITOR_INITIALIZED = 1;
+
+    init_genetic_training();
+    init_profiler(PROFILER);
 }
 
 void reset_editor(void) {
@@ -133,7 +136,7 @@ void destroy_editor(void) {
     shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
 
     kill_profiler();
-    destroy_profiler();
+    destroy_profiler(PROFILER);
     shmdt(PROFILER);
     shmctl(PROFILER_SHMID, IPC_RMID, NULL);
 

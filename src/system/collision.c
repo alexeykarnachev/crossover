@@ -4,6 +4,7 @@
 #include "../editor.h"
 #include "../gl.h"
 #include "../math.h"
+#include "../profiler.h"
 #include "../scene.h"
 #include "../system.h"
 #include <math.h>
@@ -126,8 +127,6 @@ int collide_primitives(
     Transformation transformation1,
     Collision* collision
 ) {
-    profiler_push("collide_primitives");
-
     Vec2 vertices0[MAX_N_POLYGON_VERTICES];
     Vec2 vertices1[MAX_N_POLYGON_VERTICES];
     int nv0 = get_primitive_vertices(primitive0, vertices0);
@@ -168,13 +167,10 @@ int collide_primitives(
         collision->mtv = flip(collision->mtv);
     }
 
-    profiler_pop();
     return collided;
 }
 
 static void compute_collisions() {
-    profiler_push("compute_collisions");
-
     COLLISIONS_ARENA.n = 0;
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
@@ -212,8 +208,6 @@ static void compute_collisions() {
     }
 
     DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
-
-    profiler_pop();
 }
 
 // TODO: Collisions resolving is not perfect:

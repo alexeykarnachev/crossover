@@ -1,6 +1,7 @@
 #include "../hashmap.h"
 
 #include "../const.h"
+#include "../profiler.h"
 #include "../utils.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -102,11 +103,15 @@ void hashmap_put(HashMap* hashmap, char* key, void* value) {
 }
 
 void* hashmap_get(HashMap* hashmap, char* key) {
+    profiler_push(PROFILER, "hashmap_get");
+
     void* value = hashmap_try_get(hashmap, key);
     if (value == NULL) {
         fprintf(stderr, "ERROR: No such key in hashmap: %s\n", key);
         exit(1);
     }
+
+    profiler_pop(PROFILER);
     return value;
 }
 

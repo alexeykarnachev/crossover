@@ -4,6 +4,7 @@
 #include "../editor.h"
 #include "../gl.h"
 #include "../math.h"
+#include "../profiler.h"
 #include "../scene.h"
 #include "../system.h"
 #include <float.h>
@@ -361,9 +362,7 @@ void update_controllers() {
                 break;
             }
             case BRAIN_AI_CONTROLLER: {
-                profiler_push("get_brain_ai_action");
                 action = get_brain_ai_action(entity);
-                profiler_pop();
                 break;
             }
         }
