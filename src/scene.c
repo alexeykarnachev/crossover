@@ -535,17 +535,39 @@ void update_scene(float dt, int is_playing) {
     update_visions();
     profiler_pop(PROFILER);
 
+    profiler_push(PROFILER, "update_camera");
     update_camera();
+    profiler_pop(PROFILER);
 
     if (is_playing) {
         SCENE.time += dt;
 
+        profiler_push(PROFILER, "update_ttls");
         update_ttls(dt);
+        profiler_pop(PROFILER);
+
+        profiler_push(PROFILER, "update_healths");
         update_healths();
+        profiler_pop(PROFILER);
+
+        profiler_push(PROFILER, "update_controllers");
         update_controllers();
+        profiler_pop(PROFILER);
+
+        profiler_push(PROFILER, "update_bullets");
         update_bullets(dt);
+        profiler_pop(PROFILER);
+
+        profiler_push(PROFILER, "update_kinematic_movements");
         update_kinematic_movements(dt);
+        profiler_pop(PROFILER);
+
+        profiler_push(PROFILER, "update_entities_scene_counter");
         update_entities_scene_counter();
+        profiler_pop(PROFILER);
     }
+
+    profiler_push(PROFILER, "update_collisions");
     update_collisions(is_playing);
+    profiler_pop(PROFILER);
 }
