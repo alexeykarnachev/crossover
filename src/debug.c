@@ -70,6 +70,9 @@ void render_debug_rectangle(
 
 void render_debug_grid() {
     CameraFrustum frustum = get_camera_frustum();
+    Vec2 expand = sub(frustum.top_right, frustum.bot_left);
+    frustum.bot_left = sub(frustum.bot_left, expand);
+    frustum.top_right = add(frustum.top_right, expand);
 
     float x = ceilf(frustum.bot_left.x);
     while (x < frustum.top_right.x) {

@@ -27,7 +27,7 @@ int test_array(void) {
     assert(array_peek(&arr) == 3.0);
 
     // Test array_remove_value()
-    array_remove_value(&arr, 2.0);
+    array_remove_value(&arr, 2.0, 0);
     assert(array_get(&arr, 0) == 1.0);
     assert(array_get(&arr, 1) == 4.0);
     assert(array_get(&arr, 2) == 3.0);
@@ -37,7 +37,7 @@ int test_array(void) {
     array_push(&arr, 4.0);
     array_push(&arr, 3.0);
     assert(arr.length == 7);
-    array_remove_value(&arr, 4.0);
+    array_remove_value(&arr, 4.0, 1);
     assert(array_get(&arr, 0) == 1.0);
     assert(array_get(&arr, 1) == 3.0);
     assert(array_get(&arr, 2) == 3.0);

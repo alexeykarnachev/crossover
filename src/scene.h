@@ -56,6 +56,9 @@ Vec2 get_cursor_scene_pos(void);
 void save_scene(const char* file_path, ResultMessage* res_msg);
 void load_scene(const char* file_path, ResultMessage* res_msg);
 void destroy_entity(int entity);
+void entity_enters_tile(int entity, int tile);
+void entity_leaves_tile(int entity, int tile);
+void entity_leaves_all_tiles(int entity);
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
 

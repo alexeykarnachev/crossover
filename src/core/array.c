@@ -83,7 +83,9 @@ float array_peek(Array* arr) {
     return arr->data[arr->length - 1];
 }
 
-void array_remove_value(Array* arr, float remove_val) {
+void array_remove_value(
+    Array* arr, float remove_val, int fail_if_not_present
+) {
     int idx = -1;
     for (int i = 0; i < arr->length; ++i) {
         float this_val = array_get(arr, i);
@@ -98,6 +100,17 @@ void array_remove_value(Array* arr, float remove_val) {
         } else if (this_val == remove_val && idx == -1) {
             idx = i;
         }
+    }
+
+    if (idx == -1 && fail_if_not_present) {
+        fprintf(
+            stderr,
+            "ERROR: Can't remove value %f from the array because it is "
+            "not present. If you want to ignore this error set "
+            "`fail_if_not_present`=0\n",
+            remove_val
+        );
+        exit(1);
     }
 
     arr->length = idx != -1 ? idx : arr->length;

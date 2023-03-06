@@ -224,16 +224,26 @@ void destroy_entity(int entity) {
     SCENE.healths[entity] = init_default_health();
     memset(&SCENE.scorers[entity], 0, sizeof(Scorer));
     SCENE.names[entity][0] = '\0';
+    entity_leaves_all_tiles(entity);
+}
 
+void entity_enters_tile(int entity, int tile) {
+    Array* tile_to_entities = &SCENE.tile_to_entities[tile];
+    array_push(tile_to_entities, entity);
+}
+
+void entity_leaves_tile(int entity, int tile) {
+    Array* tile_to_entities = &SCENE.tile_to_entities[tile];
+    array_remove_value(tile_to_entities, entity, 1);
+}
+
+void entity_leaves_all_tiles(int entity) {
     Array* entity_to_tiles = &SCENE.entity_to_tiles[entity];
-    // for (int t = 0; t < entity_to_tiles.length; ++t) {
-    //     int tile = (int)array_get(entity_to_tiles, t);
-    //     Array* tile_to_entities = &SCENE.tile_to_entities[tile];
-    //     Array new_tile_to_entities = init_array();
-    //     for (int e = 0; e < tile_to_entities->length; ++e) {
-    //         int entity = (int)array_get(tile_to_entities, e);
-    //     }
-    // }
+    for (int t = 0; t < entity_to_tiles->length; ++t) {
+        int tile = (int)array_get(entity_to_tiles, t);
+        entity_leaves_tile(entity, tile);
+    }
+    destroy_array(entity_to_tiles);
 }
 
 int check_if_entity_alive(int entity) {
