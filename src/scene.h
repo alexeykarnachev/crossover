@@ -1,13 +1,21 @@
 #pragma once
+#include "array.h"
 #include "asset.h"
 #include "component.h"
 #include "const.h"
+#include "math.h"
 #include "system.h"
 #include <stdint.h>
+
+#define SCENE_N_TILES N_X_SCENE_TILES* N_Y_SCENE_TILES
 
 typedef struct Scene {
     float time;
     int n_entities;
+
+    // Scene tiles
+    Array entity_to_tiles[MAX_N_ENTITIES];
+    Array tile_to_entities[SCENE_N_TILES];
 
     // Components
     uint64_t components[MAX_N_ENTITIES];

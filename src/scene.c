@@ -46,10 +46,19 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 
     int version = SCENE_VERSION;
 
-    // Write version
     fwrite(&version, sizeof(int), 1, fp);
+
     fwrite(&SCENE.time, sizeof(float), 1, fp);
     fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
+
+    for (int i = 0; i < SCENE.n_entities; ++i) {
+        write_array_to_file(&SCENE.entity_to_tiles[i], fp);
+    }
+
+    for (int i = 0; i < SCENE_N_TILES; ++i) {
+        write_array_to_file(&SCENE.tile_to_entities[i], fp);
+    }
+
     fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
     fwrite(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
     fwrite(
@@ -138,9 +147,17 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         return;
     }
 
-    // Read Scene itself
     fread(&SCENE.time, sizeof(float), 1, fp);
     fread(&SCENE.n_entities, sizeof(int), 1, fp);
+
+    for (int i = 0; i < SCENE.n_entities; ++i) {
+        read_array_from_file(&SCENE.entity_to_tiles[i], fp);
+    }
+
+    for (int i = 0; i < SCENE_N_TILES; ++i) {
+        read_array_from_file(&SCENE.tile_to_entities[i], fp);
+    }
+
     fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
 
     fread(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
@@ -207,6 +224,16 @@ void destroy_entity(int entity) {
     SCENE.healths[entity] = init_default_health();
     memset(&SCENE.scorers[entity], 0, sizeof(Scorer));
     SCENE.names[entity][0] = '\0';
+
+    Array* entity_to_tiles = &SCENE.entity_to_tiles[entity];
+    // for (int t = 0; t < entity_to_tiles.length; ++t) {
+    //     int tile = (int)array_get(entity_to_tiles, t);
+    //     Array* tile_to_entities = &SCENE.tile_to_entities[tile];
+    //     Array new_tile_to_entities = init_array();
+    //     for (int e = 0; e < tile_to_entities->length; ++e) {
+    //         int entity = (int)array_get(tile_to_entities, e);
+    //     }
+    // }
 }
 
 int check_if_entity_alive(int entity) {

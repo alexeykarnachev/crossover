@@ -8,10 +8,10 @@ RayCastResult cast_ray(
 ) {
     RayCastResult result;
     result.entity = -1;
-    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT
+                             | target_components;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)
-            || !check_if_entity_has_component(entity, target_components)
             || ray_owner == entity) {
             continue;
         }

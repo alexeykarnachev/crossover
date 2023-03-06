@@ -19,7 +19,7 @@ void destroy_array(Array* arr) {
     free(arr->data);
     arr->data = NULL;
     arr->length = 0;
-    arr->capacity = 0;
+    arr->capacity = INITIAL_ARRAY_CAPACITY;
 }
 
 static void resize_array(Array* arr) {
@@ -61,10 +61,44 @@ float array_get(Array* arr, int idx) {
     return arr->data[idx];
 }
 
+void array_set(Array* arr, int idx, float val) {
+    if (idx >= arr->length || idx < 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't set the value at index: %d from the array with "
+            "length: %d\n",
+            idx,
+            arr->length
+        );
+        exit(1);
+    }
+    arr->data[idx] = val;
+}
+
 float array_peek(Array* arr) {
     if (arr->length <= 0) {
         fprintf(stderr, "ERROR: Can't peek from the empty array\n");
         exit(1);
     }
     return arr->data[arr->length - 1];
+}
+
+void array_remove_value(Array* arr, float remove_val) {
+    int idx = -1;
+    for (int i = 0; i < arr->length; ++i) {
+        float this_val = array_get(arr, i);
+        if (this_val != remove_val && idx != -1) {
+            array_set(arr, idx, this_val);
+            array_set(arr, i, remove_val);
+            if (array_get(arr, idx + 1) == remove_val) {
+                idx += 1;
+            } else {
+                idx = i;
+            }
+        } else if (this_val == remove_val && idx == -1) {
+            idx = i;
+        }
+    }
+
+    arr->length = idx != -1 ? idx : arr->length;
 }
