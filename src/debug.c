@@ -15,6 +15,9 @@ Debug DEBUG;
 void init_debug(void) {
     DEBUG.shading.materials = 1;
     DEBUG.collisions.resolve = 1;
+
+    DEBUG.shading.grid = 1;
+    DEBUG.shading.grid_tile_size = SCENE_TILE_SIZE;
 }
 
 void update_debug(void) {
@@ -68,13 +71,17 @@ void render_debug_rectangle(
     render_debug_primitive(t, p, color, render_layer, fill_type);
 }
 
-void render_debug_grid() {
+void render_debug_grid(float cell_size) {
+    cell_size = max(cell_size, 1.0);
     CameraFrustum frustum = get_camera_frustum();
+    float frustum_width = frustum.top_right.x - frustum.bot_left.x;
     Vec2 expand = sub(frustum.top_right, frustum.bot_left);
     frustum.bot_left = sub(frustum.bot_left, expand);
     frustum.top_right = add(frustum.top_right, expand);
 
-    float x = ceilf(frustum.bot_left.x);
+    float x = frustum.bot_left.x;
+    float dx = cell_size * (0.5 + floor(abs(x) / cell_size));
+    x = x <= 0 ? -dx : dx - frustum_width;
     while (x < frustum.top_right.x) {
         render_debug_line(
             vec2(x, frustum.bot_left.y),
@@ -82,10 +89,12 @@ void render_debug_grid() {
             BLACK_COLOR,
             DEBUG_RENDER_LAYER
         );
-        x += 1.0;
+        x += cell_size;
     }
 
-    float y = ceilf(frustum.bot_left.y);
+    float y = frustum.top_right.y;
+    float dy = cell_size * (0.5 + floor(abs(y) / cell_size));
+    y = y <= 0 ? -dy - frustum_width : -dy;
     while (y < frustum.top_right.y) {
         render_debug_line(
             vec2(frustum.bot_left.x, y),
@@ -93,6 +102,6 @@ void render_debug_grid() {
             BLACK_COLOR,
             DEBUG_RENDER_LAYER
         );
-        y += 1.0;
+        y += cell_size;
     }
 }

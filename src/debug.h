@@ -29,6 +29,8 @@ typedef struct Debug {
         int visions;
         int wireframe;
         int grid;
+
+        float grid_tile_size;
     } shading;
 
     struct collisions {
@@ -61,4 +63,4 @@ void render_debug_rectangle(
     float render_layer,
     int fill_type
 );
-void render_debug_grid(void);
+void render_debug_grid(float tile_size);

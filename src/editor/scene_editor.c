@@ -792,7 +792,17 @@ static void render_debug_inspector(void) {
             (bool*)(&DEBUG.shading.kinematic_movements)
         );
         igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
+
+        igSeparator();
         igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
+        if (igButton("Reset", IG_VEC2_ZERO)) {
+            DEBUG.shading.grid_tile_size = SCENE_TILE_SIZE;
+        }
+        ig_same_line();
+        ig_drag_float(
+            "tile size", &DEBUG.shading.grid_tile_size, 1.0, 100.0, 1.0, 0
+        );
+
         igTreePop();
         igSeparator();
     }

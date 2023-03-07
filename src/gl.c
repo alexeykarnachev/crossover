@@ -390,7 +390,7 @@ void render_scene(float dt) {
         render_debug_visions();
     }
     if (DEBUG.shading.grid) {
-        render_debug_grid();
+        render_debug_grid(DEBUG.shading.grid_tile_size);
     }
 
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
