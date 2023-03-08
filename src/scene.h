@@ -59,6 +59,7 @@ void destroy_entity(int entity);
 void entity_enters_tile(int entity, int tile);
 void entity_leaves_tile(int entity, int tile);
 void entity_leaves_all_tiles(int entity);
+int get_tile_idx_at(Vec2 position);
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
 

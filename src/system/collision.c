@@ -7,6 +7,7 @@
 #include "../profiler.h"
 #include "../scene.h"
 #include "../system.h"
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -170,7 +171,56 @@ int collide_primitives(
     return collided;
 }
 
-static void compute_collisions() {
+static void update_tiling(void) {
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, required_component)) {
+            continue;
+        }
+
+        // TODO: Update tiling only if the entity position
+        // has been changed since the last update
+        entity_leaves_all_tiles(entity);
+
+        Primitive collider = SCENE.colliders[entity];
+        Transformation transformation = SCENE.transformations[entity];
+
+        float right_x = -FLT_MAX;
+        float left_x = FLT_MAX;
+        float top_y = -FLT_MAX;
+        float bot_y = FLT_MAX;
+        if (collider.type == CIRCLE_PRIMITIVE) {
+            float x = transformation.position.x;
+            float y = transformation.position.y;
+            float r = collider.p.circle.radius;
+            right_x = x + r;
+            left_x = x - r;
+            top_y = y + r;
+            bot_y = y - r;
+        } else {
+            static Vec2 vertices[MAX_N_POLYGON_VERTICES];
+            int n_vertices = get_primitive_vertices(collider, vertices);
+            apply_transformation(vertices, n_vertices, transformation);
+
+            for (int i = 0; i < n_vertices; ++i) {
+                Vec2 vert = vertices[i];
+                right_x = max(right_x, vert.x);
+                left_x = min(left_x, vert.x);
+                top_y = max(top_y, vert.y);
+                bot_y = min(bot_y, vert.y);
+            }
+        }
+
+        printf("--------------------\n");
+        get_tile_idx_at(vec2(left_x, top_y));
+        get_tile_idx_at(vec2(left_x, bot_y));
+        get_tile_idx_at(vec2(right_x, top_y));
+        get_tile_idx_at(vec2(right_x, bot_y));
+        printf("--------------------\n");
+    }
+}
+
+static void compute_collisions(void) {
     COLLISIONS_ARENA.n = 0;
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
@@ -273,6 +323,7 @@ static void resolve_collisions(int is_playing) {
 }
 
 void update_collisions(int is_playing) {
+    update_tiling();
     compute_collisions();
     resolve_collisions(is_playing);
 }

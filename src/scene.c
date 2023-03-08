@@ -246,6 +246,35 @@ void entity_leaves_all_tiles(int entity) {
     destroy_array(entity_to_tiles);
 }
 
+int get_tile_idx_at(Vec2 position) {
+    float total_width = N_X_SCENE_TILES * SCENE_TILE_SIZE;
+    float total_height = N_Y_SCENE_TILES * SCENE_TILE_SIZE;
+    float right_x = 0.5 * total_width;
+    float top_y = 0.5 * total_height;
+    float left_x = -right_x;
+    float bot_y = -top_y;
+
+    float x = position.x;
+    float y = position.y;
+    if (x < left_x || x > right_x || y < bot_y || y > top_y) {
+        return -1;
+    }
+
+    int col = floor((x - left_x) / SCENE_TILE_SIZE);
+    int row = floor((top_y - y) / SCENE_TILE_SIZE);
+    int idx = row * N_X_SCENE_TILES + col;
+    printf(
+        "left_x: %f, right_x: %f, bot_y: %f, top_y: %f\n",
+        left_x,
+        right_x,
+        bot_y,
+        top_y
+    );
+    printf("x: %d, y: %d, idx: %d\n", col, row, idx);
+    printf("\n");
+    return idx;
+}
+
 int check_if_entity_alive(int entity) {
     return SCENE.components[entity] != 0;
 }

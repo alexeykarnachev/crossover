@@ -217,7 +217,7 @@ void new_editor_project(void) {
 
     if (file_path != NULL) {
         char* default_search_path = (char*)malloc(
-            sizeof(char) * strlen(file_path)
+            sizeof(char) * strlen(file_path) + 1
         );
         strcpy(default_search_path, file_path);
         char* last_sep_loc = strrchr(default_search_path, PATH_SEPARATOR);
