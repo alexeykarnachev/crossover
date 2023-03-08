@@ -224,18 +224,13 @@ void entity_enters_tile(int entity, int tile) {
     array_push(&SCENE.entity_to_tiles[entity], tile);
 }
 
-void entity_leaves_tile(int entity, int tile) {
-    array_remove_value(&SCENE.tile_to_entities[tile], entity, 0);
-    array_remove_value(&SCENE.entity_to_tiles[entity], entity, 0);
-}
-
 void entity_leaves_all_tiles(int entity) {
-    Array* entity_to_tiles = &SCENE.entity_to_tiles[entity];
-    for (int t = 0; t < entity_to_tiles->length; ++t) {
-        int tile = (int)array_get(entity_to_tiles, t);
-        entity_leaves_tile(entity, tile);
+    Array* tiles = &SCENE.entity_to_tiles[entity];
+    for (int t = 0; t < tiles->length; ++t) {
+        int tile = (int)array_get(tiles, t);
+        array_remove_value(&SCENE.tile_to_entities[tile], entity, 0);
     }
-    empty_array(entity_to_tiles);
+    empty_array(tiles);
 }
 
 Vec2 get_tile_location_at(Vec2 position) {

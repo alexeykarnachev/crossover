@@ -817,6 +817,12 @@ static void render_debug_inspector(void) {
         igTreePop();
         igSeparator();
     }
+
+    if (igTreeNodeEx_Str("Gameplay", 0)) {
+        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+        igTreePop();
+        igSeparator();
+    }
 }
 
 static void process_keys(void) {

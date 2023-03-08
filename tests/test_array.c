@@ -28,6 +28,9 @@ int test_array(void) {
 
     // Test array_remove_value()
     array_remove_value(&arr, 2.0, 0);
+    array_remove_value(&arr, 2.0, 0);
+    array_remove_value(&arr, 2.0, 0);
+    array_remove_value(&arr, 2.0, 0);
     assert(array_get(&arr, 0) == 1.0);
     assert(array_get(&arr, 1) == 4.0);
     assert(array_get(&arr, 2) == 3.0);

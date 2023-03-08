@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Debug DEBUG;
+Debug DEBUG = {0};
 
 void init_debug(void) {
     DEBUG.shading.materials = 1;

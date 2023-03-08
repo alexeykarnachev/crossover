@@ -37,6 +37,10 @@ typedef struct Debug {
         int resolve;
         int resolve_once;
     } collisions;
+
+    struct gameplay {
+        int all_immortal;
+    } gameplay;
 } Debug;
 
 extern Debug DEBUG;

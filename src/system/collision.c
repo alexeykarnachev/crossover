@@ -11,6 +11,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#define OPTIMIZED_COLLISIONS
 
 static CollisionsArena COLLISIONS_ARENA;
 
@@ -231,6 +234,7 @@ static void update_tiling(void) {
     }
 }
 
+#ifndef OPTIMIZED_COLLISIONS
 static void compute_collisions(void) {
     COLLISIONS_ARENA.n = 0;
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
@@ -270,6 +274,53 @@ static void compute_collisions(void) {
 
     DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
+#else
+static void compute_collisions(void) {
+    COLLISIONS_ARENA.n = 0;
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, required_component)) {
+            continue;
+        }
+
+        Primitive primitive0 = SCENE.colliders[entity];
+        Transformation transformation0 = SCENE.transformations[entity];
+        Array* tiles = &SCENE.entity_to_tiles[entity];
+        static int collided_targets[MAX_N_ENTITIES];
+        memset(collided_targets, 0, sizeof(collided_targets));
+        for (int i_tile = 0; i_tile < tiles->length; ++i_tile) {
+            int tile = array_get(tiles, i_tile);
+            Array* targets = &SCENE.tile_to_entities[tile];
+            for (int i_target = 0; i_target < targets->length;
+                 ++i_target) {
+                int target = array_get(targets, i_target);
+                if (target <= entity || collided_targets[target] == 1) {
+                    continue;
+                }
+                collided_targets[target] = 1;
+                Primitive primitive1 = SCENE.colliders[target];
+                Transformation transformation1
+                    = SCENE.transformations[target];
+                Collision* collision
+                    = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
+                collision->entity0 = entity;
+                collision->entity1 = target;
+
+                int collided = collide_primitives(
+                    primitive0,
+                    transformation0,
+                    primitive1,
+                    transformation1,
+                    collision
+                );
+                COLLISIONS_ARENA.n += collided;
+            }
+        }
+    }
+
+    DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
+}
+#endif
 
 // TODO: Collisions resolving is not perfect:
 // Moving objects can squeeze through narrowing areas.
