@@ -22,9 +22,7 @@ char* read_cstr_file(
     const char* restrict file_path, const char* mode, long* n_bytes
 );
 void read_str_from_file(char** str_p, FILE* fp, int allow_null);
-void read_array_from_file(Array* array, FILE* fp);
 void write_str_to_file(const char* str, FILE* fp, int allow_null);
-void write_array_to_file(Array* array, FILE* fp);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);
 float frand01(void);
 

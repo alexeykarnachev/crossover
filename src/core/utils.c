@@ -106,12 +106,6 @@ void write_str_to_file(const char* str, FILE* fp, int allow_null) {
     }
 }
 
-void write_array_to_file(Array* array, FILE* fp) {
-    int length = array->length;
-    fwrite(&length, sizeof(int), 1, fp);
-    fwrite(array->data, sizeof(float), length, fp);
-}
-
 void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
     uint32_t str_len;
     fread(&str_len, sizeof(uint32_t), 1, fp);
@@ -130,14 +124,6 @@ void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
         );
         exit(1);
     }
-}
-
-void read_array_from_file(Array* array, FILE* fp) {
-    destroy_array(array);
-
-    int length;
-    fread(&length, sizeof(int), 1, fp);
-    fread(array->data, sizeof(float), length, fp);
 }
 
 uint64_t get_bytes_hash(const char* bytes, int n_bytes) {

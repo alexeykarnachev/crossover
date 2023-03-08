@@ -79,8 +79,9 @@ void render_debug_grid(float cell_size) {
     frustum.bot_left = sub(frustum.bot_left, expand);
     frustum.top_right = add(frustum.top_right, expand);
 
+    float offset = N_SCENE_TILES % 2 == 0 ? 0.0 : 0.5;
     float x = frustum.bot_left.x;
-    float dx = cell_size * (0.5 + floor(abs(x) / cell_size));
+    float dx = cell_size * (offset + floor(abs(x) / cell_size));
     x = x <= 0 ? -dx : dx - frustum_width;
     while (x < frustum.top_right.x) {
         render_debug_line(
@@ -93,7 +94,7 @@ void render_debug_grid(float cell_size) {
     }
 
     float y = frustum.top_right.y;
-    float dy = cell_size * (0.5 + floor(abs(y) / cell_size));
+    float dy = cell_size * (offset + floor(abs(y) / cell_size));
     y = y <= 0 ? -dy - frustum_width : -dy;
     while (y < frustum.top_right.y) {
         render_debug_line(

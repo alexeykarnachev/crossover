@@ -7,7 +7,7 @@
 #include "system.h"
 #include <stdint.h>
 
-#define SCENE_N_TILES N_X_SCENE_TILES* N_Y_SCENE_TILES
+#define N_SCENE_TILES N_X_SCENE_TILES* N_Y_SCENE_TILES
 
 typedef struct Scene {
     float time;
@@ -15,7 +15,7 @@ typedef struct Scene {
 
     // Scene tiles
     Array entity_to_tiles[MAX_N_ENTITIES];
-    Array tile_to_entities[SCENE_N_TILES];
+    Array tile_to_entities[N_SCENE_TILES];
 
     // Components
     uint64_t components[MAX_N_ENTITIES];
@@ -51,18 +51,23 @@ typedef struct CameraFrustum {
 CameraFrustum get_camera_frustum();
 void center_camera_on_entity(int entity);
 int reset_camera(void);
-void reset_scene(void);
+
 Vec2 get_cursor_scene_pos(void);
+
+void reset_scene(void);
 void save_scene(const char* file_path, ResultMessage* res_msg);
 void load_scene(const char* file_path, ResultMessage* res_msg);
-void destroy_entity(int entity);
+void update_scene(float dt, int is_playing);
+
 void entity_enters_tile(int entity, int tile);
 void entity_leaves_tile(int entity, int tile);
 void entity_leaves_all_tiles(int entity);
-int get_tile_idx_at(Vec2 position);
+Vec2 get_tile_location_at(Vec2 position);
+
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
 
+void destroy_entity(int entity);
 int spawn_entity_copy(int entity, Transformation transformation);
 int spawn_camera(Transformation transformation);
 int spawn_guy(
@@ -99,5 +104,3 @@ int spawn_default_circle_obstacle(Transformation transformation);
 int spawn_default_rectangle_obstacle(Transformation transformation);
 int spawn_default_line_obstacle(Transformation transformation);
 int spawn_default_polygon_obstacle(Transformation transformation);
-
-void update_scene(float dt, int is_playing);

@@ -19,7 +19,11 @@ void destroy_array(Array* arr) {
     free(arr->data);
     arr->data = NULL;
     arr->length = 0;
-    arr->capacity = INITIAL_ARRAY_CAPACITY;
+    arr->capacity = 0;
+}
+
+void empty_array(Array* arr) {
+    arr->length = 0;
 }
 
 static void resize_array(Array* arr) {

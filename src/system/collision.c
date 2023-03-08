@@ -211,12 +211,23 @@ static void update_tiling(void) {
             }
         }
 
-        printf("--------------------\n");
-        get_tile_idx_at(vec2(left_x, top_y));
-        get_tile_idx_at(vec2(left_x, bot_y));
-        get_tile_idx_at(vec2(right_x, top_y));
-        get_tile_idx_at(vec2(right_x, bot_y));
-        printf("--------------------\n");
+        Vec2 start = get_tile_location_at(vec2(left_x, top_y));
+        Vec2 last = get_tile_location_at(vec2(right_x, bot_y));
+        Vec2 curr = start;
+        do {
+            int tile = curr.y * N_X_SCENE_TILES + curr.x;
+            if (curr.x != -1 && curr.y != -1 && tile >= 0
+                && tile < N_SCENE_TILES) {
+                entity_enters_tile(entity, tile);
+            }
+
+            if (curr.x == last.x) {
+                curr.x = start.x;
+                curr.y += 1;
+            } else {
+                curr.x += 1;
+            }
+        } while (curr.x <= last.x && curr.y <= last.y);
     }
 }
 

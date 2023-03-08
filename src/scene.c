@@ -33,6 +33,17 @@ void reset_scene(void) {
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     memset(SCENE.owners, -1, sizeof(int) * MAX_N_ENTITIES);
     memset(SCENE.scorers, 0, sizeof(Scorer) * MAX_N_ENTITIES);
+
+    for (int e = 0; e < MAX_N_ENTITIES; ++e) {
+        destroy_array(&SCENE.entity_to_tiles[e]);
+        SCENE.entity_to_tiles[e] = init_array();
+    }
+
+    for (int t = 0; t < N_SCENE_TILES; ++t) {
+        destroy_array(&SCENE.tile_to_entities[t]);
+        SCENE.tile_to_entities[t] = init_array();
+    }
+
     reset_camera();
 
     SCENE.n_entities = 0;
@@ -50,15 +61,6 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
 
     fwrite(&SCENE.time, sizeof(float), 1, fp);
     fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
-
-    for (int i = 0; i < SCENE.n_entities; ++i) {
-        write_array_to_file(&SCENE.entity_to_tiles[i], fp);
-    }
-
-    for (int i = 0; i < SCENE_N_TILES; ++i) {
-        write_array_to_file(&SCENE.tile_to_entities[i], fp);
-    }
-
     fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
     fwrite(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
     fwrite(
@@ -149,17 +151,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
 
     fread(&SCENE.time, sizeof(float), 1, fp);
     fread(&SCENE.n_entities, sizeof(int), 1, fp);
-
-    for (int i = 0; i < SCENE.n_entities; ++i) {
-        read_array_from_file(&SCENE.entity_to_tiles[i], fp);
-    }
-
-    for (int i = 0; i < SCENE_N_TILES; ++i) {
-        read_array_from_file(&SCENE.tile_to_entities[i], fp);
-    }
-
     fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
-
     fread(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
     fread(
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
@@ -228,13 +220,13 @@ void destroy_entity(int entity) {
 }
 
 void entity_enters_tile(int entity, int tile) {
-    Array* tile_to_entities = &SCENE.tile_to_entities[tile];
-    array_push(tile_to_entities, entity);
+    array_push(&SCENE.tile_to_entities[tile], entity);
+    array_push(&SCENE.entity_to_tiles[entity], tile);
 }
 
 void entity_leaves_tile(int entity, int tile) {
-    Array* tile_to_entities = &SCENE.tile_to_entities[tile];
-    array_remove_value(tile_to_entities, entity, 1);
+    array_remove_value(&SCENE.tile_to_entities[tile], entity, 0);
+    array_remove_value(&SCENE.entity_to_tiles[entity], entity, 0);
 }
 
 void entity_leaves_all_tiles(int entity) {
@@ -243,10 +235,10 @@ void entity_leaves_all_tiles(int entity) {
         int tile = (int)array_get(entity_to_tiles, t);
         entity_leaves_tile(entity, tile);
     }
-    destroy_array(entity_to_tiles);
+    empty_array(entity_to_tiles);
 }
 
-int get_tile_idx_at(Vec2 position) {
+Vec2 get_tile_location_at(Vec2 position) {
     float total_width = N_X_SCENE_TILES * SCENE_TILE_SIZE;
     float total_height = N_Y_SCENE_TILES * SCENE_TILE_SIZE;
     float right_x = 0.5 * total_width;
@@ -256,23 +248,11 @@ int get_tile_idx_at(Vec2 position) {
 
     float x = position.x;
     float y = position.y;
-    if (x < left_x || x > right_x || y < bot_y || y > top_y) {
-        return -1;
-    }
-
     int col = floor((x - left_x) / SCENE_TILE_SIZE);
     int row = floor((top_y - y) / SCENE_TILE_SIZE);
-    int idx = row * N_X_SCENE_TILES + col;
-    printf(
-        "left_x: %f, right_x: %f, bot_y: %f, top_y: %f\n",
-        left_x,
-        right_x,
-        bot_y,
-        top_y
-    );
-    printf("x: %d, y: %d, idx: %d\n", col, row, idx);
-    printf("\n");
-    return idx;
+    col = min(max(0, col), N_X_SCENE_TILES);
+    row = min(max(0, row), N_Y_SCENE_TILES);
+    return vec2(col, row);
 }
 
 int check_if_entity_alive(int entity) {
