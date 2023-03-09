@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OPTIMIZED_COLLISIONS
-
 static CollisionsArena COLLISIONS_ARENA;
 
 static void update_overlap(

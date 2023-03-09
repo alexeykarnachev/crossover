@@ -23,7 +23,17 @@ void destroy_array(Array* arr) {
 }
 
 void empty_array(Array* arr) {
-    arr->length = 0;
+    if (arr->data == NULL) {
+        *arr = init_array();
+    } else {
+        arr->length = 0;
+    }
+}
+
+void append_array(Array* dest, Array* src) {
+    for (int i = 0; i < src->length; ++i) {
+        array_push(dest, array_get(src, i));
+    }
 }
 
 static void resize_array(Array* arr) {
