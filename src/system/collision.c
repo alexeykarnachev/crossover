@@ -383,6 +383,9 @@ static void resolve_collisions(int is_playing) {
 }
 
 void update_collisions(int is_playing) {
+    // TODO: Another systems (e.g. vision or ray casting) may use the
+    // tiling. So, it makes sense to factor out the update_tiling() into a
+    // separate system
     update_tiling();
     compute_collisions();
     resolve_collisions(is_playing);

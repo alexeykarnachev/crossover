@@ -142,6 +142,8 @@ Brain init_local_brain(BrainParams params) {
     float* weights = (float*)malloc(weights_n_bytes);
     for (int i = 0; i < n_weights; ++i) {
         weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
+        // TODO: Implement more clever weights initialization
+        weights[i] *= 0.3;
     }
 
     Brain brain = {.params = params, .weights = weights};

@@ -1,9 +1,10 @@
 #pragma once
 
 typedef struct Health {
-    float value;
+    float initial_value;
+    float current_value;
     int damage_dealler;
 } Health;
 
-Health init_health(float health);
+Health init_health(float initial_value);
 Health init_default_health(void);

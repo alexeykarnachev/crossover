@@ -269,7 +269,12 @@ void softmax(float* x, int n) {
 
 // TODO: Introduce temperature for sampling
 int sample_binary(float weight) {
-    return frand01() < sigmoid(weight) ? 1 : 0;
+    float score = sigmoid(weight);
+    float rand = frand01();
+    int res = rand < score ? 1 : 0;
+    // printf("logits: %f, score: %f, rand: %f, res: %d\n", weight, score,
+    // rand, res);
+    return res;
 }
 
 // TODO: Introduce temperature for sampling

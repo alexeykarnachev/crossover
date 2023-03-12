@@ -40,12 +40,12 @@ static void reset_genetic_training(void) {
 
     training->simulation.dt_ms = 17.0;
 
-    training->population.episode_time = 60.0;
-    training->population.n_episodes = 50;
+    training->population.episode_time = 30.0;
+    training->population.n_episodes = 500;
 
     training->evolution.elite_ratio = 0.3;
     training->evolution.mutation_rate = 0.3;
-    training->evolution.mutation_strength = 0.3;
+    training->evolution.mutation_strength = 0.03;
 }
 
 static int GENETIC_TRAINING_INITIALIZED = 0;
@@ -154,7 +154,7 @@ static void update_evolution_history(void) {
             fprintf(
                 stderr,
                 "ERROR: Number of scores (%d) is less than the number of "
-                "prefiously passed generations (%d). This is a bug\n",
+                "previously passed generations (%d). This is a bug\n",
                 n_scores,
                 gen
             );
@@ -444,16 +444,20 @@ static void render_entities_to_train(void) {
 }
 
 static void render_genetic_training_parameters(void) {
-    igText("Simulation:");
-    ig_drag_float(
-        "Timestep (ms)",
-        &GENETIC_TRAINING->simulation.dt_ms,
-        1.0,
-        100.0,
-        1.0,
-        0
-    );
-    igSeparator();
+    int is_started = GENETIC_TRAINING->progress.status
+                     == SIMULATION_NOT_STARTED;
+    if (is_started) {
+        igText("Simulation:");
+        ig_drag_float(
+            "Timestep (ms)",
+            &GENETIC_TRAINING->simulation.dt_ms,
+            1.0,
+            100.0,
+            1.0,
+            0
+        );
+        igSeparator();
+    }
 
     igText("Population:");
     ig_drag_float(
@@ -464,14 +468,17 @@ static void render_genetic_training_parameters(void) {
         1.0,
         0
     );
-    ig_drag_int(
-        "Episodes",
-        &GENETIC_TRAINING->population.n_episodes,
-        10,
-        MAX_N_EPISODES,
-        1,
-        0
-    );
+
+    if (is_started) {
+        ig_drag_int(
+            "Episodes",
+            &GENETIC_TRAINING->population.n_episodes,
+            10,
+            MAX_N_EPISODES,
+            1,
+            0
+        );
+    }
 
     igText("Evolution:");
     ig_drag_float(

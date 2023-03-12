@@ -1,7 +1,10 @@
 #include "health.h"
 
-Health init_health(float value) {
-    Health health = {.value = value, .damage_dealler = -1};
+Health init_health(float initial_value) {
+    Health health = {
+        .initial_value = initial_value,
+        .current_value = initial_value,
+        .damage_dealler = -1};
     return health;
 }
 

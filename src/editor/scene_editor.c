@@ -628,7 +628,10 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case HEALTH_COMPONENT: {
             Health* health = &SCENE.healths[entity];
-            ig_drag_float("health", &health->value, 0.0, FLT_MAX, 1.0, 0);
+            igText("initial: %.2f", health->initial_value);
+            ig_drag_float(
+                "current", &health->current_value, 0.0, FLT_MAX, 1.0, 0
+            );
             break;
         }
         case GUN_COMPONENT: {
