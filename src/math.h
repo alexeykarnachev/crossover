@@ -52,6 +52,8 @@ Vec2 point_to_axis(Vec2 p, Vec2 axis);
 float dist(Vec2 v0, Vec2 v1);
 float dot(Vec2 v0, Vec2 v1);
 float length(Vec2 v);
+int eq(Vec2 v0, Vec2 v1);
+int neq(Vec2 v0, Vec2 v1);
 
 void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2* out);
 void project_circle_on_axis(

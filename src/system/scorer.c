@@ -47,8 +47,8 @@ void update_get_rb_collided_score(int entity) {
 void update_kinematic_exploration_score(int entity, float dt) {
     Scorer* scorer = &SCENE.scorers[entity];
     Vec2 start_position = scorer->kinematic_exploration.start_position;
-    Vec2 current_position = SCENE.transformations[entity].position;
-    Vec2 diff = sub(current_position, start_position);
+    Vec2 curr_position = SCENE.transformations[entity].curr_position;
+    Vec2 diff = sub(curr_position, start_position);
     float cell_size = scorer->kinematic_exploration.cell_size;
 
     // TODO: Maybe reduce duplication somehow? Or maybe not...

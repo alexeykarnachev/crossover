@@ -27,6 +27,7 @@ static void render_brain_menu_bar(void) {
     if (igBeginMenu("Brain", 1)) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open", "", false, 1)) {
+                EDITOR.is_playing = 0;
                 char* fp = open_nfd(
                     EDITOR.project.default_search_path, BRAIN_FILTER, 1
                 );

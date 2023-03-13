@@ -1,5 +1,6 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../array.h"
+#include "../debug.h"
 #include "../editor.h"
 #include "../scene.h"
 #include "../utils.h"
@@ -40,8 +41,8 @@ static void reset_genetic_training(void) {
 
     training->simulation.dt_ms = 17.0;
 
-    training->population.episode_time = 30.0;
-    training->population.n_episodes = 500;
+    training->population.episode_time = 120.0;
+    training->population.n_episodes = 300;
 
     training->evolution.elite_ratio = 0.3;
     training->evolution.mutation_rate = 0.3;
@@ -679,6 +680,8 @@ void render_genetic_training_editor(void) {
 
     // TODO: Add possibility to selecte a specific scene to perform
     // genetic training on (like in profiler)
+
+    igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
 
     render_entities_without_scorer();
     igSeparator();

@@ -200,6 +200,14 @@ float length(Vec2 v) {
     return sqrt(v.x * v.x + v.y * v.y);
 }
 
+int eq(Vec2 v0, Vec2 v1) {
+    return v0.x == v1.x && v0.y == v1.y;
+}
+
+int neq(Vec2 v0, Vec2 v1) {
+    return eq(v0, v1) == 0;
+}
+
 void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2* out) {
     float t;
     if (fabs(a.x - b.x) < EPS) {
@@ -262,7 +270,8 @@ Vec2 get_circle_proj_bound(Vec2 position, float radius, Vec2 axis) {
 }
 
 Vec2 get_polygon_proj_bound(Vec2 vertices[], int n, Vec2 axis) {
-    axis = normalize(axis);
+    // NOTE: Input `axis` needs to be normalized!
+
     float min_k = HUGE_VAL;
     float max_k = -HUGE_VAL;
     for (int i = 0; i < n; ++i) {

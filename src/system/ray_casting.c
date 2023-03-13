@@ -66,7 +66,7 @@ RayCastResult cast_ray(
                 is_collided = intersect_line_with_circle_nearest(
                     start,
                     add(start, ray),
-                    entity_transformation.position,
+                    entity_transformation.curr_position,
                     entity_collider.p.circle.radius,
                     &collision_position
                 );

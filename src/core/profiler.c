@@ -59,7 +59,7 @@ void profiler_push(Profiler* profiler, char* name) {
     }
 
     ProfilerStage stage = {0};
-    stage.time = get_current_time();
+    stage.time = get_curr_time();
 
     // TODO: Add check for not exceeding the MAX_PROFILER_STAGE_NAME_LENGTH
     int curr_name_length = 0;
@@ -90,16 +90,16 @@ void profiler_pop(Profiler* profiler) {
     }
 
     int depth = --profiler->progress.depth;
-    ProfilerStage current_stage = profiler->progress.stages_stack[depth];
-    double current_time = get_current_time();
+    ProfilerStage curr_stage = profiler->progress.stages_stack[depth];
+    double curr_time = get_curr_time();
 
     HashMap* stages_map = &profiler->progress.stages_map;
     ProfilerStage* stage = (ProfilerStage*)hashmap_try_get(
-        stages_map, current_stage.name
+        stages_map, curr_stage.name
     );
     if (stage == NULL) {
         stage = (ProfilerStage*)malloc(sizeof(ProfilerStage));
-        memcpy(stage, &current_stage, sizeof(ProfilerStage));
+        memcpy(stage, &curr_stage, sizeof(ProfilerStage));
         stage->time = 0;
         hashmap_put(stages_map, stage->name, (void*)stage);
         // TODO: Check that profiler->n_stages doesn't exceed
@@ -109,6 +109,6 @@ void profiler_pop(Profiler* profiler) {
             stage->name
         );
     }
-    stage->time += current_time - current_stage.time;
+    stage->time += curr_time - curr_stage.time;
     stage->n_calls += 1;
 }

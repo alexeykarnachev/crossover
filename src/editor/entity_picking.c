@@ -184,7 +184,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
         case -1: {
             handles[0] = init_handle(
                 color,
-                transformation.position,
+                transformation.curr_position,
                 radius,
                 TRANSFORMATION_POSITION_HANDLE,
                 0
@@ -226,7 +226,7 @@ static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
             break;
         }
         case RECTANGLE_PRIMITIVE: {
-            Vec2 position = transformation.position;
+            Vec2 position = transformation.curr_position;
             float width = primitive.p.rectangle.width;
             float height = primitive.p.rectangle.height;
             Vec2 handle_positions[3] = {
@@ -375,7 +375,7 @@ void update_entity_dragging(void) {
     }
 
     Transformation* transformation = &SCENE.transformations[entity];
-    Vec2 center = transformation->position;
+    Vec2 center = transformation->curr_position;
     Vec2 cursor_scene_pos = get_cursor_scene_pos();
     Vec2 center_to_cursor = sub(cursor_scene_pos, center);
     Handle handles[MAX_N_POLYGON_VERTICES];
@@ -388,16 +388,18 @@ void update_entity_dragging(void) {
         if (handle.is_dragging) {
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
-                    transformation->position = add(
-                        transformation->position, cursor_scene_diff
+                    update_position(
+                        transformation,
+                        add(transformation->curr_position,
+                            cursor_scene_diff)
                     );
                     break;
                 }
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
-                    float orientation = atan2(
-                        center_to_cursor.y, center_to_cursor.x
+                    update_orientation(
+                        transformation,
+                        atan2(center_to_cursor.y, center_to_cursor.x)
                     );
-                    transformation->orientation = orientation;
                     break;
                 }
                 case CIRCLE_RADIUS_HANDLE: {
@@ -418,7 +420,7 @@ void update_entity_dragging(void) {
                     Vec2 size = rotate(
                         center_to_handle,
                         vec2(0.0, 0.0),
-                        -transformation->orientation
+                        -transformation->curr_orientation
                     );
                     size = scale(size, 2.0);
                     primitive->p.rectangle.width = max(0.0, size.x);

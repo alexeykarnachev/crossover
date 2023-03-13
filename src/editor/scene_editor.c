@@ -446,11 +446,18 @@ static void render_component_inspector(int entity, ComponentType type) {
         case TRANSFORMATION_COMPONENT: {
             Transformation* transformation
                 = &SCENE.transformations[entity];
-            float* pos = (float*)&transformation->position;
-            float* orient = &transformation->orientation;
+            Vec2 pos = transformation->curr_position;
+            float orient = transformation->curr_orientation;
+
             render_edit_button(TRANSFORMATION_COMPONENT);
-            ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
-            ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
+            ig_drag_float2(
+                "pos.", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0
+            );
+            ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
+
+            update_position(transformation, pos);
+            update_orientation(transformation, orient);
+
             break;
         }
         case RIGID_BODY_COMPONENT: {
@@ -630,7 +637,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             Health* health = &SCENE.healths[entity];
             igText("initial: %.2f", health->initial_value);
             ig_drag_float(
-                "current", &health->current_value, 0.0, FLT_MAX, 1.0, 0
+                "current", &health->curr_value, 0.0, FLT_MAX, 1.0, 0
             );
             break;
         }
@@ -668,10 +675,14 @@ static void render_camera_inspector(void) {
     }
 
     Transformation* transformation = &SCENE.transformations[SCENE.camera];
-    float* pos = (float*)&transformation->position;
-    float* orient = (float*)&transformation->orientation;
-    ig_drag_float2("pos.", pos, -FLT_MAX, FLT_MAX, 0.05, 0);
-    ig_drag_float("orient.", orient, -PI, PI, 0.05, 0);
+    Vec2 pos = transformation->curr_position;
+    float orient = transformation->curr_orientation;
+
+    ig_drag_float2("pos.", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+    ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
+    update_position(transformation, pos);
+    update_orientation(transformation, orient);
+
     ig_drag_float(
         "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
     );
@@ -759,6 +770,7 @@ static void render_assets_browser(void) {
 
     if (igTreeNodeEx_Str("Brains", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (igButton("Open", IG_VEC2_ZERO)) {
+            EDITOR.is_playing = 0;
             char* file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
@@ -823,6 +835,15 @@ static void render_debug_inspector(void) {
 
     if (igTreeNodeEx_Str("Gameplay", 0)) {
         igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+
+        int max_game_speed = 10;
+        ig_drag_int(
+            "speed", &DEBUG.gameplay.speed, 1, max_game_speed, 1, 0
+        );
+        DEBUG.gameplay.speed = clamp(
+            DEBUG.gameplay.speed, 1, max_game_speed
+        );
+
         igTreePop();
         igSeparator();
     }

@@ -216,7 +216,7 @@ int get_primitive_fan_vertices(
 Rectangle get_primitive_bounding_rectangle(
     Primitive primitive, Transformation transformation
 ) {
-    Vec2 position = transformation.position;
+    Vec2 position = transformation.curr_position;
 
     float width = 0;
     float height = 0;

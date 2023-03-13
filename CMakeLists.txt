@@ -110,7 +110,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Create an option for enabling ASAN with debug build
+# Option for enabling ASAN with debug build
 option(ASAN_DEBUG "Enable ASAN with debug build" OFF)
 
 if(ASAN_DEBUG)

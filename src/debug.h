@@ -40,6 +40,7 @@ typedef struct Debug {
 
     struct gameplay {
         int all_immortal;
+        int speed;
     } gameplay;
 } Debug;
 

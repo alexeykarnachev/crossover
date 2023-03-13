@@ -232,9 +232,9 @@ static void set_uniform_camera(GLuint program, Transformation camera) {
     CameraFrustum frustum = get_camera_frustum();
     Vec2 view_size = sub(frustum.top_right, frustum.bot_left);
     set_uniform_2fv(
-        program, "camera.position", (float*)&camera.position, 1
+        program, "camera.position", (float*)&camera.curr_position, 1
     );
-    set_uniform_1f(program, "camera.orientation", camera.orientation);
+    set_uniform_1f(program, "camera.orientation", camera.curr_orientation);
     set_uniform_1f(program, "camera.view_width", view_size.x);
     set_uniform_1f(program, "camera.view_height", view_size.y);
 }
@@ -243,7 +243,10 @@ static void set_uniform_circle(
     GLuint program, Transformation transformation, Circle circle
 ) {
     set_uniform_2fv(
-        program, "circle.position", (float*)&transformation.position, 1
+        program,
+        "circle.position",
+        (float*)&transformation.curr_position,
+        1
     );
     set_uniform_1f(program, "circle.radius", circle.radius);
     set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);

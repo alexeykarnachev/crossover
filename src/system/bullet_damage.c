@@ -29,7 +29,7 @@ void update_bullets(float dt) {
                                         | COLLIDER_COMPONENT
                                         | RIGID_BODY_COMPONENT;
         RayCastResult result = cast_ray(
-            transformation.position,
+            transformation.curr_position,
             ray,
             target_required_component,
             bullet_owner
@@ -39,7 +39,7 @@ void update_bullets(float dt) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
                 float damage = length(movement.linear_velocity);
                 Health* health = &SCENE.healths[entity];
-                health->current_value -= damage;
+                health->curr_value -= damage;
                 health->damage_dealler = bullet_owner;
 
                 if (check_if_entity_has_component(
@@ -73,8 +73,8 @@ void render_bullets(float dt) {
         KinematicMovement movement = SCENE.kinematic_movements[bullet];
         Vec2 ray = scale(movement.linear_velocity, dt);
         render_debug_line(
-            transformation.position,
-            add(transformation.position, ray),
+            transformation.curr_position,
+            add(transformation.curr_position, ray),
             YELLOW_COLOR,
             DEBUG_RENDER_LAYER
         );

@@ -2,7 +2,7 @@
 
 typedef struct Health {
     float initial_value;
-    float current_value;
+    float curr_value;
     int damage_dealler;
 } Health;
 

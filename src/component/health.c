@@ -3,7 +3,7 @@
 Health init_health(float initial_value) {
     Health health = {
         .initial_value = initial_value,
-        .current_value = initial_value,
+        .curr_value = initial_value,
         .damage_dealler = -1};
     return health;
 }

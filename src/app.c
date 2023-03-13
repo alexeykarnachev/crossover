@@ -114,9 +114,9 @@ void init_app(int window_width, int window_height) {
 }
 
 void update_window() {
-    double current_time = glfwGetTime();
-    APP.dt = current_time - APP.time;
-    APP.time = current_time;
+    double curr_time = glfwGetTime();
+    APP.dt = curr_time - APP.time;
+    APP.time = curr_time;
 
     memcpy(
         APP.key_states,

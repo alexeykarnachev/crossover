@@ -36,11 +36,11 @@ void update_visions() {
 
         Vision* vision = &SCENE.visions[entity];
         Transformation t0 = SCENE.transformations[entity];
-        Vec2 start = t0.position;
+        Vec2 start = t0.curr_position;
         reset_vision(vision);
 
         int n_view_rays = get_view_rays(
-            *vision, t0.orientation, VIEW_RAYS_ARENA
+            *vision, t0.curr_orientation, VIEW_RAYS_ARENA
         );
 
         for (int i = 0; i < n_view_rays; ++i) {
@@ -62,14 +62,14 @@ void render_debug_visions() {
         Vision vision = SCENE.visions[entity];
         Transformation t0 = SCENE.transformations[entity];
         int n_view_rays = get_view_rays(
-            vision, t0.orientation, VIEW_RAYS_ARENA
+            vision, t0.curr_orientation, VIEW_RAYS_ARENA
         );
 
         for (int i = 0; i < n_view_rays; ++i) {
             RayCastResult observation = vision.observations[i];
             if (observation.entity != -1) {
                 render_debug_line(
-                    t0.position,
+                    t0.curr_position,
                     observation.position,
                     GREEN_COLOR,
                     DEBUG_RENDER_LAYER
@@ -83,8 +83,8 @@ void render_debug_visions() {
                 );
             } else {
                 render_debug_line(
-                    t0.position,
-                    add(t0.position, VIEW_RAYS_ARENA[i]),
+                    t0.curr_position,
+                    add(t0.curr_position, VIEW_RAYS_ARENA[i]),
                     GREEN_COLOR,
                     DEBUG_RENDER_LAYER
                 );

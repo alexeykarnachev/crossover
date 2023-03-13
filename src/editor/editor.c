@@ -244,6 +244,7 @@ void new_editor_scene(void) {
 }
 
 void open_editor_project(void) {
+    EDITOR.is_playing = 0;
     nfdchar_t* file_path = open_nfd(
         EDITOR.project.default_search_path, PROJECT_FILTER, 1
     );
@@ -257,6 +258,7 @@ void open_editor_project(void) {
 void open_editor_scene(void) {
     ASSERT_PROJECT("open_editor_scene");
 
+    EDITOR.is_playing = 0;
     char* scene_file_path = open_nfd(
         EDITOR.project.default_search_path, SCENE_FILTER, 1
     );

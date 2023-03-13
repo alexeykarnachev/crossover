@@ -138,16 +138,18 @@ int collide_primitives(
     int collided;
     if (primitive0.type == CIRCLE_PRIMITIVE
         && primitive1.type == CIRCLE_PRIMITIVE) {
+
+        PROFILE_START(collide_primitives);
         collided = collide_circles(
-            transformation0.position,
+            transformation0.curr_position,
             primitive0.p.circle.radius,
-            transformation1.position,
+            transformation1.curr_position,
             primitive1.p.circle.radius,
             &collision->mtv
         );
     } else if (primitive0.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
-            transformation0.position,
+            transformation0.curr_position,
             primitive0.p.circle.radius,
             vertices1,
             nv1,
@@ -156,7 +158,7 @@ int collide_primitives(
         collision->mtv = flip(collision->mtv);
     } else if (primitive1.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
-            transformation1.position,
+            transformation1.curr_position,
             primitive1.p.circle.radius,
             vertices0,
             nv0,
@@ -178,21 +180,26 @@ static void update_tiling(void) {
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
-
-        // TODO: Update tiling only if the entity position
-        // has been changed since the last update
-        entity_leaves_all_tiles(entity);
-
-        Primitive collider = SCENE.colliders[entity];
         Transformation transformation = SCENE.transformations[entity];
+        int n_tiles = SCENE.entity_to_tiles[entity].length;
+
+        // NOTE: Don't update tiling if the entity didn't change the
+        // position
+        if (n_tiles != 0
+            && check_if_transformation_changed(transformation) == 0) {
+            continue;
+        }
+
+        entity_leaves_all_tiles(entity);
+        Primitive collider = SCENE.colliders[entity];
 
         float right_x = -FLT_MAX;
         float left_x = FLT_MAX;
         float top_y = -FLT_MAX;
         float bot_y = FLT_MAX;
         if (collider.type == CIRCLE_PRIMITIVE) {
-            float x = transformation.position.x;
-            float y = transformation.position.y;
+            float x = transformation.curr_position.x;
+            float y = transformation.curr_position.y;
             float r = collider.p.circle.radius;
             right_x = x + r;
             left_x = x - r;
@@ -281,6 +288,9 @@ static void compute_collisions(void) {
             continue;
         }
 
+        RigidBody rb0 = SCENE.rigid_bodies[entity];
+        int entity_has_kinematic_body = rb0.type == KINEMATIC_BODY;
+
         Primitive primitive0 = SCENE.colliders[entity];
         Transformation transformation0 = SCENE.transformations[entity];
         Array* tiles = &SCENE.entity_to_tiles[entity];
@@ -292,9 +302,22 @@ static void compute_collisions(void) {
             for (int i_target = 0; i_target < targets->length;
                  ++i_target) {
                 int target = array_get(targets, i_target);
+                RigidBody rb1 = SCENE.rigid_bodies[target];
+                int target_has_kinematic_body = rb1.type == KINEMATIC_BODY;
+
+                // NOTE: For now I assume that if the target and the
+                // entity don't have the kinematic rigid body,
+                // I don't event calculate the collisions between them,
+                // because for now it useless and only waste the cpu time.
+                // These type of collisions couldn't be resolved anyway.
+                if (entity_has_kinematic_body != 1
+                    && target_has_kinematic_body != 1) {
+                    continue;
+                }
                 if (target <= entity || collided_targets[target] == 1) {
                     continue;
                 }
+
                 collided_targets[target] = 1;
                 Primitive primitive1 = SCENE.colliders[target];
                 Transformation transformation1
@@ -349,20 +372,35 @@ static void resolve_collisions(int is_playing) {
 
                 if (rb0.type == KINEMATIC_BODY
                     && rb1.type == KINEMATIC_BODY) {
-                    transformation0->position = add(
-                        transformation0->position, scale(mtv, 0.5)
+                    update_position(
+                        transformation0,
+                        add(transformation0->curr_position,
+                            scale(mtv, 0.5))
                     );
-                    transformation1->position = add(
-                        transformation1->position, scale(mtv, -0.5)
+                    update_position(
+                        transformation1,
+                        add(transformation1->curr_position,
+                            scale(mtv, -0.5))
                     );
                 } else if (rb0.type == KINEMATIC_BODY) {
-                    transformation0->position = add(
-                        transformation0->position, mtv
+                    update_position(
+                        transformation0,
+                        add(transformation0->curr_position, mtv)
                     );
                 } else if (rb1.type == KINEMATIC_BODY) {
-                    transformation1->position = add(
-                        transformation1->position, flip(mtv)
+                    update_position(
+                        transformation1,
+                        add(transformation1->curr_position, flip(mtv))
                     );
+                } else {
+                    fprintf(
+                        stderr,
+                        "ERROR: Trying to resolve collision between 2 "
+                        "entities without KINEMATIC_BODY component. In "
+                        "the current workflow this shouldn't happen. This "
+                        "is a bug\n"
+                    );
+                    exit(1);
                 }
 
                 if (is_playing) {
@@ -386,9 +424,9 @@ void update_collisions(int is_playing) {
     // TODO: Another systems (e.g. vision or ray casting) may use the
     // tiling. So, it makes sense to factor out the update_tiling() into a
     // separate system
-    update_tiling();
-    compute_collisions();
-    resolve_collisions(is_playing);
+    PROFILE(update_tiling);
+    PROFILE(compute_collisions);
+    PROFILE(resolve_collisions, is_playing);
 }
 
 void render_collision_mtvs() {
@@ -400,14 +438,14 @@ void render_collision_mtvs() {
             = SCENE.transformations[collision.entity1];
 
         render_debug_line(
-            transformation0.position,
-            add(transformation0.position, collision.mtv),
+            transformation0.curr_position,
+            add(transformation0.curr_position, collision.mtv),
             MAGENTA_COLOR,
             DEBUG_RENDER_LAYER
         );
         render_debug_line(
-            transformation1.position,
-            sub(transformation1.position, collision.mtv),
+            transformation1.curr_position,
+            sub(transformation1.curr_position, collision.mtv),
             CYAN_COLOR,
             DEBUG_RENDER_LAYER
         );

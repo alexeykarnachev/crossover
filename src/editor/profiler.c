@@ -1,5 +1,6 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include "../app.h"
+#include "../debug.h"
 #include "../editor.h"
 #include "../nfd_utils.h"
 #include "../scene.h"
@@ -97,6 +98,7 @@ static void render_profiler_menu_bar(void) {
 
 static void render_scene_selection(void) {
     if (igButton("Open Scene", IG_VEC2_ZERO)) {
+        EDITOR.is_playing = 0;
         char* fp = open_nfd(
             EDITOR.project.default_search_path, SCENE_FILTER, 1
         );
@@ -250,14 +252,14 @@ static void render_stages_summary(void) {
             igColorConvertHSVtoRGB(
                 hue, 1.0, 1.0, &color.x, &color.y, &color.z
             );
-            igTextColored(color, " %.01f %% ", 100.0 * percentage);
+            igTextColored(color, " %.2f %% ", 100.0 * percentage);
         }
 
         if (show_abs_time) {
             ig_same_line();
             igSeparatorEx(ImGuiSeparatorFlags_Vertical);
             ig_same_line();
-            igTextColored(IG_GRAY_COLOR, " %.01f s ", stage.time);
+            igTextColored(IG_GRAY_COLOR, " %.4f s ", stage.time);
         }
 
         if (show_call_time) {
@@ -266,7 +268,7 @@ static void render_stages_summary(void) {
             ig_same_line();
             igTextColored(
                 IG_GRAY_COLOR,
-                " %.2f ms/call ",
+                " %.4f ms/call ",
                 1000.0 * stage.time / stage.n_calls
             );
         }
@@ -285,6 +287,8 @@ static void render_stages_summary(void) {
 void render_profiler_editor(void) {
     render_profiler_menu_bar();
     igSeparator();
+
+    igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
 
     render_scene_selection();
     igSeparator();

@@ -231,7 +231,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_rb_collided);
 
     int entity = EDITOR.picked_entity.entity;
-    Vec2 position = SCENE.transformations[entity].position;
+    Vec2 position = SCENE.transformations[entity].curr_position;
 
     if (scorer->kinematic_exploration.cell_size < EPS) {
         scorer->kinematic_exploration.cell_size = 1.0;

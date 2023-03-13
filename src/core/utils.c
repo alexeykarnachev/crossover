@@ -325,7 +325,7 @@ void swap(void** p0, void** p1) {
     *p1 = tmp;
 }
 
-double get_current_time(void) {
+double get_curr_time(void) {
     double seconds;
 #ifdef _WIN32
     FILETIME ft;

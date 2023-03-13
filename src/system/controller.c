@@ -33,7 +33,7 @@ static void try_shoot(int entity) {
             0.008, 0.0, 1000.0, 0.0, 0.0
         );
         movement.linear_velocity = scale(
-            get_orientation_vec(transformation.orientation),
+            get_orientation_vec(transformation.curr_orientation),
             gun->bullet.speed
         );
         spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
@@ -76,7 +76,7 @@ static ControllerAction get_player_keyboard_action(int entity) {
 
     Vec2 look_at = get_cursor_scene_pos();
     action.watch_orientation = get_vec_orientation(
-        sub(look_at, transformation->position)
+        sub(look_at, transformation->curr_position)
     );
 
     Vec2 move_dir = {0.0, 0.0};
@@ -87,7 +87,9 @@ static ControllerAction get_player_keyboard_action(int entity) {
 
     if (length(move_dir) > EPS) {
         Transformation camera = SCENE.transformations[SCENE.camera];
-        move_dir = rotate(move_dir, vec2(0.0, 0.0), camera.orientation);
+        move_dir = rotate(
+            move_dir, vec2(0.0, 0.0), camera.curr_orientation
+        );
         action.move_orientation = get_vec_orientation(move_dir);
         action.is_moving = 1;
     }
@@ -111,7 +113,7 @@ static ControllerAction get_dummy_ai_action(int entity) {
     ControllerAction action = {0};
     DummyAIController ai = SCENE.controllers[entity].c.dummy_ai;
     Vision vision = SCENE.visions[entity];
-    Vec2 position = SCENE.transformations[entity].position;
+    Vec2 position = SCENE.transformations[entity].curr_position;
     action.is_moving = 0;
 
     Vec2 nearest_target_position;
@@ -162,10 +164,10 @@ static ControllerAction get_brain_ai_action(int entity) {
         return action;
     }
 
-    float orientation = SCENE.transformations[entity].orientation;
+    float orientation = SCENE.transformations[entity].curr_orientation;
     // Construct Brain input array
     Vision* vision = &SCENE.visions[entity];
-    Vec2 position = SCENE.transformations[entity].position;
+    Vec2 position = SCENE.transformations[entity].curr_position;
     Health health = SCENE.healths[entity];
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput brain_input = params.inputs[i];
@@ -202,7 +204,7 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case SELF_HEALTH_INPUT: {
-                *inp++ = (health.current_value / health.initial_value);
+                *inp++ = (health.curr_value / health.initial_value);
                 break;
             }
         }
@@ -232,6 +234,7 @@ static ControllerAction get_brain_ai_action(int entity) {
             float y = i_layer == params.n_layers ? z : max(0.0, z);
             BRAIN_OUTPUT[i] = y;
         }
+
         inp_size = layer_size;
         int n_bytes = MAX_BRAIN_LAYER_SIZE * sizeof(float);
         // TODO: A lot of memory hassle. Optimize with alterating

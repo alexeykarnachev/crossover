@@ -6,6 +6,11 @@
 #include "nfd.h"
 #include "profiler.h"
 
+#define PROFILE(func, ...) \
+    profiler_push(PROFILER, #func); \
+    func(__VA_ARGS__); \
+    profiler_pop(PROFILER);
+
 typedef struct Project {
     char* project_file_path;
     char* scene_file_path;

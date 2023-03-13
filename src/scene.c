@@ -25,7 +25,9 @@ Vec2 get_cursor_scene_pos(void) {
     float y = frustum.bot_left.y + size.y * screen_pos.y;
 
     Transformation camera = SCENE.transformations[SCENE.camera];
-    Vec2 position = rotate(vec2(x, y), vec2(0.0, 0.0), camera.orientation);
+    Vec2 position = rotate(
+        vec2(x, y), vec2(0.0, 0.0), camera.curr_orientation
+    );
     return position;
 }
 
@@ -537,23 +539,23 @@ CameraFrustum get_camera_frustum() {
         float aspect_ratio = (float)APP.window_width / APP.window_height;
         float height = SCENE.camera_view_width / aspect_ratio;
         Vec2 half_size = scale(vec2(SCENE.camera_view_width, height), 0.5);
-        frustum.bot_left = sub(transformation.position, half_size);
-        frustum.top_right = add(transformation.position, half_size);
+        frustum.bot_left = sub(transformation.curr_position, half_size);
+        frustum.top_right = add(transformation.curr_position, half_size);
     }
 
     return frustum;
 }
 
 void center_camera_on_entity(int entity) {
-    Vec2 entity_position = SCENE.transformations[entity].position;
-    SCENE.transformations[SCENE.camera].position = entity_position;
+    Vec2 entity_position = SCENE.transformations[entity].curr_position;
+    update_position(&SCENE.transformations[SCENE.camera], entity_position);
 }
 
 int reset_camera(void) {
     SCENE.camera = spawn_entity("Camera");
     Transformation* transformation = &SCENE.transformations[SCENE.camera];
-    transformation->position = vec2(0.0, 0.0);
-    transformation->orientation = 0.0;
+    update_position(transformation, vec2(0.0, 0.0));
+    update_orientation(transformation, 0.0);
 
     SCENE.components[SCENE.camera] = TRANSFORMATION_COMPONENT;
     SCENE.camera_view_width = CAMERA_VIEW_WIDTH;

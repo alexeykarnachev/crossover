@@ -3,6 +3,15 @@
 #include "const.h"
 #include "hashmap.h"
 
+#define PROFILE_FUNC(func, ...) \
+    profiler_push(PROFILER, #func); \
+    func(__VA_ARGS__); \
+    profiler_pop(PROFILER);
+
+#define PROFILE_START(name) profiler_push(PROFILER, #name);
+
+#define PROFILE_STOP() profiler_pop(PROFILER);
+
 typedef enum SimulationStatus {
     SIMULATION_NOT_STARTED = 0,
     SIMULATION_RUNNING,

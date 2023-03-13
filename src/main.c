@@ -27,11 +27,13 @@ int main(int argc, char* argv[]) {
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {
         update_debug();
         update_editor();
-        update_scene(APP.dt, EDITOR.is_playing);
+
+        for (int i = 0; i < DEBUG.gameplay.speed; ++i) {
+            update_scene(APP.dt, EDITOR.is_playing);
+        }
 
         render_scene(APP.dt);
         render_editor();
-
         update_window();
     }
 

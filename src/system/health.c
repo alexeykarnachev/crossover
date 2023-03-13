@@ -10,9 +10,9 @@ void update_healths() {
 
         Health* health = &SCENE.healths[entity];
 
-        if (health->current_value <= 0) {
+        if (health->curr_value <= 0) {
             if (DEBUG.gameplay.all_immortal == 1) {
-                health->current_value = health->initial_value;
+                health->curr_value = health->initial_value;
             } else {
                 int damage_dealler = health->damage_dealler;
                 if (damage_dealler != -1

@@ -20,10 +20,10 @@ void update_camera() {
     if (APP.mouse_button_states[GLFW_MOUSE_BUTTON_MIDDLE]) {
         Vec2 cursor_scene_pos = get_cursor_scene_pos();
         Vec2 diff = sub(cursor_scene_pos, PREV_CURSOR_SCENE_POS);
-        diff = rotate(diff, vec2(0.0, 0.0), -camera->orientation);
-        camera->position = sub(camera->position, diff);
+        diff = rotate(diff, vec2(0.0, 0.0), -camera->curr_orientation);
+        update_position(camera, sub(camera->curr_position, diff));
     }
 
-    DEBUG.general.camera_position = camera->position;
+    DEBUG.general.camera_position = camera->curr_position;
     PREV_CURSOR_SCENE_POS = get_cursor_scene_pos();
 }
