@@ -77,14 +77,16 @@ void render_debug_grid(float cell_size) {
     cell_size = max(cell_size, 1.0);
     CameraFrustum frustum = get_camera_frustum();
     float frustum_width = frustum.top_right.x - frustum.bot_left.x;
+    float frustum_height = frustum.top_right.y - frustum.bot_left.y;
     Vec2 expand = sub(frustum.top_right, frustum.bot_left);
     frustum.bot_left = sub(frustum.bot_left, expand);
     frustum.top_right = add(frustum.top_right, expand);
 
     float offset = N_SCENE_TILES % 2 == 0 ? 0.0 : 0.5;
+
     float x = frustum.bot_left.x;
-    float dx = cell_size * (offset + floor(abs(x) / cell_size));
-    x = x <= 0 ? -dx : dx - frustum_width;
+    float x_start = cell_size * (offset + floor(abs(x) / cell_size));
+    x = x <= 0 ? -x_start : x_start;
     while (x < frustum.top_right.x) {
         render_debug_line(
             vec2(x, frustum.bot_left.y),
@@ -95,9 +97,9 @@ void render_debug_grid(float cell_size) {
         x += cell_size;
     }
 
-    float y = frustum.top_right.y;
-    float dy = cell_size * (offset + floor(abs(y) / cell_size));
-    y = y <= 0 ? -dy - frustum_width : -dy;
+    float y = frustum.bot_left.y;
+    float y_start = cell_size * (offset + floor(abs(y) / cell_size));
+    y = y <= 0 ? -y_start : y_start;
     while (y < frustum.top_right.y) {
         render_debug_line(
             vec2(frustum.bot_left.x, y),
