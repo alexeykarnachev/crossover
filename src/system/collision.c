@@ -139,7 +139,6 @@ int collide_primitives(
     if (primitive0.type == CIRCLE_PRIMITIVE
         && primitive1.type == CIRCLE_PRIMITIVE) {
 
-        PROFILE_START(collide_primitives);
         collided = collide_circles(
             transformation0.curr_position,
             primitive0.p.circle.radius,
