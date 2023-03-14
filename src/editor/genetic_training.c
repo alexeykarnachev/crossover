@@ -187,7 +187,18 @@ static void start_genetic_training(void) {
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
 
             static char new_key[MAX_PATH_LENGTH + 128] = {0};
-            sprintf(new_key, "%s.%d.xbrain", ai->key, entity);
+            char* new_key_p = increment_file_name_version(ai->key);
+            if (strlen(new_key_p) > sizeof(new_key) - 1) {
+                fprintf(
+                    stderr,
+                    "ERROR: New brain file name is longer than allowed "
+                    "max length\n"
+                );
+                free(new_key_p);
+                exit(1);
+            }
+            strcpy(new_key, new_key_p);
+            free(new_key_p);
 
             for (int i = 0; i < params->population.n_episodes; ++i) {
                 Brain* dst_brain = &GENERATION_BRAINS[e][i];

@@ -21,6 +21,7 @@ FILE* open_file(
 char* read_cstr_file(
     const char* restrict file_path, const char* mode, long* n_bytes
 );
+char* increment_file_name_version(char* file_name);
 void read_str_from_file(char** str_p, FILE* fp, int allow_null);
 void write_str_to_file(const char* str, FILE* fp, int allow_null);
 uint64_t get_bytes_hash(const char* bytes, int n_bytes);

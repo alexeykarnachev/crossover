@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <regex.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,6 +125,74 @@ void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
         );
         exit(1);
     }
+}
+
+char* increment_file_name_version(char* file_name) {
+    regex_t regex;
+    regmatch_t match[2];
+
+    if (regcomp(&regex, "\\.v([0-9]+)\\.", REG_EXTENDED) != 0) {
+        fprintf(stderr, "ERROR: Can't compile regex\n");
+        exit(1);
+    }
+
+    char* new_file_name = NULL;
+    char* version_str = NULL;
+    int new_file_name_length = 0;
+    if (regexec(&regex, file_name, 2, match, 0) == 0) {
+        version_str = strndup(
+            &file_name[match[1].rm_so], match[1].rm_eo - match[1].rm_so
+        );
+        int version = atoi(version_str);
+        version += 1;
+        new_file_name_length = snprintf(
+            NULL,
+            0,
+            "%.*s.v%d%s",
+            (int)match[1].rm_so,
+            file_name,
+            version,
+            &file_name[match[0].rm_eo]
+        );
+        new_file_name = malloc(new_file_name_length + 1);
+        sprintf(
+            new_file_name,
+            "%.*s.v%d.%s",
+            (int)match[0].rm_so,
+            file_name,
+            version,
+            &file_name[match[0].rm_eo]
+        );
+    } else {
+        const char* ext = strrchr(file_name, '.');
+        if (ext == NULL) {
+            new_file_name_length = snprintf(NULL, 0, "%s.v0", file_name);
+            new_file_name = malloc(new_file_name_length + 1);
+            sprintf(new_file_name, "%s.v0", file_name);
+        } else {
+            new_file_name_length = snprintf(
+                NULL,
+                0,
+                "%.*s.v0%s",
+                (int)(ext - file_name),
+                file_name,
+                ext
+            );
+            new_file_name = malloc(new_file_name_length + 1);
+            sprintf(
+                new_file_name,
+                "%.*s.v0%s",
+                (int)(ext - file_name),
+                file_name,
+                ext
+            );
+        }
+    }
+
+    regfree(&regex);
+    free(version_str);
+
+    return new_file_name;
 }
 
 uint64_t get_bytes_hash(const char* bytes, int n_bytes) {

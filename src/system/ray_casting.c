@@ -44,6 +44,7 @@ RayCastResult cast_ray(
     memset(seen_targets, 0, sizeof(seen_targets));
     for (int t = 0; t < targets.length; ++t) {
         int entity = (int)array_get(&targets, t);
+
         if (seen_targets[entity] == 1) {
             continue;
         }
@@ -55,6 +56,7 @@ RayCastResult cast_ray(
             || ray_owner == entity) {
             continue;
         }
+
         Transformation entity_transformation
             = SCENE.transformations[entity];
         Primitive entity_collider = SCENE.colliders[entity];
