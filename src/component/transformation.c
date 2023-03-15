@@ -11,27 +11,6 @@ Transformation init_transformation(Vec2 position, float orientation) {
     return transformation;
 }
 
-void update_position(Transformation* transformation, Vec2 position) {
-    transformation->prev_position = transformation->curr_position;
-    transformation->curr_position = position;
-}
-
-void update_orientation(
-    Transformation* transformation, float orientation
-) {
-    transformation->prev_orientation = transformation->curr_orientation;
-    transformation->curr_orientation = orientation;
-}
-
-int check_if_transformation_changed(Transformation transformation) {
-    int position_changed = neq(
-        transformation.prev_position, transformation.curr_position
-    );
-    int orientation_changed = transformation.prev_orientation
-                              != transformation.curr_orientation;
-    return position_changed || orientation_changed;
-}
-
 void apply_transformation(
     Vec2* vertices, int n_vertices, Transformation transformation
 ) {

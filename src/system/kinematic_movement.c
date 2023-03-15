@@ -33,47 +33,63 @@ void update_kinematic_movements(float dt) {
             continue;
         }
 
+        int has_rb = check_if_entity_has_component(
+            entity, RIGID_BODY_COMPONENT
+        );
         Transformation* transformation = &SCENE.transformations[entity];
         KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-        update_orientation(transformation, movement->watch_orientation);
+        RigidBody* rb = &SCENE.rigid_bodies[entity];
+        update_orientation(entity, movement->watch_orientation);
 
         // Linear movement
-        Vec2 damping_force = scale(
-            movement->linear_velocity, -movement->linear_damping
-        );
-        Vec2 net_force = add(movement->net_force, damping_force);
-        Vec2 linear_acceleration = scale(net_force, 1.0f / movement->mass);
-        movement->linear_velocity = add(
-            movement->linear_velocity, scale(linear_acceleration, dt)
-        );
+        if (has_rb && rb->is_static == 0) {
+            Vec2 damping_force = scale(
+                movement->linear_velocity, -rb->linear_damping
+            );
+            Vec2 net_force = add(rb->net_force, damping_force);
+
+            Vec2 linear_acceleration = has_rb ? scale(
+                                           net_force, 1.0f / rb->mass
+                                       )
+                                              : vec2(0.0, 0.0);
+            movement->linear_velocity = add(
+                movement->linear_velocity, scale(linear_acceleration, dt)
+            );
+            rb->net_force = vec2(0.0, 0.0);
+        }
+
         Vec2 linear_step = scale(movement->linear_velocity, dt);
         update_position(
-            transformation, add(transformation->curr_position, linear_step)
+            entity, add(transformation->curr_position, linear_step)
         );
-        movement->net_force = vec2(0.0, 0.0);
         if (length(movement->linear_velocity) < EPS) {
             movement->linear_velocity = vec2(0.0, 0.0);
         }
 
         // Angular movement
-        float damping_torque = movement->angular_velocity
-                               * -movement->angular_damping;
-        float orientations_diff = get_orientations_diff(
-            movement->target_watch_orientation, movement->watch_orientation
-        );
-        float target_torque = orientations_diff
-                              * movement->angular_stiffness;
-        float net_torque = movement->net_torque + damping_torque
-                           + target_torque;
-        float angular_acceleration = net_torque
-                                     / movement->moment_of_inertia;
-        movement->angular_velocity += angular_acceleration * dt;
+        if (has_rb && rb->is_static == 0) {
+            float damping_torque = movement->angular_velocity
+                                   * -rb->angular_damping;
+            float orientations_diff = get_orientations_diff(
+                movement->target_watch_orientation,
+                movement->watch_orientation
+            );
+            float target_torque = orientations_diff
+                                  * rb->angular_stiffness;
+            float net_torque = rb->net_torque + damping_torque
+                               + target_torque;
+            float angular_acceleration = net_torque
+                                         / rb->moment_of_inertia;
+            movement->angular_velocity += angular_acceleration * dt;
+            rb->net_torque = 0.0f;
+        }
+
         float angular_step = movement->angular_velocity * dt;
         movement->watch_orientation += angular_step;
         movement->watch_orientation = fmodf(
             movement->watch_orientation, 2.0 * PI
         );
-        movement->net_torque = 0.0f;
+
         if (fabs(movement->angular_velocity) < EPS) {
             movement->angular_velocity = 0.0;
         }

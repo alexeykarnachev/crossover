@@ -455,21 +455,55 @@ static void render_component_inspector(int entity, ComponentType type) {
             );
             ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
 
-            update_position(transformation, pos);
-            update_orientation(transformation, orient);
+            update_position(entity, pos);
+            update_orientation(entity, orient);
 
             break;
         }
         case RIGID_BODY_COMPONENT: {
-            RigidBody* rigid_body = &SCENE.rigid_bodies[entity];
-            int type = render_component_type_picker(
-                "Type",
-                rigid_body->type,
-                (int*)RIGID_BODY_TYPES,
-                N_RIGID_BODY_TYPES,
-                RIGID_BODY_TYPE_NAMES
+            RigidBody* rb = &SCENE.rigid_bodies[entity];
+            int was_static = rb->is_static;
+            igCheckbox("is static", (bool*)(&rb->is_static));
+
+            if (rb->is_static == 0) {
+                ig_drag_float("mass", &rb->mass, 1.0, 1000.0, 1.0, 0);
+                ig_drag_float(
+                    "linear_damping",
+                    &rb->linear_damping,
+                    0.0,
+                    FLT_MAX,
+                    1.0,
+                    0
+                );
+                ig_drag_float(
+                    "moment of inertia",
+                    &rb->moment_of_inertia,
+                    0.0,
+                    FLT_MAX,
+                    1.0,
+                    0
+                );
+                ig_drag_float(
+                    "angular damping",
+                    &rb->angular_damping,
+                    0.0,
+                    FLT_MAX,
+                    1.0,
+                    0
+                );
+                ig_drag_float(
+                    "angular stiffness",
+                    &rb->angular_stiffness,
+                    0.0,
+                    FLT_MAX,
+                    1.0,
+                    0
+                );
+            }
+
+            ig_drag_float(
+                "restitution", &rb->restitution, 0.0, 1.0, 0.01, 0
             );
-            change_rigid_body_type(rigid_body, type);
             break;
         }
         case COLLIDER_COMPONENT: {
@@ -515,34 +549,6 @@ static void render_component_inspector(int entity, ComponentType type) {
         case KINEMATIC_MOVEMENT_COMPONENT: {
             KinematicMovement* m = &SCENE.kinematic_movements[entity];
 
-            ig_drag_float("mass", &m->mass, 0.0, FLT_MAX, 1.0, 0);
-            ig_drag_float(
-                "linear_damping", &m->linear_damping, 0.0, FLT_MAX, 1.0, 0
-            );
-            ig_drag_float(
-                "moment of inertia",
-                &m->moment_of_inertia,
-                0.0,
-                FLT_MAX,
-                1.0,
-                0
-            );
-            ig_drag_float(
-                "angular damping",
-                &m->angular_damping,
-                0.0,
-                FLT_MAX,
-                1.0,
-                0
-            );
-            ig_drag_float(
-                "angular stiffness",
-                &m->angular_stiffness,
-                0.0,
-                FLT_MAX,
-                1.0,
-                0
-            );
             ig_drag_float(
                 "watch orient.", &m->watch_orientation, -PI, PI, 0.05, 0
             );
@@ -680,8 +686,8 @@ static void render_camera_inspector(void) {
 
     ig_drag_float2("pos.", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0);
     ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
-    update_position(transformation, pos);
-    update_orientation(transformation, orient);
+    update_position(SCENE.camera, pos);
+    update_orientation(SCENE.camera, orient);
 
     ig_drag_float(
         "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0

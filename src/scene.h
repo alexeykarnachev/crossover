@@ -14,6 +14,7 @@ typedef struct Scene {
     int n_entities;
 
     // Scene tiles
+    int need_update_tiling[MAX_N_ENTITIES];
     Array entity_to_tiles[MAX_N_ENTITIES];
     Array tile_to_entities[N_SCENE_TILES];
 
@@ -58,6 +59,8 @@ void reset_scene(void);
 void save_scene(const char* file_path, ResultMessage* res_msg);
 void load_scene(const char* file_path, ResultMessage* res_msg);
 void update_scene(float dt, int is_playing);
+void update_position(int entity, Vec2 position);
+void update_orientation(int entity, float orientation);
 
 void entity_enters_tile(int entity, int tile);
 void entity_leaves_tile(int entity, int tile);

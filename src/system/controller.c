@@ -29,9 +29,7 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
-        KinematicMovement movement = init_kinematic_movement(
-            0.008, 0.0, 1000.0, 0.0, 0.0
-        );
+        KinematicMovement movement = init_kinematic_movement();
         movement.linear_velocity = scale(
             get_orientation_vec(transformation.curr_orientation),
             gun->bullet.speed
@@ -389,13 +387,14 @@ void update_controllers() {
         }
 
         KinematicMovement* movement = &SCENE.kinematic_movements[entity];
+        RigidBody* rb = &SCENE.rigid_bodies[entity];
         movement->target_watch_orientation = action.watch_orientation;
         if (action.is_moving) {
             Vec2 force = scale(
                 get_orientation_vec(action.move_orientation),
                 controller.force_magnitude
             );
-            movement->net_force = add(movement->net_force, force);
+            rb->net_force = add(rb->net_force, force);
         }
 
         if (action.is_shooting) {

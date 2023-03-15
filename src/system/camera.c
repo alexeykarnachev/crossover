@@ -21,7 +21,7 @@ void update_camera() {
         Vec2 cursor_scene_pos = get_cursor_scene_pos();
         Vec2 diff = sub(cursor_scene_pos, PREV_CURSOR_SCENE_POS);
         diff = rotate(diff, vec2(0.0, 0.0), -camera->curr_orientation);
-        update_position(camera, sub(camera->curr_position, diff));
+        update_position(SCENE.camera, sub(camera->curr_position, diff));
     }
 
     DEBUG.general.camera_position = camera->curr_position;

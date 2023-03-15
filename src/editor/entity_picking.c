@@ -389,7 +389,7 @@ void update_entity_dragging(void) {
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
                     update_position(
-                        transformation,
+                        entity,
                         add(transformation->curr_position,
                             cursor_scene_diff)
                     );
@@ -397,7 +397,7 @@ void update_entity_dragging(void) {
                 }
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
                     update_orientation(
-                        transformation,
+                        entity,
                         atan2(center_to_cursor.y, center_to_cursor.x)
                     );
                     break;

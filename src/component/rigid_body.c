@@ -3,59 +3,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define RIGID_BODY_TYPE_ERROR(fn_name, type) \
-    do { \
-        fprintf( \
-            stderr, \
-            "ERROR: can't %s for the Rigid body with type id: %d. Needs " \
-            "to be implemented\n", \
-            fn_name, \
-            type \
-        ); \
-        exit(1); \
-    } while (0)
-
-RigidBodyType RIGID_BODY_TYPES[N_RIGID_BODY_TYPES] = {
-    STATIC_BODY, KINEMATIC_BODY};
-const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES] = {
-    "Static", "Kinematic"};
-
-void change_rigid_body_type(
-    RigidBody* rigid_body, RigidBodyType target_type
+RigidBody init_rigid_body(
+    int is_static,
+    float mass,
+    float restitution,
+    float linear_damping,
+    float moment_of_inertia,
+    float angular_stiffness,
+    float angular_damping
 ) {
-    RigidBodyType source_type = rigid_body->type;
-    if (source_type == target_type) {
-        return;
-    }
-
-    switch (target_type) {
-        case STATIC_BODY:
-            *rigid_body = init_default_static_rigid_body();
-            break;
-        case KINEMATIC_BODY:
-            *rigid_body = init_default_kinematic_rigid_body();
-            break;
-        default:
-            RIGID_BODY_TYPE_ERROR("change_rigid_body_type", source_type);
-    }
-}
-
-RigidBody init_static_rigid_body(void) {
-    RigidBody body = {0};
-    body.type = STATIC_BODY;
+    RigidBody body = {
+        .is_static = is_static,
+        .mass = mass,
+        .restitution = restitution,
+        .linear_damping = linear_damping,
+        .moment_of_inertia = moment_of_inertia,
+        .angular_stiffness = angular_stiffness,
+        .angular_damping = angular_damping};
     return body;
 }
 
-RigidBody init_kinematic_rigid_body(void) {
-    RigidBody body = {0};
-    body.type = KINEMATIC_BODY;
+RigidBody init_default_rigid_body(int is_static) {
+    RigidBody body = {
+        .is_static = is_static,
+        .mass = 100.0,
+        .restitution = 0.5,
+        .linear_damping = 500.0,
+        .moment_of_inertia = 0.01,
+        .angular_stiffness = 1.0,
+        .angular_damping = 0.1};
     return body;
 }
 
 RigidBody init_default_static_rigid_body(void) {
-    return init_static_rigid_body();
+    return init_default_rigid_body(1);
 }
 
 RigidBody init_default_kinematic_rigid_body(void) {
-    return init_kinematic_rigid_body();
+    return init_default_rigid_body(0);
 }

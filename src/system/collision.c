@@ -180,14 +180,14 @@ static void update_tiling(void) {
             continue;
         }
         Transformation transformation = SCENE.transformations[entity];
-        int n_tiles = SCENE.entity_to_tiles[entity].length;
+        int* need_update_tiling = &SCENE.need_update_tiling[entity];
 
         // NOTE: Don't update tiling if the entity didn't change the
         // position
-        if (n_tiles != 0
-            && check_if_transformation_changed(transformation) == 0) {
+        if (*need_update_tiling == 0) {
             continue;
         }
+        *need_update_tiling = 0;
 
         entity_leaves_all_tiles(entity);
         Primitive collider = SCENE.colliders[entity];
@@ -288,11 +288,11 @@ static void compute_collisions(void) {
         }
 
         RigidBody rb0 = SCENE.rigid_bodies[entity];
-        int entity_has_kinematic_body = rb0.type == KINEMATIC_BODY;
 
         Primitive primitive0 = SCENE.colliders[entity];
         Transformation transformation0 = SCENE.transformations[entity];
         Array* tiles = &SCENE.entity_to_tiles[entity];
+
         static int collided_targets[MAX_N_ENTITIES];
         memset(collided_targets, 0, sizeof(collided_targets));
         for (int i_tile = 0; i_tile < tiles->length; ++i_tile) {
@@ -302,18 +302,16 @@ static void compute_collisions(void) {
                  ++i_target) {
                 int target = array_get(targets, i_target);
                 RigidBody rb1 = SCENE.rigid_bodies[target];
-                int target_has_kinematic_body = rb1.type == KINEMATIC_BODY;
-
                 // NOTE: For now I assume that if the target and the
                 // entity don't have the kinematic rigid body,
                 // I don't event calculate the collisions between them,
                 // because for now it useless and only waste the cpu time.
                 // These type of collisions couldn't be resolved anyway.
-                if (entity_has_kinematic_body != 1
-                    && target_has_kinematic_body != 1) {
+                if (target <= entity || collided_targets[target] == 1) {
                     continue;
                 }
-                if (target <= entity || collided_targets[target] == 1) {
+
+                if (rb0.is_static == 1 && rb1.is_static == 1) {
                     continue;
                 }
 
@@ -342,6 +340,72 @@ static void compute_collisions(void) {
 }
 #endif
 
+static void resolve_impulse(int entity0, int entity1, Vec2 mtv) {
+    Vec2 norm_mtv = normalize(mtv);
+
+    int has_km0 = check_if_entity_has_component(
+        entity0, KINEMATIC_MOVEMENT_COMPONENT
+    );
+    int has_km1 = check_if_entity_has_component(
+        entity1, KINEMATIC_MOVEMENT_COMPONENT
+    );
+    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
+    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
+    KinematicMovement* movement0 = &SCENE.kinematic_movements[entity0];
+    KinematicMovement* movement1 = &SCENE.kinematic_movements[entity1];
+
+    float inv_mass0 = rb0->is_static ? 0.0 : 1.0 / rb0->mass;
+    float inv_mass1 = rb1->is_static ? 0.0 : 1.0 / rb1->mass;
+    Vec2 vel0 = has_km0 ? movement0->linear_velocity : vec2(0.0, 0.0);
+    Vec2 vel1 = has_km1 ? movement1->linear_velocity : vec2(0.0, 0.0);
+    float rel_vel = dot(sub(vel1, vel0), norm_mtv);
+    float rest = (rb0->restitution * rb0->mass
+                  + rb1->restitution * rb1->mass)
+                 / (rb0->mass + rb1->mass);
+    float imp_k = -(1.0 + rest) * rel_vel / (inv_mass0 + inv_mass1);
+
+    if (has_km0 && (rb0->is_static == 0)) {
+        movement0->linear_velocity = sub(
+            movement0->linear_velocity, scale(norm_mtv, imp_k / rb0->mass)
+        );
+    }
+    if (has_km1 && (rb1->is_static == 0)) {
+        movement1->linear_velocity = add(
+            movement1->linear_velocity, scale(norm_mtv, imp_k / rb1->mass)
+        );
+    }
+}
+
+static void resolve_mtv(int entity0, int entity1, Vec2 mtv) {
+    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
+    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
+    Transformation* transformation0 = &SCENE.transformations[entity0];
+    Transformation* transformation1 = &SCENE.transformations[entity1];
+    if (rb0->is_static == 0 && rb1->is_static == 0) {
+        update_position(
+            entity0, add(transformation0->curr_position, scale(mtv, 0.5))
+        );
+        update_position(
+            entity1, add(transformation1->curr_position, scale(mtv, -0.5))
+        );
+    } else if (rb0->is_static == 0) {
+        update_position(entity0, add(transformation0->curr_position, mtv));
+    } else if (rb1->is_static == 0) {
+        update_position(
+            entity1, add(transformation1->curr_position, flip(mtv))
+        );
+    } else {
+        fprintf(
+            stderr,
+            "ERROR: Trying to resolve collision between 2 "
+            "entities without KINEMATIC_BODY component. In "
+            "the current workflow this shouldn't happen. This "
+            "is a bug\n"
+        );
+        exit(1);
+    }
+}
+
 // TODO: Collisions resolving is not perfect:
 // Moving objects can squeeze through narrowing areas.
 static void resolve_collisions(int is_playing) {
@@ -350,8 +414,6 @@ static void resolve_collisions(int is_playing) {
 
         for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
             Collision collision = COLLISIONS_ARENA.arena[i];
-
-            Vec2 mtv = collision.mtv;
             int entity0 = collision.entity0;
             int entity1 = collision.entity1;
             int has_rb0 = check_if_entity_has_component(
@@ -360,94 +422,26 @@ static void resolve_collisions(int is_playing) {
             int has_rb1 = check_if_entity_has_component(
                 entity1, RIGID_BODY_COMPONENT
             );
-            int has_km0 = check_if_entity_has_component(
-                entity0, KINEMATIC_MOVEMENT_COMPONENT
-            );
-            int has_km1 = check_if_entity_has_component(
-                entity1, KINEMATIC_MOVEMENT_COMPONENT
-            );
-            Transformation* transformation0
-                = &SCENE.transformations[entity0];
-            Transformation* transformation1
-                = &SCENE.transformations[entity1];
-            KinematicMovement* movement0
-                = &SCENE.kinematic_movements[entity0];
-            KinematicMovement* movement1
-                = &SCENE.kinematic_movements[entity1];
 
-            Vec2 norm = normalize(mtv);
-            float inv_mass0 = has_km0 ? 1.0 / movement0->mass : 0.0;
-            float inv_mass1 = has_km1 ? 1.0 / movement1->mass : 0.0;
-            Vec2 vel0 = has_km0 ? movement0->linear_velocity
-                                : vec2(0.0, 0.0);
-            Vec2 vel1 = has_km1 ? movement1->linear_velocity
-                                : vec2(0.0, 0.0);
-            float rel_vel = dot(sub(vel1, vel0), norm);
-
-            float rest = 0.5;
-            float imp_k = -(1.0 + rest) * rel_vel
-                          / (inv_mass0 + inv_mass1);
-            if (has_km0) {
-                movement0->linear_velocity = sub(
-                    movement0->linear_velocity,
-                    scale(norm, imp_k / movement0->mass)
-                );
-            }
-            if (has_km1) {
-                movement1->linear_velocity = add(
-                    movement1->linear_velocity,
-                    scale(norm, imp_k / movement1->mass)
-                );
+            if ((has_rb0 && has_rb0) == 0) {
+                continue;
             }
 
-            if (has_rb0 && has_rb1) {
-                RigidBody rb0 = SCENE.rigid_bodies[entity0];
-                RigidBody rb1 = SCENE.rigid_bodies[entity1];
+            Vec2 mtv = collision.mtv;
 
-                if (rb0.type == KINEMATIC_BODY
-                    && rb1.type == KINEMATIC_BODY) {
-                    update_position(
-                        transformation0,
-                        add(transformation0->curr_position,
-                            scale(mtv, 0.5))
-                    );
-                    update_position(
-                        transformation1,
-                        add(transformation1->curr_position,
-                            scale(mtv, -0.5))
-                    );
-                } else if (rb0.type == KINEMATIC_BODY) {
-                    update_position(
-                        transformation0,
-                        add(transformation0->curr_position, mtv)
-                    );
-                } else if (rb1.type == KINEMATIC_BODY) {
-                    update_position(
-                        transformation1,
-                        add(transformation1->curr_position, flip(mtv))
-                    );
-                } else {
-                    fprintf(
-                        stderr,
-                        "ERROR: Trying to resolve collision between 2 "
-                        "entities without KINEMATIC_BODY component. In "
-                        "the current workflow this shouldn't happen. This "
-                        "is a bug\n"
-                    );
-                    exit(1);
+            resolve_impulse(entity0, entity1, mtv);
+            resolve_mtv(entity0, entity1, mtv);
+
+            if (is_playing) {
+                if (check_if_entity_has_component(
+                        entity0, SCORER_COMPONENT
+                    )) {
+                    update_get_rb_collided_score(entity0);
                 }
-
-                if (is_playing) {
-                    if (check_if_entity_has_component(
-                            entity0, SCORER_COMPONENT
-                        )) {
-                        update_get_rb_collided_score(entity0);
-                    }
-                    if (check_if_entity_has_component(
-                            entity1, SCORER_COMPONENT
-                        )) {
-                        update_get_rb_collided_score(entity1);
-                    }
+                if (check_if_entity_has_component(
+                        entity1, SCORER_COMPONENT
+                    )) {
+                    update_get_rb_collided_score(entity1);
                 }
             }
         }

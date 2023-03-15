@@ -153,6 +153,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
 
     fread(&SCENE.time, sizeof(float), 1, fp);
     fread(&SCENE.n_entities, sizeof(int), 1, fp);
+
+    memset(&SCENE.need_update_tiling, 1, sizeof(int) * MAX_N_ENTITIES);
+
     fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
     fread(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
     fread(
@@ -453,7 +456,7 @@ int spawn_default_ai_guy(
         init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
-        init_kinematic_movement(70.0, 500.0, 0.01, 0.1, 1.0),
+        init_kinematic_movement(),
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
@@ -479,7 +482,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_circle_primitive(),
         init_material(FOREST_GREEN_COLOR),
         0.0,
-        init_kinematic_movement(70.0, 500.0, 0.01, 0.1, 1.0),
+        init_kinematic_movement(),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         init_default_player_keyboard_controller(),
@@ -548,19 +551,33 @@ CameraFrustum get_camera_frustum() {
 
 void center_camera_on_entity(int entity) {
     Vec2 entity_position = SCENE.transformations[entity].curr_position;
-    update_position(&SCENE.transformations[SCENE.camera], entity_position);
+    update_position(SCENE.camera, entity_position);
 }
 
 int reset_camera(void) {
     SCENE.camera = spawn_entity("Camera");
     Transformation* transformation = &SCENE.transformations[SCENE.camera];
-    update_position(transformation, vec2(0.0, 0.0));
-    update_orientation(transformation, 0.0);
+    update_position(SCENE.camera, vec2(0.0, 0.0));
+    update_orientation(SCENE.camera, 0.0);
 
     SCENE.components[SCENE.camera] = TRANSFORMATION_COMPONENT;
     SCENE.camera_view_width = CAMERA_VIEW_WIDTH;
 
     return SCENE.camera;
+}
+
+void update_position(int entity, Vec2 position) {
+    Transformation* t = &SCENE.transformations[entity];
+    t->prev_position = t->curr_position;
+    t->curr_position = position;
+    SCENE.need_update_tiling[entity] = 1;
+}
+
+void update_orientation(int entity, float orientation) {
+    Transformation* t = &SCENE.transformations[entity];
+    t->prev_orientation = t->curr_orientation;
+    t->curr_orientation = orientation;
+    SCENE.need_update_tiling[entity] = 1;
 }
 
 static void update_entities_scene_counter() {
