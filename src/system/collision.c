@@ -406,6 +406,12 @@ static void resolve_mtv(int entity0, int entity1, Vec2 mtv) {
     }
 }
 
+static void update_scores(int entity) {
+    if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
+        update_get_rb_collided_score(entity);
+    }
+}
+
 // TODO: Collisions resolving is not perfect:
 // Moving objects can squeeze through narrowing areas.
 static void resolve_collisions(int is_playing) {
@@ -431,18 +437,9 @@ static void resolve_collisions(int is_playing) {
 
             resolve_impulse(entity0, entity1, mtv);
             resolve_mtv(entity0, entity1, mtv);
-
             if (is_playing) {
-                if (check_if_entity_has_component(
-                        entity0, SCORER_COMPONENT
-                    )) {
-                    update_get_rb_collided_score(entity0);
-                }
-                if (check_if_entity_has_component(
-                        entity1, SCORER_COMPONENT
-                    )) {
-                    update_get_rb_collided_score(entity1);
-                }
+                update_scores(entity0);
+                update_scores(entity1);
             }
         }
     }

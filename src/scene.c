@@ -137,7 +137,6 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     // TODO: Also, check some kind of hash which should be saved as a
     // Scene property. It will prevent scene from modifications through
     // the file
-    // Read version
     int version;
     fread(&version, sizeof(int), 1, fp);
     if (version != SCENE_VERSION) {
