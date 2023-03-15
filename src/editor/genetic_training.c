@@ -692,7 +692,9 @@ void render_genetic_training_editor(void) {
     // TODO: Add possibility to selecte a specific scene to perform
     // genetic training on (like in profiler)
 
-    igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+    if (GENETIC_TRAINING->progress.status == SIMULATION_NOT_STARTED) {
+        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+    }
 
     render_entities_without_scorer();
     igSeparator();

@@ -358,6 +358,10 @@ uint64_t get_brain_required_input_types(BrainParams params) {
                 components |= HEALTH_COMPONENT;
                 break;
             }
+            case SELF_SPEED_INPUT: {
+                components |= KINEMATIC_MOVEMENT_COMPONENT;
+                break;
+            }
             default:
                 BRAIN_INPUT_TYPE_ERROR(
                     "get_brain_required_components", type
@@ -424,9 +428,15 @@ Brain crossover_brains(
 // --------------------------------------------------------
 // Brain inputs
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES] = {
-    TARGET_ENTITY_INPUT, TARGET_DISTANCE_INPUT, SELF_HEALTH_INPUT};
+    TARGET_ENTITY_INPUT,
+    TARGET_DISTANCE_INPUT,
+    SELF_HEALTH_INPUT,
+    SELF_SPEED_INPUT};
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES] = {
-    "Entity (target)", "Distance (target)", "Health (self)"};
+    "Entity (target)",
+    "Distance (target)",
+    "Health (self)",
+    "Speed (self)"};
 
 BrainInput init_target_entity_brain_input(void) {
     BrainInput input;
@@ -455,6 +465,15 @@ BrainInput init_self_health_brain_input(void) {
     return input;
 }
 
+BrainInput init_self_speed_brain_input(void) {
+    BrainInput input;
+    input.type = SELF_SPEED_INPUT;
+
+    SelfSpeedBrainInput self_speed;
+    input.i.self_speed = self_speed;
+    return input;
+}
+
 void change_brain_input_type(
     BrainInput* brain_input, BrainInputType target_type
 ) {
@@ -472,6 +491,9 @@ void change_brain_input_type(
             break;
         case SELF_HEALTH_INPUT:
             *brain_input = init_self_health_brain_input();
+            break;
+        case SELF_SPEED_INPUT:
+            *brain_input = init_self_speed_brain_input();
             break;
         default:
             BRAIN_INPUT_TYPE_ERROR("change_brain_input_type", source_type);
@@ -492,6 +514,9 @@ int get_brain_input_size(BrainParams params) {
                 input_size += n_view_rays;
                 break;
             case SELF_HEALTH_INPUT:
+                input_size += 1;
+                break;
+            case SELF_SPEED_INPUT:
                 input_size += 1;
                 break;
             default:

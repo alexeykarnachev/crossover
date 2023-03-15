@@ -169,6 +169,8 @@ static ControllerAction get_brain_ai_action(int entity) {
     Vision* vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].curr_position;
     Health health = SCENE.healths[entity];
+    KinematicMovement kinematic_movement
+        = SCENE.kinematic_movements[entity];
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput brain_input = params.inputs[i];
         BrainInputType type = brain_input.type;
@@ -205,6 +207,10 @@ static ControllerAction get_brain_ai_action(int entity) {
             }
             case SELF_HEALTH_INPUT: {
                 *inp++ = (health.curr_value / health.initial_value);
+                break;
+            }
+            case SELF_SPEED_INPUT: {
+                *inp++ = length(kinematic_movement.linear_velocity);
                 break;
             }
         }
@@ -310,11 +316,15 @@ BrainFitsEntityError check_if_brain_fits_entity(
     int has_health = check_if_entity_has_component(
         entity, HEALTH_COMPONENT
     );
+    int has_kinematic_movement = check_if_entity_has_component(
+        entity, KINEMATIC_MOVEMENT_COMPONENT
+    );
     Vision* vision = &SCENE.visions[entity];
     int n_view_rays = vision->n_view_rays;
     int vision_error = 0;
     int n_view_rays_error = 0;
     int health_error = 0;
+    int kinematic_movement_error = 0;
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput input = params.inputs[i];
         BrainInputType type = input.type;
@@ -323,6 +333,8 @@ BrainFitsEntityError check_if_brain_fits_entity(
             n_view_rays_error |= params.n_view_rays != n_view_rays;
         } else if (type == SELF_HEALTH_INPUT) {
             health_error |= !has_health;
+        } else if (type == SELF_SPEED_INPUT) {
+            kinematic_movement_error |= !has_kinematic_movement;
         } else {
             fprintf(
                 stderr,

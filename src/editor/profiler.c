@@ -288,7 +288,9 @@ void render_profiler_editor(void) {
     render_profiler_menu_bar();
     igSeparator();
 
-    igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+    if (GENETIC_TRAINING->progress.status == SIMULATION_NOT_STARTED) {
+        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+    }
 
     render_scene_selection();
     igSeparator();

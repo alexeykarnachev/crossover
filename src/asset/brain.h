@@ -6,7 +6,9 @@
 typedef enum BrainInputType {
     TARGET_ENTITY_INPUT,
     TARGET_DISTANCE_INPUT,
-    SELF_HEALTH_INPUT
+    SELF_HEALTH_INPUT,
+    SELF_SPEED_INPUT,
+    N_BRAIN_INPUT_TYPES
 } BrainInputType;
 
 typedef struct TargetEntityBrainInput {
@@ -16,19 +18,19 @@ typedef struct TargetEntityBrainInput {
 typedef struct TargetDistanceBrainInput {
 } TargetDistanceBrainInput;
 
-typedef struct TargetHealthBrainInput {
-} TargetHealthBrainInput;
-
 typedef struct SelfHealthBrainInput {
 } SelfHealthBrainInput;
+
+typedef struct SelfSpeedBrainInput {
+} SelfSpeedBrainInput;
 
 typedef struct BrainInput {
     BrainInputType type;
     union {
         TargetEntityBrainInput target_entity;
         TargetDistanceBrainInput target_distance;
-        TargetHealthBrainInput target_health;
         SelfHealthBrainInput self_health;
+        SelfSpeedBrainInput self_speed;
     } i;
 } BrainInput;
 
@@ -36,7 +38,6 @@ void change_brain_input_type(
     BrainInput* brain_input, BrainInputType target_type
 );
 
-#define N_BRAIN_INPUT_TYPES 3
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
 const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
 
@@ -135,8 +136,8 @@ uint64_t get_brain_required_output_types(BrainParams params);
 
 BrainInput init_target_entity_brain_input(void);
 BrainInput init_target_distance_brain_input(void);
-BrainInput init_target_health_brain_input(void);
 BrainInput init_self_health_brain_input(void);
+BrainInput init_self_speed_brain_input(void);
 
 BrainOutput init_watch_orientation_brain_output(void);
 BrainOutput init_move_orientation_brain_output(void);
