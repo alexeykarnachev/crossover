@@ -34,6 +34,7 @@ typedef struct Debug {
     } shading;
 
     struct collisions {
+        int n_update_steps;
         int resolve;
         int resolve_once;
     } collisions;

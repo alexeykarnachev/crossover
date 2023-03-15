@@ -823,6 +823,10 @@ static void render_debug_inspector(void) {
     }
 
     if (igTreeNodeEx_Str("Collisions", 0)) {
+        ig_drag_int(
+            "n updates", &DEBUG.collisions.n_update_steps, 1, 100, 1, 0
+        );
+
         igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
 
         ig_same_line();

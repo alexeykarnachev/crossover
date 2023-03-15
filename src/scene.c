@@ -604,6 +604,8 @@ void update_scene(float dt, int is_playing) {
     }
 
     profiler_push(PROFILER, "update_collisions");
-    update_collisions(is_playing);
+    for (int i = 0; i < DEBUG.collisions.n_update_steps; ++i) {
+        update_collisions(is_playing);
+    }
     profiler_pop(PROFILER);
 }

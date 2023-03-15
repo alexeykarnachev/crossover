@@ -360,10 +360,45 @@ static void resolve_collisions(int is_playing) {
             int has_rb1 = check_if_entity_has_component(
                 entity1, RIGID_BODY_COMPONENT
             );
+            int has_km0 = check_if_entity_has_component(
+                entity0, KINEMATIC_MOVEMENT_COMPONENT
+            );
+            int has_km1 = check_if_entity_has_component(
+                entity1, KINEMATIC_MOVEMENT_COMPONENT
+            );
             Transformation* transformation0
                 = &SCENE.transformations[entity0];
             Transformation* transformation1
                 = &SCENE.transformations[entity1];
+            KinematicMovement* movement0
+                = &SCENE.kinematic_movements[entity0];
+            KinematicMovement* movement1
+                = &SCENE.kinematic_movements[entity1];
+
+            Vec2 norm = normalize(mtv);
+            float inv_mass0 = has_km0 ? 1.0 / movement0->mass : 0.0;
+            float inv_mass1 = has_km1 ? 1.0 / movement1->mass : 0.0;
+            Vec2 vel0 = has_km0 ? movement0->linear_velocity
+                                : vec2(0.0, 0.0);
+            Vec2 vel1 = has_km1 ? movement1->linear_velocity
+                                : vec2(0.0, 0.0);
+            float rel_vel = dot(sub(vel1, vel0), norm);
+
+            float rest = 0.5;
+            float imp_k = -(1.0 + rest) * rel_vel
+                          / (inv_mass0 + inv_mass1);
+            if (has_km0) {
+                movement0->linear_velocity = sub(
+                    movement0->linear_velocity,
+                    scale(norm, imp_k / movement0->mass)
+                );
+            }
+            if (has_km1) {
+                movement1->linear_velocity = add(
+                    movement1->linear_velocity,
+                    scale(norm, imp_k / movement1->mass)
+                );
+            }
 
             if (has_rb0 && has_rb1) {
                 RigidBody rb0 = SCENE.rigid_bodies[entity0];
