@@ -1,14 +1,14 @@
-#include "../collision.h"
+#include "collision.h"
 
-#include "../component.h"
-#include "../const.h"
-#include "../debug.h"
-#include "../editor.h"
-#include "../gl.h"
-#include "../math.h"
-#include "../profiler.h"
-#include "../scene.h"
-#include "../system.h"
+#include "component.h"
+#include "const.h"
+#include "debug.h"
+#include "editor.h"
+#include "gl.h"
+#include "math.h"
+#include "profiler.h"
+#include "scene.h"
+#include "system.h"
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
@@ -64,7 +64,7 @@ static void update_overlap(
 }
 
 static int collide_circles(
-    Vec2 p0, float r0, Vec2 p1, float r1, Vec2* mtv
+    Vec2 p0, float r0, Vec2 p1, float r1, Collision* collision
 ) {
     Vec2 axis = sub(p1, p0);
     float dist = length(axis);
@@ -73,14 +73,18 @@ static int collide_circles(
     if (dist < radii_sum) {
         Vec2 dp = sub(p1, p0);
         Vec2 dir = length(dp) > EPS ? normalize(dp) : vec2(1.0, 0.0);
-        *mtv = scale(dir, dist - radii_sum);
+        collision->mtv = scale(dir, dist - radii_sum);
         return 1;
     }
     return 0;
 }
 
 static int collide_circle_with_polygon(
-    Vec2 position, float radius, Vec2 vertices[], int n, Vec2* mtv
+    Vec2 position,
+    float radius,
+    Vec2 vertices[],
+    int n,
+    Collision* collision
 ) {
     Vec2 nearest_vertex;
     Vec2 min_overlap_axis;
@@ -109,7 +113,7 @@ static int collide_circle_with_polygon(
     update_overlap(bound0, bound1, axis, &min_overlap_axis, &min_overlap);
 
     if (min_overlap > 0) {
-        *mtv = scale(min_overlap_axis, min_overlap);
+        collision->mtv = scale(min_overlap_axis, min_overlap);
         return 1;
     }
 
@@ -117,7 +121,11 @@ static int collide_circle_with_polygon(
 }
 
 static int collide_polygons(
-    Vec2 vertices0[], int n0, Vec2 vertices1[], int n1, Vec2* mtv
+    Vec2 vertices0[],
+    int n0,
+    Vec2 vertices1[],
+    int n1,
+    Collision* collision
 ) {
     Vec2 min_overlap_axis;
     float min_overlap = HUGE_VAL;
@@ -144,7 +152,7 @@ static int collide_polygons(
     }
 
     if (min_overlap > 0) {
-        *mtv = scale(min_overlap_axis, min_overlap);
+        collision->mtv = scale(min_overlap_axis, min_overlap);
         return 1;
     }
     return 0;
@@ -166,13 +174,12 @@ int collide_primitives(
     int collided;
     if (primitive0.type == CIRCLE_PRIMITIVE
         && primitive1.type == CIRCLE_PRIMITIVE) {
-
         collided = collide_circles(
             transformation0.curr_position,
             primitive0.p.circle.radius,
             transformation1.curr_position,
             primitive1.p.circle.radius,
-            &collision->mtv
+            collision
         );
     } else if (primitive0.type == CIRCLE_PRIMITIVE) {
         collided = collide_circle_with_polygon(
@@ -180,7 +187,7 @@ int collide_primitives(
             primitive0.p.circle.radius,
             vertices1,
             nv1,
-            &collision->mtv
+            collision
         );
         collision->mtv = flip(collision->mtv);
     } else if (primitive1.type == CIRCLE_PRIMITIVE) {
@@ -189,11 +196,11 @@ int collide_primitives(
             primitive1.p.circle.radius,
             vertices0,
             nv0,
-            &collision->mtv
+            collision
         );
     } else {
         collided = collide_polygons(
-            vertices0, nv0, vertices1, nv1, &collision->mtv
+            vertices0, nv0, vertices1, nv1, collision
         );
         collision->mtv = flip(collision->mtv);
     }
