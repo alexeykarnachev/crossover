@@ -196,6 +196,11 @@ float dot(Vec2 v0, Vec2 v1) {
     return res;
 }
 
+float cross(Vec2 v0, Vec2 v1) {
+    float res = v0.x * v1.y - v0.y * v1.x;
+    return res;
+}
+
 float length(Vec2 v) {
     return sqrt(v.x * v.x + v.y * v.y);
 }

@@ -549,16 +549,22 @@ static void render_component_inspector(int entity, ComponentType type) {
         case KINEMATIC_MOVEMENT_COMPONENT: {
             KinematicMovement* m = &SCENE.kinematic_movements[entity];
 
+            igCheckbox(
+                "target watch orient.",
+                (bool*)(&m->consider_target_watch_orientation)
+            );
+            if (m->consider_target_watch_orientation) {
+                ig_drag_float(
+                    "target watch orient.",
+                    &m->target_watch_orientation,
+                    -PI,
+                    PI,
+                    0.05,
+                    0
+                );
+            }
             ig_drag_float(
                 "watch orient.", &m->watch_orientation, -PI, PI, 0.05, 0
-            );
-            ig_drag_float(
-                "target watch orient.",
-                &m->target_watch_orientation,
-                -PI,
-                PI,
-                0.05,
-                0
             );
             igText("linear speed: %f", length(m->linear_velocity));
             igText("angular speed: %f", m->angular_velocity);

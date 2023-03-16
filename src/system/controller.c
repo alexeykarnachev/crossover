@@ -29,7 +29,7 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
-        KinematicMovement movement = init_kinematic_movement();
+        KinematicMovement movement = init_kinematic_movement(0);
         movement.linear_velocity = scale(
             get_orientation_vec(transformation.curr_orientation),
             gun->bullet.speed

@@ -5,9 +5,9 @@
 #include "math.h"
 
 typedef struct Collision {
+    Vec2 mtv;
     int entity0;
     int entity1;
-    Vec2 mtv;
 } Collision;
 
 extern Collision COLLISIONS[MAX_N_COLLISIONS];
@@ -25,3 +25,4 @@ int collide_primitives(
     Transformation transformation1,
     Collision* collision
 );
+void render_colliders(void);

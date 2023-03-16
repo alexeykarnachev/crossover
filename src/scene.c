@@ -2,6 +2,7 @@
 
 #include "app.h"
 #include "asset.h"
+#include "collision.h"
 #include "component.h"
 #include "const.h"
 #include "debug.h"
@@ -455,7 +456,7 @@ int spawn_default_ai_guy(
         init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
-        init_kinematic_movement(),
+        init_kinematic_movement(1),
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
@@ -481,7 +482,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_circle_primitive(),
         init_material(FOREST_GREEN_COLOR),
         0.0,
-        init_kinematic_movement(),
+        init_kinematic_movement(1),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         init_default_player_keyboard_controller(),

@@ -51,6 +51,7 @@ Vec2 rotate(Vec2 v, Vec2 origin, float angle);
 Vec2 point_to_axis(Vec2 p, Vec2 axis);
 float dist(Vec2 v0, Vec2 v1);
 float dot(Vec2 v0, Vec2 v1);
+float cross(Vec2 v0, Vec2 v1);
 float length(Vec2 v);
 int eq(Vec2 v0, Vec2 v1);
 int neq(Vec2 v0, Vec2 v1);

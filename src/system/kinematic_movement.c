@@ -70,12 +70,15 @@ void update_kinematic_movements(float dt) {
         if (has_rb && rb->is_static == 0) {
             float damping_torque = movement->angular_velocity
                                    * -rb->angular_damping;
-            float orientations_diff = get_orientations_diff(
-                movement->target_watch_orientation,
-                movement->watch_orientation
-            );
-            float target_torque = orientations_diff
-                                  * rb->angular_stiffness;
+
+            float target_torque = 0.0;
+            if (movement->consider_target_watch_orientation) {
+                float orientations_diff = get_orientations_diff(
+                    movement->target_watch_orientation,
+                    movement->watch_orientation
+                );
+                target_torque = orientations_diff * rb->angular_stiffness;
+            }
             float net_torque = rb->net_torque + damping_torque
                                + target_torque;
             float angular_acceleration = net_torque

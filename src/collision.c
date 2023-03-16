@@ -383,7 +383,10 @@ static void compute_collisions(void) {
 }
 #endif
 
-static void resolve_impulse(int entity0, int entity1, Vec2 mtv) {
+static void resolve_impulse(
+    int entity0, int entity1, Collision collision
+) {
+    Vec2 mtv = collision.mtv;
     Vec2 norm_mtv = normalize(mtv);
 
     int has_km0 = check_if_entity_has_component(
@@ -396,15 +399,16 @@ static void resolve_impulse(int entity0, int entity1, Vec2 mtv) {
     RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
     KinematicMovement* movement0 = &SCENE.kinematic_movements[entity0];
     KinematicMovement* movement1 = &SCENE.kinematic_movements[entity1];
+    float rest = (rb0->restitution * rb0->mass
+                  + rb1->restitution * rb1->mass)
+                 / (rb0->mass + rb1->mass);
 
+    // Linear impulse
     float inv_mass0 = rb0->is_static ? 0.0 : 1.0 / rb0->mass;
     float inv_mass1 = rb1->is_static ? 0.0 : 1.0 / rb1->mass;
     Vec2 vel0 = has_km0 ? movement0->linear_velocity : vec2(0.0, 0.0);
     Vec2 vel1 = has_km1 ? movement1->linear_velocity : vec2(0.0, 0.0);
     float rel_vel = dot(sub(vel1, vel0), norm_mtv);
-    float rest = (rb0->restitution * rb0->mass
-                  + rb1->restitution * rb1->mass)
-                 / (rb0->mass + rb1->mass);
     float imp_k = -(1.0 + rest) * rel_vel / (inv_mass0 + inv_mass1);
 
     if (has_km0 && (rb0->is_static == 0)) {
@@ -419,7 +423,9 @@ static void resolve_impulse(int entity0, int entity1, Vec2 mtv) {
     }
 }
 
-static void resolve_mtv(int entity0, int entity1, Vec2 mtv) {
+static void resolve_mtv(int entity0, int entity1, Collision collision) {
+    Vec2 mtv = collision.mtv;
+
     RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
     RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
     Transformation* transformation0 = &SCENE.transformations[entity0];
@@ -478,8 +484,8 @@ static void resolve_collisions(int is_playing) {
 
             Vec2 mtv = collision.mtv;
 
-            resolve_impulse(entity0, entity1, mtv);
-            resolve_mtv(entity0, entity1, mtv);
+            resolve_impulse(entity0, entity1, collision);
+            resolve_mtv(entity0, entity1, collision);
             if (is_playing) {
                 update_scores(entity0);
                 update_scores(entity1);
@@ -495,4 +501,23 @@ void update_collisions(int is_playing) {
     PROFILE(update_tiling);
     PROFILE(compute_collisions);
     PROFILE(resolve_collisions, is_playing);
+}
+
+void render_colliders(void) {
+    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, required_component)) {
+            continue;
+        }
+
+        Transformation transformation = SCENE.transformations[entity];
+        Primitive primitive = SCENE.colliders[entity];
+        render_debug_primitive(
+            transformation,
+            primitive,
+            SKYBLUE_COLOR,
+            DEBUG_RENDER_LAYER,
+            LINE
+        );
+    }
 }
