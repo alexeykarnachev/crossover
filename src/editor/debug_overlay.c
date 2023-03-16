@@ -20,7 +20,6 @@ void render_debug_overlay(void) {
         igText("Scene time: %.1f", SCENE.time);
         igText("Entities: %d", SCENE.n_entities);
         igText("Brains: %d", N_BRAINS);
-        igText("Collisions: %d", DEBUG.general.n_collisions);
         igText(
             "Camera pos: (%.2f, %.2f)",
             DEBUG.general.camera_position.x,

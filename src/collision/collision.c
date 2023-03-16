@@ -1,3 +1,5 @@
+#include "../collision.h"
+
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
@@ -13,7 +15,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-static CollisionsArena COLLISIONS_ARENA;
+Collision COLLISIONS[MAX_N_COLLISIONS];
+int N_COLLISIONS = 0;
+
+void push_collision(Collision collision) {
+    if (N_COLLISIONS == MAX_N_COLLISIONS) {
+        fprintf(
+            stderr,
+            "ERROR: Engine can't process more than %d collisions\n",
+            MAX_N_COLLISIONS
+        );
+        exit(1);
+    }
+
+    COLLISIONS[N_COLLISIONS++] = collision;
+}
+
+Collision pop_collision(void) {
+    if (N_COLLISIONS == 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't pop collision from the empty collisions array\n"
+        );
+        exit(1);
+    }
+    Collision collision = COLLISIONS[--N_COLLISIONS];
+    return collision;
+}
 
 static void update_overlap(
     Vec2 bound0,
@@ -240,7 +268,15 @@ static void update_tiling(void) {
 
 #ifndef OPTIMIZED_COLLISIONS
 static void compute_collisions(void) {
-    COLLISIONS_ARENA.n = 0;
+    if (N_COLLISIONS != 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't compute new collisions while the current "
+            "collisions array is not resolved\n"
+        );
+        exit(1);
+    }
+
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
@@ -260,27 +296,30 @@ static void compute_collisions(void) {
 
             Primitive primitive1 = SCENE.colliders[target];
             Transformation transformation1 = SCENE.transformations[target];
-            Collision* collision
-                = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
-            collision->entity0 = entity;
-            collision->entity1 = target;
-
-            int collided = collide_primitives(
-                primitive0,
-                transformation0,
-                primitive1,
-                transformation1,
-                collision
-            );
-            COLLISIONS_ARENA.n += collided;
+            Collision collision = {.entity0 = entity, .entity1 = target};
+            if (collide_primitives(
+                    primitive0,
+                    transformation0,
+                    primitive1,
+                    transformation1,
+                    &collision
+                )) {
+                push_collision(collision);
+            }
         }
     }
-
-    DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 #else
 static void compute_collisions(void) {
-    COLLISIONS_ARENA.n = 0;
+    if (N_COLLISIONS != 0) {
+        fprintf(
+            stderr,
+            "ERROR: Can't compute new collisions while the current "
+            "collisions array is not resolved\n"
+        );
+        exit(1);
+    }
+
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
@@ -319,24 +358,21 @@ static void compute_collisions(void) {
                 Primitive primitive1 = SCENE.colliders[target];
                 Transformation transformation1
                     = SCENE.transformations[target];
-                Collision* collision
-                    = &COLLISIONS_ARENA.arena[COLLISIONS_ARENA.n];
-                collision->entity0 = entity;
-                collision->entity1 = target;
+                Collision collision = {
+                    .entity0 = entity, .entity1 = target};
 
-                int collided = collide_primitives(
-                    primitive0,
-                    transformation0,
-                    primitive1,
-                    transformation1,
-                    collision
-                );
-                COLLISIONS_ARENA.n += collided;
+                if (collide_primitives(
+                        primitive0,
+                        transformation0,
+                        primitive1,
+                        transformation1,
+                        &collision
+                    )) {
+                    push_collision(collision);
+                }
             }
         }
     }
-
-    DEBUG.general.n_collisions = COLLISIONS_ARENA.n;
 }
 #endif
 
@@ -418,8 +454,8 @@ static void resolve_collisions(int is_playing) {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
 
-        for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
-            Collision collision = COLLISIONS_ARENA.arena[i];
+        while (N_COLLISIONS > 0) {
+            Collision collision = pop_collision();
             int entity0 = collision.entity0;
             int entity1 = collision.entity1;
             int has_rb0 = check_if_entity_has_component(
@@ -452,46 +488,4 @@ void update_collisions(int is_playing) {
     PROFILE(update_tiling);
     PROFILE(compute_collisions);
     PROFILE(resolve_collisions, is_playing);
-}
-
-void render_collision_mtvs() {
-    for (int i = 0; i < COLLISIONS_ARENA.n; ++i) {
-        Collision collision = COLLISIONS_ARENA.arena[i];
-        Transformation transformation0
-            = SCENE.transformations[collision.entity0];
-        Transformation transformation1
-            = SCENE.transformations[collision.entity1];
-
-        render_debug_line(
-            transformation0.curr_position,
-            add(transformation0.curr_position, collision.mtv),
-            MAGENTA_COLOR,
-            DEBUG_RENDER_LAYER
-        );
-        render_debug_line(
-            transformation1.curr_position,
-            sub(transformation1.curr_position, collision.mtv),
-            CYAN_COLOR,
-            DEBUG_RENDER_LAYER
-        );
-    }
-}
-
-void render_colliders() {
-    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
-    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(entity, required_component)) {
-            continue;
-        }
-
-        Transformation transformation = SCENE.transformations[entity];
-        Primitive primitive = SCENE.colliders[entity];
-        render_debug_primitive(
-            transformation,
-            primitive,
-            SKYBLUE_COLOR,
-            DEBUG_RENDER_LAYER,
-            LINE
-        );
-    }
 }

@@ -1,4 +1,5 @@
 #include "../app.h"
+#include "../collision.h"
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"

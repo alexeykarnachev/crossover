@@ -804,9 +804,6 @@ static void render_debug_inspector(void) {
 
     if (igTreeNodeEx_Str("Shading", 0)) {
         igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
-        igCheckbox(
-            "Collision MTVs", (bool*)(&DEBUG.shading.collision_mtvs)
-        );
         igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
         igCheckbox(
             "Kinematic movements",

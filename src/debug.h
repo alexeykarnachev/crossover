@@ -19,12 +19,10 @@ typedef struct Debug {
 
     struct general {
         Vec2 camera_position;
-        int n_collisions;
     } general;
 
     struct shading {
         int materials;
-        int collision_mtvs;
         int kinematic_movements;
         int visions;
         int wireframe;
