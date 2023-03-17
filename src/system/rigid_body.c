@@ -44,13 +44,14 @@ void update_rigid_bodies(float dt) {
                 // Angular torque
                 float damping_torque = rb->b.dynamic_rb.angular_velocity
                                        * -rb->b.dynamic_rb.angular_damping;
-                float net_torque = -rb->b.dynamic_rb.net_torque
+                float net_torque = rb->b.dynamic_rb.net_torque
                                    + damping_torque;
                 float angular_acceleration
-                    = net_torque / -rb->b.dynamic_rb.moment_of_inertia;
+                    = net_torque / rb->b.dynamic_rb.moment_of_inertia;
                 rb->b.dynamic_rb.angular_velocity += angular_acceleration
                                                      * dt;
                 rb->b.dynamic_rb.net_torque = 0.0;
+
                 linear_velocity = &rb->b.dynamic_rb.linear_velocity;
                 angular_velocity = &rb->b.dynamic_rb.angular_velocity;
                 break;

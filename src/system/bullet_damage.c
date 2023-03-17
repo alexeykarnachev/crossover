@@ -40,7 +40,7 @@ void update_bullets(float dt) {
         if (target != -1) {
             if (check_if_entity_has_component(target, HEALTH_COMPONENT)) {
                 float damage = length(velocity);
-                Health* health = &SCENE.healths[entity];
+                Health* health = &SCENE.healths[target];
                 health->curr_value -= damage;
                 health->damage_dealler = bullet_owner;
 

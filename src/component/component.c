@@ -56,7 +56,8 @@ const char* get_component_type_name(ComponentType type) {
             fprintf(
                 stderr,
                 "ERROR: Can't get the name of the component type with id: "
-                "%d\n",
+                "%d. Make sure that N_COMPONENT_TYPES equals to the "
+                "number of options of the ComponentType enum\n",
                 type
             );
             exit(1);

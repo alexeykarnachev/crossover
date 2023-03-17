@@ -458,6 +458,11 @@ static void render_component_inspector(int entity, ComponentType type) {
             update_position(entity, pos);
             update_orientation(entity, orient);
 
+            if (igButton("Reset", IG_VEC2_ZERO)) {
+                update_position(entity, vec2(0.0, 0.0));
+                update_orientation(entity, 0.0);
+            }
+
             break;
         }
         case RIGID_BODY_COMPONENT: {
@@ -507,6 +512,18 @@ static void render_component_inspector(int entity, ComponentType type) {
                     1.0,
                     0
                 );
+            }
+
+            igText(
+                "linear speed: %.2f",
+                length(rb->b.dynamic_rb.linear_velocity)
+            );
+            igText(
+                "angular speed: %.2f", rb->b.dynamic_rb.angular_velocity
+            );
+            if (igButton("Reset", IG_VEC2_ZERO)) {
+                rb->b.dynamic_rb.angular_velocity = 0.0;
+                rb->b.dynamic_rb.linear_velocity = vec2(0.0, 0.0);
             }
 
             // ig_drag_float(

@@ -83,10 +83,10 @@ RigidBody init_default_kinematic_rigid_body(void) {
 
 RigidBody init_default_dynamic_rigid_body(void) {
     float mass = 70.0;
-    float linear_damping = 1.0;
-    float moment_of_inertia = 1.0;
-    float angular_damping = 1.0;
-    float angular_stiffness = 1.0;
+    float linear_damping = 500.0;
+    float moment_of_inertia = 0.2;
+    float angular_damping = 4.0;
+    float angular_stiffness = 100.0;
     return init_dynamic_rigid_body(
         mass,
         linear_damping,
