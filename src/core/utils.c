@@ -1,5 +1,6 @@
 #include "../utils.h"
 
+#include "../math.h"
 #include <errno.h>
 #include <float.h>
 #include <math.h>
@@ -336,18 +337,16 @@ void softmax(float* x, int n) {
     }
 }
 
-// TODO: Introduce temperature for sampling
-int sample_binary(float weight) {
-    float score = sigmoid(weight);
+int sample_binary(float weight, float temperature) {
+    temperature = max(temperature, EPS);
+    float score = sigmoid(weight / temperature);
     float rand = frand01();
     int res = rand < score ? 1 : 0;
-    // printf("logits: %f, score: %f, rand: %f, res: %d\n", weight, score,
-    // rand, res);
     return res;
 }
 
-// TODO: Introduce temperature for sampling
-int sample_multinomial(float* weights, int n) {
+int sample_multinomial(float* weights, int n, float temperature) {
+    temperature = max(temperature, EPS);
     static int* _idx = NULL;
     static float* _weights = NULL;
     static int _n = 0;
@@ -360,6 +359,9 @@ int sample_multinomial(float* weights, int n) {
         _weights = malloc(_n * sizeof(float));
     }
     memcpy(_weights, weights, n * sizeof(float));
+    for (int i = 0; i < n; ++i) {
+        _weights[i] /= temperature;
+    }
     softmax(_weights, n);
     argsort(_weights, _idx, n, 0);
 
@@ -373,7 +375,7 @@ int sample_multinomial(float* weights, int n) {
     }
 
     fprintf(
-        stderr, "ERROR: Unreachable in `weighted_argmax`. It's a bug\n"
+        stderr, "ERROR: Unreachable in `sample_multinomial`. It's a bug\n"
     );
     exit(1);
 }

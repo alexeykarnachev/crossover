@@ -71,13 +71,14 @@ Controller init_dummy_ai_controller(
 }
 
 Controller init_brain_ai_controller(
-    float kinematic_speed, float dynamic_force_magnitude
+    float kinematic_speed, float dynamic_force_magnitude, float temperature
 ) {
     Controller controller = {0};
 
     controller.kinematic_speed = kinematic_speed;
     controller.dynamic_force_magnitude = dynamic_force_magnitude;
     controller.type = BRAIN_AI_CONTROLLER;
+    controller.c.brain_ai.temperature = temperature;
     return controller;
 }
 
@@ -98,6 +99,7 @@ Controller init_default_dummy_ai_controller(void) {
 Controller init_default_brain_ai_controller(void) {
     return init_brain_ai_controller(
         DEFAULT_CONTROLLER_KINEMATIC_SPEED,
-        DEFAULT_CONTROLLER_DYNAMIC_FORCE
+        DEFAULT_CONTROLLER_DYNAMIC_FORCE,
+        DEFAULT_BRAIN_AI_CONTROLLER_TEMPERATURE
     );
 }

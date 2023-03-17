@@ -34,8 +34,8 @@ int choose_idx(int n);
 int argmax(float* vals, int n);
 void softmax(float* x, int n);
 float sigmoid(float x);
-int sample_binary(float weight);
-int sample_multinomial(float* weights, int n);
+int sample_binary(float weight, float temperature);
+int sample_multinomial(float* weights, int n, float temperature);
 void shuffle(int arr[], int n);
 void swap(void** p0, void** p1);
 

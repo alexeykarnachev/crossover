@@ -23,6 +23,7 @@ typedef struct DummyAIController {
 
 typedef struct BrainAIController {
     char key[MAX_PATH_LENGTH + 32];
+    float temperature;
 } BrainAIController;
 
 typedef struct Controller {
@@ -46,7 +47,7 @@ Controller init_dummy_ai_controller(
     float kinematic_speed, float dynamic_force_magnitude
 );
 Controller init_brain_ai_controller(
-    float kinematic_speed, float dynamic_force_magnitude
+    float kinematic_speed, float dynamic_force_magnitude, float temperature
 );
 Controller init_default_player_keyboard_controller(void);
 Controller init_default_dummy_ai_controller(void);
