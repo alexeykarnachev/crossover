@@ -222,8 +222,8 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kill);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kinematic_move);
-    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kinematic_rotation);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_move);
+    IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_rotation);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_shoot);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_hit);
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.get_killed);
@@ -233,25 +233,23 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     int entity = EDITOR.picked_entity.entity;
     Vec2 position = SCENE.transformations[entity].curr_position;
 
-    if (scorer->kinematic_exploration.cell_size < EPS) {
-        scorer->kinematic_exploration.cell_size = 1.0;
-        scorer->kinematic_exploration.start_position = position;
-        scorer->kinematic_exploration.prev_cell = vec2(
+    if (scorer->exploration.cell_size < EPS) {
+        scorer->exploration.cell_size = 1.0;
+        scorer->exploration.start_position = position;
+        scorer->exploration.prev_cell = vec2(
             (int)EXPLORATION_GRID_HEIGHT / 2,
             (int)EXPLORATION_GRID_WIDTH / 2
         );
     }
 
-    float cell_size = scorer->kinematic_exploration.cell_size;
-    if (igBeginMenu("kinematic_exploration", 1)) {
-        IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.new_cell_score);
-        IG_DRAG_SCALAR_SCORE_WEIGHT(kinematic_exploration.old_cell_score);
-        IG_DRAG_SCALAR_SCORE_WEIGHT(
-            kinematic_exploration.stay_in_cell_score
-        );
+    float cell_size = scorer->exploration.cell_size;
+    if (igBeginMenu("exploration", 1)) {
+        IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.new_cell_score);
+        IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.old_cell_score);
+        IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.stay_in_cell_score);
         ig_drag_float(
             "cell_size",
-            &scorer->kinematic_exploration.cell_size,
+            &scorer->exploration.cell_size,
             0.5,
             100.0,
             0.1,
@@ -259,7 +257,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
         );
         ig_drag_float(
             "stay_in_cell_delay",
-            &scorer->kinematic_exploration.stay_in_cell_delay,
+            &scorer->exploration.stay_in_cell_delay,
             0.5,
             100.0,
             0.1,
@@ -267,33 +265,30 @@ void render_scorer_weights_inspector(Scorer* scorer) {
         );
         igText(
             "start_position: (%.2f, %.2f)",
-            scorer->kinematic_exploration.start_position.x,
-            scorer->kinematic_exploration.start_position.y
+            scorer->exploration.start_position.x,
+            scorer->exploration.start_position.y
         );
         igText(
             "prev_cell: (%d, %d)",
-            (int)scorer->kinematic_exploration.prev_cell.x,
-            (int)scorer->kinematic_exploration.prev_cell.y
+            (int)scorer->exploration.prev_cell.x,
+            (int)scorer->exploration.prev_cell.y
         );
         igText(
-            "cell_enter_time: %.2f",
-            scorer->kinematic_exploration.cell_enter_time
+            "cell_enter_time: %.2f", scorer->exploration.cell_enter_time
         );
 
         igEndMenu();
     }
-    if (cell_size != scorer->kinematic_exploration.cell_size) {
+    if (cell_size != scorer->exploration.cell_size) {
         memset(
-            scorer->kinematic_exploration.grid,
-            0,
-            sizeof(scorer->kinematic_exploration.grid)
+            scorer->exploration.grid, 0, sizeof(scorer->exploration.grid)
         );
-        scorer->kinematic_exploration.cell_enter_time = SCENE.time;
-        scorer->kinematic_exploration.new_cell_score.value = 0.0;
-        scorer->kinematic_exploration.old_cell_score.value = 0.0;
-        scorer->kinematic_exploration.stay_in_cell_score.value = 0.0;
-        scorer->kinematic_exploration.start_position = position;
-        scorer->kinematic_exploration.prev_cell = vec2(
+        scorer->exploration.cell_enter_time = SCENE.time;
+        scorer->exploration.new_cell_score.value = 0.0;
+        scorer->exploration.old_cell_score.value = 0.0;
+        scorer->exploration.stay_in_cell_score.value = 0.0;
+        scorer->exploration.start_position = position;
+        scorer->exploration.prev_cell = vec2(
             (int)EXPLORATION_GRID_HEIGHT / 2,
             (int)EXPLORATION_GRID_WIDTH / 2
         );
@@ -303,11 +298,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     //  Scorer translation unit
     if (igButton("Reset", IG_VEC2_ZERO)) {
         memset(&scorer->scalars, 0, sizeof(scorer->scalars));
-        memset(
-            &scorer->kinematic_exploration,
-            0,
-            sizeof(scorer->kinematic_exploration)
-        );
+        memset(&scorer->exploration, 0, sizeof(scorer->exploration));
     }
 }
 
@@ -315,14 +306,14 @@ void render_scorer_values_inspector(Scorer* scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
     IG_TEXT_SCORE_VALUE(scalars.do_kill);
-    IG_TEXT_SCORE_VALUE(scalars.do_kinematic_move);
-    IG_TEXT_SCORE_VALUE(scalars.do_kinematic_rotation);
+    IG_TEXT_SCORE_VALUE(scalars.do_move);
+    IG_TEXT_SCORE_VALUE(scalars.do_rotation);
     IG_TEXT_SCORE_VALUE(scalars.do_shoot);
     IG_TEXT_SCORE_VALUE(scalars.do_hit);
     IG_TEXT_SCORE_VALUE(scalars.get_killed);
     IG_TEXT_SCORE_VALUE(scalars.get_hit);
     IG_TEXT_SCORE_VALUE(scalars.get_rb_collided);
-    IG_TEXT_SCORE_VALUE(kinematic_exploration.new_cell_score);
-    IG_TEXT_SCORE_VALUE(kinematic_exploration.old_cell_score);
-    IG_TEXT_SCORE_VALUE(kinematic_exploration.stay_in_cell_score);
+    IG_TEXT_SCORE_VALUE(exploration.new_cell_score);
+    IG_TEXT_SCORE_VALUE(exploration.old_cell_score);
+    IG_TEXT_SCORE_VALUE(exploration.stay_in_cell_score);
 }

@@ -359,7 +359,7 @@ uint64_t get_brain_required_input_types(BrainParams params) {
                 break;
             }
             case SELF_SPEED_INPUT: {
-                components |= KINEMATIC_MOVEMENT_COMPONENT;
+                components |= RIGID_BODY_COMPONENT;
                 break;
             }
             default:

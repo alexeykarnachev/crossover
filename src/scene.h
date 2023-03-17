@@ -24,12 +24,12 @@ typedef struct Scene {
 
     Transformation transformations[MAX_N_ENTITIES];
     RigidBody rigid_bodies[MAX_N_ENTITIES];
-    KinematicMovement kinematic_movements[MAX_N_ENTITIES];
     Vision visions[MAX_N_ENTITIES];
     Primitive colliders[MAX_N_ENTITIES];
     Primitive primitives[MAX_N_ENTITIES];
     Material materials[MAX_N_ENTITIES];
     Gun guns[MAX_N_ENTITIES];
+    Bullet bullets[MAX_N_ENTITIES];
     float ttls[MAX_N_ENTITIES];
     Health healths[MAX_N_ENTITIES];
     float render_layers[MAX_N_ENTITIES];
@@ -80,7 +80,6 @@ int spawn_guy(
     Primitive collider,
     Material material,
     float render_layer,
-    KinematicMovement kinematic_movement,
     Vision vision,
     Gun gun,
     Controller controller,
@@ -94,12 +93,7 @@ int spawn_obstacle(
     Material material,
     float render_layer
 );
-int spawn_bullet(
-    Transformation transformation,
-    KinematicMovement kinematic_movement,
-    float ttl,
-    int owner
-);
+int spawn_bullet(Bullet bullet, int owner, float ttl);
 int spawn_default_player_keyboard_guy(Transformation transformation);
 int spawn_default_dummy_ai_guy(Transformation transformation);
 int spawn_default_brain_ai_guy(Transformation transformation);

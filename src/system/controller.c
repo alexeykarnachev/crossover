@@ -29,13 +29,8 @@ static void try_shoot(int entity) {
                     || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
-        KinematicMovement movement = init_kinematic_movement(0);
-        movement.linear_velocity = scale(
-            get_orientation_vec(transformation.curr_orientation),
-            gun->bullet.speed
-        );
-        spawn_bullet(transformation, movement, gun->bullet.ttl, entity);
-
+        Bullet bullet = init_bullet(gun->bullet.speed);
+        spawn_bullet(bullet, entity, gun->bullet.ttl);
         if (check_if_entity_has_component(entity, SCORER_COMPONENT)) {
             update_do_shoot_score(entity);
         }
@@ -50,13 +45,11 @@ typedef struct ControllerAction {
 } ControllerAction;
 
 static ControllerAction get_player_keyboard_action(int entity) {
-    int required_component = TRANSFORMATION_COMPONENT
-                             | KINEMATIC_MOVEMENT_COMPONENT;
-    if (!check_if_entity_has_component(entity, required_component)) {
+    if (!check_if_entity_has_component(entity, TRANSFORMATION_COMPONENT)) {
         fprintf(
             stderr,
             "ERROR: Can't get the player keyboard action. The entity "
-            "doesn't have Transformation | KinematicMovement component\n"
+            "doesn't have Transformation component\n"
         );
         exit(1);
     }
@@ -167,8 +160,7 @@ static ControllerAction get_brain_ai_action(int entity) {
     Vision* vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].curr_position;
     Health health = SCENE.healths[entity];
-    KinematicMovement kinematic_movement
-        = SCENE.kinematic_movements[entity];
+    RigidBody rb = SCENE.rigid_bodies[entity];
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput brain_input = params.inputs[i];
         BrainInputType type = brain_input.type;
@@ -208,7 +200,20 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case SELF_SPEED_INPUT: {
-                *inp++ = length(kinematic_movement.linear_velocity);
+                Vec2 velocity;
+                if (rb.type == KINEMATIC_RIGID_BODY) {
+                    velocity = rb.b.kinematic_rb.linear_velocity;
+                } else if (rb.type == DYNAMIC_RIGID_BODY) {
+                    velocity = rb.b.dynamic_rb.linear_velocity;
+                } else {
+                    fprintf(
+                        stderr,
+                        "ERROR: Can't process brain SELF_SPEED_INPUT for "
+                        "the non-kinematic or non-dynamic rigid body\n"
+                    );
+                    exit(1);
+                }
+                *inp++ = length(velocity);
                 break;
             }
         }
@@ -314,15 +319,20 @@ BrainFitsEntityError check_if_brain_fits_entity(
     int has_health = check_if_entity_has_component(
         entity, HEALTH_COMPONENT
     );
-    int has_kinematic_movement = check_if_entity_has_component(
-        entity, KINEMATIC_MOVEMENT_COMPONENT
+    int has_rb = check_if_entity_has_component(
+        entity, RIGID_BODY_COMPONENT
     );
+    int has_static_rb = has_rb
+                        && (SCENE.rigid_bodies[entity].type
+                            == STATIC_RIGID_BODY);
+
     Vision* vision = &SCENE.visions[entity];
     int n_view_rays = vision->n_view_rays;
     int vision_error = 0;
     int n_view_rays_error = 0;
     int health_error = 0;
-    int kinematic_movement_error = 0;
+    int rb_error = 0;
+    int static_rb_error = 0;
     for (int i = 0; i < params.n_inputs; ++i) {
         BrainInput input = params.inputs[i];
         BrainInputType type = input.type;
@@ -332,7 +342,8 @@ BrainFitsEntityError check_if_brain_fits_entity(
         } else if (type == SELF_HEALTH_INPUT) {
             health_error |= !has_health;
         } else if (type == SELF_SPEED_INPUT) {
-            kinematic_movement_error |= !has_kinematic_movement;
+            rb_error |= !has_rb;
+            static_rb_error |= has_static_rb;
         } else {
             fprintf(
                 stderr,
@@ -355,6 +366,14 @@ BrainFitsEntityError check_if_brain_fits_entity(
     if (health_error) {
         error.reasons[error.n_reasons++] = HEALTH_COMPONENT_MISSED_ERROR;
     }
+    if (rb_error) {
+        error.reasons[error.n_reasons++]
+            = RIGID_BODY_COMPONENT_MISSED_ERROR;
+    }
+    if (static_rb_error) {
+        error.reasons[error.n_reasons++]
+            = STATIC_RIGID_BODY_COMPONENT_ERROR;
+    }
 
     return error;
 }
@@ -362,13 +381,26 @@ BrainFitsEntityError check_if_brain_fits_entity(
 void update_controllers() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         int required_component = TRANSFORMATION_COMPONENT
-                                 | KINEMATIC_MOVEMENT_COMPONENT
+                                 | RIGID_BODY_COMPONENT
                                  | CONTROLLER_COMPONENT;
+        RigidBody* rb = &SCENE.rigid_bodies[entity];
+
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
+        if (rb->type == STATIC_RIGID_BODY) {
+            fprintf(
+                stderr,
+                "ERROR: Can't update controller for a static rigid body. "
+                "Propper handling of this situation needs to be "
+                "implemented\n"
+            );
+            exit(1);
+        }
+
         Controller controller = SCENE.controllers[entity];
+        Transformation transformation = SCENE.transformations[entity];
         ControllerType type = controller.type;
         ControllerAction action;
         switch (type) {
@@ -386,15 +418,39 @@ void update_controllers() {
             }
         }
 
-        KinematicMovement* movement = &SCENE.kinematic_movements[entity];
-        RigidBody* rb = &SCENE.rigid_bodies[entity];
-        movement->target_watch_orientation = action.watch_orientation;
-        if (action.is_moving) {
-            Vec2 force = scale(
-                get_orientation_vec(action.move_orientation),
-                controller.force_magnitude
+        float watch_orientation = action.watch_orientation;
+        float move_orientation = action.move_orientation;
+        int is_moving = action.is_moving;
+        int is_shooting = action.is_shooting;
+        if (rb->type == KINEMATIC_RIGID_BODY) {
+            if (is_moving) {
+                rb->b.kinematic_rb.linear_velocity = scale(
+                    get_orientation_vec(move_orientation),
+                    controller.kinematic_speed
+                );
+            } else {
+                rb->b.kinematic_rb.linear_velocity = vec2(0.0, 0.0);
+            }
+            update_orientation(entity, watch_orientation);
+        } else if (rb->type == DYNAMIC_RIGID_BODY) {
+            if (is_moving) {
+                apply_move_force_to_rb(
+                    rb,
+                    move_orientation,
+                    controller.dynamic_force_magnitude
+                );
+            }
+            float orientation_diff = get_orientations_diff(
+                watch_orientation, transformation.curr_orientation
             );
-            rb->net_force = add(rb->net_force, force);
+            apply_angular_torque_to_rb(rb, orientation_diff);
+        } else {
+            fprintf(
+                stderr,
+                "ERROR: Can't apply controller action for a rigid body "
+                "with type %d. It's a bug\n",
+                rb->type
+            );
         }
 
         if (action.is_shooting) {

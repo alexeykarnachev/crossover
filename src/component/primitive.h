@@ -3,6 +3,7 @@
 #include "../math.h"
 #include "transformation.h"
 
+#define N_PRIMITIVE_TYPES 4
 typedef enum PrimitiveType {
     CIRCLE_PRIMITIVE,
     RECTANGLE_PRIMITIVE,
@@ -10,7 +11,6 @@ typedef enum PrimitiveType {
     POLYGON_PRIMITIVE
 } PrimitiveType;
 
-#define N_PRIMITIVE_TYPES 4
 extern PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES];
 const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES];
 

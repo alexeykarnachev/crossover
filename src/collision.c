@@ -273,50 +273,28 @@ static void update_tiling(void) {
     }
 }
 
-#ifndef OPTIMIZED_COLLISIONS
-static void compute_collisions(void) {
-    if (N_COLLISIONS != 0) {
-        fprintf(
-            stderr,
-            "ERROR: Can't compute new collisions while the current "
-            "collisions array is not resolved\n"
-        );
-        exit(1);
+static int check_if_entities_can_collide(int entity0, int entity1) {
+    int has_rb0 = check_if_entity_has_component(
+        entity0, RIGID_BODY_COMPONENT
+    );
+    int has_rb1 = check_if_entity_has_component(
+        entity1, RIGID_BODY_COMPONENT
+    );
+
+    if (has_rb0 == 0 || has_rb1 == 0) {
+        return 0;
     }
 
-    int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT;
-    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (!check_if_entity_has_component(entity, required_component)) {
-            continue;
-        }
-
-        Primitive primitive0 = SCENE.colliders[entity];
-        Transformation transformation0 = SCENE.transformations[entity];
-
-        for (int target = entity + 1; target < SCENE.n_entities;
-             ++target) {
-            if (!check_if_entity_has_component(
-                    target, required_component
-                )) {
-                continue;
-            }
-
-            Primitive primitive1 = SCENE.colliders[target];
-            Transformation transformation1 = SCENE.transformations[target];
-            Collision collision = {.entity0 = entity, .entity1 = target};
-            if (collide_primitives(
-                    primitive0,
-                    transformation0,
-                    primitive1,
-                    transformation1,
-                    &collision
-                )) {
-                push_collision(collision);
-            }
-        }
+    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
+    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
+    if (rb0->type != DYNAMIC_RIGID_BODY
+        && rb1->type != DYNAMIC_RIGID_BODY) {
+        return 0;
     }
+
+    return 1;
 }
-#else
+
 static void compute_collisions(void) {
     if (N_COLLISIONS != 0) {
         fprintf(
@@ -333,12 +311,11 @@ static void compute_collisions(void) {
             continue;
         }
 
-        RigidBody rb0 = SCENE.rigid_bodies[entity];
-
         Primitive primitive0 = SCENE.colliders[entity];
         Transformation transformation0 = SCENE.transformations[entity];
-        Array* tiles = &SCENE.entity_to_tiles[entity];
 
+#ifdef OPTIMIZED_COLLISIONS
+        Array* tiles = &SCENE.entity_to_tiles[entity];
         static int collided_targets[MAX_N_ENTITIES];
         memset(collided_targets, 0, sizeof(collided_targets));
         for (int i_tile = 0; i_tile < tiles->length; ++i_tile) {
@@ -347,17 +324,14 @@ static void compute_collisions(void) {
             for (int i_target = 0; i_target < targets->length;
                  ++i_target) {
                 int target = array_get(targets, i_target);
-                RigidBody rb1 = SCENE.rigid_bodies[target];
-                // NOTE: For now I assume that if the target and the
-                // entity don't have the kinematic rigid body,
-                // I don't event calculate the collisions between them,
-                // because for now it useless and only waste the cpu time.
-                // These type of collisions couldn't be resolved anyway.
+#else
+        for (int target = 0; target < SCENE.n_entities; ++target) {
+#endif
                 if (target <= entity || collided_targets[target] == 1) {
                     continue;
                 }
 
-                if (rb0.is_static == 1 && rb1.is_static == 1) {
+                if (check_if_entities_can_collide(entity, target) == 0) {
                     continue;
                 }
 
@@ -381,75 +355,41 @@ static void compute_collisions(void) {
         }
     }
 }
-#endif
-
-static void resolve_impulse(
-    int entity0, int entity1, Collision collision
-) {
-    Vec2 mtv = collision.mtv;
-    Vec2 norm_mtv = normalize(mtv);
-
-    int has_km0 = check_if_entity_has_component(
-        entity0, KINEMATIC_MOVEMENT_COMPONENT
-    );
-    int has_km1 = check_if_entity_has_component(
-        entity1, KINEMATIC_MOVEMENT_COMPONENT
-    );
-    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
-    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
-    KinematicMovement* movement0 = &SCENE.kinematic_movements[entity0];
-    KinematicMovement* movement1 = &SCENE.kinematic_movements[entity1];
-    float rest = (rb0->restitution * rb0->mass
-                  + rb1->restitution * rb1->mass)
-                 / (rb0->mass + rb1->mass);
-
-    // Linear impulse
-    float inv_mass0 = rb0->is_static ? 0.0 : 1.0 / rb0->mass;
-    float inv_mass1 = rb1->is_static ? 0.0 : 1.0 / rb1->mass;
-    Vec2 vel0 = has_km0 ? movement0->linear_velocity : vec2(0.0, 0.0);
-    Vec2 vel1 = has_km1 ? movement1->linear_velocity : vec2(0.0, 0.0);
-    float rel_vel = dot(sub(vel1, vel0), norm_mtv);
-    float imp_k = -(1.0 + rest) * rel_vel / (inv_mass0 + inv_mass1);
-
-    if (has_km0 && (rb0->is_static == 0)) {
-        movement0->linear_velocity = sub(
-            movement0->linear_velocity, scale(norm_mtv, imp_k / rb0->mass)
-        );
-    }
-    if (has_km1 && (rb1->is_static == 0)) {
-        movement1->linear_velocity = add(
-            movement1->linear_velocity, scale(norm_mtv, imp_k / rb1->mass)
-        );
-    }
-}
 
 static void resolve_mtv(int entity0, int entity1, Collision collision) {
     Vec2 mtv = collision.mtv;
-
     RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
     RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
     Transformation* transformation0 = &SCENE.transformations[entity0];
     Transformation* transformation1 = &SCENE.transformations[entity1];
-    if (rb0->is_static == 0 && rb1->is_static == 0) {
+    if (check_if_entities_can_collide(entity0, entity1) == 0) {
+        fprintf(
+            stderr,
+            "ERROR: Trying to resolve a collision between 2 entities "
+            "which can't collide with each other. It's a bug\n"
+        );
+        exit(1);
+    }
+
+    if (rb0->type == DYNAMIC_RIGID_BODY
+        && rb1->type == DYNAMIC_RIGID_BODY) {
         update_position(
             entity0, add(transformation0->curr_position, scale(mtv, 0.5))
         );
         update_position(
             entity1, add(transformation1->curr_position, scale(mtv, -0.5))
         );
-    } else if (rb0->is_static == 0) {
+    } else if (rb0->type == DYNAMIC_RIGID_BODY) {
         update_position(entity0, add(transformation0->curr_position, mtv));
-    } else if (rb1->is_static == 0) {
+    } else if (rb1->type == DYNAMIC_RIGID_BODY) {
         update_position(
             entity1, add(transformation1->curr_position, flip(mtv))
         );
     } else {
         fprintf(
             stderr,
-            "ERROR: Trying to resolve collision between 2 "
-            "entities without KINEMATIC_BODY component. In "
-            "the current workflow this shouldn't happen. This "
-            "is a bug\n"
+            "ERROR: Trying to resolve a collision between 2 non-dynamic "
+            "rigid bodies. It's a bug\n"
         );
         exit(1);
     }
@@ -461,8 +401,6 @@ static void update_scores(int entity) {
     }
 }
 
-// TODO: Collisions resolving is not perfect:
-// Moving objects can squeeze through narrowing areas.
 static void resolve_collisions(int is_playing) {
     if (DEBUG.collisions.resolve || DEBUG.collisions.resolve_once) {
         DEBUG.collisions.resolve_once = 0;
@@ -471,26 +409,27 @@ static void resolve_collisions(int is_playing) {
             Collision collision = pop_collision();
             int entity0 = collision.entity0;
             int entity1 = collision.entity1;
-            int has_rb0 = check_if_entity_has_component(
-                entity0, RIGID_BODY_COMPONENT
+            int can_collide = check_if_entities_can_collide(
+                entity0, entity1
             );
-            int has_rb1 = check_if_entity_has_component(
-                entity1, RIGID_BODY_COMPONENT
-            );
-
-            if ((has_rb0 && has_rb0) == 0) {
-                continue;
+            if (can_collide == 0) {
+                fprintf(
+                    stderr,
+                    "ERROR: Trying to resolve a collision between 2 "
+                    "entities which can't collide with each other. It's a "
+                    "bug\n"
+                );
+                exit(1);
             }
 
-            Vec2 mtv = collision.mtv;
-
-            resolve_impulse(entity0, entity1, collision);
             resolve_mtv(entity0, entity1, collision);
             if (is_playing) {
                 update_scores(entity0);
                 update_scores(entity1);
             }
         }
+    } else {
+        N_COLLISIONS = 0;
     }
 }
 

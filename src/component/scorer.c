@@ -8,39 +8,35 @@
 // TODO: Could be generalized with macros or loop or something like this
 void reset_scorer(Scorer* scorer) {
     scorer->scalars.do_kill.value = 0.0;
-    scorer->scalars.do_kinematic_move.value = 0.0;
-    scorer->scalars.do_kinematic_rotation.value = 0.0;
+    scorer->scalars.do_move.value = 0.0;
+    scorer->scalars.do_rotation.value = 0.0;
     scorer->scalars.do_shoot.value = 0.0;
     scorer->scalars.do_hit.value = 0.0;
     scorer->scalars.get_killed.value = 0.0;
     scorer->scalars.get_hit.value = 0.0;
     scorer->scalars.get_rb_collided.value = 0.0;
 
-    memset(
-        scorer->kinematic_exploration.grid,
-        0,
-        sizeof(scorer->kinematic_exploration.grid)
-    );
-    scorer->kinematic_exploration.cell_enter_time = SCENE.time;
-    scorer->kinematic_exploration.new_cell_score.value = 0.0;
-    scorer->kinematic_exploration.old_cell_score.value = 0.0;
-    scorer->kinematic_exploration.stay_in_cell_score.value = 0.0;
+    memset(scorer->exploration.grid, 0, sizeof(scorer->exploration.grid));
+    scorer->exploration.cell_enter_time = SCENE.time;
+    scorer->exploration.new_cell_score.value = 0.0;
+    scorer->exploration.old_cell_score.value = 0.0;
+    scorer->exploration.stay_in_cell_score.value = 0.0;
 }
 
 // TODO: Could be generalized with macros or loop or something like this
 float get_total_score(Scorer* scorer) {
     float total_score = 0.0;
     total_score += scorer->scalars.do_kill.value;
-    total_score += scorer->scalars.do_kinematic_move.value;
-    total_score += scorer->scalars.do_kinematic_rotation.value;
+    total_score += scorer->scalars.do_move.value;
+    total_score += scorer->scalars.do_rotation.value;
     total_score += scorer->scalars.do_shoot.value;
     total_score += scorer->scalars.do_hit.value;
     total_score += scorer->scalars.get_killed.value;
     total_score += scorer->scalars.get_hit.value;
     total_score += scorer->scalars.get_rb_collided.value;
-    total_score += scorer->kinematic_exploration.new_cell_score.value;
-    total_score += scorer->kinematic_exploration.old_cell_score.value;
-    total_score += scorer->kinematic_exploration.stay_in_cell_score.value;
+    total_score += scorer->exploration.new_cell_score.value;
+    total_score += scorer->exploration.old_cell_score.value;
+    total_score += scorer->exploration.stay_in_cell_score.value;
 
     return total_score;
 }
@@ -58,56 +54,29 @@ void read_scorer(FILE* fp, Scorer* scorer) {
         int cell = explored_cells[i];
         int row = cell / EXPLORATION_GRID_WIDTH;
         int col = cell - row * EXPLORATION_GRID_WIDTH;
-        scorer->kinematic_exploration.grid[row][col] = 1;
+        scorer->exploration.grid[row][col] = 1;
     }
 
+    fread(&scorer->exploration.start_position, sizeof(int), 2, fp);
+    fread(&scorer->exploration.prev_cell, sizeof(int), 2, fp);
+    fread(&scorer->exploration.cell_size, sizeof(float), 1, fp);
+    fread(&scorer->exploration.cell_enter_time, sizeof(float), 1, fp);
+    fread(&scorer->exploration.stay_in_cell_delay, sizeof(float), 1, fp);
+    fread(&scorer->exploration.new_cell_score, sizeof(ScalarScore), 1, fp);
+    fread(&scorer->exploration.old_cell_score, sizeof(ScalarScore), 1, fp);
     fread(
-        &scorer->kinematic_exploration.start_position, sizeof(int), 2, fp
-    );
-    fread(&scorer->kinematic_exploration.prev_cell, sizeof(int), 2, fp);
-    fread(&scorer->kinematic_exploration.cell_size, sizeof(float), 1, fp);
-    fread(
-        &scorer->kinematic_exploration.cell_enter_time,
-        sizeof(float),
-        1,
-        fp
-    );
-    fread(
-        &scorer->kinematic_exploration.stay_in_cell_delay,
-        sizeof(float),
-        1,
-        fp
-    );
-    fread(
-        &scorer->kinematic_exploration.new_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
-    );
-    fread(
-        &scorer->kinematic_exploration.old_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
-    );
-    fread(
-        &scorer->kinematic_exploration.stay_in_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
+        &scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp
     );
 
     free(explored_cells);
 }
 
 void write_scorer(FILE* fp, Scorer* scorer) {
-    int* explored_cells = (int*)malloc(
-        sizeof(scorer->kinematic_exploration.grid)
-    );
+    int* explored_cells = (int*)malloc(sizeof(scorer->exploration.grid));
     int n_explored_cells = 0;
     for (int i = 0; i < EXPLORATION_GRID_HEIGHT; ++i) {
         for (int j = 0; j < EXPLORATION_GRID_WIDTH; ++j) {
-            int is_explored = scorer->kinematic_exploration.grid[i][j];
+            int is_explored = scorer->exploration.grid[i][j];
             if (is_explored) {
                 int idx = i * EXPLORATION_GRID_WIDTH + j;
                 explored_cells[n_explored_cells++] = idx;
@@ -118,40 +87,19 @@ void write_scorer(FILE* fp, Scorer* scorer) {
     fwrite(&scorer->scalars, sizeof(scorer->scalars), 1, fp);
     fwrite(&n_explored_cells, sizeof(int), 1, fp);
     fwrite(explored_cells, sizeof(int), n_explored_cells, fp);
+    fwrite(&scorer->exploration.start_position, sizeof(int), 2, fp);
+    fwrite(&scorer->exploration.prev_cell, sizeof(int), 2, fp);
+    fwrite(&scorer->exploration.cell_size, sizeof(float), 1, fp);
+    fwrite(&scorer->exploration.cell_enter_time, sizeof(float), 1, fp);
+    fwrite(&scorer->exploration.stay_in_cell_delay, sizeof(float), 1, fp);
     fwrite(
-        &scorer->kinematic_exploration.start_position, sizeof(int), 2, fp
-    );
-    fwrite(&scorer->kinematic_exploration.prev_cell, sizeof(int), 2, fp);
-    fwrite(&scorer->kinematic_exploration.cell_size, sizeof(float), 1, fp);
-    fwrite(
-        &scorer->kinematic_exploration.cell_enter_time,
-        sizeof(float),
-        1,
-        fp
+        &scorer->exploration.new_cell_score, sizeof(ScalarScore), 1, fp
     );
     fwrite(
-        &scorer->kinematic_exploration.stay_in_cell_delay,
-        sizeof(float),
-        1,
-        fp
+        &scorer->exploration.old_cell_score, sizeof(ScalarScore), 1, fp
     );
     fwrite(
-        &scorer->kinematic_exploration.new_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
-    );
-    fwrite(
-        &scorer->kinematic_exploration.old_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
-    );
-    fwrite(
-        &scorer->kinematic_exploration.stay_in_cell_score,
-        sizeof(ScalarScore),
-        1,
-        fp
+        &scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp
     );
 
     free(explored_cells);

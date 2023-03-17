@@ -25,13 +25,13 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     PRIMITIVE_COMPONENT,
     MATERIAL_COMPONENT,
     RENDER_LAYER_COMPONENT,
-    KINEMATIC_MOVEMENT_COMPONENT,
     CONTROLLER_COMPONENT,
     VISION_COMPONENT,
     SCORER_COMPONENT,
     TTL_COMPONENT,
     HEALTH_COMPONENT,
-    GUN_COMPONENT};
+    GUN_COMPONENT,
+    BULLET_COMPONENT};
 
 static int LAST_PICKED_ENTITY = -1;
 
@@ -462,14 +462,22 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case RIGID_BODY_COMPONENT: {
             RigidBody* rb = &SCENE.rigid_bodies[entity];
-            int was_static = rb->is_static;
-            igCheckbox("is static", (bool*)(&rb->is_static));
+            int type = render_component_type_picker(
+                "Type",
+                rb->type,
+                (int*)RIGID_BODY_TYPES,
+                N_RIGID_BODY_TYPES,
+                RIGID_BODY_TYPE_NAMES
+            );
+            change_rigid_body_type(rb, type);
 
-            if (rb->is_static == 0) {
-                ig_drag_float("mass", &rb->mass, 1.0, 1000.0, 1.0, 0);
+            if (rb->type == DYNAMIC_RIGID_BODY) {
+                ig_drag_float(
+                    "mass", &rb->b.dynamic_rb.mass, 1.0, 1000.0, 1.0, 0
+                );
                 ig_drag_float(
                     "linear_damping",
-                    &rb->linear_damping,
+                    &rb->b.dynamic_rb.linear_damping,
                     0.0,
                     FLT_MAX,
                     1.0,
@@ -477,7 +485,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
                 ig_drag_float(
                     "moment of inertia",
-                    &rb->moment_of_inertia,
+                    &rb->b.dynamic_rb.moment_of_inertia,
                     0.0,
                     FLT_MAX,
                     1.0,
@@ -485,7 +493,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
                 ig_drag_float(
                     "angular damping",
-                    &rb->angular_damping,
+                    &rb->b.dynamic_rb.angular_damping,
                     0.0,
                     FLT_MAX,
                     1.0,
@@ -493,7 +501,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
                 ig_drag_float(
                     "angular stiffness",
-                    &rb->angular_stiffness,
+                    &rb->b.dynamic_rb.angular_stiffness,
                     0.0,
                     FLT_MAX,
                     1.0,
@@ -501,9 +509,9 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
             }
 
-            ig_drag_float(
-                "restitution", &rb->restitution, 0.0, 1.0, 0.01, 0
-            );
+            // ig_drag_float(
+            //     "restitution", &rb->restitution, 0.0, 1.0, 0.01, 0
+            //);
             break;
         }
         case COLLIDER_COMPONENT: {
@@ -546,30 +554,6 @@ static void render_component_inspector(int entity, ComponentType type) {
             ig_drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
             break;
         }
-        case KINEMATIC_MOVEMENT_COMPONENT: {
-            KinematicMovement* m = &SCENE.kinematic_movements[entity];
-
-            igCheckbox(
-                "target watch orient.",
-                (bool*)(&m->consider_target_watch_orientation)
-            );
-            if (m->consider_target_watch_orientation) {
-                ig_drag_float(
-                    "target watch orient.",
-                    &m->target_watch_orientation,
-                    -PI,
-                    PI,
-                    0.05,
-                    0
-                );
-            }
-            ig_drag_float(
-                "watch orient.", &m->watch_orientation, -PI, PI, 0.05, 0
-            );
-            igText("linear speed: %f", length(m->linear_velocity));
-            igText("angular speed: %f", m->angular_velocity);
-            break;
-        }
         case VISION_COMPONENT: {
             Vision* vision = &SCENE.visions[entity];
             int* n_view_rays = &vision->n_view_rays;
@@ -590,10 +574,23 @@ static void render_component_inspector(int entity, ComponentType type) {
                 N_CONTROLLER_TYPES,
                 CONTROLLER_TYPE_NAMES
             );
-            ig_drag_float(
-                "force", &controller->force_magnitude, 0.0, FLT_MAX, 0.1, 0
-            );
             change_controller_type(controller, type);
+            ig_drag_float(
+                "kinematic speed",
+                &controller->kinematic_speed,
+                0.0,
+                FLT_MAX,
+                0.1,
+                0
+            );
+            ig_drag_float(
+                "dynamic force",
+                &controller->dynamic_force_magnitude,
+                0.0,
+                FLT_MAX,
+                0.1,
+                0
+            );
 
             switch (type) {
                 case PLAYER_KEYBOARD_CONTROLLER: {
@@ -668,6 +665,12 @@ static void render_component_inspector(int entity, ComponentType type) {
             }
 
             ig_drag_float("fire rate", fire_rate, 0.0, 10.0, 0.01, 0);
+            break;
+        }
+        case BULLET_COMPONENT: {
+            Bullet* bullet = &SCENE.bullets[entity];
+            float* speed = &bullet->speed;
+            ig_drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
             break;
         }
     }
@@ -811,11 +814,6 @@ static void render_debug_inspector(void) {
     if (igTreeNodeEx_Str("Shading", 0)) {
         igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
         igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
-        igCheckbox(
-            "Kinematic movements",
-            (bool*)(&DEBUG.shading.kinematic_movements)
-        );
-        igCheckbox("Wireframe", (bool*)(&DEBUG.shading.wireframe));
 
         igSeparator();
         igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));

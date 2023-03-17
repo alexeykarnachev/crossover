@@ -70,17 +70,12 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
     fwrite(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
-    fwrite(
-        SCENE.kinematic_movements,
-        sizeof(KinematicMovement),
-        SCENE.n_entities,
-        fp
-    );
     fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
     fwrite(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
     fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fwrite(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
     fwrite(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
     fwrite(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
@@ -162,17 +157,12 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
         SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
     );
     fread(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
-    fread(
-        SCENE.kinematic_movements,
-        sizeof(KinematicMovement),
-        SCENE.n_entities,
-        fp
-    );
     fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
     fread(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
     fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
+    fread(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
     fread(SCENE.healths, sizeof(Health), SCENE.n_entities, fp);
     fread(SCENE.render_layers, sizeof(float), SCENE.n_entities, fp);
@@ -318,10 +308,6 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                 case MATERIAL_COMPONENT:
                     SCENE.materials[entity_copy] = SCENE.materials[entity];
                     break;
-                case KINEMATIC_MOVEMENT_COMPONENT:
-                    SCENE.kinematic_movements[entity_copy]
-                        = SCENE.kinematic_movements[entity];
-                    break;
                 case VISION_COMPONENT:
                     SCENE.visions[entity_copy] = SCENE.visions[entity];
                     break;
@@ -337,6 +323,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.guns[entity_copy] = SCENE.guns[entity];
                     break;
                 case BULLET_COMPONENT:
+                    SCENE.bullets[entity_copy] = SCENE.bullets[entity];
                     break;
                 case OWNER_COMPONENT:
                     SCENE.owners[entity_copy] = SCENE.owners[entity];
@@ -374,7 +361,6 @@ int spawn_guy(
     Primitive collider,
     Material material,
     float render_layer,
-    KinematicMovement kinematic_movement,
     Vision vision,
     Gun gun,
     Controller controller,
@@ -388,19 +374,16 @@ int spawn_guy(
     SCENE.colliders[entity] = collider;
     SCENE.materials[entity] = material;
     SCENE.render_layers[entity] = render_layer;
-    SCENE.kinematic_movements[entity] = kinematic_movement;
     SCENE.visions[entity] = vision;
     SCENE.guns[entity] = gun;
     SCENE.healths[entity] = health;
     SCENE.controllers[entity] = controller;
 
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | KINEMATIC_MOVEMENT_COMPONENT
-                               | VISION_COMPONENT | OBSERVABLE_COMPONENT
-                               | COLLIDER_COMPONENT | RIGID_BODY_COMPONENT
-                               | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
-                               | GUN_COMPONENT | HEALTH_COMPONENT
-                               | CONTROLLER_COMPONENT
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT | VISION_COMPONENT
+                               | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
+                               | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
+                               | MATERIAL_COMPONENT | GUN_COMPONENT
+                               | HEALTH_COMPONENT | CONTROLLER_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
     return entity;
@@ -429,21 +412,14 @@ int spawn_obstacle(
     return entity;
 }
 
-int spawn_bullet(
-    Transformation transformation,
-    KinematicMovement kinematic_movement,
-    float ttl,
-    int owner
-) {
+int spawn_bullet(Bullet bullet, int owner, float ttl) {
     int entity = spawn_entity("Bullet");
-    SCENE.transformations[entity] = transformation;
-    SCENE.kinematic_movements[entity] = kinematic_movement;
+    SCENE.transformations[entity] = SCENE.transformations[owner];
+    SCENE.bullets[entity] = bullet;
     SCENE.ttls[entity] = ttl;
     SCENE.owners[entity] = owner;
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | KINEMATIC_MOVEMENT_COMPONENT
-                               | TTL_COMPONENT | BULLET_COMPONENT
-                               | OWNER_COMPONENT;
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT | TTL_COMPONENT
+                               | BULLET_COMPONENT | OWNER_COMPONENT;
 }
 
 int spawn_default_ai_guy(
@@ -451,12 +427,11 @@ int spawn_default_ai_guy(
 ) {
     return spawn_guy(
         transformation,
-        init_default_kinematic_rigid_body(),
+        init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
         init_material(REDWOOD_COLOR),
         0.0,
-        init_kinematic_movement(1),
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
         controller,
@@ -477,12 +452,11 @@ int spawn_default_brain_ai_guy(Transformation transformation) {
 int spawn_default_player_keyboard_guy(Transformation transformation) {
     return spawn_guy(
         transformation,
-        init_default_kinematic_rigid_body(),
+        init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
         init_material(FOREST_GREEN_COLOR),
         0.0,
-        init_kinematic_movement(1),
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
         init_default_player_keyboard_controller(),
@@ -574,6 +548,7 @@ void update_position(int entity, Vec2 position) {
 }
 
 void update_orientation(int entity, float orientation) {
+    orientation = fmodf(orientation, 2.0 * PI);
     Transformation* t = &SCENE.transformations[entity];
     t->prev_orientation = t->curr_orientation;
     t->curr_orientation = orientation;
@@ -611,8 +586,8 @@ void update_scene(float dt, int is_playing) {
         update_bullets(dt);
         profiler_pop(PROFILER);
 
-        profiler_push(PROFILER, "update_kinematic_movements");
-        update_kinematic_movements(dt);
+        profiler_push(PROFILER, "update_rigid_bodies");
+        update_rigid_bodies(dt);
         profiler_pop(PROFILER);
 
         profiler_push(PROFILER, "update_entities_scene_counter");

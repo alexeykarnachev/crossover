@@ -10,26 +10,28 @@
 #include <stdlib.h>
 
 void update_bullets(float dt) {
-    int required_component = TRANSFORMATION_COMPONENT
-                             | KINEMATIC_MOVEMENT_COMPONENT
-                             | BULLET_COMPONENT;
-    for (int bullet = 0; bullet < SCENE.n_entities; ++bullet) {
-        if (!check_if_entity_has_component(bullet, required_component)) {
+    int required_component = TRANSFORMATION_COMPONENT | BULLET_COMPONENT;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
         int bullet_owner = -1;
-        if (check_if_entity_has_component(bullet, OWNER_COMPONENT)) {
-            bullet_owner = SCENE.owners[bullet];
+        if (check_if_entity_has_component(entity, OWNER_COMPONENT)) {
+            bullet_owner = SCENE.owners[entity];
         }
-        Transformation transformation = SCENE.transformations[bullet];
-        KinematicMovement movement = SCENE.kinematic_movements[bullet];
-        Vec2 ray = scale(movement.linear_velocity, dt);
+        Transformation* transformation = &SCENE.transformations[entity];
+        Bullet bullet = SCENE.bullets[entity];
+        Vec2 velocity = scale(
+            get_orientation_vec(transformation->curr_orientation),
+            bullet.speed
+        );
+        Vec2 ray = scale(velocity, dt);
         int target_required_component = TRANSFORMATION_COMPONENT
                                         | COLLIDER_COMPONENT
                                         | RIGID_BODY_COMPONENT;
         RayCastResult result = cast_ray(
-            transformation.curr_position,
+            transformation->curr_position,
             ray,
             target_required_component,
             bullet_owner
@@ -37,7 +39,7 @@ void update_bullets(float dt) {
         int entity = result.entity;
         if (entity != -1) {
             if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
-                float damage = length(movement.linear_velocity);
+                float damage = length(velocity);
                 Health* health = &SCENE.healths[entity];
                 health->curr_value -= damage;
                 health->damage_dealler = bullet_owner;
@@ -55,23 +57,30 @@ void update_bullets(float dt) {
                     update_do_hit_score(bullet_owner);
                 }
             }
-            destroy_entity(bullet);
+            destroy_entity(entity);
+        } else {
+            Vec2 position = add(
+                transformation->curr_position, scale(velocity, dt)
+            );
+            update_position(entity, position);
         }
     }
 }
 
 void render_bullets(float dt) {
-    int required_component = TRANSFORMATION_COMPONENT
-                             | KINEMATIC_MOVEMENT_COMPONENT
-                             | BULLET_COMPONENT;
-    for (int bullet = 0; bullet < SCENE.n_entities; ++bullet) {
-        if (!check_if_entity_has_component(bullet, required_component)) {
+    int required_component = TRANSFORMATION_COMPONENT | BULLET_COMPONENT;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (!check_if_entity_has_component(entity, required_component)) {
             continue;
         }
 
-        Transformation transformation = SCENE.transformations[bullet];
-        KinematicMovement movement = SCENE.kinematic_movements[bullet];
-        Vec2 ray = scale(movement.linear_velocity, dt);
+        Transformation transformation = SCENE.transformations[entity];
+        Bullet bullet = SCENE.bullets[entity];
+        Vec2 velocity = scale(
+            get_orientation_vec(transformation.curr_orientation),
+            bullet.speed
+        );
+        Vec2 ray = scale(velocity, dt);
         render_debug_line(
             transformation.curr_position,
             add(transformation.curr_position, ray),

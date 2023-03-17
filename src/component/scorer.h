@@ -13,8 +13,8 @@ typedef struct ScalarScore {
 typedef struct Scorer {
     struct {
         ScalarScore do_kill;
-        ScalarScore do_kinematic_move;
-        ScalarScore do_kinematic_rotation;
+        ScalarScore do_move;
+        ScalarScore do_rotation;
         ScalarScore do_shoot;
         ScalarScore do_hit;
         ScalarScore get_killed;
@@ -33,7 +33,7 @@ typedef struct Scorer {
         ScalarScore new_cell_score;
         ScalarScore old_cell_score;
         ScalarScore stay_in_cell_score;
-    } kinematic_exploration;
+    } exploration;
 } Scorer;
 
 void reset_scorer(Scorer* scorer);

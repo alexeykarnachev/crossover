@@ -384,9 +384,6 @@ void render_scene(float dt) {
         render_colliders();
     }
 
-    if (DEBUG.shading.kinematic_movements) {
-        render_debug_kinematic_movements();
-    }
     if (DEBUG.shading.visions) {
         render_debug_visions();
     }

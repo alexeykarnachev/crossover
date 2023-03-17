@@ -43,20 +43,26 @@ void change_controller_type(
     }
 }
 
-Controller init_player_keyboard_controller(float force_magnitude) {
+Controller init_player_keyboard_controller(
+    float kinematic_speed, float dynamic_force_magnitude
+) {
     Controller controller = {0};
 
-    controller.force_magnitude = force_magnitude;
+    controller.kinematic_speed = kinematic_speed;
+    controller.dynamic_force_magnitude = dynamic_force_magnitude;
     controller.type = PLAYER_KEYBOARD_CONTROLLER;
     PlayerKeyboardController player_keyboard_controller;
     controller.c.player_keyboard = player_keyboard_controller;
     return controller;
 }
 
-Controller init_dummy_ai_controller(float force_magnitude) {
+Controller init_dummy_ai_controller(
+    float kinematic_speed, float dynamic_force_magnitude
+) {
     Controller controller = {0};
 
-    controller.force_magnitude = force_magnitude;
+    controller.kinematic_speed = kinematic_speed;
+    controller.dynamic_force_magnitude = dynamic_force_magnitude;
     controller.type = DUMMY_AI_CONTROLLER;
     DummyAIController dummy_ai_controller = {0};
     dummy_ai_controller.is_shooting = 1;
@@ -64,22 +70,34 @@ Controller init_dummy_ai_controller(float force_magnitude) {
     return controller;
 }
 
-Controller init_brain_ai_controller(float force_magnitude) {
+Controller init_brain_ai_controller(
+    float kinematic_speed, float dynamic_force_magnitude
+) {
     Controller controller = {0};
 
-    controller.force_magnitude = force_magnitude;
+    controller.kinematic_speed = kinematic_speed;
+    controller.dynamic_force_magnitude = dynamic_force_magnitude;
     controller.type = BRAIN_AI_CONTROLLER;
     return controller;
 }
 
 Controller init_default_player_keyboard_controller(void) {
-    return init_player_keyboard_controller(DEFAULT_CONTROLLER_FORCE);
+    return init_player_keyboard_controller(
+        DEFAULT_CONTROLLER_KINEMATIC_SPEED,
+        DEFAULT_CONTROLLER_DYNAMIC_FORCE
+    );
 }
 
 Controller init_default_dummy_ai_controller(void) {
-    return init_dummy_ai_controller(DEFAULT_CONTROLLER_FORCE);
+    return init_dummy_ai_controller(
+        DEFAULT_CONTROLLER_KINEMATIC_SPEED,
+        DEFAULT_CONTROLLER_DYNAMIC_FORCE
+    );
 }
 
 Controller init_default_brain_ai_controller(void) {
-    return init_brain_ai_controller(DEFAULT_CONTROLLER_FORCE);
+    return init_brain_ai_controller(
+        DEFAULT_CONTROLLER_KINEMATIC_SPEED,
+        DEFAULT_CONTROLLER_DYNAMIC_FORCE
+    );
 }

@@ -13,14 +13,13 @@ void update_do_kill_score(int entity) {
     scorer->value += scorer->weight;
 }
 
-void update_do_kinematic_move_score(int entity, Vec2 step) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_kinematic_move;
+void update_do_move_score(int entity, Vec2 step) {
+    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_move;
     scorer->value += scorer->weight * length(step);
 }
 
-void update_do_kinematic_rotation_score(int entity, float angular_step) {
-    ScalarScore* scorer
-        = &SCENE.scorers[entity].scalars.do_kinematic_rotation;
+void update_do_rotation_score(int entity, float angular_step) {
+    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_rotation;
     scorer->value += scorer->weight * fabs(angular_step);
 }
 
@@ -44,12 +43,12 @@ void update_get_rb_collided_score(int entity) {
     scorer->value += scorer->weight;
 }
 
-void update_kinematic_exploration_score(int entity, float dt) {
+void update_exploration_score(int entity, float dt) {
     Scorer* scorer = &SCENE.scorers[entity];
-    Vec2 start_position = scorer->kinematic_exploration.start_position;
+    Vec2 start_position = scorer->exploration.start_position;
     Vec2 curr_position = SCENE.transformations[entity].curr_position;
     Vec2 diff = sub(curr_position, start_position);
-    float cell_size = scorer->kinematic_exploration.cell_size;
+    float cell_size = scorer->exploration.cell_size;
 
     // TODO: Maybe reduce duplication somehow? Or maybe not...
     float diff_x = fabs(diff.x) - 0.5 * cell_size;
@@ -66,37 +65,32 @@ void update_kinematic_exploration_score(int entity, float dt) {
 
     cell_x += EXPLORATION_GRID_WIDTH / 2;
     cell_y += EXPLORATION_GRID_HEIGHT / 2;
-    int prev_cell_x = scorer->kinematic_exploration.prev_cell.x;
-    int prev_cell_y = scorer->kinematic_exploration.prev_cell.y;
+    int prev_cell_x = scorer->exploration.prev_cell.x;
+    int prev_cell_y = scorer->exploration.prev_cell.y;
 
     if (min(cell_x, cell_y) >= 0 && cell_x < EXPLORATION_GRID_WIDTH
         && cell_y < EXPLORATION_GRID_HEIGHT) {
-        int* is_visited
-            = &scorer->kinematic_exploration.grid[cell_x][cell_y];
+        int* is_visited = &scorer->exploration.grid[cell_x][cell_y];
         if (*is_visited == 0) {
             *is_visited = 1;
-            float weight
-                = scorer->kinematic_exploration.new_cell_score.weight;
-            scorer->kinematic_exploration.new_cell_score.value += weight;
-            scorer->kinematic_exploration.cell_enter_time = SCENE.time;
+            float weight = scorer->exploration.new_cell_score.weight;
+            scorer->exploration.new_cell_score.value += weight;
+            scorer->exploration.cell_enter_time = SCENE.time;
         } else if (cell_x != prev_cell_x || cell_y != prev_cell_y) {
-            float weight
-                = scorer->kinematic_exploration.old_cell_score.weight;
-            scorer->kinematic_exploration.old_cell_score.value += weight;
-            scorer->kinematic_exploration.cell_enter_time = SCENE.time;
+            float weight = scorer->exploration.old_cell_score.weight;
+            scorer->exploration.old_cell_score.value += weight;
+            scorer->exploration.cell_enter_time = SCENE.time;
         } else {
-            float weight
-                = scorer->kinematic_exploration.stay_in_cell_score.weight;
+            float weight = scorer->exploration.stay_in_cell_score.weight;
             float stay_in_cell_time
-                = SCENE.time
-                  - scorer->kinematic_exploration.cell_enter_time;
+                = SCENE.time - scorer->exploration.cell_enter_time;
             if (stay_in_cell_time
-                > scorer->kinematic_exploration.stay_in_cell_delay) {
-                scorer->kinematic_exploration.stay_in_cell_score.value
-                    += weight * dt;
+                > scorer->exploration.stay_in_cell_delay) {
+                scorer->exploration.stay_in_cell_score.value += weight
+                                                                * dt;
             }
         }
     }
 
-    scorer->kinematic_exploration.prev_cell = vec2(cell_x, cell_y);
+    scorer->exploration.prev_cell = vec2(cell_x, cell_y);
 }
