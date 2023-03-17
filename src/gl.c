@@ -264,15 +264,24 @@ static RenderCall prepare_primitive_render_call(
     Material material,
     float render_layer
 ) {
+    if (material.type != PLAIN_COLOR_MATERIAL) {
+        fprintf(
+            stderr,
+            "ERROR: Can render only material of type "
+            "PLAIN_COLOR_MATERIAL. Another types need to be implemented\n"
+        );
+        exit(1);
+    }
+
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
     PrimitiveType type = primitive.type;
 
     set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
     set_uniform_1i(program, "type", type);
-    set_uniform_3fv(
-        program, "diffuse_color", (float*)&material.diffuse_color, 1
-    );
+
+    float* diffuse_color = (float*)&material.m.plain_color.diffuse_color;
+    set_uniform_3fv(program, "diffuse_color", diffuse_color, 1);
     set_uniform_1f(program, "render_layer", render_layer);
 
     GLuint draw_mode = GL_TRIANGLE_FAN;
@@ -396,7 +405,7 @@ void render_scene(float dt) {
         RenderCall render_call = prepare_primitive_render_call(
             dp.transformation,
             dp.primitive,
-            init_material(dp.color),
+            init_plain_color_material(dp.color),
             dp.render_layer
         );
         execute_render_call(render_call, dp.fill_type);

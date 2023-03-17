@@ -9,18 +9,25 @@ typedef struct PlainColorMaterial {
 // ------------------------------------------------------------------
 #define N_PROCEDURAL_MATERIAL_TYPES 2
 typedef enum ProceduralMaterialType {
-    TEST_PROCEDURAL_MATERIAL,
-    BRICKS_PROCEDURAL_MATERIAL
+    BRICKS_PROCEDURAL_MATERIAL,
+    STONES_PROCEDURAL_MATERIAL
 } ProceduralMaterialType;
 
-extern ProceduralMaterialType PROCEDURAL_MATERIAL_TYPES[N_PROCEDURAL_MATERIAL_TYPES];
+extern ProceduralMaterialType
+    PROCEDURAL_MATERIAL_TYPES[N_PROCEDURAL_MATERIAL_TYPES];
 const char* PROCEDURAL_MATERIAL_TYPE_NAMES[N_PROCEDURAL_MATERIAL_TYPES];
+
+typedef struct ProceduralMaterialBricks {
+} ProceduralMaterialBricks;
+
+typedef struct ProceduralMaterialStones {
+} ProceduralMaterialStones;
 
 typedef struct ProceduralMaterial {
     ProceduralMaterialType type;
     union {
-        ProceduralMaterialTest test;
         ProceduralMaterialBricks bricks;
+        ProceduralMaterialStones stones;
     } m;
 } ProceduralMaterial;
 
@@ -42,11 +49,19 @@ typedef struct Material {
     } m;
 } Material;
 
+// ------------------------------------------------------------------
+void change_material_type(Material* material, MaterialType target_type);
+void change_procedural_material_type(
+    Material* material, ProceduralMaterialType target_type
+);
+
+Material init_plain_color_material(Vec3 diffuse_color);
+Material init_procedural_bricks_material(void);
+Material init_procedural_stones_material(void);
+Material init_default_plain_color_material(void);
+Material init_default_procedural_material(void);
 
 // ------------------------------------------------------------------
-
-Material init_material(Vec3 diffuse_color);
-
 extern Vec3 RED_COLOR;
 extern Vec3 REDWOOD_COLOR;
 extern Vec3 GREEN_COLOR;

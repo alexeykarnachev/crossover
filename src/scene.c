@@ -430,7 +430,7 @@ int spawn_default_ai_guy(
         init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_material(REDWOOD_COLOR),
+        init_plain_color_material(REDWOOD_COLOR),
         0.0,
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
@@ -455,7 +455,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_material(FOREST_GREEN_COLOR),
+        init_plain_color_material(FOREST_GREEN_COLOR),
         0.0,
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
@@ -470,7 +470,7 @@ int spawn_default_circle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_material(GRAY_COLOR),
+        init_plain_color_material(GRAY_COLOR),
         0.0
     );
 }
@@ -481,7 +481,7 @@ int spawn_default_rectangle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_rectangle_primitive(),
         init_default_rectangle_primitive(),
-        init_material(GRAY_COLOR),
+        init_plain_color_material(GRAY_COLOR),
         0.0
     );
 }
@@ -492,7 +492,7 @@ int spawn_default_line_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_line_primitive(),
         init_default_line_primitive(),
-        init_material(GRAY_COLOR),
+        init_plain_color_material(GRAY_COLOR),
         0.0
     );
 }
@@ -503,7 +503,7 @@ int spawn_default_polygon_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_polygon_primitive(),
         init_default_polygon_primitive(),
-        init_material(GRAY_COLOR),
+        init_plain_color_material(GRAY_COLOR),
         0.0
     );
 }

@@ -529,6 +529,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                 rb->b.dynamic_rb.linear_velocity = vec2(0.0, 0.0);
             }
 
+            // TODO: Introduce dynamic body restitution (bouncing)
             // ig_drag_float(
             //     "restitution", &rb->restitution, 0.0, 1.0, 0.01, 0
             //);
@@ -564,9 +565,47 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case MATERIAL_COMPONENT: {
             Material* material = &SCENE.materials[entity];
-            float* color = (float*)&material->diffuse_color;
-            igText("Diffuse color");
-            igColorPicker3("", color, COLOR_PICKER_FLAGS);
+            int has_primitive = check_if_entity_has_component(
+                entity, PRIMITIVE_COMPONENT
+            );
+            if (has_primitive == 0) {
+                igTextColored(
+                    IG_RED_COLOR,
+                    "ERROR: Material component requires Primitive\n"
+                    "       component attached"
+                );
+                break;
+            }
+            int type = render_component_type_picker(
+                "Type",
+                material->type,
+                (int*)MATERIAL_TYPES,
+                N_MATERIAL_TYPES,
+                MATERIAL_TYPE_NAMES
+            );
+            change_material_type(material, type);
+
+            switch (type) {
+                case PLAIN_COLOR_MATERIAL: {
+                    float* color
+                        = (float*)&material->m.plain_color.diffuse_color;
+                    igText("diffuse color");
+                    igColorPicker3("", color, COLOR_PICKER_FLAGS);
+                    break;
+                }
+                case PROCEDURAL_MATERIAL: {
+                    int type = render_component_type_picker(
+                        "Procedural type",
+                        material->m.procedural.type,
+                        (int*)PROCEDURAL_MATERIAL_TYPES,
+                        N_PROCEDURAL_MATERIAL_TYPES,
+                        PROCEDURAL_MATERIAL_TYPE_NAMES
+                    );
+                    change_procedural_material_type(material, type);
+                    break;
+                }
+            }
+
             break;
         }
         case RENDER_LAYER_COMPONENT: {
