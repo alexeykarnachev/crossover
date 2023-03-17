@@ -584,6 +584,21 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case CONTROLLER_COMPONENT: {
             Controller* controller = &SCENE.controllers[entity];
+            RigidBody* rb = &SCENE.rigid_bodies[entity];
+            int has_rb = check_if_entity_has_component(
+                entity, RIGID_BODY_COMPONENT
+            );
+            int can_be_controlled = rb->type == KINEMATIC_RIGID_BODY
+                                    || rb->type == DYNAMIC_RIGID_BODY;
+            if (has_rb == 0 || can_be_controlled == 0) {
+                igTextColored(
+                    IG_RED_COLOR,
+                    "ERROR: Controller component doesn't work without\n"
+                    "       RigidBody component (kinematic or dynamic)"
+                );
+                break;
+            }
+
             int type = render_component_type_picker(
                 "Type",
                 controller->type,
