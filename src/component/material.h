@@ -1,9 +1,49 @@
 #pragma once
 #include "../math.h"
 
-typedef struct Material {
+// ------------------------------------------------------------------
+typedef struct PlainColorMaterial {
     Vec3 diffuse_color;
+} PlainColorMaterial;
+
+// ------------------------------------------------------------------
+#define N_PROCEDURAL_MATERIAL_TYPES 2
+typedef enum ProceduralMaterialType {
+    TEST_PROCEDURAL_MATERIAL,
+    BRICKS_PROCEDURAL_MATERIAL
+} ProceduralMaterialType;
+
+extern ProceduralMaterialType PROCEDURAL_MATERIAL_TYPES[N_PROCEDURAL_MATERIAL_TYPES];
+const char* PROCEDURAL_MATERIAL_TYPE_NAMES[N_PROCEDURAL_MATERIAL_TYPES];
+
+typedef struct ProceduralMaterial {
+    ProceduralMaterialType type;
+    union {
+        ProceduralMaterialTest test;
+        ProceduralMaterialBricks bricks;
+    } m;
+} ProceduralMaterial;
+
+// ------------------------------------------------------------------
+#define N_MATERIAL_TYPES 2
+typedef enum MaterialType {
+    PLAIN_COLOR_MATERIAL,
+    PROCEDURAL_MATERIAL
+} MaterialType;
+
+extern MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES];
+const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
+
+typedef struct Material {
+    MaterialType type;
+    union {
+        PlainColorMaterial plain_color;
+        ProceduralMaterial procedural;
+    } m;
 } Material;
+
+
+// ------------------------------------------------------------------
 
 Material init_material(Vec3 diffuse_color);
 
