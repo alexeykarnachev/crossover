@@ -18,7 +18,7 @@ void update_rigid_bodies(float dt) {
         float* angular_velocity = NULL;
         switch (rb->type) {
             case STATIC_RIGID_BODY:
-                return;
+                continue;
             case KINEMATIC_RIGID_BODY:
                 linear_velocity = &rb->b.kinematic_rb.linear_velocity;
                 angular_velocity = &rb->b.kinematic_rb.angular_velocity;
