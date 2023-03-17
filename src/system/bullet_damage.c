@@ -36,18 +36,18 @@ void update_bullets(float dt) {
             target_required_component,
             bullet_owner
         );
-        int entity = result.entity;
-        if (entity != -1) {
-            if (check_if_entity_has_component(entity, HEALTH_COMPONENT)) {
+        int target = result.entity;
+        if (target != -1) {
+            if (check_if_entity_has_component(target, HEALTH_COMPONENT)) {
                 float damage = length(velocity);
                 Health* health = &SCENE.healths[entity];
                 health->curr_value -= damage;
                 health->damage_dealler = bullet_owner;
 
                 if (check_if_entity_has_component(
-                        entity, SCORER_COMPONENT
+                        target, SCORER_COMPONENT
                     )) {
-                    update_get_hit_score(entity);
+                    update_get_hit_score(target);
                 }
 
                 if (bullet_owner != -1
