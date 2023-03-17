@@ -428,6 +428,9 @@ static void render_brain_ai_controller_inspector(int entity) {
                 "Brain: %s",
                 get_short_file_path(params.key)
             );
+            ig_drag_float(
+                "temperature", &ai->temperature, 0.0, 10.0, 0.01, 0
+            );
         }
     }
 }
