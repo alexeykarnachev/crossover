@@ -1,65 +1,42 @@
 #pragma once
 #include "../math.h"
 
-// ------------------------------------------------------------------
-typedef struct PlainColorMaterial {
-    Vec3 diffuse_color;
-} PlainColorMaterial;
-
-// ------------------------------------------------------------------
-#define N_PROCEDURAL_MATERIAL_TYPES 2
-typedef enum ProceduralMaterialType {
-    BRICKS_PROCEDURAL_MATERIAL,
-    STONES_PROCEDURAL_MATERIAL
-} ProceduralMaterialType;
-
-extern ProceduralMaterialType
-    PROCEDURAL_MATERIAL_TYPES[N_PROCEDURAL_MATERIAL_TYPES];
-const char* PROCEDURAL_MATERIAL_TYPE_NAMES[N_PROCEDURAL_MATERIAL_TYPES];
-
-typedef struct ProceduralMaterialBricks {
-} ProceduralMaterialBricks;
-
-typedef struct ProceduralMaterialStones {
-} ProceduralMaterialStones;
-
-typedef struct ProceduralMaterial {
-    ProceduralMaterialType type;
-    union {
-        ProceduralMaterialBricks bricks;
-        ProceduralMaterialStones stones;
-    } m;
-} ProceduralMaterial;
-
-// ------------------------------------------------------------------
-#define N_MATERIAL_TYPES 2
+#define N_MATERIAL_TYPES 3
 typedef enum MaterialType {
-    PLAIN_COLOR_MATERIAL,
-    PROCEDURAL_MATERIAL
+    COLOR_MATERIAL,
+    BRICK_MATERIAL,
+    STONE_MATERIAL
 } MaterialType;
-
 extern MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES];
-const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
+extern const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
+
+typedef struct ColorMaterial {
+    Vec3 color;
+} ColorMaterial;
+
+typedef struct BrickMaterial {
+} BrickMaterial;
+
+typedef struct StoneMaterial {
+} StoneMaterial;
 
 typedef struct Material {
     MaterialType type;
     union {
-        PlainColorMaterial plain_color;
-        ProceduralMaterial procedural;
+        ColorMaterial color;
+        BrickMaterial brick;
+        StoneMaterial stone;
     } m;
 } Material;
 
-// ------------------------------------------------------------------
 void change_material_type(Material* material, MaterialType target_type);
-void change_procedural_material_type(
-    Material* material, ProceduralMaterialType target_type
-);
 
-Material init_plain_color_material(Vec3 diffuse_color);
-Material init_procedural_bricks_material(void);
-Material init_procedural_stones_material(void);
-Material init_default_plain_color_material(void);
-Material init_default_procedural_material(void);
+Material init_color_material(Vec3 color);
+Material init_brick_material(void);
+Material init_stone_material(void);
+Material init_default_color_material(void);
+Material init_default_brick_material(void);
+Material init_default_stone_material(void);
 
 // ------------------------------------------------------------------
 extern Vec3 RED_COLOR;

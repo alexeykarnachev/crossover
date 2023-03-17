@@ -2,6 +2,7 @@
 // TODO: decouple scene and primitive (almost don't need it here)
 #include "../scene.h"
 #include "math.h"
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -165,7 +166,7 @@ static int get_line_fan_vertices(
 }
 
 int get_primitive_vertices(
-    Primitive primitive, Vec2 out[MAX_N_POLYGON_VERTICES]
+    Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]
 ) {
     PrimitiveType type = primitive.type;
     int n_vertices;
@@ -175,14 +176,16 @@ int get_primitive_vertices(
             n_vertices = 0;
         case RECTANGLE_PRIMITIVE:
             n_vertices = get_rectangle_vertices(
-                primitive.p.rectangle, out
+                primitive.p.rectangle, vertices
             );
             break;
         case LINE_PRIMITIVE:
-            n_vertices = get_line_vertices(primitive.p.line, out);
+            n_vertices = get_line_vertices(primitive.p.line, vertices);
             break;
         case POLYGON_PRIMITIVE:
-            n_vertices = get_polygon_vertices(primitive.p.polygon, out);
+            n_vertices = get_polygon_vertices(
+                primitive.p.polygon, vertices
+            );
             break;
         default: {
             PRIMITIVE_TYPE_ERROR("get_primitive_vertices", type);
@@ -193,7 +196,7 @@ int get_primitive_vertices(
 }
 
 int get_primitive_fan_vertices(
-    Primitive primitive, Vec2 out[MAX_N_POLYGON_VERTICES]
+    Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]
 ) {
     PrimitiveType type = primitive.type;
     int n_vertices;
@@ -202,41 +205,43 @@ int get_primitive_fan_vertices(
         case LINE_PRIMITIVE: {
             float line_width = SCENE.camera_view_width * LINE_WIDTH_SCALE;
             n_vertices = get_line_fan_vertices(
-                primitive.p.line, line_width, out
+                primitive.p.line, line_width, vertices
             );
             break;
         }
         default:
-            n_vertices = get_primitive_vertices(primitive, out);
+            n_vertices = get_primitive_vertices(primitive, vertices);
     }
 
     return n_vertices;
 }
 
-Rectangle get_primitive_bounding_rectangle(
-    Primitive primitive, Transformation transformation
+void get_vertex_uvs(
+    Vec2 vertices[MAX_N_POLYGON_VERTICES],
+    int n,
+    Vec2 uvs[MAX_N_POLYGON_VERTICES]
 ) {
-    Vec2 position = transformation.curr_position;
+    float min_x = FLT_MAX;
+    float max_x = -FLT_MAX;
+    float min_y = FLT_MAX;
+    float max_y = -FLT_MAX;
 
-    float width = 0;
-    float height = 0;
-    if (primitive.type == CIRCLE_PRIMITIVE) {
-        width = 2.0 * primitive.p.circle.radius;
-        height = width;
-    } else {
-        Vec2 vertices[MAX_N_POLYGON_VERTICES];
-        int n_vertices = get_primitive_vertices(primitive, vertices);
-        apply_transformation(vertices, n_vertices, transformation);
-
-        for (int i = 0; i < n_vertices; ++i) {
-            Vec2 vertex = vertices[i];
-            width = max(width, 2.0 * fabs(position.x - vertex.x));
-            height = max(height, 2.0 * fabs(position.y - vertex.y));
-        }
+    for (int i = 0; i < n; ++i) {
+        Vec2 vertex = vertices[i];
+        min_x = min(min_x, vertex.x);
+        max_x = max(max_x, vertex.x);
+        min_y = min(min_y, vertex.y);
+        max_y = max(max_y, vertex.y);
     }
 
-    Rectangle rectangle = {width, height};
-    return rectangle;
+    float x_range = max(EPS, max_x - min_x);
+    float y_range = max(EPS, max_y - min_y);
+
+    for (int i = 0; i < n; ++i) {
+        Vec2 vertex = vertices[i];
+        uvs[i].x = (vertex.x - min_x) / x_range;
+        uvs[i].y = (vertex.y - min_y) / y_range;
+    }
 }
 
 void add_polygon_vertex(Polygon* polygon) {

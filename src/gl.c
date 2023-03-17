@@ -213,18 +213,6 @@ static int set_uniform_4fv(
     return 1;
 }
 
-int set_attrib(
-    GLuint program, const char* name, int n_components, GLuint type
-) {
-    glUseProgram(program);
-    GLuint loc;
-    if (!get_attrib_location(program, &loc, name)) {
-        return 0;
-    }
-    glEnableVertexAttribArray(loc);
-    glVertexAttribPointer(loc, n_components, type, GL_FALSE, 0, 0);
-}
-
 static GLuint POLYGON_VAO;
 static GLuint POLYGON_VBO;
 static const int N_POLYGONS_IN_CIRCLE = 32;
@@ -264,43 +252,58 @@ static RenderCall prepare_primitive_render_call(
     Material material,
     float render_layer
 ) {
-    if (material.type != PLAIN_COLOR_MATERIAL) {
-        fprintf(
-            stderr,
-            "ERROR: Can render only material of type "
-            "PLAIN_COLOR_MATERIAL. Another types need to be implemented\n"
-        );
-        exit(1);
-    }
-
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
-    PrimitiveType type = primitive.type;
-
     set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
-    set_uniform_1i(program, "type", type);
-
-    float* diffuse_color = (float*)&material.m.plain_color.diffuse_color;
-    set_uniform_3fv(program, "diffuse_color", diffuse_color, 1);
+    set_uniform_1i(program, "primitive_type", primitive.type);
+    set_uniform_1i(program, "material_type", material.type);
     set_uniform_1f(program, "render_layer", render_layer);
-
     GLuint draw_mode = GL_TRIANGLE_FAN;
+
+    switch (material.type) {
+        case COLOR_MATERIAL: {
+            float* color = (float*)&material.m.color.color;
+            set_uniform_3fv(program, "color_material.color", color, 1);
+            break;
+        }
+        default:
+            break;
+    }
+
     int n_vertices;
-    if (type == CIRCLE_PRIMITIVE) {
+    if (primitive.type == CIRCLE_PRIMITIVE) {
         set_uniform_circle(program, transformation, primitive.p.circle);
         n_vertices = N_POLYGONS_IN_CIRCLE + 2;
     } else {
-        Vec2 vertices[MAX_N_POLYGON_VERTICES];
+        static Vec2 vertices[MAX_N_POLYGON_VERTICES];
+        static Vec2 uvs[MAX_N_POLYGON_VERTICES];
         n_vertices = get_primitive_fan_vertices(primitive, vertices);
+        get_vertex_uvs(vertices, n_vertices, uvs);
         apply_transformation(vertices, n_vertices, transformation);
         glBufferSubData(
             GL_ARRAY_BUFFER, 0, n_vertices * sizeof(Vec2), (float*)vertices
+        );
+        glBufferSubData(
+            GL_ARRAY_BUFFER,
+            n_vertices * sizeof(Vec2),
+            n_vertices * sizeof(Vec2),
+            (float*)uvs
         );
     }
 
     glBindVertexArray(POLYGON_VAO);
     glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
-    set_attrib(program, "world_pos", 2, GL_FLOAT);
+
+    GLuint loc;
+    get_attrib_location(program, &loc, "vs_world_pos");
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    get_attrib_location(program, &loc, "vs_uv_pos");
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(
+        loc, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(Vec2) * n_vertices)
+    );
 
     RenderCall render_call;
     render_call.n_vertices = n_vertices;
@@ -336,7 +339,7 @@ static void init_polygon_vao() {
     glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
     glBufferData(
         GL_ARRAY_BUFFER,
-        sizeof(float) * 2 * MAX_N_POLYGON_VERTICES,
+        sizeof(Vec2) * 2 * MAX_N_POLYGON_VERTICES,
         NULL,
         GL_DYNAMIC_DRAW
     );
@@ -405,7 +408,7 @@ void render_scene(float dt) {
         RenderCall render_call = prepare_primitive_render_call(
             dp.transformation,
             dp.primitive,
-            init_plain_color_material(dp.color),
+            init_color_material(dp.color),
             dp.render_layer
         );
         execute_render_call(render_call, dp.fill_type);

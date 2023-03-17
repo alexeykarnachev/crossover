@@ -55,12 +55,14 @@ Primitive init_default_circle_primitive(void);
 Primitive init_default_rectangle_primitive(void);
 Primitive init_default_line_primitive(void);
 Primitive init_default_polygon_primitive(void);
-int get_primitive_vertices(Primitive primitive, Vec2* out);
+int get_primitive_vertices(Primitive primitive, Vec2* vertices);
 int get_primitive_fan_vertices(
-    Primitive primitive, Vec2 out[MAX_N_POLYGON_VERTICES]
+    Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]
 );
-Rectangle get_primitive_bounding_rectangle(
-    Primitive primitive, Transformation transformation
+void get_vertex_uvs(
+    Vec2 vertices[MAX_N_POLYGON_VERTICES],
+    int n,
+    Vec2 uvs[MAX_N_POLYGON_VERTICES]
 );
 
 void add_polygon_vertex(Polygon* polygon);

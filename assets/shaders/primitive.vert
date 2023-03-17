@@ -15,12 +15,15 @@ struct Circle {
     int n_polygons;
 };
 
-in vec2 world_pos;
+in vec2 vs_world_pos;
+in vec2 vs_uv_pos;
 
 uniform Circle circle;
 uniform Camera camera;
-uniform int type;
+uniform int primitive_type;
 uniform float render_layer;
+
+out vec2 fs_uv_pos;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
     vec2 p0 = point - center;
@@ -41,25 +44,27 @@ vec2 world2proj(vec2 world_pos) {
 }
 
 // Render with TRIANGLE_FAN
-vec2 get_circle_position() {
+void get_circle_attributes(out vec2 world_pos, out vec2 uv_pos) {
     int id = gl_VertexID;
 
-    vec2 world_pos = circle.position;
+    world_pos = circle.position;
     if (id > 0) {
         world_pos.x += circle.radius;
         float angle = (id - 1) * 2.0 * PI / float(circle.n_polygons);
+        uv_pos = 0.5 * (vec2(cos(angle), sin(angle)) + 1.0);
         world_pos = rotate(world_pos, circle.position, angle);
+    } else {
+        uv_pos = vec2(0.5);
     }
-
-    return world_pos;
 }
 
 void main(void) {
     vec2 world_position;
-    if (type == 0) {
-        world_position = get_circle_position();
+    if (primitive_type == 0) {
+        get_circle_attributes(world_position, fs_uv_pos);
     } else {
-        world_position = world_pos;
+        world_position = vs_world_pos;
+        fs_uv_pos = vs_uv_pos;
     }
 
     vec2 proj_pos = world2proj(world_position); 

@@ -17,15 +17,9 @@
     } while (0)
 
 MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES] = {
-    PLAIN_COLOR_MATERIAL, PROCEDURAL_MATERIAL};
+    COLOR_MATERIAL, BRICK_MATERIAL, STONE_MATERIAL};
 const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES] = {
-    "Plain color", "Procedural"};
-
-ProceduralMaterialType
-    PROCEDURAL_MATERIAL_TYPES[N_PROCEDURAL_MATERIAL_TYPES]
-    = {BRICKS_PROCEDURAL_MATERIAL, STONES_PROCEDURAL_MATERIAL};
-const char* PROCEDURAL_MATERIAL_TYPE_NAMES[N_PROCEDURAL_MATERIAL_TYPES] = {
-    "Bricks", "Stones"};
+    "Color", "Brick", "Stone"};
 
 void change_material_type(Material* material, MaterialType target_type) {
     MaterialType source_type = material->type;
@@ -34,75 +28,49 @@ void change_material_type(Material* material, MaterialType target_type) {
     }
 
     switch (target_type) {
-        case PLAIN_COLOR_MATERIAL:
-            *material = init_default_plain_color_material();
+        case COLOR_MATERIAL:
+            *material = init_default_color_material();
             break;
-        case PROCEDURAL_MATERIAL:
-            *material = init_default_procedural_material();
+        case BRICK_MATERIAL:
+            *material = init_default_brick_material();
+            break;
+        case STONE_MATERIAL:
+            *material = init_default_stone_material();
             break;
         default:
             MATERIAL_TYPE_ERROR("change_material_type", source_type);
     }
 }
 
-void change_procedural_material_type(
-    Material* material, ProceduralMaterialType target_type
-) {
-    if (material->type != PROCEDURAL_MATERIAL) {
-        fprintf(
-            stderr,
-            "ERROR: Can't change procedural material type. The material "
-            "is not procedural\n"
-        );
-        exit(1);
-    }
-
-    ProceduralMaterialType source_type = material->type;
-    if (source_type == target_type) {
-        return;
-    }
-
-    switch (target_type) {
-        case BRICKS_PROCEDURAL_MATERIAL:
-            *material = init_procedural_bricks_material();
-            break;
-        case STONES_PROCEDURAL_MATERIAL:
-            *material = init_procedural_stones_material();
-            break;
-        default:
-            MATERIAL_TYPE_ERROR(
-                "change_procedural_material_type", source_type
-            );
-    }
-}
-
-Material init_plain_color_material(Vec3 diffuse_color) {
+Material init_color_material(Vec3 color) {
     Material material = {0};
-    material.type = PLAIN_COLOR_MATERIAL;
-    material.m.plain_color.diffuse_color = diffuse_color;
+    material.type = COLOR_MATERIAL;
+    material.m.color.color = color;
     return material;
 }
 
-Material init_procedural_bricks_material(void) {
+Material init_brick_material(void) {
     Material material = {0};
-    material.type = PROCEDURAL_MATERIAL;
-    material.m.procedural.type = BRICKS_PROCEDURAL_MATERIAL;
+    material.type = BRICK_MATERIAL;
     return material;
 }
 
-Material init_procedural_stones_material(void) {
+Material init_stone_material(void) {
     Material material = {0};
-    material.type = PROCEDURAL_MATERIAL;
-    material.m.procedural.type = STONES_PROCEDURAL_MATERIAL;
+    material.type = STONE_MATERIAL;
     return material;
 }
 
-Material init_default_plain_color_material(void) {
-    return init_plain_color_material(GRAY_COLOR);
+Material init_default_color_material(void) {
+    return init_color_material(GRAY_COLOR);
 }
 
-Material init_default_procedural_material(void) {
-    return init_procedural_bricks_material();
+Material init_default_brick_material(void) {
+    return init_brick_material();
+}
+
+Material init_default_stone_material(void) {
+    return init_stone_material();
 }
 
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};
