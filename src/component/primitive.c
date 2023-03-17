@@ -219,7 +219,8 @@ int get_primitive_fan_vertices(
 void get_vertex_uvs(
     Vec2 vertices[MAX_N_POLYGON_VERTICES],
     int n,
-    Vec2 uvs[MAX_N_POLYGON_VERTICES]
+    Vec2 uvs[MAX_N_POLYGON_VERTICES],
+    Vec2* uv_size
 ) {
     float min_x = FLT_MAX;
     float max_x = -FLT_MAX;
@@ -236,6 +237,7 @@ void get_vertex_uvs(
 
     float x_range = max(EPS, max_x - min_x);
     float y_range = max(EPS, max_y - min_y);
+    *uv_size = vec2(x_range, y_range);
 
     for (int i = 0; i < n; ++i) {
         Vec2 vertex = vertices[i];

@@ -14,10 +14,10 @@ Debug DEBUG = {0};
 
 void init_debug(void) {
     DEBUG.shading.materials = 1;
+
     DEBUG.collisions.resolve = 1;
     DEBUG.collisions.n_update_steps = 1;
 
-    DEBUG.shading.grid = 1;
     DEBUG.shading.grid_tile_size = SCENE_TILE_SIZE;
 
     DEBUG.gameplay.speed = 1;

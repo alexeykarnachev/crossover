@@ -93,6 +93,12 @@ int spawn_obstacle(
     Material material,
     float render_layer
 );
+int spawn_sprite(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    float render_layer
+);
 int spawn_bullet(Bullet bullet, int owner, float ttl);
 int spawn_default_player_keyboard_guy(Transformation transformation);
 int spawn_default_dummy_ai_guy(Transformation transformation);
@@ -101,3 +107,7 @@ int spawn_default_circle_obstacle(Transformation transformation);
 int spawn_default_rectangle_obstacle(Transformation transformation);
 int spawn_default_line_obstacle(Transformation transformation);
 int spawn_default_polygon_obstacle(Transformation transformation);
+int spawn_default_circle_sprite(Transformation transformation);
+int spawn_default_rectangle_sprite(Transformation transformation);
+int spawn_default_line_sprite(Transformation transformation);
+int spawn_default_polygon_sprite(Transformation transformation);

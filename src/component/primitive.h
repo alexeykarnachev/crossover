@@ -62,7 +62,8 @@ int get_primitive_fan_vertices(
 void get_vertex_uvs(
     Vec2 vertices[MAX_N_POLYGON_VERTICES],
     int n,
-    Vec2 uvs[MAX_N_POLYGON_VERTICES]
+    Vec2 uvs[MAX_N_POLYGON_VERTICES],
+    Vec2* uv_size
 );
 
 void add_polygon_vertex(Polygon* polygon);

@@ -251,6 +251,22 @@ static void render_context_menu(void) {
             }
             igEndMenu();
         }
+
+        if (igBeginMenu("Sprite", 1)) {
+            if (menu_item("Line", "", 0, 1)) {
+                pick_entity(spawn_default_line_sprite(cursor));
+            }
+            if (menu_item("Circle", "", 0, 1)) {
+                pick_entity(spawn_default_circle_sprite(cursor));
+            }
+            if (menu_item("Rectangle", "", 0, 1)) {
+                pick_entity(spawn_default_rectangle_sprite(cursor));
+            }
+            if (menu_item("Polygon", "", 0, 1)) {
+                pick_entity(spawn_default_polygon_sprite(cursor));
+            }
+            igEndMenu();
+        }
         igEndMenu();
     }
 
@@ -518,11 +534,11 @@ static void render_component_inspector(int entity, ComponentType type) {
             }
 
             igText(
-                "linear speed: %.2f",
+                "linear speed: %.4f",
                 length(rb->b.dynamic_rb.linear_velocity)
             );
             igText(
-                "angular speed: %.2f", rb->b.dynamic_rb.angular_velocity
+                "angular speed: %.4f", rb->b.dynamic_rb.angular_velocity
             );
             if (igButton("Reset", IG_VEC2_ZERO)) {
                 rb->b.dynamic_rb.angular_velocity = 0.0;
@@ -589,11 +605,26 @@ static void render_component_inspector(int entity, ComponentType type) {
                 case COLOR_MATERIAL: {
                     float* color = (float*)&material->m.color.color;
                     igText("color");
-                    igColorPicker3("", color, COLOR_PICKER_FLAGS);
+                    igColorPicker3("##", color, COLOR_PICKER_FLAGS);
                     break;
                 }
                 case BRICK_MATERIAL: {
-                    igTextColored(IG_YELLOW_COLOR, "TODO: Add parameters");
+                    float* color = (float*)&material->m.brick.color;
+                    float* brick_size
+                        = (float*)&material->m.brick.brick_size;
+                    float* joint_size
+                        = (float*)&material->m.brick.joint_size;
+                    int* is_smooth = (int*)&material->m.brick.is_smooth;
+
+                    ig_drag_float2(
+                        "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
+                    );
+                    ig_drag_float2(
+                        "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    igCheckbox("smooth", (bool*)is_smooth);
+                    igText("color");
+                    igColorPicker3("##", color, COLOR_PICKER_FLAGS);
                     break;
                 }
                 case STONE_MATERIAL: {
@@ -690,7 +721,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case SCORER_COMPONENT: {
             Scorer* scorer = &SCENE.scorers[entity];
-            igText("Total: %.2f", get_total_score(scorer));
+            igText("Total: %.4f", get_total_score(scorer));
             ig_same_line();
             if (igButton("Reset", IG_VEC2_ZERO)) {
                 reset_scorer(scorer);
@@ -714,7 +745,7 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case HEALTH_COMPONENT: {
             Health* health = &SCENE.healths[entity];
-            igText("initial: %.2f", health->initial_value);
+            igText("initial: %.4f", health->initial_value);
             ig_drag_float(
                 "current", &health->curr_value, 0.0, FLT_MAX, 1.0, 0
             );

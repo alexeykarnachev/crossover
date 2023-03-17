@@ -412,6 +412,23 @@ int spawn_obstacle(
     return entity;
 }
 
+int spawn_sprite(
+    Transformation transformation,
+    Primitive primitive,
+    Material material,
+    float render_layer
+) {
+    int entity = spawn_entity("Obstacle");
+    SCENE.transformations[entity] = transformation;
+    SCENE.primitives[entity] = primitive;
+    SCENE.materials[entity] = material;
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT
+                               | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
+                               | RENDER_LAYER_COMPONENT;
+
+    return entity;
+}
+
 int spawn_bullet(Bullet bullet, int owner, float ttl) {
     int entity = spawn_entity("Bullet");
     SCENE.transformations[entity] = SCENE.transformations[owner];
@@ -504,6 +521,42 @@ int spawn_default_polygon_obstacle(Transformation transformation) {
         init_default_polygon_primitive(),
         init_default_polygon_primitive(),
         init_color_material(GRAY_COLOR),
+        0.0
+    );
+}
+
+int spawn_default_circle_sprite(Transformation transformation) {
+    return spawn_sprite(
+        transformation,
+        init_default_circle_primitive(),
+        init_default_brick_material(),
+        0.0
+    );
+}
+
+int spawn_default_rectangle_sprite(Transformation transformation) {
+    return spawn_sprite(
+        transformation,
+        init_default_rectangle_primitive(),
+        init_default_brick_material(),
+        0.0
+    );
+}
+
+int spawn_default_line_sprite(Transformation transformation) {
+    return spawn_sprite(
+        transformation,
+        init_default_line_primitive(),
+        init_default_brick_material(),
+        0.0
+    );
+}
+
+int spawn_default_polygon_sprite(Transformation transformation) {
+    return spawn_sprite(
+        transformation,
+        init_default_polygon_primitive(),
+        init_default_brick_material(),
         0.0
     );
 }

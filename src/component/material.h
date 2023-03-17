@@ -15,6 +15,10 @@ typedef struct ColorMaterial {
 } ColorMaterial;
 
 typedef struct BrickMaterial {
+    Vec3 color;
+    Vec2 brick_size;
+    Vec2 joint_size;
+    int is_smooth;
 } BrickMaterial;
 
 typedef struct StoneMaterial {
@@ -32,7 +36,9 @@ typedef struct Material {
 void change_material_type(Material* material, MaterialType target_type);
 
 Material init_color_material(Vec3 color);
-Material init_brick_material(void);
+Material init_brick_material(
+    Vec3 color, Vec2 brick_size, Vec2 joint_size, int is_smooth
+);
 Material init_stone_material(void);
 Material init_default_color_material(void);
 Material init_default_brick_material(void);
@@ -41,6 +47,7 @@ Material init_default_stone_material(void);
 // ------------------------------------------------------------------
 extern Vec3 RED_COLOR;
 extern Vec3 REDWOOD_COLOR;
+extern Vec3 BRICK_COLOR;
 extern Vec3 GREEN_COLOR;
 extern Vec3 FOREST_GREEN_COLOR;
 extern Vec3 BLUE_COLOR;

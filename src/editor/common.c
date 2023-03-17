@@ -16,7 +16,7 @@
     ig_drag_float(#name, &scorer->name.weight, -FLT_MAX, FLT_MAX, 0.1, 0)
 
 #define IG_TEXT_SCORE_VALUE(name) \
-    igText("%.2f: " #name, scorer->name.value)
+    igText("%.4f: " #name, scorer->name.value)
 
 static int N_SCALAR_SCORES = 8;
 #define CHECK_ALL_SCORES_HANDLED(scorer) \
@@ -83,7 +83,7 @@ int ig_drag_float(
     float init_value = *value;
     igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
-    igDragFloat(label, value, step, min_val, max_val, "%.2f", flags);
+    igDragFloat(label, value, step, min_val, max_val, "%.4f", flags);
     igPopID();
     igPopItemWidth();
     return *value != init_value;
@@ -100,7 +100,7 @@ int ig_drag_float2(
     float init_values[2] = {values[0], values[1]};
     igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
-    igDragFloat2(label, values, step, min_val, max_val, "%.2f", flags);
+    igDragFloat2(label, values, step, min_val, max_val, "%.4f", flags);
     igPopID();
     igPopItemWidth();
     return values[0] != init_values[0] || values[1] != init_values[1];
@@ -264,7 +264,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
             1.0
         );
         igText(
-            "start_position: (%.2f, %.2f)",
+            "start_position: (%.4f, %.4f)",
             scorer->exploration.start_position.x,
             scorer->exploration.start_position.y
         );
@@ -274,7 +274,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
             (int)scorer->exploration.prev_cell.y
         );
         igText(
-            "cell_enter_time: %.2f", scorer->exploration.cell_enter_time
+            "cell_enter_time: %.4f", scorer->exploration.cell_enter_time
         );
 
         igEndMenu();

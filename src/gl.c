@@ -266,20 +266,38 @@ static RenderCall prepare_primitive_render_call(
             set_uniform_3fv(program, "color_material.color", color, 1);
             break;
         }
+        case BRICK_MATERIAL: {
+            float* color = (float*)&material.m.color.color;
+            float* brick_size = (float*)&material.m.brick.brick_size;
+            float* joint_size = (float*)&material.m.brick.joint_size;
+            int is_smooth = material.m.brick.is_smooth;
+            set_uniform_3fv(program, "brick_material.color", color, 1);
+            set_uniform_2fv(
+                program, "brick_material.brick_size", brick_size, 1
+            );
+            set_uniform_2fv(
+                program, "brick_material.joint_size", joint_size, 1
+            );
+            set_uniform_1i(program, "brick_material.is_smooth", is_smooth);
+            break;
+        }
         default:
             break;
     }
 
     int n_vertices;
+    Vec2 uv_size;
     if (primitive.type == CIRCLE_PRIMITIVE) {
         set_uniform_circle(program, transformation, primitive.p.circle);
         n_vertices = N_POLYGONS_IN_CIRCLE + 2;
     } else {
         static Vec2 vertices[MAX_N_POLYGON_VERTICES];
         static Vec2 uvs[MAX_N_POLYGON_VERTICES];
+        Vec2 uv_size;
         n_vertices = get_primitive_fan_vertices(primitive, vertices);
-        get_vertex_uvs(vertices, n_vertices, uvs);
+        get_vertex_uvs(vertices, n_vertices, uvs, &uv_size);
         apply_transformation(vertices, n_vertices, transformation);
+
         glBufferSubData(
             GL_ARRAY_BUFFER, 0, n_vertices * sizeof(Vec2), (float*)vertices
         );
@@ -304,6 +322,8 @@ static RenderCall prepare_primitive_render_call(
     glVertexAttribPointer(
         loc, 2, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(Vec2) * n_vertices)
     );
+
+    set_uniform_2fv(program, "uv_size", (float*)&uv_size, 1);
 
     RenderCall render_call;
     render_call.n_vertices = n_vertices;
