@@ -187,6 +187,10 @@ static void start_genetic_training(void) {
             BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
 
             static char new_key[MAX_PATH_LENGTH + 128] = {0};
+            // TODO: Increment file version is not enough.
+            // The entity name also needs to be a part of the name.
+            // Otherwise entities with the same starting brain will
+            // overwrite each other
             char* new_key_p = increment_file_name_version(ai->key);
             if (strlen(new_key_p) > sizeof(new_key) - 1) {
                 fprintf(
