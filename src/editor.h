@@ -60,6 +60,7 @@ typedef struct GeneticTraining {
         int is_frozen[MAX_N_ENTITIES_TO_TRAIN];
         Scorer best_scorers[MAX_N_ENTITIES_TO_TRAIN];
         float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
+        float elite_streaks[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
         SimulationStatus status;
         int generation;
@@ -79,8 +80,8 @@ typedef struct GeneticTraining {
     } population;
 
     struct {
-        float elite_ratio;
         int elite_streak;
+        float elite_ratio;
         float mutation_rate;
         float mutation_strength;
     } evolution;

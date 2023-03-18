@@ -26,7 +26,9 @@ static int N_ENTITIES_TO_TRAIN;
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN];
 static Array GENERATIONS;
 
-static int BRAIN_ELITE_STREAKS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
+static float BRAIN_ELITE_STREAKS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
+static Brain GENERATION_ELITE_BRAINS[MAX_N_ENTITIES_TO_TRAIN]
+                                    [MAX_N_EPISODES];
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
 static void reset_genetic_training(void) {
@@ -45,10 +47,10 @@ static void reset_genetic_training(void) {
     training->population.episode_time = 60.0;
     training->population.n_episodes = 100;
 
-    training->evolution.elite_ratio = 0.1;
-    training->evolution.elite_streak = 3;
-    training->evolution.mutation_rate = 0.1;
-    training->evolution.mutation_strength = 0.02;
+    training->evolution.elite_streak = 5;
+    training->evolution.elite_ratio = 0.15;
+    training->evolution.mutation_rate = 0.3;
+    training->evolution.mutation_strength = 0.15;
 }
 
 static int GENETIC_TRAINING_INITIALIZED = 0;
@@ -290,27 +292,20 @@ static void start_genetic_training(void) {
             for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
                 static int indices[MAX_N_EPISODES];
                 static Brain new_gen_brains[MAX_N_EPISODES];
-                static int new_elite_streak[MAX_N_EPISODES];
+                static float new_elite_streaks[MAX_N_EPISODES];
 
                 // Don't create the new generation if the entity is
-                // frozen. Just shuffle the existing one
+                // frozen. Just shuffle the elite
                 if (params->progress.is_frozen[e] == 1) {
                     for (int i = 0; i < params->population.n_episodes;
                          ++i) {
-                        indices[i] = i;
+                        clone_ptr_brain_into(
+                            &GENERATION_BRAINS[e][i],
+                            &GENERATION_ELITE_BRAINS[e]
+                                                    [choose_idx(n_elites)],
+                            0
+                        );
                     }
-                    shuffle(indices, params->population.n_episodes);
-
-                    for (int i = 0; i < params->population.n_episodes;
-                         ++i) {
-                        int idx = indices[i];
-                        new_gen_brains[i] = GENERATION_BRAINS[e][idx];
-                    }
-                    memcpy(
-                        GENERATION_BRAINS[e],
-                        new_gen_brains,
-                        sizeof(new_gen_brains)
-                    );
                     memset(
                         BRAIN_ELITE_STREAKS[e],
                         0,
@@ -325,21 +320,53 @@ static void start_genetic_training(void) {
                     gen_scores, indices, params->population.n_episodes, 1
                 );
 
+                int best_brain_saved = 0;
                 for (int i = 0; i < params->population.n_episodes; ++i) {
                     int idx = indices[i];
                     if (i < n_elites) {
                         // Keep track the elite streak for the brains
-                        new_elite_streak[i] = BRAIN_ELITE_STREAKS[e][idx]
-                                              + 1;
+                        new_elite_streaks[i] = BRAIN_ELITE_STREAKS[e][idx]
+                                               + 1;
                         clone_ptr_brain_into(
                             &new_gen_brains[i],
                             &GENERATION_BRAINS[e][idx],
                             0
                         );
+                        GENERATION_ELITE_BRAINS[e][i] = new_gen_brains[i];
+
+                        float streak = new_elite_streaks[i];
+                        float score = gen_scores[i];
+                        Brain* brain = &new_gen_brains[i];
+                        if (best_brain_saved == 0
+                            && streak >= params->evolution.elite_streak) {
+                            save_brain(brain->params.key, brain, &res_msg);
+                            if (res_msg.flag != SUCCESS_RESULT) {
+                                fprintf(
+                                    stderr,
+                                    "ERROR: Failed to save new best "
+                                    "Brain: %s\n",
+                                    res_msg.msg
+                                );
+                                exit(1);
+                            }
+                            printf(
+                                "INFO: New best Brain with elite streak "
+                                "%d and score %f saved for the "
+                                "entity %d on the generation %d -> %s\n",
+                                (int)streak,
+                                score,
+                                ENTITIES_TO_TRAIN[e],
+                                generation,
+                                brain->params.key
+                            );
+                            best_brain_saved = 1;
+                        }
                     } else {
-                        new_elite_streak[i] = 0;
+                        new_elite_streaks[i] = 0;
                     }
 
+                    GENETIC_TRAINING->progress.elite_streaks[e][i]
+                        = new_elite_streaks[i];
                     destroy_brain(&GENERATION_BRAINS[e][idx]);
                 }
 
@@ -357,19 +384,20 @@ static void start_genetic_training(void) {
                     );
                 }
 
-                // Construct new generation as a
-                // shuffled elite + offspring
-                shuffle(indices, params->population.n_episodes);
-                for (int i = 0; i < params->population.n_episodes; ++i) {
-                    int idx = indices[i];
-                    GENERATION_BRAINS[e][i] = new_gen_brains[idx];
-                    BRAIN_ELITE_STREAKS[e][i] = new_elite_streak[idx];
-                }
+                memcpy(
+                    GENERATION_BRAINS[e],
+                    new_gen_brains,
+                    sizeof(new_gen_brains)
+                );
+                memcpy(
+                    BRAIN_ELITE_STREAKS[e],
+                    new_elite_streaks,
+                    sizeof(new_elite_streaks)
+                );
             }
 
             params->progress.generation = ++generation;
             load_scene(".tmp.xscene", &res_msg);
-            printf("INFO: Scene reloaded for the new generation\n");
         }
 
         exit(0);
@@ -520,20 +548,20 @@ static void render_genetic_training_parameters(void) {
     }
 
     igText("Evolution:");
-    ig_drag_float(
-        "Elite ratio",
-        &GENETIC_TRAINING->evolution.elite_ratio,
-        0.01,
-        0.9,
-        0.01,
-        0
-    );
     ig_drag_int(
         "Elite streak",
         &GENETIC_TRAINING->evolution.elite_streak,
         1,
         100,
         1,
+        0
+    );
+    ig_drag_float(
+        "Elite ratio",
+        &GENETIC_TRAINING->evolution.elite_ratio,
+        0.01,
+        0.9,
+        0.01,
         0
     );
     ig_drag_float(
@@ -696,6 +724,32 @@ static void render_evolution_plots(void) {
 
             ImPlot_PlotHistogram_FloatPtr(
                 str, scores, episode, bins, bar_scale, range, hist_flags
+            );
+        }
+
+        ImPlot_EndPlot();
+    }
+
+    ig_same_line();
+    if (ImPlot_BeginPlot("Elite streaks", IG_VEC2_ZERO, 0)) {
+        ImPlot_SetupAxes("Streak", "N Episodes", 0, 0);
+        ImPlot_SetupAxisLimits(ImAxis_X1, 1, 20, 0);
+        ImPlot_SetupAxisLimits(ImAxis_Y1, 0, 5, 0);
+        ImPlotRange range = {1, 20};
+
+        float bar_scale = 1.0;
+        int episode = GENETIC_TRAINING->progress.episode;
+        int hist_flags = 0;
+        for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
+            if (GENETIC_TRAINING->progress.is_frozen[e] == 1) {
+                continue;
+            }
+
+            float* streaks = GENETIC_TRAINING->progress.elite_streaks[e];
+            char str[16];
+            sprintf(str, "Entity: %d", ENTITIES_TO_TRAIN[e]);
+            ImPlot_PlotHistogram_FloatPtr(
+                str, streaks, episode, 40, bar_scale, range, hist_flags
             );
         }
 
