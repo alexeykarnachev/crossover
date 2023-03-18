@@ -55,7 +55,7 @@ const char* get_component_type_name(ComponentType type) {
         case SCORER_COMPONENT:
             return "Scorer";
         case HIDDEN_COMPONENT:
-            return "Hidden";
+            return NULL;
         default: {
             fprintf(
                 stderr,

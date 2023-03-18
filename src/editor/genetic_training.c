@@ -26,6 +26,7 @@ static int N_ENTITIES_TO_TRAIN;
 static Array SCORES[MAX_N_ENTITIES_TO_TRAIN];
 static Array GENERATIONS;
 
+static int BRAIN_ELITE_STREAKS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
 static void reset_genetic_training(void) {
@@ -41,12 +42,13 @@ static void reset_genetic_training(void) {
 
     training->simulation.dt_ms = 17.0;
 
-    training->population.episode_time = 120.0;
-    training->population.n_episodes = 300;
+    training->population.episode_time = 60.0;
+    training->population.n_episodes = 100;
 
-    training->evolution.elite_ratio = 0.3;
-    training->evolution.mutation_rate = 0.3;
-    training->evolution.mutation_strength = 0.03;
+    training->evolution.elite_ratio = 0.1;
+    training->evolution.elite_streak = 3;
+    training->evolution.mutation_rate = 0.1;
+    training->evolution.mutation_strength = 0.02;
 }
 
 static int GENETIC_TRAINING_INITIALIZED = 0;
@@ -215,6 +217,7 @@ static void start_genetic_training(void) {
         while (*status == SIMULATION_RUNNING) {
             int episode = 0;
 
+            ResultMessage res_msg = {0};
             Scorer* best_scorers = params->progress.best_scorers;
             while (episode < params->population.n_episodes) {
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
@@ -245,9 +248,14 @@ static void start_genetic_training(void) {
 
                 for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
                     int entity = ENTITIES_TO_TRAIN[e];
-                    if (!check_if_entity_has_component(
+                    int has_scorer = check_if_entity_has_component(
+                        entity, SCORER_COMPONENT
+                    );
+                    int has_hidden_scorer
+                        = check_if_entity_has_hidden_component(
                             entity, SCORER_COMPONENT
-                        )) {
+                        );
+                    if (has_scorer == 0 && has_hidden_scorer == 0) {
                         fprintf(
                             stderr,
                             "ERROR: Trainable Entity %d doesn't have a "
@@ -277,63 +285,70 @@ static void start_genetic_training(void) {
                 }
 
                 params->progress.episode = ++episode;
-                load_scene(".tmp.xscene", &res_msg);
             }
 
             for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
                 static int indices[MAX_N_EPISODES];
                 static Brain new_gen_brains[MAX_N_EPISODES];
+                static int new_elite_streak[MAX_N_EPISODES];
 
+                // Don't create the new generation if the entity is
+                // frozen. Just shuffle the existing one
+                if (params->progress.is_frozen[e] == 1) {
+                    for (int i = 0; i < params->population.n_episodes;
+                         ++i) {
+                        indices[i] = i;
+                    }
+                    shuffle(indices, params->population.n_episodes);
+
+                    for (int i = 0; i < params->population.n_episodes;
+                         ++i) {
+                        int idx = indices[i];
+                        new_gen_brains[i] = GENERATION_BRAINS[e][idx];
+                    }
+                    memcpy(
+                        GENERATION_BRAINS[e],
+                        new_gen_brains,
+                        sizeof(new_gen_brains)
+                    );
+                    memset(
+                        BRAIN_ELITE_STREAKS[e],
+                        0,
+                        sizeof(BRAIN_ELITE_STREAKS[e])
+                    );
+                    continue;
+                }
+
+                // Prepare new brains generation
                 float* gen_scores = params->progress.episode_scores[e];
                 argsort(
                     gen_scores, indices, params->population.n_episodes, 1
                 );
 
-                int best_idx = indices[0];
-                Brain* best_brain = &GENERATION_BRAINS[e][best_idx];
-                ResultMessage res_msg = {0};
-
-                // TODO: Add an option to save the brain only if it's
-                // the best over all generations.
-                // It makes sense to make it optional because some times
-                // saving only the overall best brain is not the best
-                // decision (I think...).
-                // For example, if we train multiple brains,
-                // It's a normal situation when the brain has less score,
-                // but performs better, because there may be another
-                // brains which compete with each other.
-                // Or maybe it makes sense to save best brain in the
-                // current generation and the best on over all
-                // generations...
-                save_brain(best_brain->params.key, best_brain, &res_msg);
-
-                if (res_msg.flag != SUCCESS_RESULT) {
-                    fprintf(
-                        stderr,
-                        "ERROR: Failed to save new best Brain: %s\n",
-                        res_msg.msg
-                    );
-                    exit(1);
-                }
-
-                printf(
-                    "INFO: New best Brain saved: %s\n",
-                    best_brain->params.key
-                );
-
-                for (int i = 0; i < n_elites; ++i) {
+                for (int i = 0; i < params->population.n_episodes; ++i) {
                     int idx = indices[i];
-                    clone_ptr_brain_into(
-                        &new_gen_brains[i], &GENERATION_BRAINS[e][idx], 0
-                    );
+                    if (i < n_elites) {
+                        // Keep track the elite streak for the brains
+                        new_elite_streak[i] = BRAIN_ELITE_STREAKS[e][idx]
+                                              + 1;
+                        clone_ptr_brain_into(
+                            &new_gen_brains[i],
+                            &GENERATION_BRAINS[e][idx],
+                            0
+                        );
+                    } else {
+                        new_elite_streak[i] = 0;
+                    }
+
+                    destroy_brain(&GENERATION_BRAINS[e][idx]);
                 }
 
+                // Perform crossover on the elite brains to obtain the next
+                // new generation
                 for (int i = n_elites; i < params->population.n_episodes;
                      ++i) {
-                    int idx1 = indices[choose_idx(n_elites)];
-                    int idx2 = indices[choose_idx(n_elites)];
-                    Brain* brain1 = &GENERATION_BRAINS[e][idx1];
-                    Brain* brain2 = &GENERATION_BRAINS[e][idx2];
+                    Brain* brain1 = &new_gen_brains[choose_idx(n_elites)];
+                    Brain* brain2 = &new_gen_brains[choose_idx(n_elites)];
                     new_gen_brains[i] = crossover_brains(
                         brain1,
                         brain2,
@@ -342,15 +357,19 @@ static void start_genetic_training(void) {
                     );
                 }
 
+                // Construct new generation as a
+                // shuffled elite + offspring
                 shuffle(indices, params->population.n_episodes);
                 for (int i = 0; i < params->population.n_episodes; ++i) {
                     int idx = indices[i];
-                    destroy_brain(&GENERATION_BRAINS[e][idx]);
-                    GENERATION_BRAINS[e][idx] = new_gen_brains[i];
+                    GENERATION_BRAINS[e][i] = new_gen_brains[idx];
+                    BRAIN_ELITE_STREAKS[e][i] = new_elite_streak[idx];
                 }
             }
 
             params->progress.generation = ++generation;
+            load_scene(".tmp.xscene", &res_msg);
+            printf("INFO: Scene reloaded for the new generation\n");
         }
 
         exit(0);
@@ -443,6 +462,10 @@ static void render_entities_to_train(void) {
         sprintf(str, "  Entity: %d", entity);
 
         if (igBeginMenu(str, 1)) {
+            igCheckbox(
+                "is frozen",
+                (bool*)&GENETIC_TRAINING->progress.is_frozen[e]
+            );
             SimulationStatus status = GENETIC_TRAINING->progress.status;
             if (status == SIMULATION_NOT_STARTED) {
                 Scorer* scorer = &SCENE.scorers[entity];
@@ -503,6 +526,14 @@ static void render_genetic_training_parameters(void) {
         0.01,
         0.9,
         0.01,
+        0
+    );
+    ig_drag_int(
+        "Elite streak",
+        &GENETIC_TRAINING->evolution.elite_streak,
+        1,
+        100,
+        1,
         0
     );
     ig_drag_float(

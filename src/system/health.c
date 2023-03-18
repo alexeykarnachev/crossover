@@ -55,7 +55,6 @@ void update_healths(float dt) {
             reveal_entity(entity);
         }
 
-        printf("%f\n", health->resurrection.countdown);
         health->resurrection.countdown -= dt;
         health->damage_dealler = -1;
     }

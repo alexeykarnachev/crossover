@@ -57,6 +57,7 @@ typedef struct Editor {
 
 typedef struct GeneticTraining {
     struct {
+        int is_frozen[MAX_N_ENTITIES_TO_TRAIN];
         Scorer best_scorers[MAX_N_ENTITIES_TO_TRAIN];
         float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
@@ -79,6 +80,7 @@ typedef struct GeneticTraining {
 
     struct {
         float elite_ratio;
+        int elite_streak;
         float mutation_rate;
         float mutation_strength;
     } evolution;

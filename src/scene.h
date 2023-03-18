@@ -70,7 +70,8 @@ Vec2 get_tile_location_at(Vec2 position);
 
 int check_if_entity_hidden(int entity);
 int check_if_entity_alive(int entity);
-int check_if_entity_has_component(int entity, ComponentType component);
+int check_if_entity_has_component(int entity, ComponentType type);
+int check_if_entity_has_hidden_component(int entity, ComponentType type);
 
 void hide_entity(int entity);
 void reveal_entity(int entity);

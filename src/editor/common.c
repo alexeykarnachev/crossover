@@ -174,7 +174,9 @@ void render_component_checkboxes(uint64_t* components) {
 
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
         const char* name = get_component_type_name(COMPONENT_TYPES[i]);
-        igCheckbox(name, (bool*)(&flags[i]));
+        if (name != NULL) {
+            igCheckbox(name, (bool*)(&flags[i]));
+        }
     }
 
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {

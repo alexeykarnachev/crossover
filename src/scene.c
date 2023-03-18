@@ -290,6 +290,10 @@ int check_if_entity_has_component(int entity, ComponentType type) {
     return (SCENE.components[entity] & type) == type;
 }
 
+int check_if_entity_has_hidden_component(int entity, ComponentType type) {
+    return (SCENE.hiddens[entity] & type) == type;
+}
+
 static int spawn_entity(char* name) {
     if (strlen(name) > MAX_ENTITY_NAME_LENGTH) {
         fprintf(
@@ -317,8 +321,6 @@ int spawn_entity_copy(int entity, Transformation transformation) {
     SCENE.components[entity_copy] |= TRANSFORMATION_COMPONENT;
     SCENE.transformations[entity_copy] = transformation;
 
-    // TODO: Spawn entity and preserve source entity orientation.
-    // Now the orientation is set to default, it's not convenient
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
         ComponentType type = COMPONENT_TYPES[i];
         if (check_if_entity_has_component(entity, type)) {
@@ -326,6 +328,10 @@ int spawn_entity_copy(int entity, Transformation transformation) {
 
             switch (type) {
                 case TRANSFORMATION_COMPONENT:
+                    update_orientation(
+                        entity_copy,
+                        SCENE.transformations[entity].curr_orientation
+                    );
                     break;
                 case RIGID_BODY_COMPONENT:
                     SCENE.rigid_bodies[entity_copy]
@@ -538,7 +544,7 @@ int spawn_default_rectangle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_rectangle_primitive(),
         init_default_rectangle_primitive(),
-        init_color_material(GRAY_COLOR),
+        init_default_brick_material(),
         0.0
     );
 }
