@@ -23,7 +23,7 @@ BrainFitsEntityError check_if_brain_fits_entity(
 
 void update_camera(void);
 void update_bullets(float dt);
-void update_healths(void);
+void update_healths(float dt);
 void update_rigid_bodies(float dt);
 void update_ttls(float dt);
 void update_visions(void);

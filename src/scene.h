@@ -36,6 +36,7 @@ typedef struct Scene {
     int owners[MAX_N_ENTITIES];
     Controller controllers[MAX_N_ENTITIES];
     Scorer scorers[MAX_N_ENTITIES];
+    uint64_t hiddens[MAX_N_ENTITIES];
 
     // Singleton entities
     int camera;
@@ -67,9 +68,12 @@ void entity_leaves_tile(int entity, int tile);
 void entity_leaves_all_tiles(int entity);
 Vec2 get_tile_location_at(Vec2 position);
 
+int check_if_entity_hidden(int entity);
 int check_if_entity_alive(int entity);
 int check_if_entity_has_component(int entity, ComponentType component);
 
+void hide_entity(int entity);
+void reveal_entity(int entity);
 void destroy_entity(int entity);
 int spawn_entity_copy(int entity, Transformation transformation);
 int spawn_camera(Transformation transformation);

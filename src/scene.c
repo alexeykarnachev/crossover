@@ -36,6 +36,7 @@ void reset_scene(void) {
     memset(SCENE.components, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
     memset(SCENE.owners, -1, sizeof(int) * MAX_N_ENTITIES);
     memset(SCENE.scorers, 0, sizeof(Scorer) * MAX_N_ENTITIES);
+    memset(SCENE.hiddens, 0, sizeof(uint64_t) * MAX_N_ENTITIES);
 
     for (int e = 0; e < MAX_N_ENTITIES; ++e) {
         destroy_array(&SCENE.entity_to_tiles[e]);
@@ -82,6 +83,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     fwrite(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
     fwrite(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
     write_n_scorers(fp, SCENE.scorers, SCENE.n_entities);
+    fwrite(SCENE.hiddens, sizeof(uint64_t), SCENE.n_entities, fp);
     fwrite(&SCENE.camera, sizeof(int), 1, fp);
     fwrite(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
@@ -169,6 +171,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     fread(SCENE.owners, sizeof(int), SCENE.n_entities, fp);
     fread(SCENE.controllers, sizeof(Controller), SCENE.n_entities, fp);
     read_n_scorers(fp, SCENE.scorers, SCENE.n_entities);
+    fread(SCENE.scorers, sizeof(uint64_t), SCENE.n_entities, fp);
     fread(&SCENE.camera, sizeof(int), 1, fp);
     fread(&SCENE.camera_view_width, sizeof(float), 1, fp);
 
@@ -197,6 +200,24 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     return;
 }
 
+void hide_entity(int entity) {
+    if (check_if_entity_hidden(entity) == 1) {
+        fprintf(stderr, "ERROR: Can't hide an already hidden entity\n");
+        exit(1);
+    }
+    SCENE.hiddens[entity] = SCENE.components[entity];
+    SCENE.components[entity] = HIDDEN_COMPONENT;
+}
+
+void reveal_entity(int entity) {
+    if (check_if_entity_hidden(entity) == 0) {
+        fprintf(stderr, "ERROR: Can't reveal a not hidden entity\n");
+        exit(1);
+    }
+    SCENE.components[entity] = SCENE.hiddens[entity];
+    SCENE.hiddens[entity] = 0;
+}
+
 void destroy_entity(int entity) {
     SCENE.components[entity] = 0;
 
@@ -210,6 +231,7 @@ void destroy_entity(int entity) {
 
     SCENE.healths[entity] = init_default_health();
     memset(&SCENE.scorers[entity], 0, sizeof(Scorer));
+    SCENE.hiddens[entity] = 0;
     SCENE.names[entity][0] = '\0';
     entity_leaves_all_tiles(entity);
 }
@@ -243,6 +265,21 @@ Vec2 get_tile_location_at(Vec2 position) {
     col = min(max(0, col), N_X_SCENE_TILES);
     row = min(max(0, row), N_Y_SCENE_TILES);
     return vec2(col, row);
+}
+
+int check_if_entity_hidden(int entity) {
+    int is_hidden = SCENE.hiddens[entity] != 0;
+    int only_hidden = SCENE.hiddens[entity] == HIDDEN_COMPONENT;
+    if (is_hidden && only_hidden) {
+        fprintf(
+            stderr,
+            "ERROR: Can't determine if the entity is hidden. It has "
+            "hidden component active but also it has another components "
+            "active. It's a bug\n"
+        );
+        exit(1);
+    }
+    return is_hidden;
 }
 
 int check_if_entity_alive(int entity) {
@@ -334,6 +371,9 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     break;
                 case SCORER_COMPONENT:
                     SCENE.scorers[entity_copy] = SCENE.scorers[entity];
+                    break;
+                case HIDDEN_COMPONENT:
+                    SCENE.hiddens[entity_copy] = SCENE.hiddens[entity];
                     break;
                 default: {
                     const char* component_name = get_component_type_name(
@@ -629,7 +669,7 @@ void update_scene(float dt, int is_playing) {
         SCENE.time += dt;
 
         update_ttls(dt);
-        update_healths();
+        update_healths(dt);
 
         profiler_push(PROFILER, "update_controllers");
         update_controllers();

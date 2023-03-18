@@ -745,7 +745,22 @@ static void render_component_inspector(int entity, ComponentType type) {
         }
         case HEALTH_COMPONENT: {
             Health* health = &SCENE.healths[entity];
-            igText("initial: %.4f", health->initial_value);
+            igCheckbox(
+                "can resurrect", (bool*)(&health->resurrection.is_active)
+            );
+            if (health->resurrection.is_active) {
+                ig_drag_float(
+                    "res. delay",
+                    &health->resurrection.delay,
+                    0.0,
+                    FLT_MAX,
+                    0.1,
+                    0
+                );
+            }
+            ig_drag_float(
+                "initial", &health->initial_value, 0.0, FLT_MAX, 1.0, 0
+            );
             ig_drag_float(
                 "current", &health->curr_value, 0.0, FLT_MAX, 1.0, 0
             );

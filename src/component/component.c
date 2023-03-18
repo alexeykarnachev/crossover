@@ -18,8 +18,10 @@ ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES] = {
     BULLET_COMPONENT,
     OWNER_COMPONENT,
     CONTROLLER_COMPONENT,
-    SCORER_COMPONENT};
+    SCORER_COMPONENT,
+    HIDDEN_COMPONENT};
 
+// TODO: Factor out this function into the array of names
 const char* get_component_type_name(ComponentType type) {
     switch (type) {
         case TRANSFORMATION_COMPONENT:
@@ -52,6 +54,8 @@ const char* get_component_type_name(ComponentType type) {
             return "Controller";
         case SCORER_COMPONENT:
             return "Scorer";
+        case HIDDEN_COMPONENT:
+            return "Hidden";
         default: {
             fprintf(
                 stderr,

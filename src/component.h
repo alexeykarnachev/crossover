@@ -11,7 +11,7 @@
 #include "./component/transformation.h"
 #include "./component/vision.h"
 
-#define N_COMPONENT_TYPES 15
+#define N_COMPONENT_TYPES 16
 typedef enum ComponentType {
     TRANSFORMATION_COMPONENT = 1 << 0,
     RIGID_BODY_COMPONENT = 1 << 1,
@@ -27,7 +27,8 @@ typedef enum ComponentType {
     BULLET_COMPONENT = 1 << 11,
     OWNER_COMPONENT = 1 << 12,
     CONTROLLER_COMPONENT = 1 << 13,
-    SCORER_COMPONENT = 1 << 14
+    SCORER_COMPONENT = 1 << 14,
+    HIDDEN_COMPONENT = 1 << 15
 } ComponentType;
 
 ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES];
