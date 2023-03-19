@@ -55,50 +55,13 @@ typedef struct Editor {
     int is_editing_profiler;
 } Editor;
 
-typedef struct GeneticTraining {
-    struct {
-        int is_frozen[MAX_N_ENTITIES_TO_TRAIN];
-        Scorer best_scorers[MAX_N_ENTITIES_TO_TRAIN];
-        float episode_scores[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
-        float elite_streaks[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
-
-        SimulationStatus status;
-        int generation;
-        int episode;
-        float episode_time;
-        float min_score;
-        float max_score;
-    } progress;
-
-    struct {
-        float dt_ms;
-    } simulation;
-
-    struct {
-        float episode_time;
-        int n_episodes;
-    } population;
-
-    struct {
-        int elite_streak;
-        float elite_ratio;
-        float mutation_rate;
-        float mutation_strength;
-    } evolution;
-} GeneticTraining;
-
 extern Editor EDITOR;
-extern GeneticTraining* GENETIC_TRAINING;
 
 Vec2 get_cursor_scene_pos(void);
 
 void init_editor(void);
 void destroy_editor(void);
 void reset_editor(void);
-
-void init_genetic_training(void);
-void destroy_genetic_training(void);
-void kill_genetic_training(void);
 
 void kill_profiler(void);
 

@@ -5,6 +5,7 @@
 #include "../app.h"
 #include "../component.h"
 #include "../const.h"
+#include "../genetic_training.h"
 #include "../nfd_utils.h"
 #include "../scene.h"
 #include "../utils.h"
@@ -33,9 +34,6 @@ const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
 Editor EDITOR;
 
-GeneticTraining* GENETIC_TRAINING;
-static int GENETIC_TRAINING_SHMID;
-
 Profiler* PROFILER;
 static int PROFILER_SHMID;
 static int PROFILER_STAGES_MAP_SHMID;
@@ -55,31 +53,6 @@ void init_editor(void) {
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
         free(file_path);
-    }
-
-    // TODO: Creation of the shared memory for the GeneticTraining and
-    // Profiler could be factored out (function or macros)
-
-    // Initialize GeneticTraining shared object
-    {
-        GENETIC_TRAINING_SHMID = shmget(
-            IPC_PRIVATE, sizeof(GeneticTraining), 0666 | IPC_CREAT
-        );
-        if (GENETIC_TRAINING_SHMID == -1) {
-            perror("ERROR: Failed to create shared memory segment for the "
-                   "GeneticTraining\n");
-            exit(1);
-        }
-
-        GENETIC_TRAINING = (GeneticTraining*)shmat(
-            GENETIC_TRAINING_SHMID, NULL, 0
-        );
-
-        if (GENETIC_TRAINING == (GeneticTraining*)-1) {
-            perror("ERROR: Failed to create shared memory segment for the "
-                   "GeneticTraining\n");
-            exit(1);
-        }
     }
 
     // Initialize Profiler shared object
@@ -132,8 +105,6 @@ void destroy_editor(void) {
 
     kill_genetic_training();
     destroy_genetic_training();
-    shmdt(GENETIC_TRAINING);
-    shmctl(GENETIC_TRAINING_SHMID, IPC_RMID, NULL);
 
     kill_profiler();
     destroy_profiler(PROFILER);
