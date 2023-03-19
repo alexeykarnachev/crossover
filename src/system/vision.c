@@ -1,8 +1,8 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../editor.h"
-#include "../gl.h"
 #include "../profiler.h"
+#include "../renderer.h"
 #include "../scene.h"
 #include "../system.h"
 

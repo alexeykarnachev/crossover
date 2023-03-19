@@ -1,8 +1,8 @@
 #include "../component.h"
 #include "../const.h"
 #include "../debug.h"
-#include "../gl.h"
 #include "../math.h"
+#include "../renderer.h"
 #include "../scene.h"
 #include "../system.h"
 #include <math.h>

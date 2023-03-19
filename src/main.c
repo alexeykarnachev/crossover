@@ -2,8 +2,8 @@
 #include "component.h"
 #include "debug.h"
 #include "editor.h"
-#include "gl.h"
 #include "math.h"
+#include "renderer.h"
 #include "scene.h"
 #include <signal.h>
 #include <unistd.h>
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     init_editor();
 
     init_app(1600, 1200);
-    init_renderer();
+    init_gl();
     init_debug();
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {

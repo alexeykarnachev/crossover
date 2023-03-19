@@ -3,7 +3,7 @@
 #include "app.h"
 #include "component.h"
 #include "const.h"
-#include "gl.h"
+#include "renderer.h"
 #include "scene.h"
 #include "system.h"
 #include <math.h>

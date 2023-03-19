@@ -2,9 +2,9 @@
 #include "../component.h"
 #include "../debug.h"
 #include "../editor.h"
-#include "../gl.h"
 #include "../math.h"
 #include "../profiler.h"
+#include "../renderer.h"
 #include "../scene.h"
 #include "../system.h"
 #include <float.h>
