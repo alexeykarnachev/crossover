@@ -48,6 +48,8 @@ void reset_scene(void) {
         SCENE.tile_to_entities[t] = init_array();
     }
 
+    destroy_assets();
+
     reset_camera();
 
     SCENE.n_entities = 0;

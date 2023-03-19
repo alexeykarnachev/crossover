@@ -299,12 +299,11 @@ static void start_genetic_training(void) {
                 if (params->progress.is_frozen[e] == 1) {
                     for (int i = 0; i < params->population.n_episodes;
                          ++i) {
-                        clone_ptr_brain_into(
-                            &GENERATION_BRAINS[e][i],
-                            &GENERATION_ELITE_BRAINS[e]
-                                                    [choose_idx(n_elites)],
-                            0
-                        );
+                        int elite_idx = choose_idx(n_elites);
+                        Brain* elite_brain = &GENERATION_ELITE_BRAINS[e]
+                                                    [elite_idx];
+                        Brain* gen_brain = &GENERATION_BRAINS[e][i]; 
+                        clone_ptr_brain_into(gen_brain, elite_brain, 0);
                     }
                     memset(
                         BRAIN_ELITE_STREAKS[e],
