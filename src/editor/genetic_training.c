@@ -278,7 +278,9 @@ static void render_evolution_plots(void) {
                 "Entity: %d",
                 GENETIC_TRAINING->progress.entities_to_train[e]
             );
-            ImPlot_PlotLine_FloatPtrInt(str, ys, n, 1.0, 0.0, 0, 0, 0);
+            ImPlot_PlotLine_FloatPtrInt(
+                str, ys, n, 1.0, 0.0, 0, 0, stride
+            );
         }
 
         ImPlot_EndPlot();
@@ -403,15 +405,17 @@ static void update_evolution_history(void) {
     }
 
     int gen = params->progress.generation;
-
     for (int e = 0; e < params->progress.n_entities_to_train; ++e) {
         Scorer* scorer = &params->progress.best_scorers[e];
         float val = get_total_score(scorer);
-        MIN_SCORE = min(MIN_SCORE, val);
-        MAX_SCORE = max(MAX_SCORE, val);
 
         int n_scores = SCORES[e].length;
         if (n_scores == gen) {
+            if (n_scores > 0) {
+                float prev_val = array_get(&SCORES[e], n_scores - 1);
+                MIN_SCORE = min(MIN_SCORE, prev_val);
+                MAX_SCORE = max(MAX_SCORE, prev_val);
+            }
             array_push(&SCORES[e], val);
         } else if (n_scores == gen + 1) {
             SCORES[e].data[n_scores - 1] = val;
