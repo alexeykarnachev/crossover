@@ -25,8 +25,9 @@ typedef struct GBuffer {
 
 extern GLuint POLYGON_VAO;
 extern GLuint POLYGON_VBO;
-extern GLuint PRIMITIVE_PROGRAM;
 extern GBuffer GBUFFER;
+extern GLuint PRIMITIVE_PROGRAM;
+extern GLuint COLOR_PROGRAM;
 
 int set_attrib(
     GLuint program,

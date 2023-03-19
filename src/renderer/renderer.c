@@ -61,13 +61,8 @@ static RenderCall prepare_primitive_render_call(
         }
         case BRICK_MATERIAL: {
             float* color = (float*)&material.m.color.color;
-            // float* brick_size = (float*)&material.m.brick.brick_size;
-            // float* joint_size = (float*)&material.m.brick.joint_size;
-
-            Vec2 b = vec2(2.0, 2.0);
-            Vec2 j = vec2(0.1, 0.1);
-            float* brick_size = (float*)&b;
-            float* joint_size = (float*)&j;
+            float* brick_size = (float*)&material.m.brick.brick_size;
+            float* joint_size = (float*)&material.m.brick.joint_size;
 
             int is_smooth = material.m.brick.is_smooth;
             set_uniform_3fv(program, "brick_material.color", color, 1);
@@ -147,10 +142,13 @@ static void execute_render_call(RenderCall render_call, int fill_type) {
 }
 
 void render_scene(float dt) {
+    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
+    glViewport(0, 0, GBUFFER_WIDTH, GBUFFER_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // -------------------------------------------------------------------
     // Render primitives
     glDisable(GL_CULL_FACE);
-    glViewport(0, 0, APP.window_width, APP.window_height);
 
     int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
                              | MATERIAL_COMPONENT | RENDER_LAYER_COMPONENT;
@@ -205,4 +203,21 @@ void render_scene(float dt) {
     }
 
     DEBUG.n_primitives = 0;
+
+    // -------------------------------------------------------------------
+    // Blit color to the output frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, APP.window_width, APP.window_height);
+    GLuint program = COLOR_PROGRAM;
+    glUseProgram(program);
+
+    set_uniform_1i(program, "world_pos_tex", 0);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, GBUFFER.world_pos_tex);
+
+    set_uniform_1i(program, "diffuse_tex", 1);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, GBUFFER.diffuse_tex);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

@@ -23,6 +23,7 @@ uniform Camera camera;
 uniform int primitive_type;
 uniform float render_layer;
 
+out vec3 fs_world_pos;
 out vec2 fs_uv_pos;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
@@ -68,5 +69,6 @@ void main(void) {
     }
 
     vec2 proj_pos = world2proj(world_position); 
+    fs_world_pos = vec3(vs_world_pos, render_layer);
     gl_Position = vec4(proj_pos, render_layer, 1.0);
 }

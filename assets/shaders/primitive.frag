@@ -14,6 +14,7 @@ struct BrickMaterial {
 // struct StoneMaterial {
 // };
 
+in vec3 fs_world_pos;
 in vec2 fs_uv_pos;
 
 uniform vec2 uv_size;
@@ -22,8 +23,8 @@ uniform ColorMaterial color_material;
 uniform BrickMaterial brick_material;
 // uniform StoneMaterial stone_material;
 
-out vec4 frag_color;
-
+layout(location=0) out vec3 world_pos_tex;
+layout(location=1) out vec4 diffuse_tex;
 
 vec3 get_brick_color(void) {
     vec3 color = brick_material.color;
@@ -76,5 +77,8 @@ void main(void) {
         default:
             break;
     }
-    frag_color = vec4(color, 1.0);
+    vec4 diffuse_color = vec4(color, 1.0);
+
+    world_pos_tex = fs_world_pos;
+    diffuse_tex = diffuse_color;
 }
