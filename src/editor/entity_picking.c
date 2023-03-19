@@ -8,6 +8,7 @@
 #include "../math.h"
 #include "../scene.h"
 #include "../system.h"
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -108,18 +109,30 @@ int check_if_cursor_on_entity(int entity) {
 }
 
 int get_entity_under_cursor(void) {
+    float min_render_layer = FLT_MAX;
+    float picked_entity = -1;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(
                 entity, TRANSFORMATION_COMPONENT
             )) {
             continue;
         }
-        if (check_if_cursor_on_entity(entity)) {
-            return entity;
+
+        float render_layer = FLT_MAX;
+        if (check_if_entity_has_component(
+                entity, RENDER_LAYER_COMPONENT
+            )) {
+            render_layer = SCENE.render_layers[entity];
+        }
+
+        if (check_if_cursor_on_entity(entity)
+            && render_layer <= min_render_layer) {
+            min_render_layer = render_layer;
+            picked_entity = entity;
         }
     }
 
-    return -1;
+    return picked_entity;
 }
 
 static int get_picked_entity_handles(Handle handles[MAX_N_POLYGON_VERTICES]
