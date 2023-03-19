@@ -899,6 +899,10 @@ static void render_assets_browser(void) {
         return;
     }
 
+    if (igButton("Destroy all", IG_VEC2_ZERO)) {
+        destroy_assets();
+    }
+
     if (igTreeNodeEx_Str("Brains", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (igButton("Open", IG_VEC2_ZERO)) {
             EDITOR.is_playing = 0;
