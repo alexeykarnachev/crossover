@@ -286,7 +286,6 @@ static void render_evolution_plots(void) {
         ImPlot_EndPlot();
     }
 
-    ig_same_line();
     if (ImPlot_BeginPlot("Elite streaks", IG_VEC2_ZERO, 0)) {
         ImPlot_SetupAxes("Streak", "N Episodes", 0, 0);
         ImPlot_SetupAxisLimits(ImAxis_X1, 1, 20, 0);

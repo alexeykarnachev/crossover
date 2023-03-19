@@ -203,6 +203,7 @@ void render_scene(float dt) {
     }
 
     DEBUG.n_primitives = 0;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // -------------------------------------------------------------------
     // Blit color to the output frame buffer

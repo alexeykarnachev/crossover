@@ -35,10 +35,10 @@ void reset_genetic_training(void) {
 
     training->simulation.dt_ms = 17.0;
 
-    training->population.episode_time = 60.0;
+    training->population.episode_time = 100.0;
     training->population.n_episodes = 100;
 
-    training->evolution.elite_streak = 5;
+    training->evolution.elite_streak = 10;
     training->evolution.elite_ratio = 0.15;
     training->evolution.mutation_rate = 0.3;
     training->evolution.mutation_strength = 0.15;

@@ -26,14 +26,14 @@ uniform BrickMaterial brick_material;
 layout(location=0) out vec3 world_pos_tex;
 layout(location=1) out vec4 diffuse_tex;
 
-vec3 get_brick_color(void) {
+void apply_brick_material(out vec3 diffuse_color, out vec3 normals) {
     vec3 color = brick_material.color;
     vec2 brick_size = brick_material.brick_size;
     vec2 joint_size = brick_material.joint_size;
 
     vec2 brick_uv_size = brick_size / uv_size;
     vec2 joint_uv_size = joint_size / uv_size;
-
+    
     vec2 n_bricks = fs_uv_pos / brick_uv_size;
     vec2 brick_fract = fract(n_bricks);
 
@@ -56,29 +56,30 @@ vec3 get_brick_color(void) {
     }
     color *= min(joint_x, joint_y);
 
-    return color;
+    diffuse_color = color;
+    normals = vec3(0.0, 1.0, 0.0);
 }
 
-vec3 get_stone_color(void) {
-    return vec3(fs_uv_pos, 0.0);
+void apply_stone_material(out vec3 diffuse_color, out vec3 normals) {
+    diffuse_color = vec3(fs_uv_pos, 0.0);
+    normals = vec3(0.0, 1.0, 0.0);
 }
 
 void main(void) {
-    vec3 color = vec3(0.0);
+    vec3 diffuse_color = vec3(0.0);
+    vec3 normals = vec3(0.0);
     switch (material_type) {
         case 0:
-            color = color_material.color;
+            diffuse_color = color_material.color;
             break;
         case 1:
-            color = get_brick_color();
+            apply_brick_material(diffuse_color, normals);
             break;
         case 2:
-            color = get_stone_color();
+            apply_stone_material(diffuse_color, normals);
         default:
             break;
     }
-    vec4 diffuse_color = vec4(color, 1.0);
-
     world_pos_tex = fs_world_pos;
-    diffuse_tex = diffuse_color;
+    diffuse_tex = vec4(diffuse_color, 1.0);
 }
