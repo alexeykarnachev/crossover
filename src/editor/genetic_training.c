@@ -180,9 +180,6 @@ static void start_genetic_training(void) {
         save_scene(".tmp.xscene", &res_msg);
 
         GeneticTraining* params = GENETIC_TRAINING;
-        int n_elites = params->population.n_episodes
-                       * params->evolution.elite_ratio;
-        n_elites = max(2, n_elites);
         SimulationStatus* status = &params->progress.status;
         *status = SIMULATION_RUNNING;
 
@@ -289,6 +286,9 @@ static void start_genetic_training(void) {
                 params->progress.episode = ++episode;
             }
 
+            int n_elites = params->population.n_episodes
+                           * params->evolution.elite_ratio;
+            n_elites = max(2, n_elites);
             for (int e = 0; e < N_ENTITIES_TO_TRAIN; ++e) {
                 static int indices[MAX_N_EPISODES];
                 static Brain new_gen_brains[MAX_N_EPISODES];
