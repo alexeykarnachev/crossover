@@ -286,46 +286,6 @@ static void render_evolution_plots(void) {
         ImPlot_EndPlot();
     }
 
-    if (ImPlot_BeginPlot("Episode scores", IG_VEC2_ZERO, 0)) {
-        ImPlot_SetupAxes("Score", "N Episoded", 0, 0);
-        ImPlot_SetupAxisLimits(
-            ImAxis_X1,
-            MIN_SCORE - fabs(0.05 * MIN_SCORE),
-            MAX_SCORE + fabs(0.05 * MAX_SCORE),
-            0
-        );
-        ImPlot_SetupAxisLimits(ImAxis_Y1, 0.0, 50, 0);
-        ImPlotRange range = {
-            MIN_SCORE - fabs(0.05 * MIN_SCORE),
-            MAX_SCORE + fabs(0.05 * MAX_SCORE)};
-
-        int bins;
-        double width;
-        float bar_scale = 1.0;
-        int episode = GENETIC_TRAINING->progress.episode;
-        int hist_flags = 0;
-
-        for (int e = 0; e < n_entities_to_train; ++e) {
-            float* scores = GENETIC_TRAINING->progress.episode_scores[e];
-            char str[16];
-            sprintf(
-                str,
-                "Entity: %d",
-                GENETIC_TRAINING->progress.entities_to_train[e]
-            );
-
-            ImPlot_CalculateBins_FloatPtr(
-                scores, episode, ImPlotBin_Sturges, range, &bins, &width
-            );
-
-            ImPlot_PlotHistogram_FloatPtr(
-                str, scores, episode, bins, bar_scale, range, hist_flags
-            );
-        }
-
-        ImPlot_EndPlot();
-    }
-
     ig_same_line();
     if (ImPlot_BeginPlot("Elite streaks", IG_VEC2_ZERO, 0)) {
         ImPlot_SetupAxes("Streak", "N Episodes", 0, 0);
