@@ -1,9 +1,32 @@
 #pragma once
 #include <glad/glad.h>
 
+#define GL_CHECK_ERRORS() \
+    do { \
+        GLenum err; \
+        while ((err = glGetError()) != GL_NO_ERROR) { \
+            fprintf( \
+                stderr, \
+                "OpenGL error in %s:%d: %d\n", \
+                __FILE__, \
+                __LINE__, \
+                err \
+            ); \
+            exit(1); \
+        } \
+    } while (0)
+
+typedef struct GBuffer {
+    GLuint fbo;
+    GLuint rbo;
+    GLuint world_pos_tex;
+    GLuint diffuse_tex;
+} GBuffer;
+
 extern GLuint POLYGON_VAO;
 extern GLuint POLYGON_VBO;
 extern GLuint PRIMITIVE_PROGRAM;
+extern GBuffer GBUFFER;
 
 int set_attrib(
     GLuint program,

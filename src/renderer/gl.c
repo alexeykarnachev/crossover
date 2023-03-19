@@ -13,8 +13,9 @@
 GLuint POLYGON_VAO;
 GLuint POLYGON_VBO;
 GLuint PRIMITIVE_PROGRAM;
+GBuffer GBUFFER;
 
-static void init_polygon_vao() {
+static void init_polygon_vao(void) {
     glCreateVertexArrays(1, &POLYGON_VAO);
     glBindVertexArray(POLYGON_VAO);
 
@@ -26,8 +27,10 @@ static void init_polygon_vao() {
         NULL,
         GL_DYNAMIC_DRAW
     );
+    GL_CHECK_ERRORS();
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    GL_CHECK_ERRORS();
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
@@ -131,7 +134,7 @@ static int create_program(
     return 1;
 }
 
-static int init_all_programs() {
+static int init_all_programs(void) {
     int ok = 1;
 
     PRIMITIVE_PROGRAM = glCreateProgram();
@@ -140,6 +143,109 @@ static int init_all_programs() {
     );
 
     return ok;
+}
+
+static int create_texture_2d(
+    GLuint* tex,
+    void* data,
+    size_t level,
+    size_t width,
+    size_t height,
+    size_t internal_format,
+    size_t format,
+    size_t type,
+    int filter
+) {
+    glCreateTextures(GL_TEXTURE_2D, 1, tex);
+    glBindTexture(GL_TEXTURE_2D, *tex);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        level,
+        internal_format,
+        width,
+        height,
+        0,
+        format,
+        type,
+        data
+    );
+    GL_CHECK_ERRORS();
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return 1;
+}
+
+static int init_gbuffer(void) {
+    glGenFramebuffers(1, &GBUFFER.fbo);
+    glGenRenderbuffers(1, &GBUFFER.rbo);
+
+    create_texture_2d(
+        &GBUFFER.world_pos_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGB32F,
+        GL_RGB,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    create_texture_2d(
+        &GBUFFER.diffuse_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGBA32F,
+        GL_RGBA,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    glBindRenderbuffer(GL_RENDERBUFFER, GBUFFER.rbo);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER, GL_DEPTH_COMPONENT, GBUFFER_WIDTH, GBUFFER_HEIGHT
+    );
+    GL_CHECK_ERRORS();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 0,
+        GL_TEXTURE_2D,
+        GBUFFER.world_pos_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 2,
+        GL_TEXTURE_2D,
+        GBUFFER.diffuse_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, GBUFFER.rbo
+    );
+    GL_CHECK_ERRORS();
+
+    GLuint buffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, buffers);
+    GL_CHECK_ERRORS();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return 1;
 }
 
 static int get_attrib_location(
@@ -185,6 +291,7 @@ static int get_uniform_location(
 void init_gl(void) {
     init_polygon_vao();
     init_all_programs();
+    init_gbuffer();
 }
 
 #define _GET_UNIFORM_LOC \
@@ -207,7 +314,7 @@ int set_attrib(
         return 0;
     }
 
-    void* offset = (void*)(long long)offset_n_bytes;
+    void* offset = (void*)(uint64_t)offset_n_bytes;
     glEnableVertexAttribArray(loc);
     glVertexAttribPointer(loc, n_elems, type, GL_FALSE, 0, offset);
     return 1;
