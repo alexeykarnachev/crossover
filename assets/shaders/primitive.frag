@@ -30,13 +30,17 @@ layout(location=1) out vec3 normals_tex;
 layout(location=2) out vec4 diffuse_tex;
 
 vec2 rotate2d(vec2 p, float angle) {
-    mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p = rotation * p;
-    return p;
+    float c = cos(angle);
+    float s = sin(angle);
+    return vec2(c * p.x - s * p.y, s * p.x + c * p.y);
 }
 
 float min4(float a, float b, float c, float d) {
     return min(min(min(a, b), c), d);
+}
+
+float max4(float a, float b, float c, float d) {
+    return max(max(max(a, b), c), d);
 }
 
 void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
@@ -77,25 +81,29 @@ void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
     color *= min(joint_x, joint_y);
     diffuse_color = color;
 
-    vec2 east = vec2(-1.0, 0.0);
+    vec2 west = vec2(-1.0, 0.0);
     vec2 north = vec2(0.0, 1.0);
-    vec2 west = vec2(1.0, 0.0);
+    vec2 east = vec2(1.0, 0.0);
     vec2 south = vec2(0.0, -1.0);
-    vec2 up = vec2(0.0, 0.0);
 
     float west_k = 1.0 - min(1.0, fs_uv_pos.x / thickness_uv_size.x);
+
     float north_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.y) / thickness_uv_size.y);
     float east_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.x) / thickness_uv_size.z);
     float south_k = 1.0 - min(1.0, fs_uv_pos.y / thickness_uv_size.w);
-    float up_k = 1.0 - min4(west_k, north_k, east_k, south_k);
 
-    vec2 normal2d =
-        rotate2d(west_k * west, orientation)
-        + rotate2d(north_k * north, orientation)
-        + rotate2d(east_k * east, orientation)
-        + rotate2d(south_k * south, orientation);
-
-    normal = normalize(vec3(normal2d, up_k));
+    float max_k = max4(west_k, north_k, east_k, south_k);
+    if (max_k == 0.0) {
+        normal = vec3(0.0, 0.0, 1.0);
+    } else if (max_k == west_k) {
+        normal = vec3(rotate2d(west, orientation), 0.0);
+    } else if (max_k == north_k) {
+        normal = vec3(rotate2d(north, orientation), 0.0);
+    } else if (max_k == east_k) {
+        normal = vec3(rotate2d(east, orientation), 0.0);
+    } else if (max_k == south_k) {
+        normal = vec3(rotate2d(south, orientation), 0.0);
+    }
 }
 
 void apply_stone_material(out vec3 diffuse_color, out vec3 normal) {
