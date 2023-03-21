@@ -46,6 +46,14 @@ int ig_drag_float2(
     float step,
     int flags
 );
+int ig_drag_float4(
+    char* label,
+    float values[4],
+    float min_val,
+    float max_val,
+    float step,
+    int flags
+);
 int ig_drag_int(
     char* label, int* value, int min_val, int max_val, int step, int flags
 );

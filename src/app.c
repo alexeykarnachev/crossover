@@ -109,7 +109,7 @@ void init_app(int window_width, int window_height) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.2, 0.2, 0.3, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
 }
 

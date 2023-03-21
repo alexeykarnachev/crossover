@@ -20,6 +20,7 @@ typedef struct GBuffer {
     GLuint fbo;
     GLuint rbo;
     GLuint world_pos_tex;
+    GLuint normals_tex;
     GLuint diffuse_tex;
 } GBuffer;
 

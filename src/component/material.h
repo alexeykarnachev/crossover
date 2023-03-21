@@ -18,6 +18,7 @@ typedef struct BrickMaterial {
     Vec3 color;
     Vec2 brick_size;
     Vec2 joint_size;
+    Vec4 thickness;
     int is_smooth;
 } BrickMaterial;
 
@@ -37,7 +38,11 @@ void change_material_type(Material* material, MaterialType target_type);
 
 Material init_color_material(Vec3 color);
 Material init_brick_material(
-    Vec3 color, Vec2 brick_size, Vec2 joint_size, int is_smooth
+    Vec3 color,
+    Vec2 brick_size,
+    Vec2 joint_size,
+    Vec4 thickness,
+    int is_smooth
 );
 Material init_stone_material(void);
 Material init_default_color_material(void);

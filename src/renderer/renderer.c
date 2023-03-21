@@ -63,14 +63,18 @@ static RenderCall prepare_primitive_render_call(
             float* color = (float*)&material.m.color.color;
             float* brick_size = (float*)&material.m.brick.brick_size;
             float* joint_size = (float*)&material.m.brick.joint_size;
-
+            float* thickness = (float*)&material.m.brick.thickness;
             int is_smooth = material.m.brick.is_smooth;
+
             set_uniform_3fv(program, "brick_material.color", color, 1);
             set_uniform_2fv(
                 program, "brick_material.brick_size", brick_size, 1
             );
             set_uniform_2fv(
                 program, "brick_material.joint_size", joint_size, 1
+            );
+            set_uniform_4fv(
+                program, "brick_material.thickness", thickness, 1
             );
             set_uniform_1i(program, "brick_material.is_smooth", is_smooth);
             break;
@@ -113,6 +117,9 @@ static RenderCall prepare_primitive_render_call(
 
     set_attrib(program, "vs_world_pos", 2, GL_FLOAT, 0);
     set_attrib(program, "vs_uv_pos", 2, GL_FLOAT, total_attrib_size);
+    set_uniform_1f(
+        program, "orientation", transformation.curr_orientation
+    );
     set_uniform_2fv(program, "uv_size", (float*)&uv_size, 1);
 
     RenderCall render_call;
@@ -212,12 +219,17 @@ void render_scene(float dt) {
     GLuint program = COLOR_PROGRAM;
     glUseProgram(program);
 
+    // TODO: Factor out these bindings
     set_uniform_1i(program, "world_pos_tex", 0);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, GBUFFER.world_pos_tex);
 
-    set_uniform_1i(program, "diffuse_tex", 1);
+    set_uniform_1i(program, "normals_tex", 1);
     glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, GBUFFER.normals_tex);
+
+    set_uniform_1i(program, "diffuse_tex", 2);
+    glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, GBUFFER.diffuse_tex);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

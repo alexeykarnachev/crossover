@@ -614,6 +614,8 @@ static void render_component_inspector(int entity, ComponentType type) {
                         = (float*)&material->m.brick.brick_size;
                     float* joint_size
                         = (float*)&material->m.brick.joint_size;
+                    float* thickness
+                        = (float*)&material->m.brick.thickness;
                     int* is_smooth = (int*)&material->m.brick.is_smooth;
 
                     ig_drag_float2(
@@ -622,6 +624,15 @@ static void render_component_inspector(int entity, ComponentType type) {
                     ig_drag_float2(
                         "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
                     );
+                    ig_drag_float4(
+                        "thickness", thickness, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    if (igButton("Reset", IG_VEC2_ZERO)) {
+                        material->m.brick.thickness = vec4(
+                            0.0, 0.0, 0.0, 0.0
+                        );
+                    }
+
                     igCheckbox("smooth", (bool*)is_smooth);
                     igText("color");
                     igColorPicker3("##", color, COLOR_PICKER_FLAGS);

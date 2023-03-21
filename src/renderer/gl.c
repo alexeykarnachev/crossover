@@ -189,11 +189,24 @@ static int create_texture_2d(
 }
 
 static int init_gbuffer(void) {
+    // TODO: Factor out textures creations (a lot of repetitions here)
     glGenFramebuffers(1, &GBUFFER.fbo);
     glGenRenderbuffers(1, &GBUFFER.rbo);
 
     create_texture_2d(
         &GBUFFER.world_pos_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGB32F,
+        GL_RGB,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    create_texture_2d(
+        &GBUFFER.normals_tex,
         NULL,
         0,
         GBUFFER_WIDTH,
@@ -236,6 +249,15 @@ static int init_gbuffer(void) {
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0 + 1,
         GL_TEXTURE_2D,
+        GBUFFER.normals_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 2,
+        GL_TEXTURE_2D,
         GBUFFER.diffuse_tex,
         0
     );
@@ -246,8 +268,9 @@ static int init_gbuffer(void) {
     );
     GL_CHECK_ERRORS();
 
-    GLuint buffers[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, buffers);
+    GLuint buffers[3] = {
+        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, buffers);
     GL_CHECK_ERRORS();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

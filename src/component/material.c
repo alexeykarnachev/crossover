@@ -50,13 +50,18 @@ Material init_color_material(Vec3 color) {
 }
 
 Material init_brick_material(
-    Vec3 color, Vec2 brick_size, Vec2 joint_size, int is_smooth
+    Vec3 color,
+    Vec2 brick_size,
+    Vec2 joint_size,
+    Vec4 thickness,
+    int is_smooth
 ) {
     Material material = {0};
     material.type = BRICK_MATERIAL;
     material.m.brick.color = color;
     material.m.brick.brick_size = brick_size;
     material.m.brick.joint_size = joint_size;
+    material.m.brick.thickness = thickness;
     material.m.brick.is_smooth = is_smooth;
     return material;
 }
@@ -74,9 +79,10 @@ Material init_default_color_material(void) {
 Material init_default_brick_material(void) {
     Vec2 brick_size = vec2(2.0, 1.0);
     Vec2 joint_size = vec2(0.12, 0.15);
+    Vec4 thickness = vec4(0.0, 0.0, 0.0, 0.0);
     int is_smooth = 1;
     return init_brick_material(
-        BRICK_COLOR, brick_size, joint_size, is_smooth
+        BRICK_COLOR, brick_size, joint_size, thickness, is_smooth
     );
 }
 
