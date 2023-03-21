@@ -10,14 +10,16 @@ struct WallMaterial {
     vec3 color;
     vec2 brick_size;
     vec2 joint_size;
-    vec4 thickness;
-    int is_smooth;
+    vec4 tilt;
+    ivec4 flip;
+    int smooth_joint;
 };
 
 struct Wall {
     vec3 normal;
     float elevation;
     int side;
+    int flip;
 };
 
 const vec3 WEST_NORMAL = vec3(-1.0, 0.0, 0.0);
@@ -26,11 +28,11 @@ const vec3 EAST_NORMAL = vec3(1.0, 0.0, 0.0);
 const vec3 SOUTH_NORMAL = vec3(0.0, -1.0, 0.0);
 const vec3 UP_NORMAL = vec3(0.0, 0.0, 1.0);
 
-const int WEST_SIDE = 1;
-const int NORTH_SIDE = 2;
-const int EAST_SIDE = 3;
-const int SOUTH_SIDE = 4;
-const int UP_SIDE = 5;
+const int WEST_SIDE = 0;
+const int NORTH_SIDE = 1;
+const int EAST_SIDE = 2;
+const int SOUTH_SIDE = 3;
+const int UP_SIDE = 4;
 
 in vec3 fs_world_pos;
 in vec2 fs_uv_pos;
@@ -71,6 +73,15 @@ vec3 get_wall_color(Wall wall) {
     vec2 brick_uv_size = brick_size / uv_size;
     vec2 joint_uv_size = joint_size / uv_size;
     vec2 uv = fs_uv_pos;
+
+    if (wall.flip == 1) {
+        if (wall.side == WEST_SIDE || wall.side == EAST_SIDE) {
+            uv.y = 1.0 - uv.y;
+        } else if (wall.side == NORTH_SIDE || wall.side == SOUTH_SIDE) {
+            uv.x = 1.0 - uv.x;
+        }
+    }
+
     if (wall.side == WEST_SIDE) {
         uv.x = 1.0 - uv.x;
         uv = rotate2d(uv, PI * 0.5);
@@ -101,7 +112,7 @@ vec3 get_wall_color(Wall wall) {
     float joint_y;
     float joint_edge_x = joint_uv_size.x / brick_uv_size.x;
     float joint_edge_y = joint_uv_size.y / brick_uv_size.y;
-    if (wall_material.is_smooth == 1) {
+    if (wall_material.smooth_joint == 1) {
         joint_x = smoothstep(0.0, joint_edge_x, brick_fract.x);
         joint_y = smoothstep(0.0, joint_edge_y, brick_fract.y);
     } else {
@@ -114,19 +125,19 @@ vec3 get_wall_color(Wall wall) {
 }
 
 Wall get_wall(void) {
-    vec4 thickness = wall_material.thickness;
-    vec4 thickness_uv_size = vec4(
-        thickness.x / uv_size.x,
-        thickness.y / uv_size.y,
-        thickness.z / uv_size.x,
-        thickness.w / uv_size.y
+    vec4 tilt = wall_material.tilt;
+    vec4 tilt_uv_size = vec4(
+        tilt.x / uv_size.x,
+        tilt.y / uv_size.y,
+        tilt.z / uv_size.x,
+        tilt.w / uv_size.y
     );
 
-    float west_k = 1.0 - min(1.0, fs_uv_pos.x / thickness_uv_size.x);
+    float west_k = 1.0 - min(1.0, fs_uv_pos.x / tilt_uv_size.x);
 
-    float north_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.y) / thickness_uv_size.y);
-    float east_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.x) / thickness_uv_size.z);
-    float south_k = 1.0 - min(1.0, fs_uv_pos.y / thickness_uv_size.w);
+    float north_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.y) / tilt_uv_size.y);
+    float east_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.x) / tilt_uv_size.z);
+    float south_k = 1.0 - min(1.0, fs_uv_pos.y / tilt_uv_size.w);
 
     float max_k = max4(west_k, north_k, east_k, south_k);
     vec3 normal;
@@ -151,6 +162,7 @@ Wall get_wall(void) {
     Wall wall;
     wall.normal = normal;
     wall.side = side;
+    wall.flip = side == UP_SIDE ? 0 : wall_material.flip[side];
     wall.elevation = 1.0 - max_k;
     return wall;
 }

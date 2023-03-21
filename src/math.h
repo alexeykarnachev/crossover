@@ -21,6 +21,13 @@ typedef struct Vec4 {
     float w;
 } Vec4;
 
+typedef struct IVec4 {
+    int x;
+    int y;
+    int z;
+    int w;
+} IVec4;
+
 float sign(float x);
 float min(float x, float y);
 float max(float x, float y);
@@ -36,6 +43,8 @@ float get_vec_orientation(Vec2 v);
 Vec2 vec2(float x, float y);
 Vec3 vec3(float x, float y, float z);
 Vec4 vec4(float x, float y, float z, float w);
+IVec4 ivec4(int x, int y, int z, int w);
+
 Vec2 get_orientation_vec(float orientation);
 Vec2 scale(Vec2 v, float k);
 Vec2 add(Vec2 v0, Vec2 v1);

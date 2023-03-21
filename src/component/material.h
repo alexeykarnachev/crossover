@@ -14,8 +14,9 @@ typedef struct WallMaterial {
     Vec3 color;
     Vec2 brick_size;
     Vec2 joint_size;
-    Vec4 thickness;
-    int is_smooth;
+    Vec4 tilt;
+    IVec4 flip;
+    int smooth_joint;
 } WallMaterial;
 
 typedef struct Material {
@@ -33,8 +34,9 @@ Material init_wall_material(
     Vec3 color,
     Vec2 brick_size,
     Vec2 joint_size,
-    Vec4 thickness,
-    int is_smooth
+    Vec4 tilt,
+    IVec4 flip,
+    int smooth_joint
 );
 Material init_default_color_material(void);
 Material init_default_wall_material(void);

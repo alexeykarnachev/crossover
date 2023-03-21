@@ -39,6 +39,9 @@ int set_attrib(
 );
 
 int set_uniform_1i(GLuint program, const char* name, GLint val);
+int set_uniform_4iv(
+    GLuint program, const char* name, GLint* data, int n_values
+);
 int set_uniform_1f(GLuint program, const char* name, GLfloat val);
 int set_uniform_2fv(
     GLuint program, const char* name, GLfloat* data, int n_values

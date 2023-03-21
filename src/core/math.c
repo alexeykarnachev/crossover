@@ -108,6 +108,11 @@ Vec4 vec4(float x, float y, float z, float w) {
     return res;
 }
 
+IVec4 ivec4(int x, int y, int z, int w) {
+    IVec4 res = {x, y, z, w};
+    return res;
+}
+
 Vec2 get_orientation_vec(float orientation) {
     Vec2 vec = vec2(cos(orientation), sin(orientation));
     return vec;

@@ -614,8 +614,12 @@ static void render_component_inspector(int entity, ComponentType type) {
                         = (float*)&material->m.wall.brick_size;
                     float* joint_size
                         = (float*)&material->m.wall.joint_size;
-                    float* thickness = (float*)&material->m.wall.thickness;
-                    int* is_smooth = (int*)&material->m.wall.is_smooth;
+                    float* west_tilt = (float*)&material->m.wall.tilt.x;
+                    float* north_tilt = (float*)&material->m.wall.tilt.y;
+                    float* east_tilt = (float*)&material->m.wall.tilt.z;
+                    float* south_tilt = (float*)&material->m.wall.tilt.w;
+                    int* smooth_joint
+                        = (int*)&material->m.wall.smooth_joint;
 
                     ig_drag_float2(
                         "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
@@ -623,16 +627,39 @@ static void render_component_inspector(int entity, ComponentType type) {
                     ig_drag_float2(
                         "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
                     );
-                    ig_drag_float4(
-                        "thickness", thickness, 0.00, FLT_MAX, 0.01, 0
-                    );
+
+                    igText("tilt:");
+                    ig_same_line();
                     if (igButton("Reset", IG_VEC2_ZERO)) {
-                        material->m.wall.thickness = vec4(
-                            0.0, 0.0, 0.0, 0.0
-                        );
+                        material->m.wall.tilt = vec4(0.0, 0.0, 0.0, 0.0);
+                        material->m.wall.flip = ivec4(0, 0, 0, 0);
                     }
 
-                    igCheckbox("smooth", (bool*)is_smooth);
+                    ig_drag_float(
+                        "west", west_tilt, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    ig_same_line();
+                    ig_xor_button("flip", &material->m.wall.flip.x);
+
+                    ig_drag_float(
+                        "north", north_tilt, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    ig_same_line();
+                    ig_xor_button("flip", &material->m.wall.flip.y);
+
+                    ig_drag_float(
+                        "east", east_tilt, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    ig_same_line();
+                    ig_xor_button("flip", &material->m.wall.flip.z);
+
+                    ig_drag_float(
+                        "south", south_tilt, 0.00, FLT_MAX, 0.01, 0
+                    );
+                    ig_same_line();
+                    ig_xor_button("flip", &material->m.wall.flip.w);
+
+                    igCheckbox("smooth joint", (bool*)smooth_joint);
                     igText("color");
                     igColorPicker3("##", color, COLOR_PICKER_FLAGS);
                     break;

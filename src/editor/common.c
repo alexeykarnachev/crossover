@@ -184,6 +184,14 @@ int ig_mem_reset_button(const char* label, void* ptr, int size) {
     return is_changed;
 }
 
+void ig_xor_button(const char* label, int* val) {
+    igPushID_Int(IG_UNIQUE_ID++);
+    if (igButton(label, IG_VEC2_ZERO)) {
+        *val = *val ^ 1;
+    }
+    igPopID();
+}
+
 void render_component_checkboxes(uint64_t* components) {
     int flags[N_COMPONENT_TYPES] = {0};
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {

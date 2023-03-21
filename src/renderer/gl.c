@@ -356,6 +356,14 @@ int set_uniform_1i(GLuint program, const char* name, GLint val) {
     return 1;
 }
 
+int set_uniform_4iv(
+    GLuint program, const char* name, GLint* data, int n_values
+) {
+    _GET_UNIFORM_LOC
+    glUniform4iv(loc, n_values, data);
+    return 1;
+}
+
 int set_uniform_1f(GLuint program, const char* name, GLfloat val) {
     _GET_UNIFORM_LOC
     glUniform1f(loc, val);
