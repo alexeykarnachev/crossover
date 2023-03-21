@@ -1,10 +1,12 @@
 #version 460 core
 
+#define PI 3.14159265359
+
 struct ColorMaterial {
     vec3 color;
 };
 
-struct BrickMaterial {
+struct WallMaterial {
     vec3 color;
     vec2 brick_size;
     vec2 joint_size;
@@ -12,8 +14,23 @@ struct BrickMaterial {
     int is_smooth;
 };
 
-// struct StoneMaterial {
-// };
+struct Wall {
+    vec3 normal;
+    float elevation;
+    int side;
+};
+
+const vec3 WEST_NORMAL = vec3(-1.0, 0.0, 0.0);
+const vec3 NORTH_NORMAL = vec3(0.0, 1.0, 0.0);
+const vec3 EAST_NORMAL = vec3(1.0, 0.0, 0.0);
+const vec3 SOUTH_NORMAL = vec3(0.0, -1.0, 0.0);
+const vec3 UP_NORMAL = vec3(0.0, 0.0, 1.0);
+
+const int WEST_SIDE = 1;
+const int NORTH_SIDE = 2;
+const int EAST_SIDE = 3;
+const int SOUTH_SIDE = 4;
+const int UP_SIDE = 5;
 
 in vec3 fs_world_pos;
 in vec2 fs_uv_pos;
@@ -22,8 +39,7 @@ uniform float orientation;
 uniform vec2 uv_size;
 uniform int material_type;
 uniform ColorMaterial color_material;
-uniform BrickMaterial brick_material;
-// uniform StoneMaterial stone_material;
+uniform WallMaterial wall_material;
 
 layout(location=0) out vec3 world_pos_tex;
 layout(location=1) out vec3 normals_tex;
@@ -43,22 +59,36 @@ float max4(float a, float b, float c, float d) {
     return max(max(max(a, b), c), d);
 }
 
-void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
-    vec3 color = brick_material.color;
-    vec2 brick_size = brick_material.brick_size;
-    vec2 joint_size = brick_material.joint_size;
-    vec4 thickness = brick_material.thickness;
+vec2 swap2(vec2 v) {
+    return vec2(v.y, v.x);
+}
+
+vec3 get_wall_color(Wall wall) {
+    vec3 color = wall_material.color;
+    vec2 brick_size = wall_material.brick_size;
+    vec2 joint_size = wall_material.joint_size;
 
     vec2 brick_uv_size = brick_size / uv_size;
     vec2 joint_uv_size = joint_size / uv_size;
-    vec4 thickness_uv_size = vec4(
-        thickness.x / uv_size.x,
-        thickness.y / uv_size.y,
-        thickness.z / uv_size.x,
-        thickness.w / uv_size.y
-    );
+    vec2 uv = fs_uv_pos;
+    if (wall.side == WEST_SIDE) {
+        uv.x = 1.0 - uv.x;
+        uv = rotate2d(uv, PI * 0.5);
+        brick_uv_size = brick_size / swap2(uv_size);
+        joint_uv_size = joint_size / swap2(uv_size);
+    } else if (wall.side == EAST_SIDE) {
+        uv = rotate2d(uv, PI * 0.5);
+        brick_uv_size = brick_size / swap2(uv_size);
+        joint_uv_size = joint_size / swap2(uv_size);
+    } else if (wall.side == SOUTH_SIDE) {
+        uv.y = 1.0 - uv.y;
+    }
+
+    float k = 0.80 + wall.elevation * (1 - 0.5);
+    brick_uv_size *= k;
+    joint_uv_size *= k;
     
-    vec2 n_bricks = fs_uv_pos / brick_uv_size;
+    vec2 n_bricks = uv / brick_uv_size;
     vec2 brick_fract = fract(n_bricks);
 
     if (int(n_bricks.y) % 2 == 0) {
@@ -71,7 +101,7 @@ void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
     float joint_y;
     float joint_edge_x = joint_uv_size.x / brick_uv_size.x;
     float joint_edge_y = joint_uv_size.y / brick_uv_size.y;
-    if (brick_material.is_smooth == 1) {
+    if (wall_material.is_smooth == 1) {
         joint_x = smoothstep(0.0, joint_edge_x, brick_fract.x);
         joint_y = smoothstep(0.0, joint_edge_y, brick_fract.y);
     } else {
@@ -79,12 +109,18 @@ void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
         joint_y = step(joint_edge_y, brick_fract.y);
     }
     color *= min(joint_x, joint_y);
-    diffuse_color = color;
 
-    vec2 west = vec2(-1.0, 0.0);
-    vec2 north = vec2(0.0, 1.0);
-    vec2 east = vec2(1.0, 0.0);
-    vec2 south = vec2(0.0, -1.0);
+    return color;
+}
+
+Wall get_wall(void) {
+    vec4 thickness = wall_material.thickness;
+    vec4 thickness_uv_size = vec4(
+        thickness.x / uv_size.x,
+        thickness.y / uv_size.y,
+        thickness.z / uv_size.x,
+        thickness.w / uv_size.y
+    );
 
     float west_k = 1.0 - min(1.0, fs_uv_pos.x / thickness_uv_size.x);
 
@@ -93,22 +129,37 @@ void apply_brick_material(out vec3 diffuse_color, out vec3 normal) {
     float south_k = 1.0 - min(1.0, fs_uv_pos.y / thickness_uv_size.w);
 
     float max_k = max4(west_k, north_k, east_k, south_k);
+    vec3 normal;
+    int side;
     if (max_k == 0.0) {
-        normal = vec3(0.0, 0.0, 1.0);
+        normal = UP_NORMAL;
+        side = UP_SIDE;
     } else if (max_k == west_k) {
-        normal = vec3(rotate2d(west, orientation), 0.0);
+        normal = vec3(rotate2d(WEST_NORMAL.xy, orientation), 0.0);
+        side = WEST_SIDE;
     } else if (max_k == north_k) {
-        normal = vec3(rotate2d(north, orientation), 0.0);
+        normal = vec3(rotate2d(NORTH_NORMAL.xy, orientation), 0.0);
+        side = NORTH_SIDE;
     } else if (max_k == east_k) {
-        normal = vec3(rotate2d(east, orientation), 0.0);
+        normal = vec3(rotate2d(EAST_NORMAL.xy, orientation), 0.0);
+        side = EAST_SIDE;
     } else if (max_k == south_k) {
-        normal = vec3(rotate2d(south, orientation), 0.0);
+        normal = vec3(rotate2d(SOUTH_NORMAL.xy, orientation), 0.0);
+        side = SOUTH_SIDE;
     }
+
+    Wall wall;
+    wall.normal = normal;
+    wall.side = side;
+    wall.elevation = 1.0 - max_k;
+    return wall;
 }
 
-void apply_stone_material(out vec3 diffuse_color, out vec3 normal) {
-    diffuse_color = vec3(fs_uv_pos, 0.0);
-    normal = vec3(0.0, 1.0, 0.0);
+void apply_wall_material(out vec3 diffuse_color, out vec3 normal) {
+    Wall wall = get_wall();
+    diffuse_color = get_wall_color(wall);
+
+    normal = wall.normal;
 }
 
 void main(void) {
@@ -119,10 +170,8 @@ void main(void) {
             diffuse_color = color_material.color;
             break;
         case 1:
-            apply_brick_material(diffuse_color, normal);
+            apply_wall_material(diffuse_color, normal);
             break;
-        case 2:
-            apply_stone_material(diffuse_color, normal);
         default:
             break;
     }

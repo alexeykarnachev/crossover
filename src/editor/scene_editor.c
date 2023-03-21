@@ -608,15 +608,14 @@ static void render_component_inspector(int entity, ComponentType type) {
                     igColorPicker3("##", color, COLOR_PICKER_FLAGS);
                     break;
                 }
-                case BRICK_MATERIAL: {
-                    float* color = (float*)&material->m.brick.color;
+                case WALL_MATERIAL: {
+                    float* color = (float*)&material->m.wall.color;
                     float* brick_size
-                        = (float*)&material->m.brick.brick_size;
+                        = (float*)&material->m.wall.brick_size;
                     float* joint_size
-                        = (float*)&material->m.brick.joint_size;
-                    float* thickness
-                        = (float*)&material->m.brick.thickness;
-                    int* is_smooth = (int*)&material->m.brick.is_smooth;
+                        = (float*)&material->m.wall.joint_size;
+                    float* thickness = (float*)&material->m.wall.thickness;
+                    int* is_smooth = (int*)&material->m.wall.is_smooth;
 
                     ig_drag_float2(
                         "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
@@ -628,7 +627,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                         "thickness", thickness, 0.00, FLT_MAX, 0.01, 0
                     );
                     if (igButton("Reset", IG_VEC2_ZERO)) {
-                        material->m.brick.thickness = vec4(
+                        material->m.wall.thickness = vec4(
                             0.0, 0.0, 0.0, 0.0
                         );
                     }
@@ -636,10 +635,6 @@ static void render_component_inspector(int entity, ComponentType type) {
                     igCheckbox("smooth", (bool*)is_smooth);
                     igText("color");
                     igColorPicker3("##", color, COLOR_PICKER_FLAGS);
-                    break;
-                }
-                case STONE_MATERIAL: {
-                    igTextColored(IG_YELLOW_COLOR, "TODO: Add parameters");
                     break;
                 }
             }

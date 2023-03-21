@@ -59,24 +59,24 @@ static RenderCall prepare_primitive_render_call(
             set_uniform_3fv(program, "color_material.color", color, 1);
             break;
         }
-        case BRICK_MATERIAL: {
+        case WALL_MATERIAL: {
             float* color = (float*)&material.m.color.color;
-            float* brick_size = (float*)&material.m.brick.brick_size;
-            float* joint_size = (float*)&material.m.brick.joint_size;
-            float* thickness = (float*)&material.m.brick.thickness;
-            int is_smooth = material.m.brick.is_smooth;
+            float* brick_size = (float*)&material.m.wall.brick_size;
+            float* joint_size = (float*)&material.m.wall.joint_size;
+            float* thickness = (float*)&material.m.wall.thickness;
+            int is_smooth = material.m.wall.is_smooth;
 
-            set_uniform_3fv(program, "brick_material.color", color, 1);
+            set_uniform_3fv(program, "wall_material.color", color, 1);
             set_uniform_2fv(
-                program, "brick_material.brick_size", brick_size, 1
+                program, "wall_material.brick_size", brick_size, 1
             );
             set_uniform_2fv(
-                program, "brick_material.joint_size", joint_size, 1
+                program, "wall_material.joint_size", joint_size, 1
             );
             set_uniform_4fv(
-                program, "brick_material.thickness", thickness, 1
+                program, "wall_material.thickness", thickness, 1
             );
-            set_uniform_1i(program, "brick_material.is_smooth", is_smooth);
+            set_uniform_1i(program, "wall_material.is_smooth", is_smooth);
             break;
         }
         default:

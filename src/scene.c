@@ -546,7 +546,7 @@ int spawn_default_rectangle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_rectangle_primitive(),
         init_default_rectangle_primitive(),
-        init_default_brick_material(),
+        init_default_wall_material(),
         0.0
     );
 }
@@ -577,7 +577,7 @@ int spawn_default_circle_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_circle_primitive(),
-        init_default_brick_material(),
+        init_default_wall_material(),
         0.0
     );
 }
@@ -586,7 +586,7 @@ int spawn_default_rectangle_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_rectangle_primitive(),
-        init_default_brick_material(),
+        init_default_wall_material(),
         0.0
     );
 }
@@ -595,7 +595,7 @@ int spawn_default_line_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_line_primitive(),
-        init_default_brick_material(),
+        init_default_wall_material(),
         0.0
     );
 }
@@ -604,7 +604,7 @@ int spawn_default_polygon_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_polygon_primitive(),
-        init_default_brick_material(),
+        init_default_wall_material(),
         0.0
     );
 }

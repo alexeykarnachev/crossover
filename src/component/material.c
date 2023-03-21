@@ -17,9 +17,8 @@
     } while (0)
 
 MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES] = {
-    COLOR_MATERIAL, BRICK_MATERIAL, STONE_MATERIAL};
-const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES] = {
-    "Color", "Brick", "Stone"};
+    COLOR_MATERIAL, WALL_MATERIAL};
+const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES] = {"Color", "Wall"};
 
 void change_material_type(Material* material, MaterialType target_type) {
     MaterialType source_type = material->type;
@@ -31,11 +30,8 @@ void change_material_type(Material* material, MaterialType target_type) {
         case COLOR_MATERIAL:
             *material = init_default_color_material();
             break;
-        case BRICK_MATERIAL:
-            *material = init_default_brick_material();
-            break;
-        case STONE_MATERIAL:
-            *material = init_default_stone_material();
+        case WALL_MATERIAL:
+            *material = init_default_wall_material();
             break;
         default:
             MATERIAL_TYPE_ERROR("change_material_type", source_type);
@@ -49,7 +45,7 @@ Material init_color_material(Vec3 color) {
     return material;
 }
 
-Material init_brick_material(
+Material init_wall_material(
     Vec3 color,
     Vec2 brick_size,
     Vec2 joint_size,
@@ -57,18 +53,12 @@ Material init_brick_material(
     int is_smooth
 ) {
     Material material = {0};
-    material.type = BRICK_MATERIAL;
-    material.m.brick.color = color;
-    material.m.brick.brick_size = brick_size;
-    material.m.brick.joint_size = joint_size;
-    material.m.brick.thickness = thickness;
-    material.m.brick.is_smooth = is_smooth;
-    return material;
-}
-
-Material init_stone_material(void) {
-    Material material = {0};
-    material.type = STONE_MATERIAL;
+    material.type = WALL_MATERIAL;
+    material.m.wall.color = color;
+    material.m.wall.brick_size = brick_size;
+    material.m.wall.joint_size = joint_size;
+    material.m.wall.thickness = thickness;
+    material.m.wall.is_smooth = is_smooth;
     return material;
 }
 
@@ -76,18 +66,14 @@ Material init_default_color_material(void) {
     return init_color_material(GRAY_COLOR);
 }
 
-Material init_default_brick_material(void) {
+Material init_default_wall_material(void) {
     Vec2 brick_size = vec2(2.0, 1.0);
     Vec2 joint_size = vec2(0.12, 0.15);
     Vec4 thickness = vec4(0.0, 0.0, 0.0, 0.0);
     int is_smooth = 1;
-    return init_brick_material(
+    return init_wall_material(
         BRICK_COLOR, brick_size, joint_size, thickness, is_smooth
     );
-}
-
-Material init_default_stone_material(void) {
-    return init_stone_material();
 }
 
 Vec3 RED_COLOR = {1.0, 0.0, 0.0};
