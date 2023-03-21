@@ -65,6 +65,7 @@ static RenderCall prepare_primitive_render_call(
             float* joint_size = (float*)&material.m.wall.joint_size;
             float* tilt = (float*)&material.m.wall.tilt;
             int* flip = (int*)&material.m.wall.flip;
+            float elevation = material.m.wall.elevation;
             int smooth_joint = material.m.wall.smooth_joint;
 
             set_uniform_3fv(program, "wall_material.color", color, 1);
@@ -76,6 +77,7 @@ static RenderCall prepare_primitive_render_call(
             );
             set_uniform_4fv(program, "wall_material.tilt", tilt, 1);
             set_uniform_4iv(program, "wall_material.flip", flip, 1);
+            set_uniform_1f(program, "wall_material.elevation", elevation);
             set_uniform_1i(
                 program, "wall_material.smooth_joint", smooth_joint
             );

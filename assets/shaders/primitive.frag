@@ -12,6 +12,7 @@ struct WallMaterial {
     vec2 joint_size;
     vec4 tilt;
     ivec4 flip;
+    float elevation;
     int smooth_joint;
 };
 
@@ -95,9 +96,8 @@ vec3 get_wall_color(Wall wall) {
         uv.y = 1.0 - uv.y;
     }
 
-    float k = 0.80 + wall.elevation * (1 - 0.5);
-    brick_uv_size *= k;
-    joint_uv_size *= k;
+    brick_uv_size *= wall.elevation;
+    joint_uv_size *= wall.elevation;
     
     vec2 n_bricks = uv / brick_uv_size;
     vec2 brick_fract = fract(n_bricks);
@@ -163,7 +163,9 @@ Wall get_wall(void) {
     wall.normal = normal;
     wall.side = side;
     wall.flip = side == UP_SIDE ? 0 : wall_material.flip[side];
-    wall.elevation = 1.0 - max_k;
+    wall.elevation =
+        (1.0 - wall_material.elevation)
+        + (1.0 - max_k) * wall_material.elevation;
     return wall;
 }
 

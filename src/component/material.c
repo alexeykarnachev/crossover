@@ -51,6 +51,7 @@ Material init_wall_material(
     Vec2 joint_size,
     Vec4 tilt,
     IVec4 flip,
+    float elevation,
     int smooth_joint
 ) {
     Material material = {0};
@@ -60,6 +61,7 @@ Material init_wall_material(
     material.m.wall.joint_size = joint_size;
     material.m.wall.tilt = tilt;
     material.m.wall.flip = flip;
+    material.m.wall.elevation = elevation;
     material.m.wall.smooth_joint = smooth_joint;
     return material;
 }
@@ -73,9 +75,16 @@ Material init_default_wall_material(void) {
     Vec2 joint_size = vec2(0.12, 0.15);
     Vec4 tilt = vec4(0.0, 0.0, 0.0, 0.0);
     IVec4 flip = ivec4(0, 0, 0, 0);
+    int elevation = 0.5;
     int smooth_joint = 1;
     return init_wall_material(
-        BRICK_COLOR, brick_size, joint_size, tilt, flip, smooth_joint
+        BRICK_COLOR,
+        brick_size,
+        joint_size,
+        tilt,
+        flip,
+        elevation,
+        smooth_joint
     );
 }
 

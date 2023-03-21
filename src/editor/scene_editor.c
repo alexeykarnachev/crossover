@@ -620,6 +620,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                     float* south_tilt = (float*)&material->m.wall.tilt.w;
                     int* smooth_joint
                         = (int*)&material->m.wall.smooth_joint;
+                    float* elevation = (float*)&material->m.wall.elevation;
 
                     ig_drag_float2(
                         "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
@@ -636,28 +637,32 @@ static void render_component_inspector(int entity, ComponentType type) {
                     }
 
                     ig_drag_float(
-                        "west", west_tilt, 0.00, FLT_MAX, 0.01, 0
+                        "west", west_tilt, 0.00, FLT_MAX, 0.05, 0
                     );
                     ig_same_line();
                     ig_xor_button("flip", &material->m.wall.flip.x);
 
                     ig_drag_float(
-                        "north", north_tilt, 0.00, FLT_MAX, 0.01, 0
+                        "north", north_tilt, 0.00, FLT_MAX, 0.05, 0
                     );
                     ig_same_line();
                     ig_xor_button("flip", &material->m.wall.flip.y);
 
                     ig_drag_float(
-                        "east", east_tilt, 0.00, FLT_MAX, 0.01, 0
+                        "east", east_tilt, 0.00, FLT_MAX, 0.05, 0
                     );
                     ig_same_line();
                     ig_xor_button("flip", &material->m.wall.flip.z);
 
                     ig_drag_float(
-                        "south", south_tilt, 0.00, FLT_MAX, 0.01, 0
+                        "south", south_tilt, 0.00, FLT_MAX, 0.05, 0
                     );
                     ig_same_line();
                     ig_xor_button("flip", &material->m.wall.flip.w);
+
+                    ig_drag_float(
+                        "elevation", elevation, 0.00, 1.0, 0.05, 0
+                    );
 
                     igCheckbox("smooth joint", (bool*)smooth_joint);
                     igText("color");

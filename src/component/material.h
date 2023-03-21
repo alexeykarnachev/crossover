@@ -16,6 +16,7 @@ typedef struct WallMaterial {
     Vec2 joint_size;
     Vec4 tilt;
     IVec4 flip;
+    float elevation;
     int smooth_joint;
 } WallMaterial;
 
@@ -36,6 +37,7 @@ Material init_wall_material(
     Vec2 joint_size,
     Vec4 tilt,
     IVec4 flip,
+    float elevation,
     int smooth_joint
 );
 Material init_default_color_material(void);
