@@ -8,26 +8,19 @@ typedef enum MaterialType { COLOR_MATERIAL, BRICK_MATERIAL } MaterialType;
 extern MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES];
 extern const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
 
-typedef struct ColorMaterial {
-    Vec3 color;
-} ColorMaterial;
+typedef struct Material {
+    MaterialType type;
 
-typedef struct BrickMaterial {
+    // Common
     Vec3 color;
+
+    // Brick
     Vec2 perspective;
     Vec2 shear;
     Vec2 brick_size;
     Vec2 joint_size;
-    int flip;
-    int smooth_joint;
-} BrickMaterial;
-
-typedef struct Material {
-    MaterialType type;
-    union {
-        ColorMaterial color;
-        BrickMaterial brick;
-    } m;
+    IVec2 flip;
+    IVec2 smooth_joint;
 } Material;
 
 void change_material_type(Material* material, MaterialType target_type);
@@ -39,8 +32,8 @@ Material init_brick_material(
     Vec2 shear,
     Vec2 brick_size,
     Vec2 joint_size,
-    int flip,
-    int smooth_joint
+    IVec2 flip,
+    IVec2 smooth_joint
 );
 Material init_default_color_material(void);
 Material init_default_brick_material(void);
@@ -55,21 +48,14 @@ typedef enum MaterialShapeType {
 extern MaterialShapeType MATERIAL_SHAPE_TYPES[N_MATERIAL_SHAPE_TYPES];
 extern const char* MATERIAL_SHAPE_TYPE_NAMES[N_MATERIAL_SHAPE_TYPES];
 
-typedef struct PlaneMaterialShape {
-    Material material;
-} PlaneMaterialShape;
-
-typedef struct CubeMaterialShape {
-    Material side_materials[5];
-    float side_sizes[4];
-} CubeMaterialShape;
-
 typedef struct MaterialShape {
     MaterialShapeType type;
-    union {
-        PlaneMaterialShape plane;
-        CubeMaterialShape cube;
-    } s;
+
+    // Common
+    Material materials[5];
+
+    // Cube
+    float side_sizes[4];
 } MaterialShape;
 
 void change_material_shape_type(

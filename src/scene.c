@@ -76,7 +76,9 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fwrite(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
+    fwrite(
+        SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp
+    );
     fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fwrite(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
@@ -164,7 +166,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fread(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
+    fread(
+        SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp
+    );
     fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fread(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
@@ -351,7 +355,8 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                         = SCENE.render_layers[entity];
                     break;
                 case MATERIAL_SHAPE_COMPONENT:
-                    SCENE.material_shapes[entity_copy] = SCENE.material_shapes[entity];
+                    SCENE.material_shapes[entity_copy]
+                        = SCENE.material_shapes[entity];
                     break;
                 case VISION_COMPONENT:
                     SCENE.visions[entity_copy] = SCENE.visions[entity];
@@ -471,7 +476,8 @@ int spawn_sprite(
     SCENE.primitives[entity] = primitive;
     SCENE.material_shapes[entity] = material_shape;
     SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | PRIMITIVE_COMPONENT | MATERIAL_SHAPE_COMPONENT
+                               | PRIMITIVE_COMPONENT
+                               | MATERIAL_SHAPE_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
     return entity;

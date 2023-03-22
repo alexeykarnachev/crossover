@@ -451,6 +451,59 @@ static void render_brain_ai_controller_inspector(int entity) {
     }
 }
 
+static void render_material(Material* material) {
+    int type = render_component_type_picker(
+        "Material",
+        material->type,
+        (int*)MATERIAL_TYPES,
+        N_MATERIAL_TYPES,
+        MATERIAL_TYPE_NAMES
+    );
+    change_material_type(material, type);
+
+    switch (type) {
+        case COLOR_MATERIAL: {
+            float* color = (float*)&material->color;
+            igText("color");
+            igColorPicker3("##", color, COLOR_PICKER_FLAGS);
+            break;
+        }
+        case BRICK_MATERIAL: {
+            float* color = (float*)&material->color;
+            float* perspective = (float*)&material->perspective;
+            float* shear = (float*)&material->shear;
+            float* brick_size = (float*)&material->brick_size;
+            float* joint_size = (float*)&material->joint_size;
+            IVec2* flip = &material->flip;
+            IVec2* smooth_joint = &material->smooth_joint;
+
+            igText("color");
+            igColorPicker3("##", color, COLOR_PICKER_FLAGS);
+            ig_drag_float2("perspective", perspective, 0.0, 1.0, 0.05, 0);
+            ig_drag_float2("shear", shear, 0.0, 1.0, 0.05, 0);
+            ig_drag_float2(
+                "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
+            );
+            ig_drag_float2(
+                "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
+            );
+
+            igText("flip:");
+            ig_same_line();
+            ig_xor_button("x", &flip->x);
+            ig_same_line();
+            ig_xor_button("y", &flip->y);
+
+            igText("smooth joint:");
+            ig_same_line();
+            igCheckbox("x", (bool*)&smooth_joint->x);
+            ig_same_line();
+            igCheckbox("y", (bool*)&smooth_joint->y);
+            break;
+        }
+    }
+}
+
 static void render_component_inspector(int entity, ComponentType type) {
     if (!check_if_entity_has_component(entity, type)) {
         return;
@@ -592,96 +645,28 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
                 break;
             }
-            int shape_type = render_component_type_picker(
-                "Type",
+            int type = render_component_type_picker(
+                "Shape",
                 material_shape->type,
                 (int*)MATERIAL_SHAPE_TYPES,
                 N_MATERIAL_SHAPE_TYPES,
                 MATERIAL_SHAPE_TYPE_NAMES
             );
 
-            change_material_shape_type(material_shape, shape_type);
-            switch (shape_type) {
+            change_material_shape_type(material_shape, type);
+            switch (type) {
                 case PLANE_MATERIAL_SHAPE: {
-                    igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+                    render_material(&material_shape->materials[0]);
                     break;
                 }
                 case CUBE_MATERIAL_SHAPE: {
-                    igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+                    igTextColored(
+                        IG_YELLOW_COLOR, "TODO: Not implemented"
+                    );
                     break;
                 }
             }
-#if 0
-            switch (type) {
-                case COLOR_MATERIAL: {
-                    float* color = (float*)&material->m.color.color;
-                    igText("color");
-                    igColorPicker3("##", color, COLOR_PICKER_FLAGS);
-                    break;
-                }
-                case WALL_MATERIAL: {
-                    float* color = (float*)&material->m.wall.color;
-                    float* brick_size
-                        = (float*)&material->m.wall.brick_size;
-                    float* joint_size
-                        = (float*)&material->m.wall.joint_size;
-                    float* west_tilt = (float*)&material->m.wall.tilt.x;
-                    float* north_tilt = (float*)&material->m.wall.tilt.y;
-                    float* east_tilt = (float*)&material->m.wall.tilt.z;
-                    float* south_tilt = (float*)&material->m.wall.tilt.w;
-                    int* smooth_joint
-                        = (int*)&material->m.wall.smooth_joint;
-                    float* elevation = (float*)&material->m.wall.elevation;
 
-                    ig_drag_float2(
-                        "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
-                    );
-                    ig_drag_float2(
-                        "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
-                    );
-
-                    igText("tilt:");
-                    ig_same_line();
-                    if (igButton("Reset", IG_VEC2_ZERO)) {
-                        material->m.wall.tilt = vec4(0.0, 0.0, 0.0, 0.0);
-                        material->m.wall.flip = ivec4(0, 0, 0, 0);
-                    }
-
-                    ig_drag_float(
-                        "west", west_tilt, 0.00, FLT_MAX, 0.05, 0
-                    );
-                    ig_same_line();
-                    ig_xor_button("flip", &material->m.wall.flip.x);
-
-                    ig_drag_float(
-                        "north", north_tilt, 0.00, FLT_MAX, 0.05, 0
-                    );
-                    ig_same_line();
-                    ig_xor_button("flip", &material->m.wall.flip.y);
-
-                    ig_drag_float(
-                        "east", east_tilt, 0.00, FLT_MAX, 0.05, 0
-                    );
-                    ig_same_line();
-                    ig_xor_button("flip", &material->m.wall.flip.z);
-
-                    ig_drag_float(
-                        "south", south_tilt, 0.00, FLT_MAX, 0.05, 0
-                    );
-                    ig_same_line();
-                    ig_xor_button("flip", &material->m.wall.flip.w);
-
-                    ig_drag_float(
-                        "elevation", elevation, 0.00, 1.0, 0.05, 0
-                    );
-
-                    igCheckbox("smooth joint", (bool*)smooth_joint);
-                    igText("color");
-                    igColorPicker3("##", color, COLOR_PICKER_FLAGS);
-                    break;
-                }
-            }
-#endif
             break;
         }
         case RENDER_LAYER_COMPONENT: {

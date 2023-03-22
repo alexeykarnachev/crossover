@@ -1,9 +1,9 @@
 #include "material.h"
-#include <string.h>
 
 #include "../math.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // -----------------------------------------------------------------------
 // Materials
@@ -44,7 +44,7 @@ void change_material_type(Material* material, MaterialType target_type) {
 Material init_color_material(Vec3 color) {
     Material material = {0};
     material.type = COLOR_MATERIAL;
-    material.m.color.color = color;
+    material.color = color;
     return material;
 }
 
@@ -54,18 +54,18 @@ Material init_brick_material(
     Vec2 shear,
     Vec2 brick_size,
     Vec2 joint_size,
-    int flip,
-    int smooth_joint
+    IVec2 flip,
+    IVec2 smooth_joint
 ) {
     Material material = {0};
     material.type = BRICK_MATERIAL;
-    material.m.brick.color = color;
-    material.m.brick.perspective = perspective;
-    material.m.brick.shear = shear;
-    material.m.brick.brick_size = brick_size;
-    material.m.brick.joint_size = joint_size;
-    material.m.brick.flip = flip;
-    material.m.brick.smooth_joint = smooth_joint;
+    material.color = color;
+    material.perspective = perspective;
+    material.shear = shear;
+    material.brick_size = brick_size;
+    material.joint_size = joint_size;
+    material.flip = flip;
+    material.smooth_joint = smooth_joint;
     return material;
 }
 
@@ -79,8 +79,8 @@ Material init_default_brick_material(void) {
     Vec2 shear = vec2(0.0, 0.0);
     Vec2 brick_size = vec2(2.0, 1.0);
     Vec2 joint_size = vec2(0.12, 0.15);
-    int flip = 0;
-    int smooth_joint = 1;
+    IVec2 flip = ivec2(0, 0);
+    IVec2 smooth_joint = ivec2(1, 1);
     return init_brick_material(
         color,
         perspective,
@@ -137,23 +137,17 @@ void change_material_shape_type(
 MaterialShape init_plane_material_shape(Material material) {
     MaterialShape material_shape = {0};
     material_shape.type = PLANE_MATERIAL_SHAPE;
-    material_shape.s.plane.material = material;
+    material_shape.materials[0] = material;
     return material_shape;
 }
 
 MaterialShape init_cube_material_shape(
-    Material side_materials[5], float side_sizes[4]
+    Material materials[5], float side_sizes[4]
 ) {
     MaterialShape material_shape = {0};
     material_shape.type = CUBE_MATERIAL_SHAPE;
-    memcpy(
-        material_shape.s.cube.side_materials,
-        side_materials,
-        sizeof(Material) * 5
-    );
-    memcpy(
-        material_shape.s.cube.side_sizes, side_sizes, sizeof(float) * 4
-    );
+    memcpy(material_shape.materials, materials, sizeof(Material) * 5);
+    memcpy(material_shape.side_sizes, side_sizes, sizeof(float) * 4);
     return material_shape;
 }
 

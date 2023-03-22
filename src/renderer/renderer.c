@@ -39,28 +39,36 @@ typedef struct RenderCall {
     GLuint draw_mode;
 } RenderCall;
 
-static RenderCall prepare_primitive_render_call(
-    Transformation transformation,
-    Primitive primitive,
-    MaterialShape material_shape,
-    float render_layer
+static void set_material_uniform(
+    GLuint program, Material material, int idx
 ) {
-    GLuint program = PRIMITIVE_PROGRAM;
-    glUseProgram(program);
-    set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
-    set_uniform_1i(program, "primitive_type", primitive.type);
-    set_uniform_1i(program, "material_shape_type", material_shape.type);
-    set_uniform_1f(program, "render_layer", render_layer);
-    GLuint draw_mode = GL_TRIANGLE_FAN;
+    static char name[128];
+    sprintf(name, "material_shape.materials[%d].type", idx);
+    MaterialType type = material.type;
+    set_uniform_1i(program, name, type);
 
-#if 0
-    switch (material.type) {
+    switch (type) {
         case COLOR_MATERIAL: {
-            float* color = (float*)&material.m.color.color;
-            set_uniform_3fv(program, "color_material.color", color, 1);
+            float* color = (float*)&material.color;
+            sprintf(name, "material_shape.materials[%d].color", idx);
+            set_uniform_3fv(program, name, color, 1);
+        }
+    }
+}
+
+static void set_material_shape_uniform(
+    GLuint program, MaterialShape material_shape
+) {
+    set_uniform_1i(program, "material_shape.type", material_shape.type);
+
+    switch (material_shape.type) {
+        case PLANE_MATERIAL_SHAPE: {
+            Material material = material_shape.materials[0];
+            set_material_uniform(program, material, 0);
             break;
         }
-        case WALL_MATERIAL: {
+        case CUBE_MATERIAL_SHAPE: {
+#if 0
             float* color = (float*)&material.m.color.color;
             float* brick_size = (float*)&material.m.wall.brick_size;
             float* joint_size = (float*)&material.m.wall.joint_size;
@@ -82,12 +90,28 @@ static RenderCall prepare_primitive_render_call(
             set_uniform_1i(
                 program, "wall_material.smooth_joint", smooth_joint
             );
+#endif
             break;
         }
         default:
             break;
     }
-#endif
+}
+
+static RenderCall prepare_primitive_render_call(
+    Transformation transformation,
+    Primitive primitive,
+    MaterialShape material_shape,
+    float render_layer
+) {
+    GLuint program = PRIMITIVE_PROGRAM;
+    glUseProgram(program);
+    set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
+    set_uniform_1i(program, "primitive_type", primitive.type);
+    set_uniform_1f(program, "render_layer", render_layer);
+    GLuint draw_mode = GL_TRIANGLE_FAN;
+
+    set_material_shape_uniform(program, material_shape);
 
     int total_attrib_size = sizeof(Vec2);
     int n_vertices;
@@ -164,7 +188,8 @@ void render_scene(float dt) {
     glDisable(GL_CULL_FACE);
 
     int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
-                             | MATERIAL_SHAPE_COMPONENT | RENDER_LAYER_COMPONENT;
+                             | MATERIAL_SHAPE_COMPONENT
+                             | RENDER_LAYER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;

@@ -108,6 +108,11 @@ Vec4 vec4(float x, float y, float z, float w) {
     return res;
 }
 
+IVec2 ivec2(int x, int y) {
+    IVec2 res = {x, y};
+    return res;
+}
+
 IVec4 ivec4(int x, int y, int z, int w) {
     IVec4 res = {x, y, z, w};
     return res;
