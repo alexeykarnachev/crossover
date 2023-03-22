@@ -14,8 +14,8 @@ struct Material {
     vec2 brick_size;
     vec2 joint_size;
     ivec2 flip;
+    ivec2 offset;
     ivec2 smooth_joint;
-    float orientation;
 };
 
 struct MaterialShape {
@@ -130,19 +130,21 @@ vec3 get_brick_color(Material material) {
     // vec2 brick_size;
     // vec2 joint_size;
     // ivec2 flip;
+    // ivec2 offset;
     // ivec2 smooth_joint;
-    // float orientation;
 
-    vec2 uv = fs_uv_pos;
+    vec2 uv = flip(fs_uv_pos, material.flip);
     vec2 brick_uv_size = material.brick_size / uv_size;
     vec2 joint_uv_size = material.joint_size / uv_size;
-    uv = rotate2d(uv, vec2(0.5), material.orientation);
 
-    if (int(floor(uv.y / brick_uv_size.y)) % 2 == 0) {
+    if (material.offset.x == 1 && int(uv.y / brick_uv_size.y) % 2 == 0) {
         uv.x += brick_uv_size.x * 0.5;
     }
 
-    //uv = flip(fs_uv_pos, material.flip);
+    if (material.offset.y == 1 && int(uv.x / brick_uv_size.x) % 2 == 0) {
+        uv.y += brick_uv_size.y * 0.5;
+    }
+
 
     vec2 n_bricks = uv / brick_uv_size;
     vec2 brick_fract = fract(n_bricks);

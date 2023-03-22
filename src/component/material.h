@@ -20,8 +20,8 @@ typedef struct Material {
     Vec2 brick_size;
     Vec2 joint_size;
     IVec2 flip;
+    IVec2 offset;
     IVec2 smooth_joint;
-    float orientation;
 } Material;
 
 void change_material_type(Material* material, MaterialType target_type);
@@ -34,8 +34,8 @@ Material init_brick_material(
     Vec2 brick_size,
     Vec2 joint_size,
     IVec2 flip,
-    IVec2 smooth_joint,
-    float orientation
+    IVec2 offset,
+    IVec2 smooth_joint
 );
 Material init_default_color_material(void);
 Material init_default_brick_material(void);

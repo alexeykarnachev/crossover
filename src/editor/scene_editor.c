@@ -474,8 +474,8 @@ static void render_material(Material* material) {
             float* shear = (float*)&material->shear;
             float* brick_size = (float*)&material->brick_size;
             float* joint_size = (float*)&material->joint_size;
-            float* orientation = (float*)&material->orientation;
             IVec2* flip = &material->flip;
+            IVec2* offset = &material->offset;
             IVec2* smooth_joint = &material->smooth_joint;
 
             igText("color");
@@ -488,15 +488,18 @@ static void render_material(Material* material) {
             ig_drag_float2(
                 "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
             );
-            ig_drag_float(
-                "orientation", orientation, 0.00, 2.0 * PI, 0.05 * PI, 0
-            );
 
             igText("flip:");
             ig_same_line();
             ig_xor_button("x", &flip->x);
             ig_same_line();
             ig_xor_button("y", &flip->y);
+
+            igText("offset:");
+            ig_same_line();
+            igCheckbox("x", (bool*)&offset->x);
+            ig_same_line();
+            igCheckbox("y", (bool*)&offset->y);
 
             igText("smooth joint:");
             ig_same_line();

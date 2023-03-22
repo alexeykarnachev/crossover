@@ -78,14 +78,16 @@ static void set_material_uniform(
             sprintf(name, "material_shape.materials[%d].flip", idx);
             set_uniform_2iv(program, name, flip, 1);
 
+            int* offset = (int*)&material.offset;
+            sprintf(name, "material_shape.materials[%d].offset", idx);
+            set_uniform_2iv(program, name, offset, 1);
+
             int* smooth_joint = (int*)&material.smooth_joint;
             sprintf(
                 name, "material_shape.materials[%d].smooth_joint", idx
             );
             set_uniform_2iv(program, name, smooth_joint, 1);
 
-            sprintf(name, "material_shape.materials[%d].orientation", idx);
-            set_uniform_1f(program, name, material.orientation);
             break;
         }
     }
