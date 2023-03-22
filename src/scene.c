@@ -76,7 +76,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fwrite(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fwrite(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
     fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fwrite(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fwrite(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
@@ -164,7 +164,7 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fread(SCENE.materials, sizeof(Material), SCENE.n_entities, fp);
+    fread(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
     fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fread(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
     fread(SCENE.ttls, sizeof(float), SCENE.n_entities, fp);
@@ -350,8 +350,8 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.render_layers[entity_copy]
                         = SCENE.render_layers[entity];
                     break;
-                case MATERIAL_COMPONENT:
-                    SCENE.materials[entity_copy] = SCENE.materials[entity];
+                case MATERIAL_SHAPE_COMPONENT:
+                    SCENE.material_shapes[entity_copy] = SCENE.material_shapes[entity];
                     break;
                 case VISION_COMPONENT:
                     SCENE.visions[entity_copy] = SCENE.visions[entity];
@@ -407,7 +407,7 @@ int spawn_guy(
     RigidBody rigid_body,
     Primitive primitive,
     Primitive collider,
-    Material material,
+    MaterialShape material_shape,
     float render_layer,
     Vision vision,
     Gun gun,
@@ -420,7 +420,7 @@ int spawn_guy(
     SCENE.rigid_bodies[entity] = rigid_body;
     SCENE.primitives[entity] = primitive;
     SCENE.colliders[entity] = collider;
-    SCENE.materials[entity] = material;
+    SCENE.material_shapes[entity] = material_shape;
     SCENE.render_layers[entity] = render_layer;
     SCENE.visions[entity] = vision;
     SCENE.guns[entity] = gun;
@@ -430,7 +430,7 @@ int spawn_guy(
     SCENE.components[entity] = TRANSFORMATION_COMPONENT | VISION_COMPONENT
                                | OBSERVABLE_COMPONENT | COLLIDER_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
-                               | MATERIAL_COMPONENT | GUN_COMPONENT
+                               | MATERIAL_SHAPE_COMPONENT | GUN_COMPONENT
                                | HEALTH_COMPONENT | CONTROLLER_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
@@ -442,7 +442,7 @@ int spawn_obstacle(
     RigidBody rigid_body,
     Primitive primitive,
     Primitive collider,
-    Material material,
+    MaterialShape material_shape,
     float render_layer
 ) {
     int entity = spawn_entity("Obstacle");
@@ -450,11 +450,11 @@ int spawn_obstacle(
     SCENE.rigid_bodies[entity] = rigid_body;
     SCENE.primitives[entity] = primitive;
     SCENE.colliders[entity] = collider;
-    SCENE.materials[entity] = material;
+    SCENE.material_shapes[entity] = material_shape;
     SCENE.components[entity] = TRANSFORMATION_COMPONENT
                                | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
                                | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
-                               | MATERIAL_COMPONENT
+                               | MATERIAL_SHAPE_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
     return entity;
@@ -463,15 +463,15 @@ int spawn_obstacle(
 int spawn_sprite(
     Transformation transformation,
     Primitive primitive,
-    Material material,
+    MaterialShape material_shape,
     float render_layer
 ) {
     int entity = spawn_entity("Obstacle");
     SCENE.transformations[entity] = transformation;
     SCENE.primitives[entity] = primitive;
-    SCENE.materials[entity] = material;
+    SCENE.material_shapes[entity] = material_shape;
     SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | PRIMITIVE_COMPONENT | MATERIAL_COMPONENT
+                               | PRIMITIVE_COMPONENT | MATERIAL_SHAPE_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
     return entity;
@@ -495,7 +495,7 @@ int spawn_default_ai_guy(
         init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_color_material(REDWOOD_COLOR),
+        init_plane_material_shape(init_color_material(REDWOOD_COLOR)),
         0.0,
         init_vision(0.5 * PI, 30.0, 32),
         init_gun(4.0, 100.0, 5.0),
@@ -520,7 +520,7 @@ int spawn_default_player_keyboard_guy(Transformation transformation) {
         init_default_dynamic_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_color_material(FOREST_GREEN_COLOR),
+        init_plane_material_shape(init_color_material(FOREST_GREEN_COLOR)),
         0.0,
         init_vision(0.5 * PI, 10.0, 32),
         init_gun(4.0, 100.0, 5.0),
@@ -535,7 +535,7 @@ int spawn_default_circle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_circle_primitive(),
         init_default_circle_primitive(),
-        init_color_material(GRAY_COLOR),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -546,7 +546,7 @@ int spawn_default_rectangle_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_rectangle_primitive(),
         init_default_rectangle_primitive(),
-        init_default_wall_material(),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -557,7 +557,7 @@ int spawn_default_line_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_line_primitive(),
         init_default_line_primitive(),
-        init_color_material(GRAY_COLOR),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -568,7 +568,7 @@ int spawn_default_polygon_obstacle(Transformation transformation) {
         init_default_static_rigid_body(),
         init_default_polygon_primitive(),
         init_default_polygon_primitive(),
-        init_color_material(GRAY_COLOR),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -577,7 +577,7 @@ int spawn_default_circle_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_circle_primitive(),
-        init_default_wall_material(),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -586,7 +586,7 @@ int spawn_default_rectangle_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_rectangle_primitive(),
-        init_default_wall_material(),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -595,7 +595,7 @@ int spawn_default_line_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_line_primitive(),
-        init_default_wall_material(),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }
@@ -604,7 +604,7 @@ int spawn_default_polygon_sprite(Transformation transformation) {
     return spawn_sprite(
         transformation,
         init_default_polygon_primitive(),
-        init_default_wall_material(),
+        init_plane_material_shape(init_color_material(GRAY_COLOR)),
         0.0
     );
 }

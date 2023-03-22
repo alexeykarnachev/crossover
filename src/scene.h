@@ -27,7 +27,7 @@ typedef struct Scene {
     Vision visions[MAX_N_ENTITIES];
     Primitive colliders[MAX_N_ENTITIES];
     Primitive primitives[MAX_N_ENTITIES];
-    Material materials[MAX_N_ENTITIES];
+    MaterialShape material_shapes[MAX_N_ENTITIES];
     Gun guns[MAX_N_ENTITIES];
     Bullet bullets[MAX_N_ENTITIES];
     float ttls[MAX_N_ENTITIES];
@@ -83,7 +83,7 @@ int spawn_guy(
     RigidBody rigid_body,
     Primitive primitive,
     Primitive collider,
-    Material material,
+    MaterialShape material_shapes,
     float render_layer,
     Vision vision,
     Gun gun,
@@ -95,13 +95,13 @@ int spawn_obstacle(
     RigidBody rigid_body,
     Primitive primitive,
     Primitive collider,
-    Material material,
+    MaterialShape material_shapes,
     float render_layer
 );
 int spawn_sprite(
     Transformation transformation,
     Primitive primitive,
-    Material material,
+    MaterialShape material_shapes,
     float render_layer
 );
 int spawn_bullet(Bullet bullet, int owner, float ttl);

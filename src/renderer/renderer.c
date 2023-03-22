@@ -42,17 +42,18 @@ typedef struct RenderCall {
 static RenderCall prepare_primitive_render_call(
     Transformation transformation,
     Primitive primitive,
-    Material material,
+    MaterialShape material_shape,
     float render_layer
 ) {
     GLuint program = PRIMITIVE_PROGRAM;
     glUseProgram(program);
     set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
     set_uniform_1i(program, "primitive_type", primitive.type);
-    set_uniform_1i(program, "material_type", material.type);
+    set_uniform_1i(program, "material_shape_type", material_shape.type);
     set_uniform_1f(program, "render_layer", render_layer);
     GLuint draw_mode = GL_TRIANGLE_FAN;
 
+#if 0
     switch (material.type) {
         case COLOR_MATERIAL: {
             float* color = (float*)&material.m.color.color;
@@ -86,6 +87,7 @@ static RenderCall prepare_primitive_render_call(
         default:
             break;
     }
+#endif
 
     int total_attrib_size = sizeof(Vec2);
     int n_vertices;
@@ -162,7 +164,7 @@ void render_scene(float dt) {
     glDisable(GL_CULL_FACE);
 
     int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
-                             | MATERIAL_COMPONENT | RENDER_LAYER_COMPONENT;
+                             | MATERIAL_SHAPE_COMPONENT | RENDER_LAYER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;
@@ -170,11 +172,11 @@ void render_scene(float dt) {
 
         Transformation transformation = SCENE.transformations[entity];
         Primitive primitive = SCENE.primitives[entity];
-        Material material = SCENE.materials[entity];
+        MaterialShape material_shape = SCENE.material_shapes[entity];
         float render_layer = SCENE.render_layers[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
-            transformation, primitive, material, render_layer
+            transformation, primitive, material_shape, render_layer
         );
 
         if (DEBUG.shading.materials) {
@@ -207,7 +209,7 @@ void render_scene(float dt) {
         RenderCall render_call = prepare_primitive_render_call(
             dp.transformation,
             dp.primitive,
-            init_color_material(dp.color),
+            init_plane_material_shape(init_color_material(dp.color)),
             dp.render_layer
         );
         execute_render_call(render_call, dp.fill_type);

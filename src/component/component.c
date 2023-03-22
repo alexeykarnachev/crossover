@@ -9,7 +9,7 @@ ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES] = {
     COLLIDER_COMPONENT,
     PRIMITIVE_COMPONENT,
     RENDER_LAYER_COMPONENT,
-    MATERIAL_COMPONENT,
+    MATERIAL_SHAPE_COMPONENT,
     VISION_COMPONENT,
     OBSERVABLE_COMPONENT,
     TTL_COMPONENT,
@@ -32,8 +32,8 @@ const char* get_component_type_name(ComponentType type) {
             return "Primitive";
         case RENDER_LAYER_COMPONENT:
             return "Render layer";
-        case MATERIAL_COMPONENT:
-            return "Material";
+        case MATERIAL_SHAPE_COMPONENT:
+            return "Material Shape";
         case VISION_COMPONENT:
             return "Vision";
         case RIGID_BODY_COMPONENT:

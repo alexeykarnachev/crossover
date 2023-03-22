@@ -23,7 +23,7 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     RIGID_BODY_COMPONENT,
     COLLIDER_COMPONENT,
     PRIMITIVE_COMPONENT,
-    MATERIAL_COMPONENT,
+    MATERIAL_SHAPE_COMPONENT,
     RENDER_LAYER_COMPONENT,
     CONTROLLER_COMPONENT,
     VISION_COMPONENT,
@@ -579,28 +579,39 @@ static void render_component_inspector(int entity, ComponentType type) {
             );
             break;
         }
-        case MATERIAL_COMPONENT: {
-            Material* material = &SCENE.materials[entity];
+        case MATERIAL_SHAPE_COMPONENT: {
+            MaterialShape* material_shape = &SCENE.material_shapes[entity];
             int has_primitive = check_if_entity_has_component(
                 entity, PRIMITIVE_COMPONENT
             );
             if (has_primitive == 0) {
                 igTextColored(
                     IG_RED_COLOR,
-                    "ERROR: Material component requires Primitive\n"
-                    "       component attached"
+                    "ERROR: MaterialShape component requires\n"
+                    "       Primitive component attached"
                 );
                 break;
             }
-            int type = render_component_type_picker(
+            int shape_type = render_component_type_picker(
                 "Type",
-                material->type,
-                (int*)MATERIAL_TYPES,
-                N_MATERIAL_TYPES,
-                MATERIAL_TYPE_NAMES
+                material_shape->type,
+                (int*)MATERIAL_SHAPE_TYPES,
+                N_MATERIAL_SHAPE_TYPES,
+                MATERIAL_SHAPE_TYPE_NAMES
             );
-            change_material_type(material, type);
 
+            change_material_shape_type(material_shape, shape_type);
+            switch (shape_type) {
+                case PLANE_MATERIAL_SHAPE: {
+                    igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+                    break;
+                }
+                case CUBE_MATERIAL_SHAPE: {
+                    igTextColored(IG_YELLOW_COLOR, "TODO: Not implemented");
+                    break;
+                }
+            }
+#if 0
             switch (type) {
                 case COLOR_MATERIAL: {
                     float* color = (float*)&material->m.color.color;
@@ -670,7 +681,7 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
             }
-
+#endif
             break;
         }
         case RENDER_LAYER_COMPONENT: {

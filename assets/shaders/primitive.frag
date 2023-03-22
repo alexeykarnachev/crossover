@@ -74,6 +74,7 @@ vec3 get_wall_color(Wall wall) {
     vec2 brick_uv_size = brick_size / uv_size;
     vec2 joint_uv_size = joint_size / uv_size;
     vec2 uv = fs_uv_pos;
+        
 
     if (wall.flip == 1) {
         if (wall.side == WEST_SIDE || wall.side == EAST_SIDE) {
@@ -83,6 +84,7 @@ vec3 get_wall_color(Wall wall) {
         }
     }
 
+    // uv.x = uv.x + 0.5 * uv.y;
     if (wall.side == WEST_SIDE) {
         uv.y -= 0.5;
         uv.x = 1.0 - uv.x;
@@ -100,6 +102,7 @@ vec3 get_wall_color(Wall wall) {
     } else if (wall.side == NORTH_SIDE) {
         uv.x -= 0.5;
     }
+
 
     brick_uv_size *= wall.elevation;
     joint_uv_size *= wall.elevation;
