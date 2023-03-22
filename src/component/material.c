@@ -75,7 +75,7 @@ Material init_default_wall_material(void) {
     Vec2 joint_size = vec2(0.12, 0.15);
     Vec4 tilt = vec4(0.0, 0.0, 0.0, 0.0);
     IVec4 flip = ivec4(0, 0, 0, 0);
-    int elevation = 0.5;
+    float elevation = 0.5;
     int smooth_joint = 1;
     return init_wall_material(
         BRICK_COLOR,

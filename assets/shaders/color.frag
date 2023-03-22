@@ -8,7 +8,7 @@ uniform sampler2D diffuse_tex;
 
 out vec4 frag_color;
 
-vec3 light_dir = vec3(0.0, -1.0, -1.0);
+vec3 light_dir = vec3(1.0, -1.0, -1.0);
 vec3 light_color = vec3(1.0, 1.0, 1.0);
 
 void main(void) {

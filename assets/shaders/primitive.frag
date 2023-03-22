@@ -84,16 +84,21 @@ vec3 get_wall_color(Wall wall) {
     }
 
     if (wall.side == WEST_SIDE) {
+        uv.y -= 0.5;
         uv.x = 1.0 - uv.x;
         uv = rotate2d(uv, PI * 0.5);
         brick_uv_size = brick_size / swap2(uv_size);
         joint_uv_size = joint_size / swap2(uv_size);
     } else if (wall.side == EAST_SIDE) {
+        uv.y -= 0.5;
         uv = rotate2d(uv, PI * 0.5);
         brick_uv_size = brick_size / swap2(uv_size);
         joint_uv_size = joint_size / swap2(uv_size);
     } else if (wall.side == SOUTH_SIDE) {
+        uv.x -= 0.5;
         uv.y = 1.0 - uv.y;
+    } else if (wall.side == NORTH_SIDE) {
+        uv.x -= 0.5;
     }
 
     brick_uv_size *= wall.elevation;
@@ -134,7 +139,6 @@ Wall get_wall(void) {
     );
 
     float west_k = 1.0 - min(1.0, fs_uv_pos.x / tilt_uv_size.x);
-
     float north_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.y) / tilt_uv_size.y);
     float east_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.x) / tilt_uv_size.z);
     float south_k = 1.0 - min(1.0, fs_uv_pos.y / tilt_uv_size.w);
