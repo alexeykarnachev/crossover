@@ -474,6 +474,7 @@ static void render_material(Material* material) {
             float* shear = (float*)&material->shear;
             float* brick_size = (float*)&material->brick_size;
             float* joint_size = (float*)&material->joint_size;
+            float* orientation = (float*)&material->orientation;
             IVec2* flip = &material->flip;
             IVec2* smooth_joint = &material->smooth_joint;
 
@@ -486,6 +487,9 @@ static void render_material(Material* material) {
             );
             ig_drag_float2(
                 "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
+            );
+            ig_drag_float(
+                "orientation", orientation, 0.00, 2.0 * PI, 0.05 * PI, 0
             );
 
             igText("flip:");
@@ -501,6 +505,20 @@ static void render_material(Material* material) {
             igCheckbox("y", (bool*)&smooth_joint->y);
             break;
         }
+    }
+}
+
+static void render_material_shape_side(
+    MaterialShape* material_shape, char* name, int idx
+) {
+    if (idx < 4) {
+        float* size = &material_shape->side_sizes[idx];
+        ig_drag_float("##", size, 0.0, FLT_MAX, 0.05, 0);
+        ig_same_line();
+    }
+    if (igBeginMenu(name, 1)) {
+        render_material(&material_shape->materials[idx]);
+        igEndMenu();
     }
 }
 
@@ -660,9 +678,12 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case CUBE_MATERIAL_SHAPE: {
-                    igTextColored(
-                        IG_YELLOW_COLOR, "TODO: Not implemented"
-                    );
+                    igText("Sides:");
+                    render_material_shape_side(material_shape, "west", 0);
+                    render_material_shape_side(material_shape, "north", 1);
+                    render_material_shape_side(material_shape, "east", 2);
+                    render_material_shape_side(material_shape, "south", 3);
+                    render_material_shape_side(material_shape, "up", 4);
                     break;
                 }
             }

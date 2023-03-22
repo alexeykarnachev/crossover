@@ -27,4 +27,5 @@ void main(void) {
     }
 
     frag_color = vec4(color, 1.0);
+    frag_color = vec4(diffuse_color, 1.0);
 }

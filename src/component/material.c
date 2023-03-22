@@ -55,7 +55,8 @@ Material init_brick_material(
     Vec2 brick_size,
     Vec2 joint_size,
     IVec2 flip,
-    IVec2 smooth_joint
+    IVec2 smooth_joint,
+    float orientation
 ) {
     Material material = {0};
     material.type = BRICK_MATERIAL;
@@ -66,6 +67,7 @@ Material init_brick_material(
     material.joint_size = joint_size;
     material.flip = flip;
     material.smooth_joint = smooth_joint;
+    material.orientation = orientation;
     return material;
 }
 
@@ -81,6 +83,7 @@ Material init_default_brick_material(void) {
     Vec2 joint_size = vec2(0.12, 0.15);
     IVec2 flip = ivec2(0, 0);
     IVec2 smooth_joint = ivec2(1, 1);
+    float orientation = 0.0;
     return init_brick_material(
         color,
         perspective,
@@ -88,7 +91,8 @@ Material init_default_brick_material(void) {
         brick_size,
         joint_size,
         flip,
-        smooth_joint
+        smooth_joint,
+        orientation
     );
 }
 

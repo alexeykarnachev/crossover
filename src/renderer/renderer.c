@@ -47,11 +47,46 @@ static void set_material_uniform(
     MaterialType type = material.type;
     set_uniform_1i(program, name, type);
 
+    float* color = (float*)&material.color;
     switch (type) {
         case COLOR_MATERIAL: {
-            float* color = (float*)&material.color;
             sprintf(name, "material_shape.materials[%d].color", idx);
             set_uniform_3fv(program, name, color, 1);
+            break;
+        }
+        case BRICK_MATERIAL: {
+            sprintf(name, "material_shape.materials[%d].color", idx);
+            set_uniform_3fv(program, name, color, 1);
+
+            float* perspective = (float*)&material.perspective;
+            sprintf(name, "material_shape.materials[%d].perspective", idx);
+            set_uniform_2fv(program, name, perspective, 1);
+
+            float* shear = (float*)&material.shear;
+            sprintf(name, "material_shape.materials[%d].shear", idx);
+            set_uniform_2fv(program, name, shear, 1);
+
+            float* brick_size = (float*)&material.brick_size;
+            sprintf(name, "material_shape.materials[%d].brick_size", idx);
+            set_uniform_2fv(program, name, brick_size, 1);
+
+            float* joint_size = (float*)&material.joint_size;
+            sprintf(name, "material_shape.materials[%d].joint_size", idx);
+            set_uniform_2fv(program, name, joint_size, 1);
+
+            int* flip = (int*)&material.flip;
+            sprintf(name, "material_shape.materials[%d].flip", idx);
+            set_uniform_2iv(program, name, flip, 1);
+
+            int* smooth_joint = (int*)&material.smooth_joint;
+            sprintf(
+                name, "material_shape.materials[%d].smooth_joint", idx
+            );
+            set_uniform_2iv(program, name, smooth_joint, 1);
+
+            sprintf(name, "material_shape.materials[%d].orientation", idx);
+            set_uniform_1f(program, name, material.orientation);
+            break;
         }
     }
 }
@@ -68,29 +103,16 @@ static void set_material_shape_uniform(
             break;
         }
         case CUBE_MATERIAL_SHAPE: {
-#if 0
-            float* color = (float*)&material.m.color.color;
-            float* brick_size = (float*)&material.m.wall.brick_size;
-            float* joint_size = (float*)&material.m.wall.joint_size;
-            float* tilt = (float*)&material.m.wall.tilt;
-            int* flip = (int*)&material.m.wall.flip;
-            float elevation = material.m.wall.elevation;
-            int smooth_joint = material.m.wall.smooth_joint;
-
-            set_uniform_3fv(program, "wall_material.color", color, 1);
-            set_uniform_2fv(
-                program, "wall_material.brick_size", brick_size, 1
+            set_uniform_4fv(
+                program,
+                "material_shape.side_sizes",
+                material_shape.side_sizes,
+                1
             );
-            set_uniform_2fv(
-                program, "wall_material.joint_size", joint_size, 1
-            );
-            set_uniform_4fv(program, "wall_material.tilt", tilt, 1);
-            set_uniform_4iv(program, "wall_material.flip", flip, 1);
-            set_uniform_1f(program, "wall_material.elevation", elevation);
-            set_uniform_1i(
-                program, "wall_material.smooth_joint", smooth_joint
-            );
-#endif
+            for (int i = 0; i < 5; ++i) {
+                Material material = material_shape.materials[i];
+                set_material_uniform(program, material, i);
+            }
             break;
         }
         default:
