@@ -37,6 +37,6 @@ float sigmoid(float x);
 int sample_binary(float weight, float temperature);
 int sample_multinomial(float* weights, int n, float temperature);
 void shuffle(int arr[], int n);
-void swap(void** p0, void** p1);
+void swap_ptrs(void** p0, void** p1);
 
 double get_curr_time(void);

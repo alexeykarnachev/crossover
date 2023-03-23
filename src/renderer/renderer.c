@@ -58,10 +58,6 @@ static void set_material_uniform(
             sprintf(name, "material_shape.materials[%d].color", idx);
             set_uniform_3fv(program, name, color, 1);
 
-            float* perspective = (float*)&material.perspective;
-            sprintf(name, "material_shape.materials[%d].perspective", idx);
-            set_uniform_2fv(program, name, perspective, 1);
-
             float* shear = (float*)&material.shear;
             sprintf(name, "material_shape.materials[%d].shear", idx);
             set_uniform_2fv(program, name, shear, 1);
@@ -74,13 +70,17 @@ static void set_material_uniform(
             sprintf(name, "material_shape.materials[%d].joint_size", idx);
             set_uniform_2fv(program, name, joint_size, 1);
 
-            int* flip = (int*)&material.flip;
-            sprintf(name, "material_shape.materials[%d].flip", idx);
-            set_uniform_2iv(program, name, flip, 1);
-
-            int* offset = (int*)&material.offset;
+            float* offset = (float*)&material.offset;
             sprintf(name, "material_shape.materials[%d].offset", idx);
-            set_uniform_2iv(program, name, offset, 1);
+            set_uniform_2fv(program, name, offset, 1);
+
+            int* mirror = (int*)&material.mirror;
+            sprintf(name, "material_shape.materials[%d].mirror", idx);
+            set_uniform_2iv(program, name, mirror, 1);
+
+            int* orientation = (int*)&material.orientation;
+            sprintf(name, "material_shape.materials[%d].orientation", idx);
+            set_uniform_2iv(program, name, orientation, 1);
 
             int* smooth_joint = (int*)&material.smooth_joint;
             sprintf(

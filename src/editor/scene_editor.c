@@ -470,42 +470,74 @@ static void render_material(Material* material) {
         }
         case BRICK_MATERIAL: {
             float* color = (float*)&material->color;
-            float* perspective = (float*)&material->perspective;
-            float* shear = (float*)&material->shear;
             float* brick_size = (float*)&material->brick_size;
             float* joint_size = (float*)&material->joint_size;
-            IVec2* flip = &material->flip;
-            IVec2* offset = &material->offset;
+            float* offset = (float*)&material->offset;
+            IVec2* mirror = &material->mirror;
+            IVec2* orientation = &material->orientation;
             IVec2* smooth_joint = &material->smooth_joint;
 
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
-            ig_drag_float2("perspective", perspective, 0.0, 1.0, 0.05, 0);
-            ig_drag_float2("shear", shear, 0.0, 1.0, 0.05, 0);
-            ig_drag_float2(
-                "brick size", brick_size, 0.05, FLT_MAX, 0.05, 0
-            );
             ig_drag_float2(
                 "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
             );
+            ig_drag_float2("offset", offset, 0.00, FLT_MAX, 0.001, 0);
 
-            igText("flip:");
-            ig_same_line();
-            ig_xor_button("x", &flip->x);
-            ig_same_line();
-            ig_xor_button("y", &flip->y);
+            if (orientation->x == 1) {
+                ig_drag_float(
+                    "brick_size",
+                    &material->brick_size.x,
+                    0.01,
+                    FLT_MAX,
+                    0.01,
+                    0
+                );
+                material->brick_size.y = material->brick_size.x * 0.5;
+                ig_drag_float(
+                    "shear", &material->shear.x, -5.0, 5.0, 0.05, 0
+                );
+            } else {
+                ig_drag_float(
+                    "brick_size",
+                    &material->brick_size.y,
+                    0.01,
+                    FLT_MAX,
+                    0.01,
+                    0
+                );
+                material->brick_size.x = material->brick_size.y * 0.5;
+                ig_drag_float(
+                    "shear", &material->shear.y, -5.0, 5.0, 0.05, 0
+                );
+            }
 
-            igText("offset:");
+            if (igButton("orientation", IG_VEC2_ZERO)) {
+                *orientation = iswap(*orientation);
+                material->brick_size = swap(material->brick_size);
+                material->shear = swap(material->shear);
+            }
             ig_same_line();
-            igCheckbox("x", (bool*)&offset->x);
-            ig_same_line();
-            igCheckbox("y", (bool*)&offset->y);
+            igText(": %s", orientation->x == 1 ? "hor." : "vert.");
 
-            igText("smooth joint:");
+            if (igButton("smooth joint", IG_VEC2_ZERO)) {
+                *smooth_joint = ivec2(
+                    smooth_joint->x ^ 1, smooth_joint->y ^ 1
+                );
+            }
             ig_same_line();
-            igCheckbox("x", (bool*)&smooth_joint->x);
+            igText(": %s", smooth_joint->x == 1 ? "on" : "off");
+
+            igText("mirror:");
             ig_same_line();
-            igCheckbox("y", (bool*)&smooth_joint->y);
+            ig_xor_button("x", &mirror->x);
+            ig_same_line();
+            ig_xor_button("y", &mirror->y);
+
+            if (igButton("Reset", IG_VEC2_ZERO)) {
+                *material = init_default_brick_material();
+            }
+
             break;
         }
     }

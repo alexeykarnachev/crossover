@@ -50,23 +50,23 @@ Material init_color_material(Vec3 color) {
 
 Material init_brick_material(
     Vec3 color,
-    Vec2 perspective,
     Vec2 shear,
     Vec2 brick_size,
     Vec2 joint_size,
-    IVec2 flip,
-    IVec2 offset,
+    Vec2 offset,
+    IVec2 mirror,
+    IVec2 orientation,
     IVec2 smooth_joint
 ) {
     Material material = {0};
     material.type = BRICK_MATERIAL;
     material.color = color;
-    material.perspective = perspective;
     material.shear = shear;
     material.brick_size = brick_size;
     material.joint_size = joint_size;
-    material.flip = flip;
     material.offset = offset;
+    material.mirror = mirror;
+    material.orientation = orientation;
     material.smooth_joint = smooth_joint;
     return material;
 }
@@ -77,21 +77,21 @@ Material init_default_color_material(void) {
 
 Material init_default_brick_material(void) {
     Vec3 color = BRICK_COLOR;
-    Vec2 perspective = vec2(0.0, 0.0);
     Vec2 shear = vec2(0.0, 0.0);
     Vec2 brick_size = vec2(2.0, 1.0);
     Vec2 joint_size = vec2(0.12, 0.15);
-    IVec2 flip = ivec2(0, 0);
-    IVec2 offset = ivec2(1, 0);
+    Vec2 offset = vec2(0.0, 0.0);
+    IVec2 mirror = ivec2(0, 0);
+    IVec2 orientation = ivec2(1, 0);
     IVec2 smooth_joint = ivec2(1, 1);
     return init_brick_material(
         color,
-        perspective,
         shear,
         brick_size,
         joint_size,
-        flip,
         offset,
+        mirror,
+        orientation,
         smooth_joint
     );
 }

@@ -166,6 +166,16 @@ Vec2 flip(Vec2 v) {
     return res;
 }
 
+Vec2 swap(Vec2 v) {
+    Vec2 res = {v.y, v.x};
+    return res;
+}
+
+IVec2 iswap(IVec2 v) {
+    IVec2 res = {v.y, v.x};
+    return res;
+}
+
 Vec2 normalize(Vec2 v) {
     float len = length(v);
     Vec2 res = {v.x / len, v.y / len};

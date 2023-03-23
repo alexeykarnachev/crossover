@@ -15,12 +15,12 @@ typedef struct Material {
     Vec3 color;
 
     // Brick
-    Vec2 perspective;
     Vec2 shear;
     Vec2 brick_size;
     Vec2 joint_size;
-    IVec2 flip;
-    IVec2 offset;
+    Vec2 offset;
+    IVec2 mirror;
+    IVec2 orientation;
     IVec2 smooth_joint;
 } Material;
 
@@ -29,12 +29,12 @@ void change_material_type(Material* material, MaterialType target_type);
 Material init_color_material(Vec3 color);
 Material init_brick_material(
     Vec3 color,
-    Vec2 perspective,
     Vec2 shear,
     Vec2 brick_size,
     Vec2 joint_size,
-    IVec2 flip,
-    IVec2 offset,
+    Vec2 offset,
+    IVec2 mirror,
+    IVec2 orientation,
     IVec2 smooth_joint
 );
 Material init_default_color_material(void);

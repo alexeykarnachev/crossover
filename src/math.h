@@ -60,6 +60,8 @@ Vec2 add_many(Vec2 vecs[], int n);
 Vec2 sub(Vec2 v0, Vec2 v1);
 Vec2 middle(Vec2 v0, Vec2 v1);
 Vec2 flip(Vec2 v);
+Vec2 swap(Vec2 v);
+IVec2 iswap(IVec2 v);
 Vec2 normalize(Vec2 v);
 Vec2 rotate90(Vec2 v);
 Vec2 rotate(Vec2 v, Vec2 origin, float angle);

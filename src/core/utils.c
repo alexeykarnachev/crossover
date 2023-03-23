@@ -390,7 +390,7 @@ void shuffle(int arr[], int n) {
     }
 }
 
-void swap(void** p0, void** p1) {
+void swap_ptrs(void** p0, void** p1) {
     void* tmp = *p0;
     *p0 = *p1;
     *p1 = tmp;

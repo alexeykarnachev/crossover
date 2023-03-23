@@ -74,6 +74,7 @@ void render_bullets(float dt) {
             continue;
         }
 
+        float render_layer = SCENE.render_layers[entity];
         Transformation transformation = SCENE.transformations[entity];
         Bullet bullet = SCENE.bullets[entity];
         Vec2 velocity = scale(
@@ -85,7 +86,7 @@ void render_bullets(float dt) {
             transformation.curr_position,
             add(transformation.curr_position, ray),
             YELLOW_COLOR,
-            DEBUG_RENDER_LAYER
+            render_layer
         );
     }
 }

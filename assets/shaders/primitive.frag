@@ -9,12 +9,12 @@ struct Material {
     vec3 color;
 
     // Brick
-    vec2 perspective;
     vec2 shear;
     vec2 brick_size;
     vec2 joint_size;
-    ivec2 flip;
-    ivec2 offset;
+    vec2 offset;
+    ivec2 mirror;
+    ivec2 orientation;
     ivec2 smooth_joint;
 };
 
@@ -113,163 +113,57 @@ vec3 get_cube_normal(int side) {
     return normal;
 }
 
-vec2 flip(vec2 uv, ivec2 flip) {
+vec2 mirror(vec2 uv, ivec2 flags) {
     vec2 new_uv = uv;
-    if (flip.x == 1) {
+    if (flags.x == 1) {
         new_uv.x = 1.0 - uv.x;
     }
-    if (flip.y == 1) {
+    if (flags.y == 1) {
         new_uv.y = 1.0 - uv.y;
     }
     return new_uv;
 }
 
 vec3 get_brick_color(Material material) {
-    // vec2 perspective;
-    // vec2 shear;
-    // vec2 brick_size;
-    // vec2 joint_size;
-    // ivec2 flip;
-    // ivec2 offset;
-    // ivec2 smooth_joint;
-
-    vec2 uv = flip(fs_uv_pos, material.flip);
+    vec2 uv = mirror(fs_uv_pos, material.mirror) + material.offset;
     vec2 brick_uv_size = material.brick_size / uv_size;
     vec2 joint_uv_size = material.joint_size / uv_size;
 
-    if (material.offset.x == 1 && int(uv.y / brick_uv_size.y) % 2 == 0) {
+    if (material.orientation.x == 1 && int(uv.y / brick_uv_size.y) % 2 == 0) {
         uv.x += brick_uv_size.x * 0.5;
     }
 
-    if (material.offset.y == 1 && int(uv.x / brick_uv_size.x) % 2 == 0) {
+    if (material.orientation.y == 1 && int(uv.x / brick_uv_size.x) % 2 == 0) {
         uv.y += brick_uv_size.y * 0.5;
     }
 
+    uv = vec2(
+        uv.x + material.shear.x * uv.y,
+        uv.y + material.shear.y * uv.x
+    );
 
     vec2 n_bricks = uv / brick_uv_size;
     vec2 brick_fract = fract(n_bricks);
-    return vec3(brick_fract, 0.0);
 
+    float joint_x;
+    float joint_y;
+    float joint_edge_x = joint_uv_size.x / brick_uv_size.x;
+    float joint_edge_y = joint_uv_size.y / brick_uv_size.y;
+    if (material.smooth_joint.x == 1) {
+        joint_x = smoothstep(0.0, joint_edge_x, brick_fract.x);
+    } else {
+        joint_x = step(joint_edge_x, brick_fract.x);
+    }
 
-    // brick_fract.x = min(brick_fract.x, 1.0 - brick_fract.x);
-    // brick_fract.y = min(brick_fract.y, 1.0 - brick_fract.y);
+    if (material.smooth_joint.y == 1) {
+        joint_y = smoothstep(0.0, joint_edge_y, brick_fract.y);
+    } else {
+        joint_y = step(joint_edge_y, brick_fract.y);
+    }
 
-    // float joint_x;
-    // float joint_y;
-    // float joint_edge_x = joint_uv_size.x / brick_uv_size.x;
-    // float joint_edge_y = joint_uv_size.y / brick_uv_size.y;
-    // if (material.smooth_joint.x == 1) {
-    //     joint_x = smoothstep(0.0, joint_edge_x, brick_fract.x);
-    //     joint_y = smoothstep(0.0, joint_edge_y, brick_fract.y);
-    // } else {
-    //     joint_x = step(joint_edge_x, brick_fract.x);
-    //     joint_y = step(joint_edge_y, brick_fract.y);
-    // }
-    // vec3 color = material.color * min(joint_x, joint_y);
-
-    // return color;
+    vec3 color = material.color * min(joint_x, joint_y);
+    return color;
 }
-
-// vec3 get_wall_color(Wall wall) {
-// 
-//     // uv.x = uv.x + 0.5 * uv.y;
-//     if (wall.side == WEST_SIDE) {
-//         uv.y -= 0.5;
-//         uv.x = 1.0 - uv.x;
-//         uv = rotate2d(uv, PI * 0.5);
-//         brick_uv_size = brick_size / swap2(uv_size);
-//         joint_uv_size = joint_size / swap2(uv_size);
-//     } else if (wall.side == EAST_SIDE) {
-//         uv.y -= 0.5;
-//         uv = rotate2d(uv, PI * 0.5);
-//         brick_uv_size = brick_size / swap2(uv_size);
-//         joint_uv_size = joint_size / swap2(uv_size);
-//     } else if (wall.side == SOUTH_SIDE) {
-//         uv.x -= 0.5;
-//         uv.y = 1.0 - uv.y;
-//     } else if (wall.side == NORTH_SIDE) {
-//         uv.x -= 0.5;
-//     }
-// 
-// 
-//     brick_uv_size *= wall.elevation;
-//     joint_uv_size *= wall.elevation;
-//     
-//     vec2 n_bricks = uv / brick_uv_size;
-//     vec2 brick_fract = fract(n_bricks);
-// 
-//     if (int(n_bricks.y) % 2 == 0) {
-//         brick_fract.x = fract(brick_fract.x + 0.5);
-//     }
-//     brick_fract.x = min(brick_fract.x, 1.0 - brick_fract.x);
-//     brick_fract.y = min(brick_fract.y, 1.0 - brick_fract.y);
-// 
-//     float joint_x;
-//     float joint_y;
-//     float joint_edge_x = joint_uv_size.x / brick_uv_size.x;
-//     float joint_edge_y = joint_uv_size.y / brick_uv_size.y;
-//     if (wall_material.smooth_joint == 1) {
-//         joint_x = smoothstep(0.0, joint_edge_x, brick_fract.x);
-//         joint_y = smoothstep(0.0, joint_edge_y, brick_fract.y);
-//     } else {
-//         joint_x = step(joint_edge_x, brick_fract.x);
-//         joint_y = step(joint_edge_y, brick_fract.y);
-//     }
-//     color *= min(joint_x, joint_y);
-// 
-//     return color;
-// }
-// 
-// Wall get_wall(void) {
-//     vec4 tilt = wall_material.tilt;
-//     vec4 tilt_uv_size = vec4(
-//         tilt.x / uv_size.x,
-//         tilt.y / uv_size.y,
-//         tilt.z / uv_size.x,
-//         tilt.w / uv_size.y
-//     );
-// 
-//     float west_k = 1.0 - min(1.0, fs_uv_pos.x / tilt_uv_size.x);
-//     float north_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.y) / tilt_uv_size.y);
-//     float east_k = 1.0 - min(1.0, (1.0 - fs_uv_pos.x) / tilt_uv_size.z);
-//     float south_k = 1.0 - min(1.0, fs_uv_pos.y / tilt_uv_size.w);
-// 
-//     float max_k = max4(west_k, north_k, east_k, south_k);
-//     vec3 normal;
-//     int side;
-//     if (max_k == 0.0) {
-//         normal = UP_NORMAL;
-//         side = UP_SIDE;
-//     } else if (max_k == west_k) {
-//         normal = vec3(rotate2d(WEST_NORMAL.xy, orientation), 0.0);
-//         side = WEST_SIDE;
-//     } else if (max_k == north_k) {
-//         normal = vec3(rotate2d(NORTH_NORMAL.xy, orientation), 0.0);
-//         side = NORTH_SIDE;
-//     } else if (max_k == east_k) {
-//         normal = vec3(rotate2d(EAST_NORMAL.xy, orientation), 0.0);
-//         side = EAST_SIDE;
-//     } else if (max_k == south_k) {
-//         normal = vec3(rotate2d(SOUTH_NORMAL.xy, orientation), 0.0);
-//         side = SOUTH_SIDE;
-//     }
-// 
-//     Wall wall;
-//     wall.normal = normal;
-//     wall.side = side;
-//     wall.flip = side == UP_SIDE ? 0 : wall_material.flip[side];
-//     wall.elevation =
-//         (1.0 - wall_material.elevation)
-//         + (1.0 - max_k) * wall_material.elevation;
-//     return wall;
-// }
-// 
-// void apply_wall_material(out vec3 diffuse_color, out vec3 normal) {
-//     Wall wall = get_wall();
-//     diffuse_color = get_wall_color(wall);
-// 
-//     normal = wall.normal;
-// }
 
 void main(void) {
     vec3 diffuse_color = vec3(0.0);
