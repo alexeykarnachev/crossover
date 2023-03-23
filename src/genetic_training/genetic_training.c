@@ -18,6 +18,7 @@ static Array SCORES[MAX_N_ENTITIES_TO_TRAIN];
 static float BRAIN_ELITE_STREAKS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 static Brain GENERATION_ELITE_BRAINS[MAX_N_ENTITIES_TO_TRAIN]
                                     [MAX_N_EPISODES];
+static int GENERATION_N_ELITE_BRAINS[MAX_N_ENTITIES_TO_TRAIN];
 static Brain GENERATION_BRAINS[MAX_N_ENTITIES_TO_TRAIN][MAX_N_EPISODES];
 
 static int GENETIC_TRAINING_INITIALIZED = 0;
@@ -244,8 +245,11 @@ void start_genetic_training(void) {
                 static float new_elite_streaks[MAX_N_EPISODES];
 
                 // Don't create the new generation if the entity is
-                // frozen. Just shuffle the elite
+                // frozen, just shuffle the elite
                 if (params->progress.is_frozen[e] == 1) {
+                    int n_elites = min(
+                        GENERATION_N_ELITE_BRAINS[e], n_elites
+                    );
                     for (int i = 0; i < params->population.n_episodes;
                          ++i) {
                         int elite_idx = choose_idx(n_elites);
@@ -269,6 +273,7 @@ void start_genetic_training(void) {
                 );
 
                 int best_brain_saved = 0;
+                GENERATION_N_ELITE_BRAINS[e] = n_elites;
                 for (int i = 0; i < params->population.n_episodes; ++i) {
                     int idx = indices[i];
                     if (i < n_elites) {
