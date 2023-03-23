@@ -107,7 +107,9 @@ void destroy_brains(void);
 void destroy_brain(Brain* brain);
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
 BrainParams load_brain_params(char* file_path, ResultMessage* res_msg);
-Brain load_local_brain(char* file_path, ResultMessage* res_msg);
+void load_local_brain(
+    Brain* brain, char* file_path, ResultMessage* res_msg
+);
 Brain* load_brain(
     char* file_path, ResultMessage* res_msg, int allow_replacement
 );

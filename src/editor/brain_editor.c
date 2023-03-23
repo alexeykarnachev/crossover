@@ -32,14 +32,13 @@ static void render_brain_menu_bar(void) {
                     EDITOR.project.default_search_path, BRAIN_FILTER, 1
                 );
                 if (fp != NULL) {
-                    Brain brain = load_local_brain(
-                        fp, &BRAIN_RESULT_MESSAGE
-                    );
+                    Brain brain;
+                    load_local_brain(&brain, fp, &BRAIN_RESULT_MESSAGE);
                     if (BRAIN_RESULT_MESSAGE.flag == SUCCESS_RESULT) {
                         PREV_BRAIN_PARAMS = brain.params;
                         BRAIN_PARAMS = brain.params;
+                        destroy_brain(&brain);
                     }
-                    destroy_brain(&brain);
                 }
             }
             if (menu_item("Save As", "", false, 1)) {

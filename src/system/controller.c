@@ -140,11 +140,22 @@ static ControllerAction get_dummy_ai_action(int entity) {
 
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
-    BrainAIController ai = SCENE.controllers[entity].c.brain_ai;
-    if (ai.key[0] == '\0') {
+    BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
+    if (ai->key[0] == '\0') {
         return action;
     }
-    Brain* brain = get_or_load_brain(ai.key);
+
+    Brain* brain = get_or_load_brain(ai->key);
+    if (brain == NULL) {
+        fprintf(
+            stderr,
+            "WARNING: BrainAIController can't find the Brain: %s\n",
+            ai->key
+        );
+        ai->key[0] = '\0';
+        return action;
+    }
+
     BrainParams params = brain->params;
     int n_view_rays = params.n_view_rays;
     float* inp = BRAIN_INPUT;
@@ -263,7 +274,7 @@ static ControllerAction get_brain_ai_action(int entity) {
         switch (type) {
             case WATCH_ORIENTATION_OUTPUT: {
                 int best_ray_idx = sample_multinomial(
-                    inp, n_view_rays, ai.temperature
+                    inp, n_view_rays, ai->temperature
                 );
                 Vec2 look_at = vision->observations[best_ray_idx].position;
                 action.watch_orientation = get_vec_orientation(
@@ -275,7 +286,7 @@ static ControllerAction get_brain_ai_action(int entity) {
             case MOVE_ORIENTATION_OUTPUT: {
                 int n_dirs = output.o.move_orientation.n_directions;
                 int best_dir_idx = sample_multinomial(
-                    inp, n_dirs, ai.temperature
+                    inp, n_dirs, ai->temperature
                 );
                 float dir_step = 2.0 * PI / n_dirs;
                 action.move_orientation = dir_step * best_dir_idx
@@ -284,12 +295,12 @@ static ControllerAction get_brain_ai_action(int entity) {
                 break;
             }
             case IS_SHOOTING_OUTPUT: {
-                action.is_shooting = sample_binary(*inp, ai.temperature);
+                action.is_shooting = sample_binary(*inp, ai->temperature);
                 inp += 1;
                 break;
             }
             case IS_MOVING_OUTPUT: {
-                action.is_moving = sample_binary(*inp, ai.temperature);
+                action.is_moving = sample_binary(*inp, ai->temperature);
                 inp += 1;
                 break;
             }

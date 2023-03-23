@@ -160,9 +160,13 @@ Brain* init_brain(BrainParams params) {
 Brain* load_brain(
     char* file_path, ResultMessage* res_msg, int allow_replacement
 ) {
-    Brain local_brain = load_local_brain(file_path, res_msg);
-    Brain* brain = add_brain_clone(&local_brain, allow_replacement);
-    destroy_brain(&local_brain);
+    Brain local_brain;
+    Brain* brain = NULL;
+    load_local_brain(&local_brain, file_path, res_msg);
+    if (res_msg->flag == SUCCESS_RESULT) {
+        Brain* brain = add_brain_clone(&local_brain, allow_replacement);
+        destroy_brain(&local_brain);
+    }
     return brain;
 }
 
@@ -175,7 +179,9 @@ void reload_all_brains(ResultMessage* res_msg) {
         char* file_path = brain->params.key;
         if (file_path[0] != '\0') {
             load_brain(file_path, res_msg, 1);
-            n_brains_realoded += 1;
+            if (res_msg->flag == SUCCESS_RESULT) {
+                n_brains_realoded += 1;
+            }
         }
     }
 
@@ -277,13 +283,12 @@ void randomize_brain(Brain* brain) {
     }
 }
 
-Brain load_local_brain(char* file_path, ResultMessage* res_msg) {
+void load_local_brain(
+    Brain* brain, char* file_path, ResultMessage* res_msg
+) {
     FILE* fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
-        fprintf(
-            stderr, "ERROR: Failed to load the Brain: %s\n", file_path
-        );
-        exit(1);
+        return;
     }
 
     int version;
@@ -301,15 +306,14 @@ Brain load_local_brain(char* file_path, ResultMessage* res_msg) {
 
     BrainParams params;
     fread(&params, sizeof(BrainParams), 1, fp);
-    Brain brain = init_local_brain(params);
+    *brain = init_local_brain(params);
     int n_weights = get_brain_size(params);
-    fread(brain.weights, sizeof(float), n_weights, fp);
+    fread(brain->weights, sizeof(float), n_weights, fp);
 
     fclose(fp);
     res_msg->flag = SUCCESS_RESULT;
 
     sprintf(res_msg->msg, "INFO: Brain is loaded");
-    return brain;
 }
 
 void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
