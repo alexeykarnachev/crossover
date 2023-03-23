@@ -13,13 +13,17 @@ static BrainParams PREV_BRAIN_PARAMS;
 static ResultMessage BRAIN_RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};
 
 static void init_and_save_as(void) {
-    char* file_path = save_nfd(
+    char* fp = save_nfd(
         EDITOR.project.default_search_path, BRAIN_FILTER, 1
     );
+    if (fp == NULL) {
+        return;
+    }
+
     BrainParams params = BRAIN_PARAMS;
-    strcpy(params.key, file_path);
+    strcpy(params.key, fp);
     Brain brain = init_local_brain(params);
-    save_brain(file_path, &brain, &BRAIN_RESULT_MESSAGE);
+    save_brain(fp, &brain, &BRAIN_RESULT_MESSAGE);
     destroy_brain(&brain);
 }
 
