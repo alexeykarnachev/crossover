@@ -12,15 +12,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-Vec2 CURSOR_SCENE_POS;
-
-static Vec2 update_cursor_scene_pos() {
-    Vec2 cursor_scene_pos = get_cursor_scene_pos();
-    Vec2 cursor_scene_diff = sub(cursor_scene_pos, CURSOR_SCENE_POS);
-    CURSOR_SCENE_POS = cursor_scene_pos;
-    return cursor_scene_diff;
-}
-
 typedef enum HandleTag {
     TRANSFORMATION_POSITION_HANDLE,
     TRANSFORMATION_ORIENTATION_HANDLE,
@@ -369,9 +360,14 @@ void update_entity_picking(void) {
     pick_entity(get_entity_under_cursor());
 }
 
+static Vec2 CURSOR_SCENE_POS;
 void update_entity_dragging(void) {
     int entity = EDITOR.picked_entity.entity;
-    Vec2 cursor_scene_diff = update_cursor_scene_pos();
+
+    Vec2 cursor_scene_pos = get_cursor_scene_pos();
+    Vec2 cursor_scene_diff = sub(cursor_scene_pos, CURSOR_SCENE_POS);
+    CURSOR_SCENE_POS = cursor_scene_pos;
+
     if (entity == -1) {
         return;
     }
@@ -390,8 +386,7 @@ void update_entity_dragging(void) {
 
     Transformation* transformation = &SCENE.transformations[entity];
     Vec2 center = transformation->curr_position;
-    Vec2 cursor_scene_pos = get_cursor_scene_pos();
-    Vec2 center_to_cursor = sub(cursor_scene_pos, center);
+    Vec2 center_to_cursor = sub(CURSOR_SCENE_POS, center);
     Handle handles[MAX_N_POLYGON_VERTICES];
     int n_handles = get_picked_entity_handles(handles);
     for (int i = 0; i < n_handles; ++i) {
