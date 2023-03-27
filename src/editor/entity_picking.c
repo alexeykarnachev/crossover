@@ -411,10 +411,13 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
-                    update_orientation(
-                        entity,
-                        atan2(center_to_cursor.y, center_to_cursor.x)
-                    );
+                    float new_angle = atan2(center_to_cursor.y, center_to_cursor.x);
+                    float diff = transformation->curr_orientation - new_angle;
+                    diff = round_by_grid(vec2(diff, diff), 0.5).x;
+                    if (fabs(diff) > EPS) {
+                        CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
+                        update_orientation(entity, transformation->curr_orientation - diff);
+                    }
                     break;
                 }
                 case CIRCLE_RADIUS_HANDLE: {
