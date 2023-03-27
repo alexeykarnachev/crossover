@@ -361,14 +361,18 @@ void update_entity_picking(void) {
 }
 
 static Vec2 CURSOR_SCENE_POS;
+static Vec2 CURSOR_SCENE_DIFF;
 void update_entity_dragging(void) {
     int entity = EDITOR.picked_entity.entity;
 
     Vec2 cursor_scene_pos = get_cursor_scene_pos();
-    Vec2 cursor_scene_diff = sub(cursor_scene_pos, CURSOR_SCENE_POS);
+    CURSOR_SCENE_DIFF = add(
+        CURSOR_SCENE_DIFF, sub(cursor_scene_pos, CURSOR_SCENE_POS)
+    );
     CURSOR_SCENE_POS = cursor_scene_pos;
 
     if (entity == -1) {
+        CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
         return;
     }
 
@@ -389,19 +393,37 @@ void update_entity_dragging(void) {
     Vec2 center_to_cursor = sub(CURSOR_SCENE_POS, center);
     Handle handles[MAX_N_POLYGON_VERTICES];
     int n_handles = get_picked_entity_handles(handles);
+    int is_dragging = 0;
     for (int i = 0; i < n_handles; ++i) {
         Handle handle = handles[i];
-        Vec2 handle_position = add(handle.position, cursor_scene_diff);
-        Vec2 center_to_handle = sub(handle_position, center);
-        float center_to_handle_length = length(center_to_handle);
         if (handle.is_dragging) {
+            is_dragging = 1;
+            Vec2 handle_position = add(handle.position, CURSOR_SCENE_DIFF);
+            Vec2 center_to_handle = sub(handle_position, center);
+            float center_to_handle_length = length(center_to_handle);
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
-                    update_position(
-                        entity,
-                        add(transformation->curr_position,
-                            cursor_scene_diff)
+                    Vec2 diff = vec2(
+                        round(
+                            fabs(CURSOR_SCENE_DIFF.x)
+                            / EDITOR.drag_grid_size
+                        ) * EDITOR.drag_grid_size,
+                        round(
+                            fabs(CURSOR_SCENE_DIFF.y)
+                            / EDITOR.drag_grid_size
+                        ) * EDITOR.drag_grid_size
                     );
+
+                    if (diff.x > 0.0 || diff.y > 0.0) {
+                        diff.x *= sign(CURSOR_SCENE_DIFF.x);
+                        diff.y *= sign(CURSOR_SCENE_DIFF.y);
+
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, diff);
+                        Vec2 new_position = add(
+                            transformation->curr_position, diff
+                        );
+                        update_position(entity, new_position);
+                    }
                     break;
                 }
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
@@ -455,6 +477,10 @@ void update_entity_dragging(void) {
                 }
             }
         }
+    }
+
+    if (is_dragging == 0) {
+        CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
     }
 }
 

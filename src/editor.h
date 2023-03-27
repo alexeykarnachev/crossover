@@ -53,6 +53,8 @@ typedef struct Editor {
     int is_editing_brain;
     int is_editing_genetic_training;
     int is_editing_profiler;
+
+    float drag_grid_size;
 } Editor;
 
 extern Editor EDITOR;
