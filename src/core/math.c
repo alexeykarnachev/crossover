@@ -206,6 +206,14 @@ Vec2 point_to_axis(Vec2 p, Vec2 axis) {
     return res;
 }
 
+Vec2 round_by_grid(Vec2 v, float grid_size) {
+    Vec2 rounded = vec2(
+        round(v.x / grid_size) * grid_size,
+        round(v.y / grid_size) * grid_size
+    );
+    return rounded;
+}
+
 float dist(Vec2 v0, Vec2 v1) {
     float res = length(sub(v1, v0));
     return res;

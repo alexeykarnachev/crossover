@@ -403,21 +403,10 @@ void update_entity_dragging(void) {
             float center_to_handle_length = length(center_to_handle);
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
-                    Vec2 diff = vec2(
-                        round(
-                            fabs(CURSOR_SCENE_DIFF.x)
-                            / EDITOR.drag_grid_size
-                        ) * EDITOR.drag_grid_size,
-                        round(
-                            fabs(CURSOR_SCENE_DIFF.y)
-                            / EDITOR.drag_grid_size
-                        ) * EDITOR.drag_grid_size
+                    Vec2 diff = round_by_grid(
+                        CURSOR_SCENE_DIFF, EDITOR.drag_grid_size
                     );
-
-                    if (diff.x > 0.0 || diff.y > 0.0) {
-                        diff.x *= sign(CURSOR_SCENE_DIFF.x);
-                        diff.y *= sign(CURSOR_SCENE_DIFF.y);
-
+                    if (fabs(diff.x) > EPS || fabs(diff.y) > EPS) {
                         CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, diff);
                         Vec2 new_position = add(
                             transformation->curr_position, diff
@@ -435,16 +424,19 @@ void update_entity_dragging(void) {
                 }
                 case CIRCLE_RADIUS_HANDLE: {
                     primitive->p.circle.radius = center_to_handle_length;
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
                 case RECTANGLE_WIDTH_HANDLE: {
                     primitive->p.rectangle.width = center_to_handle_length
                                                    * 2.0;
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
                 case RECTANGLE_HEIGHT_HANDLE: {
                     primitive->p.rectangle.height = center_to_handle_length
                                                     * 2.0;
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
                 case RECTANGLE_VERTEX_HANDLE: {
@@ -456,6 +448,7 @@ void update_entity_dragging(void) {
                     size = scale(size, 2.0);
                     primitive->p.rectangle.width = max(0.0, size.x);
                     primitive->p.rectangle.height = max(0.0, size.y);
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
                 case LINE_VERTEX_HANDLE: {
@@ -464,6 +457,7 @@ void update_entity_dragging(void) {
                         &new_vertex, 1, *transformation
                     );
                     primitive->p.line.b = scale(new_vertex, 2.0);
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
                 case POLYGON_VERTEX_HANDLE: {
@@ -473,6 +467,7 @@ void update_entity_dragging(void) {
                     );
                     primitive->p.polygon.vertices[handle.vertex_idx]
                         = new_vertex;
+                    CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                     break;
                 }
             }
