@@ -400,10 +400,11 @@ void update_entity_dragging(void) {
             is_dragging = 1;
             Vec2 handle_position = add(handle.position, CURSOR_SCENE_DIFF);
             Vec2 center_to_handle = sub(handle_position, center);
+            Vec2 rot_diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
+            Vec2 diff = round_by_grid(CURSOR_SCENE_DIFF, EDITOR.drag_grid_size);
 
             switch (handle.tag) {
                 case TRANSFORMATION_POSITION_HANDLE: {
-                    Vec2 diff = round_by_grid(CURSOR_SCENE_DIFF, EDITOR.drag_grid_size);
                     if (fabs(diff.x) > EPS || fabs(diff.y) > EPS) {
                         CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, diff);
                         update_position(entity, add(transformation->curr_position, diff));
@@ -413,7 +414,7 @@ void update_entity_dragging(void) {
                 case TRANSFORMATION_ORIENTATION_HANDLE: {
                     float new_angle = atan2(center_to_cursor.y, center_to_cursor.x);
                     float diff = transformation->curr_orientation - new_angle;
-                    diff = round_by_grid(vec2(diff, diff), 0.5).x;
+                    diff = round_by_grid(vec2(diff, diff), EDITOR.rotation_grid_size).x;
                     if (fabs(diff) > EPS) {
                         CURSOR_SCENE_DIFF = vec2(0.0, 0.0);
                         update_orientation(entity, transformation->curr_orientation - diff);
@@ -421,51 +422,45 @@ void update_entity_dragging(void) {
                     break;
                 }
                 case CIRCLE_RADIUS_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.x) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.circle.radius = max(primitive->p.circle.radius + diff.x, EDITOR.drag_grid_size);
+                    if (fabs(rot_diff.x) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.circle.radius = max(primitive->p.circle.radius + rot_diff.x, EDITOR.drag_grid_size);
                     }
                     break;
                 }
                 case RECTANGLE_WIDTH_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.x) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.rectangle.width = max(primitive->p.rectangle.width + diff.x * 2.0, EDITOR.drag_grid_size * 2.0);
+                    if (fabs(rot_diff.x) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.rectangle.width = max(primitive->p.rectangle.width + rot_diff.x * 2.0, EDITOR.drag_grid_size * 2.0);
                     }
                     break;
                 }
                 case RECTANGLE_HEIGHT_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.y) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.rectangle.height = max(primitive->p.rectangle.height + diff.y * 2.0, EDITOR.drag_grid_size * 2.0);
+                    if (fabs(rot_diff.y) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.rectangle.height = max(primitive->p.rectangle.height + rot_diff.y * 2.0, EDITOR.drag_grid_size * 2.0);
                     }
                     break;
                 }
                 case RECTANGLE_VERTEX_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.y) > EPS || fabs(diff.x) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.rectangle.width = max(primitive->p.rectangle.width + diff.x * 2.0, EDITOR.drag_grid_size * 2.0);
-                        primitive->p.rectangle.height = max(primitive->p.rectangle.height + diff.y * 2.0, EDITOR.drag_grid_size * 2.0);
+                    if (fabs(rot_diff.y) > EPS || fabs(rot_diff.x) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.rectangle.width = max(primitive->p.rectangle.width + rot_diff.x * 2.0, EDITOR.drag_grid_size * 2.0);
+                        primitive->p.rectangle.height = max(primitive->p.rectangle.height + rot_diff.y * 2.0, EDITOR.drag_grid_size * 2.0);
                     }
                     break;
                 }
                 case LINE_VERTEX_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.x) > EPS || fabs(diff.y) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.line.b = add(primitive->p.line.b, scale(diff, 2.0));
+                    if (fabs(rot_diff.x) > EPS || fabs(rot_diff.y) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.line.b = add(primitive->p.line.b, scale(rot_diff, 2.0));
                     }
                     break;
                 }
                 case POLYGON_VERTEX_HANDLE: {
-                    Vec2 diff = round_by_grid(rotate(CURSOR_SCENE_DIFF, vec2(0.0, 0.0), -transformation->curr_orientation), EDITOR.drag_grid_size);
-                    if (fabs(diff.x) > EPS || fabs(diff.y) > EPS) {
-                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(diff, vec2(0.0, 0.0), transformation->curr_orientation));
-                        primitive->p.polygon.vertices[handle.vertex_idx] = add(primitive->p.polygon.vertices[handle.vertex_idx], diff);
+                    if (fabs(rot_diff.x) > EPS || fabs(rot_diff.y) > EPS) {
+                        CURSOR_SCENE_DIFF = sub(CURSOR_SCENE_DIFF, rotate(rot_diff, vec2(0.0, 0.0), transformation->curr_orientation));
+                        primitive->p.polygon.vertices[handle.vertex_idx] = add(primitive->p.polygon.vertices[handle.vertex_idx], rot_diff);
                     }
                     break;
                 }

@@ -41,6 +41,7 @@ static int PROFILER_STAGES_MAP_SHMID;
 static int EDITOR_INITIALIZED = 0;
 void init_editor(void) {
     EDITOR.drag_grid_size = 0.5;
+    EDITOR.rotation_grid_size = PI / 8.0;
 
     if (EDITOR_INITIALIZED == 1) {
         fprintf(stderr, "ERROR: EDITOR could be initialized only once\n");

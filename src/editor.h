@@ -55,6 +55,7 @@ typedef struct Editor {
     int is_editing_profiler;
 
     float drag_grid_size;
+    float rotation_grid_size;
 } Editor;
 
 extern Editor EDITOR;
