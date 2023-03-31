@@ -9,6 +9,7 @@
 #include "../renderer.h"
 #include "../scene.h"
 #include "gl.h"
+#include <stdlib.h>
 
 static void set_uniform_camera(GLuint program, Transformation camera) {
     CameraFrustum frustum = get_camera_frustum();
@@ -273,6 +274,66 @@ void render_scene(float dt) {
     glViewport(0, 0, APP.window_width, APP.window_height);
     GLuint program = COLOR_PROGRAM;
     glUseProgram(program);
+
+    // TODO: Maybe move lights setting to a separate function
+
+    // -------------------------------------------------------------------
+    // Set up lights
+    static char color_name[32];
+    static char is_dir_name[32];
+    static char vec_name[32];
+
+    int n_lights = 0;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (n_lights == MAX_N_LIGHTS) {
+            break;
+        }
+
+        if (!check_if_entity_has_component(
+                entity, LIGHT_COMPONENT | TRANSFORMATION_COMPONENT
+            )) {
+            continue;
+        }
+
+        Transformation transformation = SCENE.transformations[entity];
+        Light light = SCENE.lights[entity];
+
+        sprintf(color_name, "lights[%d].color", n_lights);
+        sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
+        sprintf(vec_name, "lights[%d].vec", n_lights);
+
+        set_uniform_3fv(program, color_name, (float*)&light.color, 1);
+        set_uniform_1i(program, is_dir_name, light.is_dir);
+
+        if (light.is_dir == 1) {
+            set_uniform_3fv(
+                program, vec_name, (float*)&light.direction, 1
+            );
+        } else {
+            if (!check_if_entity_has_component(
+                    entity, RENDER_LAYER_COMPONENT
+                )) {
+                fprintf(
+                    stderr,
+                    "ERROR: Can't render positional light without render "
+                    "layer component. The entity which has the Light "
+                    "component also must have the RenderLayer component "
+                    "attached"
+                );
+                exit(1);
+            }
+            float render_layer = SCENE.render_layers[entity];
+            Vec3 position = vec3(
+                transformation.curr_position.x,
+                transformation.curr_position.y,
+                render_layer
+            );
+            set_uniform_3fv(program, vec_name, (float*)&position, 1);
+        }
+
+        n_lights += 1;
+    }
+    set_uniform_1i(program, "n_lights", n_lights);
 
     // TODO: Factor out these bindings
     set_uniform_1i(program, "world_pos_tex", 0);
