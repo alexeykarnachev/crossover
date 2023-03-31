@@ -336,6 +336,8 @@ int spawn_entity_copy(int entity, Transformation transformation) {
 
             switch (type) {
                 case TRANSFORMATION_COMPONENT:
+                    SCENE.transformations[entity_copy].elevation
+                        = SCENE.transformations[entity].elevation;
                     update_orientation(
                         entity_copy,
                         SCENE.transformations[entity].curr_orientation
@@ -494,12 +496,15 @@ int spawn_bullet(Bullet bullet, int owner, float ttl) {
     SCENE.bullets[entity] = bullet;
     SCENE.ttls[entity] = ttl;
     SCENE.owners[entity] = owner;
+    SCENE.lights[entity] = init_light(
+        YELLOW_COLOR, vec2(0.0, 0.0), 5.0, 0
+    );
     if (check_if_entity_has_component(owner, RENDER_LAYER_COMPONENT)) {
         SCENE.render_layers[entity] = SCENE.render_layers[owner];
     }
     SCENE.components[entity] = TRANSFORMATION_COMPONENT | TTL_COMPONENT
                                | BULLET_COMPONENT | OWNER_COMPONENT
-                               | RENDER_LAYER_COMPONENT;
+                               | RENDER_LAYER_COMPONENT | LIGHT_COMPONENT;
 }
 
 int spawn_default_ai_guy(
