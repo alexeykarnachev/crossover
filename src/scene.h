@@ -28,6 +28,7 @@ typedef struct Scene {
     Primitive colliders[MAX_N_ENTITIES];
     Primitive primitives[MAX_N_ENTITIES];
     MaterialShape material_shapes[MAX_N_ENTITIES];
+    Light lights[MAX_N_ENTITIES];
     Gun guns[MAX_N_ENTITIES];
     Bullet bullets[MAX_N_ENTITIES];
     float ttls[MAX_N_ENTITIES];

@@ -93,6 +93,10 @@ float get_vec_orientation(Vec2 v) {
     return atan2(v.y, v.x);
 }
 
+float round_by_grid(float x, float grid_size) {
+    return round(x / grid_size) * grid_size;
+}
+
 Vec2 vec2(float x, float y) {
     Vec2 res = {x, y};
     return res;
@@ -206,10 +210,9 @@ Vec2 point_to_axis(Vec2 p, Vec2 axis) {
     return res;
 }
 
-Vec2 round_by_grid(Vec2 v, float grid_size) {
+Vec2 round_vec_by_grid(Vec2 v, float grid_size) {
     Vec2 rounded = vec2(
-        round(v.x / grid_size) * grid_size,
-        round(v.y / grid_size) * grid_size
+        round_by_grid(v.x, grid_size), round_by_grid(v.y, grid_size)
     );
     return rounded;
 }

@@ -24,6 +24,7 @@ static ComponentType INSPECTABLE_COMPONENT_TYPES[] = {
     COLLIDER_COMPONENT,
     PRIMITIVE_COMPONENT,
     MATERIAL_SHAPE_COMPONENT,
+    LIGHT_COMPONENT,
     RENDER_LAYER_COMPONENT,
     CONTROLLER_COMPONENT,
     VISION_COMPONENT,
@@ -210,7 +211,9 @@ static void render_context_menu(void) {
     if (is_rmb_clicked && !want_capture_mouse) {
         pick_entity(get_entity_under_cursor());
         cursor_scene_pos = get_cursor_scene_pos();
-        cursor = init_transformation(cursor_scene_pos, 0.0);
+        cursor = init_transformation(
+            round_vec_by_grid(cursor_scene_pos, EDITOR.drag_grid_size), 0.0
+        );
         igOpenPopup_Str("context_menu", 0);
     }
 
@@ -725,6 +728,28 @@ static void render_component_inspector(int entity, ComponentType type) {
 
             break;
         }
+        case LIGHT_COMPONENT: {
+            Light* light = &SCENE.lights[entity];
+            float* color = (float*)&light->color;
+            igText("color");
+            igColorPicker3("##", color, COLOR_PICKER_FLAGS);
+
+            igCheckbox("is dir.", (bool*)(&light->is_dir));
+            if (light->is_dir == 1) {
+                ig_drag_float2(
+                    "direction",
+                    (float*)&light->direction,
+                    -FLT_MAX,
+                    FLT_MAX,
+                    0.05,
+                    0
+                );
+                if (igButton("Normalize", IG_VEC2_ZERO)) {
+                    light->direction = normalize(light->direction);
+                }
+            }
+            break;
+        }
         case RENDER_LAYER_COMPONENT: {
             float* render_layer = &SCENE.render_layers[entity];
             ig_drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
@@ -1077,7 +1102,10 @@ static void process_keys(void) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     } else if (EDITOR.key.ctrl && EDITOR.key.v && EDITOR.entity_to_copy != -1) {
         Transformation cursor = init_transformation(
-            get_cursor_scene_pos(), 0.0
+            round_vec_by_grid(
+                get_cursor_scene_pos(), EDITOR.drag_grid_size
+            ),
+            0.0
         );
         pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
     } else if (EDITOR.key.del && EDITOR.picked_entity.entity != -1) {

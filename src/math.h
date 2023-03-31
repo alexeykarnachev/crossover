@@ -44,6 +44,7 @@ int all(int vals[], int n);
 int any(int vals[], int n);
 float get_orientations_diff(float r0, float r1);
 float get_vec_orientation(Vec2 v);
+float round_by_grid(float x, float grid_size);
 
 Vec2 vec2(float x, float y);
 Vec3 vec3(float x, float y, float z);
@@ -66,7 +67,7 @@ Vec2 normalize(Vec2 v);
 Vec2 rotate90(Vec2 v);
 Vec2 rotate(Vec2 v, Vec2 origin, float angle);
 Vec2 point_to_axis(Vec2 p, Vec2 axis);
-Vec2 round_by_grid(Vec2 v, float grid_size);
+Vec2 round_vec_by_grid(Vec2 v, float grid_size);
 float dist(Vec2 v0, Vec2 v1);
 float dot(Vec2 v0, Vec2 v1);
 float cross(Vec2 v0, Vec2 v1);
