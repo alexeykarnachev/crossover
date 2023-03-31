@@ -5,6 +5,7 @@
 struct Light {
     vec3 color;
     vec3 vec;
+    float power;
     int is_dir;
 };
 
@@ -44,7 +45,7 @@ void main(void) {
             }
 
             float diffuse = max(dot(normal, -light_dir), 0.0);
-            color += diffuse_color * diffuse * light.color / (light_dist * light_dist);
+            color += diffuse_color * diffuse * light.color * light.power / (light_dist * light_dist);
         }
     } else {
         color = diffuse_color;

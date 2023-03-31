@@ -2,8 +2,11 @@
 
 #include "math.h"
 
-Light init_light(Vec3 color, Vec2 direction, int is_dir) {
+Light init_light(Vec3 color, Vec2 direction, float power, int is_dir) {
     Light light = {
-        .color = color, .direction = direction, .is_dir = is_dir};
+        .color = color,
+        .direction = direction,
+        .power = power,
+        .is_dir = is_dir};
     return light;
 }

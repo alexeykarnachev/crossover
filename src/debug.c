@@ -48,7 +48,9 @@ void render_debug_primitive(
 
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color, float render_layer) {
     Vec2 d = sub(e, s);
-    Transformation t = init_transformation(add(s, scale(d, 0.5)), 0.0);
+    Transformation t = init_transformation(
+        add(s, scale(d, 0.5)), 0.0, 0.0
+    );
     Primitive p = init_line_primitive(d);
     render_debug_primitive(t, p, color, render_layer, FILL);
 }
@@ -56,7 +58,7 @@ void render_debug_line(Vec2 s, Vec2 e, Vec3 color, float render_layer) {
 void render_debug_circle(
     Vec2 c, float r, Vec3 color, float render_layer, int fill_type
 ) {
-    Transformation t = init_transformation(c, 0.0);
+    Transformation t = init_transformation(c, 0.0, 0.0);
     Primitive p = init_circle_primitive(r);
     render_debug_primitive(t, p, color, render_layer, fill_type);
 }
@@ -69,7 +71,7 @@ void render_debug_rectangle(
     float render_layer,
     int fill_type
 ) {
-    Transformation t = init_transformation(position, 0.0);
+    Transformation t = init_transformation(position, 0.0, 0.0);
     Primitive p = init_rectangle_primitive(width, height);
     render_debug_primitive(t, p, color, render_layer, fill_type);
 }

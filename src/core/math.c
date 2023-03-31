@@ -217,6 +217,10 @@ Vec2 round_vec_by_grid(Vec2 v, float grid_size) {
     return rounded;
 }
 
+Vec3 scale3(Vec3 v, float k) {
+    return vec3(v.x * k, v.y * k, v.z * k);
+}
+
 float dist(Vec2 v0, Vec2 v1) {
     float res = length(sub(v1, v0));
     return res;

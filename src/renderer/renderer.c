@@ -134,6 +134,7 @@ static RenderCall prepare_primitive_render_call(
     set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
     set_uniform_1i(program, "primitive_type", primitive.type);
     set_uniform_1f(program, "render_layer", render_layer);
+    set_uniform_1f(program, "elevation", transformation.elevation);
     GLuint draw_mode = GL_TRIANGLE_FAN;
 
     set_material_shape_uniform(program, material_shape);
@@ -282,6 +283,7 @@ void render_scene(float dt) {
     static char color_name[32];
     static char is_dir_name[32];
     static char vec_name[32];
+    static char power_name[32];
 
     int n_lights = 0;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
@@ -301,8 +303,10 @@ void render_scene(float dt) {
         sprintf(color_name, "lights[%d].color", n_lights);
         sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
         sprintf(vec_name, "lights[%d].vec", n_lights);
+        sprintf(power_name, "lights[%d].power", n_lights);
 
         set_uniform_3fv(program, color_name, (float*)&light.color, 1);
+        set_uniform_1f(program, power_name, light.power);
         set_uniform_1i(program, is_dir_name, light.is_dir);
 
         if (light.is_dir == 1) {
@@ -310,29 +314,17 @@ void render_scene(float dt) {
                 program, vec_name, (float*)&light.direction, 1
             );
         } else {
-            if (!check_if_entity_has_component(
-                    entity, RENDER_LAYER_COMPONENT
-                )) {
-                fprintf(
-                    stderr,
-                    "ERROR: Can't render positional light without render "
-                    "layer component. The entity which has the Light "
-                    "component also must have the RenderLayer component "
-                    "attached"
-                );
-                exit(1);
-            }
-            float render_layer = SCENE.render_layers[entity];
             Vec3 position = vec3(
                 transformation.curr_position.x,
                 transformation.curr_position.y,
-                render_layer
+                transformation.elevation
             );
             set_uniform_3fv(program, vec_name, (float*)&position, 1);
         }
 
         n_lights += 1;
     }
+
     set_uniform_1i(program, "n_lights", n_lights);
 
     // TODO: Factor out these bindings

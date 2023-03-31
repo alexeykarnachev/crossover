@@ -204,15 +204,18 @@ static void render_game_controls(void) {
 
 static void render_context_menu(void) {
     static Vec2 cursor_scene_pos;
-    static Transformation cursor;
+    static Transformation transformation;
     int is_rmb_clicked = igIsMouseClicked_Bool(1, 0);
     int want_capture_mouse = igGetIO()->WantCaptureMouse;
 
     if (is_rmb_clicked && !want_capture_mouse) {
         pick_entity(get_entity_under_cursor());
         cursor_scene_pos = get_cursor_scene_pos();
-        cursor = init_transformation(
-            round_vec_by_grid(cursor_scene_pos, EDITOR.drag_grid_size), 0.0
+        float elevation = 2.0;
+        transformation = init_transformation(
+            round_vec_by_grid(cursor_scene_pos, EDITOR.drag_grid_size),
+            0.0,
+            elevation
         );
         igOpenPopup_Str("context_menu", 0);
     }
@@ -228,45 +231,50 @@ static void render_context_menu(void) {
     if (igBeginMenu("Spawn", 1)) {
         if (igBeginMenu("Guy", 1)) {
             if (menu_item("Player Keyboard", "", 0, 1)) {
-                pick_entity(spawn_default_player_keyboard_guy(cursor));
+                pick_entity(
+                    spawn_default_player_keyboard_guy(transformation)
+                );
             }
             if (menu_item("Dummy AI", "", 0, 1)) {
-                pick_entity(spawn_default_dummy_ai_guy(cursor));
+                pick_entity(spawn_default_dummy_ai_guy(transformation));
             }
             if (menu_item("Brain AI", "", 0, 1)) {
-                pick_entity(spawn_default_brain_ai_guy(cursor));
+                pick_entity(spawn_default_brain_ai_guy(transformation));
             }
             igEndMenu();
         }
 
         if (igBeginMenu("Obstacle", 1)) {
             if (menu_item("Line", "", 0, 1)) {
-                pick_entity(spawn_default_line_obstacle(cursor));
+                pick_entity(spawn_default_line_obstacle(transformation));
             }
             if (menu_item("Circle", "", 0, 1)) {
-                pick_entity(spawn_default_circle_obstacle(cursor));
+                pick_entity(spawn_default_circle_obstacle(transformation));
             }
             if (menu_item("Rectangle", "", 0, 1)) {
-                pick_entity(spawn_default_rectangle_obstacle(cursor));
+                pick_entity(spawn_default_rectangle_obstacle(transformation
+                ));
             }
             if (menu_item("Polygon", "", 0, 1)) {
-                pick_entity(spawn_default_polygon_obstacle(cursor));
+                pick_entity(spawn_default_polygon_obstacle(transformation)
+                );
             }
             igEndMenu();
         }
 
         if (igBeginMenu("Sprite", 1)) {
             if (menu_item("Line", "", 0, 1)) {
-                pick_entity(spawn_default_line_sprite(cursor));
+                pick_entity(spawn_default_line_sprite(transformation));
             }
             if (menu_item("Circle", "", 0, 1)) {
-                pick_entity(spawn_default_circle_sprite(cursor));
+                pick_entity(spawn_default_circle_sprite(transformation));
             }
             if (menu_item("Rectangle", "", 0, 1)) {
-                pick_entity(spawn_default_rectangle_sprite(cursor));
+                pick_entity(spawn_default_rectangle_sprite(transformation)
+                );
             }
             if (menu_item("Polygon", "", 0, 1)) {
-                pick_entity(spawn_default_polygon_sprite(cursor));
+                pick_entity(spawn_default_polygon_sprite(transformation));
             }
             igEndMenu();
         }
@@ -280,7 +288,10 @@ static void render_context_menu(void) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     }
     if (menu_item("Paste", "Ctrl+V", 0, EDITOR.entity_to_copy != -1)) {
-        pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
+        // TODO: Copy elevation from the copyied entity
+        pick_entity(
+            spawn_entity_copy(EDITOR.entity_to_copy, transformation)
+        );
     }
     if (menu_item("Delete", "Del", 0, EDITOR.picked_entity.entity != -1)) {
         // TODO: Don't delete the object if "del" is pressed,
@@ -575,16 +586,18 @@ static void render_component_inspector(int entity, ComponentType type) {
             Transformation* transformation
                 = &SCENE.transformations[entity];
             Vec2 pos = transformation->curr_position;
-            float orient = transformation->curr_orientation;
+            float* orient = &transformation->curr_orientation;
+            float* elevation = &transformation->elevation;
 
             render_edit_button(TRANSFORMATION_COMPONENT);
             ig_drag_float2(
-                "pos.", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0
+                "position", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0
             );
-            ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
+            ig_drag_float("orientation", orient, -PI, PI, 0.05, 0);
+            ig_drag_float("elevation", elevation, 0.0, 10.0, 0.05, 0);
 
             update_position(entity, pos);
-            update_orientation(entity, orient);
+            update_orientation(entity, *orient);
 
             if (igButton("Reset", IG_VEC2_ZERO)) {
                 update_position(entity, vec2(0.0, 0.0));
@@ -733,6 +746,9 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* color = (float*)&light->color;
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
+            ig_drag_float(
+                "power", (float*)&light->power, -0.0, 1000.0, 1.0, 0
+            );
 
             igCheckbox("is dir.", (bool*)(&light->is_dir));
             if (light->is_dir == 1) {
@@ -1105,6 +1121,7 @@ static void process_keys(void) {
             round_vec_by_grid(
                 get_cursor_scene_pos(), EDITOR.drag_grid_size
             ),
+            0.0,
             0.0
         );
         pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));

@@ -56,7 +56,7 @@ static int check_if_cursor_on_primitive(
     Vec2 cursor_scene_pos = get_cursor_scene_pos();
     Primitive cursor_primitive = init_circle_primitive(0.1);
     Transformation cursor_transformation = init_transformation(
-        cursor_scene_pos, 0.0
+        cursor_scene_pos, 0.0, 0.0
     );
 
     Collision collision;
@@ -73,7 +73,7 @@ static int check_if_cursor_on_primitive(
 static int check_if_cursor_on_handle(Handle handle) {
     return check_if_cursor_on_primitive(
         init_circle_primitive(handle.radius),
-        init_transformation(handle.position, 0.0)
+        init_transformation(handle.position, 0.0, 0.0)
     );
 }
 

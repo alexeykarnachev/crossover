@@ -2,12 +2,15 @@
 
 #include "../math.h"
 
-Transformation init_transformation(Vec2 position, float orientation) {
+Transformation init_transformation(
+    Vec2 position, float orientation, float elevation
+) {
     Transformation transformation;
     transformation.prev_position = position;
     transformation.curr_position = position;
     transformation.prev_orientation = orientation;
     transformation.curr_orientation = orientation;
+    transformation.elevation = elevation;
     return transformation;
 }
 

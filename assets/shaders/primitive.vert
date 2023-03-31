@@ -22,6 +22,7 @@ uniform Circle circle;
 uniform Camera camera;
 uniform int primitive_type;
 uniform float render_layer;
+uniform float elevation;
 
 out vec3 fs_world_pos;
 out vec2 fs_uv_pos;
@@ -69,6 +70,6 @@ void main(void) {
     }
 
     vec2 proj_pos = world2proj(world_position); 
-    fs_world_pos = vec3(vs_world_pos, render_layer);
+    fs_world_pos = vec3(vs_world_pos, elevation);
     gl_Position = vec4(proj_pos, render_layer, 1.0);
 }
