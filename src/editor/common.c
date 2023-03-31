@@ -106,6 +106,24 @@ int ig_drag_float2(
     return values[0] != init_values[0] || values[1] != init_values[1];
 }
 
+int ig_drag_float3(
+    char* label,
+    float values[3],
+    float min_val,
+    float max_val,
+    float step,
+    int flags
+) {
+    float init_values[3] = {values[0], values[1], values[2]};
+    igPushItemWidth(SLIDER_WIDTH);
+    igPushID_Int(IG_UNIQUE_ID++);
+    igDragFloat3(label, values, step, min_val, max_val, "%.4f", flags);
+    igPopID();
+    igPopItemWidth();
+    return values[0] != init_values[0] || values[1] != init_values[1]
+           || values[2] != init_values[2];
+}
+
 int ig_drag_float4(
     char* label,
     float values[4],

@@ -746,6 +746,14 @@ static void render_component_inspector(int entity, ComponentType type) {
             float* color = (float*)&light->color;
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
+            ig_drag_float3(
+                "attenuation",
+                (float*)&light->attenuation,
+                0.0,
+                10.0,
+                0.01,
+                0
+            );
             ig_drag_float(
                 "power", (float*)&light->power, -0.0, 1000.0, 1.0, 0
             );

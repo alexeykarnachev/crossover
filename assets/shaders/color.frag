@@ -4,6 +4,7 @@
 
 struct Light {
     vec3 color;
+    vec3 attenuation;
     vec3 vec;
     float power;
     int is_dir;
@@ -34,18 +35,20 @@ void main(void) {
             Light light = lights[i];
             
             vec3 light_dir;
-            float light_dist;
+            float attenuation;
             if (light.is_dir == 1) {
                 light_dir = normalize(light.vec);
-                light_dist = 1.0;
+                attenuation = 1.0;
             } else {
                 vec3 light_to_pos = world_pos - light.vec;
+                float light_dist = length(light_to_pos);
                 light_dir = normalize(light_to_pos);
-                light_dist = length(light_to_pos);
+                attenuation = 1.0 / dot(light.attenuation, vec3(1.0, light_dist, light_dist * light_dist));
             }
 
             float diffuse = max(dot(normal, -light_dir), 0.0);
-            color += diffuse_color * diffuse * light.color * light.power / (light_dist * light_dist);
+            color += diffuse_color * diffuse * light.color * light.power * attenuation;
+
         }
     } else {
         color = diffuse_color;

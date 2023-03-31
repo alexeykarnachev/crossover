@@ -281,6 +281,7 @@ void render_scene(float dt) {
     // -------------------------------------------------------------------
     // Set up lights
     static char color_name[32];
+    static char attenuation_name[32];
     static char is_dir_name[32];
     static char vec_name[32];
     static char power_name[32];
@@ -301,11 +302,15 @@ void render_scene(float dt) {
         Light light = SCENE.lights[entity];
 
         sprintf(color_name, "lights[%d].color", n_lights);
+        sprintf(attenuation_name, "lights[%d].attenuation", n_lights);
         sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
         sprintf(vec_name, "lights[%d].vec", n_lights);
         sprintf(power_name, "lights[%d].power", n_lights);
 
         set_uniform_3fv(program, color_name, (float*)&light.color, 1);
+        set_uniform_3fv(
+            program, attenuation_name, (float*)&light.attenuation, 1
+        );
         set_uniform_1f(program, power_name, light.power);
         set_uniform_1i(program, is_dir_name, light.is_dir);
 

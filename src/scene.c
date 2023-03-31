@@ -497,7 +497,7 @@ int spawn_bullet(Bullet bullet, int owner, float ttl) {
     SCENE.ttls[entity] = ttl;
     SCENE.owners[entity] = owner;
     SCENE.lights[entity] = init_light(
-        YELLOW_COLOR, vec2(0.0, 0.0), 5.0, 0
+        YELLOW_COLOR, vec3(1.0, 1.0, 1.0), vec2(0.0, 0.0), 5.0, 0
     );
     if (check_if_entity_has_component(owner, RENDER_LAYER_COMPONENT)) {
         SCENE.render_layers[entity] = SCENE.render_layers[owner];
