@@ -294,8 +294,8 @@ static int init_light_mask_buffer(void) {
         0,
         GBUFFER_WIDTH,
         GBUFFER_HEIGHT,
-        GL_RGBA32F,
-        GL_RGBA,
+        GL_R32F,
+        GL_RED,
         GL_FLOAT,
         GL_NEAREST
     );
