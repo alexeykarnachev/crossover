@@ -1,6 +1,6 @@
+#if 0
 #include "gl.h"
 
-#include "../component.h"
 #include "../const.h"
 #include "../math.h"
 #include "../renderer.h"
@@ -11,70 +11,33 @@
 #include <stdlib.h>
 #include <string.h>
 
+GLuint POLYGON_VAO;
+GLuint POLYGON_VBO;
 GBuffer GBUFFER;
 LightMaskBuffer LIGHT_MASK_BUFFER;
 
-GLuint CIRCLE_PROGRAM;
+GLuint PRIMITIVE_PROGRAM;
 GLuint COLOR_PROGRAM;
 GLuint LIGHT_MASK_PROGRAM;
 
-GLuint CIRCLE_VAO;
-GLuint CIRCLE_POS_VBO;
-GLuint CIRCLE_GEOMETRY_VBO;
-GLuint CIRCLE_RENDER_LAYER_VBO;
+static void init_polygon_vao(void) {
+    glCreateVertexArrays(1, &POLYGON_VAO);
+    glBindVertexArray(POLYGON_VAO);
 
-static void init_circle_vao(void) {
-    Vec2 vertices[MAX_N_POLYGON_VERTICES];
-    get_unit_circle_fan_vertices(vertices, MAX_N_POLYGON_VERTICES);
-
-    glCreateVertexArrays(1, &CIRCLE_VAO);
-    glBindVertexArray(CIRCLE_VAO);
-
-    // -------------------------------------------------------------------
-    // Circle vertex data (positions which are common for all instances)
-    glGenBuffers(1, &CIRCLE_POS_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_POS_VBO);
-    glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), (float*)vertices, GL_STATIC_DRAW
-    );
-    GL_CHECK_ERRORS();
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    GL_CHECK_ERRORS();
-
-    // -------------------------------------------------------------------
-    // Circle instance data: vec3(x, y, elevation, radius)
-    glGenBuffers(1, &CIRCLE_GEOMETRY_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_GEOMETRY_VBO);
+    glGenBuffers(1, &POLYGON_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
     glBufferData(
         GL_ARRAY_BUFFER,
-        MAX_N_ENTITIES * 4 * sizeof(float),
-        0,
+        sizeof(Vec2) * 2 * MAX_N_POLYGON_VERTICES,
+        NULL,
         GL_DYNAMIC_DRAW
     );
     GL_CHECK_ERRORS();
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(1, 1);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     GL_CHECK_ERRORS();
+    glEnableVertexAttribArray(0);
 
-    // -------------------------------------------------------------------
-    // Circle instance data: render_layer
-    glGenBuffers(1, &CIRCLE_RENDER_LAYER_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_RENDER_LAYER_VBO);
-    glBufferData(
-        GL_ARRAY_BUFFER, MAX_N_ENTITIES * sizeof(float), 0, GL_DYNAMIC_DRAW
-    );
-    GL_CHECK_ERRORS();
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(3, 1);
-    GL_CHECK_ERRORS();
-
-    // Bind default back
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -179,21 +142,20 @@ static int create_program(
 static int init_all_programs(void) {
     int ok = 1;
 
-    CIRCLE_PROGRAM = glCreateProgram();
+    PRIMITIVE_PROGRAM = glCreateProgram();
     ok &= create_program(
-        CIRCLE_PROGRAM, CIRCLE_VERT_SHADER, MATERIAL_FRAG_SHADER
+        PRIMITIVE_PROGRAM, PRIMITIVE_VERT_SHADER, PRIMITIVE_FRAG_SHADER
     );
 
-    // COLOR_PROGRAM = glCreateProgram();
-    // ok &= create_program(
-    //     COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
-    // );
+    COLOR_PROGRAM = glCreateProgram();
+    ok &= create_program(
+        COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
+    );
 
-    // LIGHT_MASK_PROGRAM = glCreateProgram();
-    // ok &= create_program(
-    //     LIGHT_MASK_PROGRAM, PRIMITIVE_VERT_SHADER,
-    //     LIGHT_MASK_FRAG_SHADER
-    // );
+    LIGHT_MASK_PROGRAM = glCreateProgram();
+    ok &= create_program(
+        LIGHT_MASK_PROGRAM, PRIMITIVE_VERT_SHADER, LIGHT_MASK_FRAG_SHADER
+    );
 
     return ok;
 }
@@ -399,8 +361,8 @@ static int get_uniform_location(
 }
 
 void init_gl(void) {
+    init_polygon_vao();
     init_all_programs();
-    init_circle_vao();
     init_gbuffer();
     init_light_mask_buffer();
 }
@@ -488,3 +450,4 @@ int set_uniform_4fv(
     glUniform4fv(loc, n_values, data);
     return 1;
 }
+#endif

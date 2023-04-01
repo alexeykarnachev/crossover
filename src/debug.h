@@ -22,10 +22,8 @@ typedef struct Debug {
     } general;
 
     struct shading {
-        int materials;
         int lights;
         int visions;
-        int wireframe;
         int grid;
 
         float grid_tile_size;

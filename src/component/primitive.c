@@ -110,6 +110,17 @@ Primitive init_default_polygon_primitive(void) {
     return init_polygon_primitive(vertices, 3);
 }
 
+void get_unit_circle_fan_vertices(Vec2* vertices, int n_vertices) {
+    Vec2 origin = vec2(0.0, 0.0);
+    Vec2 point = vec2(1.0, 0.0);
+    vertices[0] = origin;
+    int n_steps = (float)(MAX_N_POLYGON_VERTICES - 2);
+    for (int i = 1; i < MAX_N_POLYGON_VERTICES; ++i) {
+        float angle = (i - 1) * 2.0 * PI / n_steps;
+        vertices[i] = rotate(point, origin, angle);
+    }
+}
+
 static int get_rectangle_vertices(
     Rectangle rectangle, Vec2 out[MAX_N_POLYGON_VERTICES]
 ) {
@@ -174,6 +185,7 @@ int get_primitive_vertices(
     switch (type) {
         case CIRCLE_PRIMITIVE:
             n_vertices = 0;
+            break;
         case RECTANGLE_PRIMITIVE:
             n_vertices = get_rectangle_vertices(
                 primitive.p.rectangle, vertices

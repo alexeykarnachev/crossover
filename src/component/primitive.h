@@ -55,6 +55,7 @@ Primitive init_default_circle_primitive(void);
 Primitive init_default_rectangle_primitive(void);
 Primitive init_default_line_primitive(void);
 Primitive init_default_polygon_primitive(void);
+void get_unit_circle_fan_vertices(Vec2* vertices, int n_vertices);
 int get_primitive_vertices(Primitive primitive, Vec2* vertices);
 int get_primitive_fan_vertices(
     Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]

@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 #include <glad/glad.h>
 
@@ -29,14 +30,13 @@ typedef struct LightMaskBuffer {
     GLuint light_mask_tex;
 } LightMaskBuffer;
 
+extern GLuint POLYGON_VAO;
+extern GLuint POLYGON_VBO;
 extern GBuffer GBUFFER;
 extern LightMaskBuffer LIGHT_MASK_BUFFER;
-extern GLuint CIRCLE_PROGRAM;
-
-extern GLuint CIRCLE_VAO;
-extern GLuint CIRCLE_POS_VBO;
-extern GLuint CIRCLE_GEOMETRY_VBO;
-extern GLuint CIRCLE_RENDER_LAYER_VBO;
+extern GLuint PRIMITIVE_PROGRAM;
+extern GLuint COLOR_PROGRAM;
+extern GLuint LIGHT_MASK_PROGRAM;
 
 int set_attrib(
     GLuint program,
@@ -64,3 +64,4 @@ int set_uniform_3fv(
 int set_uniform_4fv(
     GLuint program, const char* name, GLfloat* data, int n_values
 );
+#endif

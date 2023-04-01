@@ -196,4 +196,6 @@ void main(void) {
     world_pos_tex = fs_world_pos;
     normals_tex = normal;
     diffuse_tex = vec4(diffuse_color, 1.0);
+
+    diffuse_tex = vec4(0.0, 1.0, 0.0, 1.0);
 }
