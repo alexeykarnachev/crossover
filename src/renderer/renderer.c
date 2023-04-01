@@ -94,9 +94,13 @@ void render_scene(float dt) {
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_POS_VBO);
     set_attrib(CIRCLE_PROGRAM, "vs_pos", 2, GL_FLOAT, 0);
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_GEOMETRY_VBO);
-    set_attrib(CIRCLE_PROGRAM, "vs_geometry", 2, GL_FLOAT, 0);
+    set_attrib(CIRCLE_PROGRAM, "vs_geometry", 4, GL_FLOAT, 0);
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_RENDER_LAYER_VBO);
     set_attrib(CIRCLE_PROGRAM, "vs_render_layer", 1, GL_FLOAT, 0);
+
+    glVertexAttribDivisor(0, 0);
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
 
     glDrawArraysInstanced(
         GL_TRIANGLE_FAN, 0, MAX_N_POLYGON_VERTICES, N_CIRCLES

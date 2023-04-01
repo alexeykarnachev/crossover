@@ -29,7 +29,6 @@ vec2 rotate(vec2 point, vec2 center, float angle) {
 
 vec2 world2proj(vec2 world_pos) {
     vec2 half_size = vec2(0.5 * vec2(camera.view_width, camera.view_height));
-
     vec2 view_pos = rotate(world_pos, vec2(0.0, 0.0), -camera.orientation);
     view_pos -= camera.position;
 
@@ -37,10 +36,9 @@ vec2 world2proj(vec2 world_pos) {
 }
 
 void main(void) {
-    // fs_uv_pos = vs_uv_pos;
-    // fs_world_pos = vec3(vs_world_pos, elevation);
-
-    // vec2 proj_pos = world2proj(vs_world_pos); 
-    // gl_Position = vec4(proj_pos, render_layer, 1.0);
-    gl_Position = vec4(vs_pos, 0.0, 1.0);
+    float radius = vs_geometry.w;
+    vec2 translation = vs_geometry.xy;
+    vec2 world_pos = vs_pos * radius + translation;
+    vec2 proj_pos = world2proj(world_pos);
+    gl_Position = vec4(proj_pos, vs_render_layer, 1.0);
 }

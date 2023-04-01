@@ -41,10 +41,11 @@ static void init_circle_vao(void) {
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribDivisor(0, 0);
     GL_CHECK_ERRORS();
 
     // -------------------------------------------------------------------
-    // Circle instance data: vec3(x, y, elevation, radius)
+    // Circle instance data: vec4(x, y, elevation, radius)
     glGenBuffers(1, &CIRCLE_GEOMETRY_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_GEOMETRY_VBO);
     glBufferData(
@@ -71,7 +72,7 @@ static void init_circle_vao(void) {
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(2, 1);
     GL_CHECK_ERRORS();
 
     // Bind default back
