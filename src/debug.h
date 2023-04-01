@@ -23,6 +23,7 @@ typedef struct Debug {
 
     struct shading {
         int materials;
+        int lights;
         int visions;
         int wireframe;
         int grid;

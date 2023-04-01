@@ -1073,6 +1073,7 @@ static void render_debug_inspector(void) {
 
     if (igTreeNodeEx_Str("Shading", 0)) {
         igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
+        igCheckbox("Lights", (bool*)(&DEBUG.shading.lights));
         igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
 
         igSeparator();

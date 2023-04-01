@@ -287,49 +287,52 @@ void render_scene(float dt) {
     static char power_name[32];
 
     int n_lights = 0;
-    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        if (n_lights == MAX_N_LIGHTS) {
-            break;
-        }
+    if (DEBUG.shading.lights == 1) {
+        for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+            if (n_lights == MAX_N_LIGHTS) {
+                break;
+            }
 
-        if (!check_if_entity_has_component(
-                entity, LIGHT_COMPONENT | TRANSFORMATION_COMPONENT
-            )) {
-            continue;
-        }
+            if (!check_if_entity_has_component(
+                    entity, LIGHT_COMPONENT | TRANSFORMATION_COMPONENT
+                )) {
+                continue;
+            }
 
-        Transformation transformation = SCENE.transformations[entity];
-        Light light = SCENE.lights[entity];
+            Transformation transformation = SCENE.transformations[entity];
+            Light light = SCENE.lights[entity];
 
-        sprintf(color_name, "lights[%d].color", n_lights);
-        sprintf(attenuation_name, "lights[%d].attenuation", n_lights);
-        sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
-        sprintf(vec_name, "lights[%d].vec", n_lights);
-        sprintf(power_name, "lights[%d].power", n_lights);
+            sprintf(color_name, "lights[%d].color", n_lights);
+            sprintf(attenuation_name, "lights[%d].attenuation", n_lights);
+            sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
+            sprintf(vec_name, "lights[%d].vec", n_lights);
+            sprintf(power_name, "lights[%d].power", n_lights);
 
-        set_uniform_3fv(program, color_name, (float*)&light.color, 1);
-        set_uniform_3fv(
-            program, attenuation_name, (float*)&light.attenuation, 1
-        );
-        set_uniform_1f(program, power_name, light.power);
-        set_uniform_1i(program, is_dir_name, light.is_dir);
-
-        if (light.is_dir == 1) {
+            set_uniform_3fv(program, color_name, (float*)&light.color, 1);
             set_uniform_3fv(
-                program, vec_name, (float*)&light.direction, 1
+                program, attenuation_name, (float*)&light.attenuation, 1
             );
-        } else {
-            Vec3 position = vec3(
-                transformation.curr_position.x,
-                transformation.curr_position.y,
-                transformation.elevation
-            );
-            set_uniform_3fv(program, vec_name, (float*)&position, 1);
-        }
+            set_uniform_1f(program, power_name, light.power);
+            set_uniform_1i(program, is_dir_name, light.is_dir);
 
-        n_lights += 1;
+            if (light.is_dir == 1) {
+                set_uniform_3fv(
+                    program, vec_name, (float*)&light.direction, 1
+                );
+            } else {
+                Vec3 position = vec3(
+                    transformation.curr_position.x,
+                    transformation.curr_position.y,
+                    transformation.elevation
+                );
+                set_uniform_3fv(program, vec_name, (float*)&position, 1);
+            }
+
+            n_lights += 1;
+        }
     }
 
+    set_uniform_1i(program, "enable_lights", DEBUG.shading.lights);
     set_uniform_1i(program, "n_lights", n_lights);
 
     // TODO: Factor out these bindings

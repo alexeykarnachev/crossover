@@ -16,6 +16,7 @@ uniform sampler2D world_pos_tex;
 uniform sampler2D normals_tex;
 uniform sampler2D diffuse_tex;
 
+uniform int enable_lights;
 uniform int n_lights;
 uniform Light lights[MAX_N_LIGHTS];
 
@@ -28,7 +29,7 @@ void main(void) {
     vec3 diffuse_color = texture(diffuse_tex, uv).xyz;
 
     vec3 color = vec3(0.0);
-    if (length(normal) > 0.000001) {
+    if (enable_lights == 1 && length(normal) > 0.000001) {
         normal = normalize(normal);
 
         for (int i = 0; i < min(MAX_N_LIGHTS, n_lights); ++i) {
