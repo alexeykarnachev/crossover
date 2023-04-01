@@ -24,11 +24,18 @@ typedef struct GBuffer {
     GLuint diffuse_tex;
 } GBuffer;
 
+typedef struct LightMaskBuffer {
+    GLuint fbo;
+    GLuint light_mask_tex;
+} LightMaskBuffer;
+
 extern GLuint POLYGON_VAO;
 extern GLuint POLYGON_VBO;
 extern GBuffer GBUFFER;
+extern LightMaskBuffer LIGHT_MASK_BUFFER;
 extern GLuint PRIMITIVE_PROGRAM;
 extern GLuint COLOR_PROGRAM;
+extern GLuint LIGHT_MASK_PROGRAM;
 
 int set_attrib(
     GLuint program,
@@ -39,6 +46,7 @@ int set_attrib(
 );
 
 int set_uniform_1i(GLuint program, const char* name, GLint val);
+int set_uniform_1ui(GLuint program, const char* name, GLuint val);
 int set_uniform_2iv(
     GLuint program, const char* name, GLint* data, int n_values
 );

@@ -13,9 +13,11 @@
 GLuint POLYGON_VAO;
 GLuint POLYGON_VBO;
 GBuffer GBUFFER;
+LightMaskBuffer LIGHT_MASK_BUFFER;
 
 GLuint PRIMITIVE_PROGRAM;
 GLuint COLOR_PROGRAM;
+GLuint LIGHT_MASK_PROGRAM;
 
 static void init_polygon_vao(void) {
     glCreateVertexArrays(1, &POLYGON_VAO);
@@ -149,6 +151,11 @@ static int init_all_programs(void) {
         COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
     );
 
+    LIGHT_MASK_PROGRAM = glCreateProgram();
+    ok &= create_program(
+        LIGHT_MASK_PROGRAM, PRIMITIVE_VERT_SHADER, LIGHT_MASK_FRAG_SHADER
+    );
+
     return ok;
 }
 
@@ -278,6 +285,40 @@ static int init_gbuffer(void) {
     return 1;
 }
 
+static int init_light_mask_buffer(void) {
+    glGenFramebuffers(1, &LIGHT_MASK_BUFFER.fbo);
+
+    create_texture_2d(
+        &LIGHT_MASK_BUFFER.light_mask_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGBA32F,
+        GL_RGBA,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    glBindFramebuffer(GL_FRAMEBUFFER, LIGHT_MASK_BUFFER.fbo);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 0,
+        GL_TEXTURE_2D,
+        LIGHT_MASK_BUFFER.light_mask_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    GLuint buffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, buffers);
+    GL_CHECK_ERRORS();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return 1;
+}
+
 static int get_attrib_location(
     GLuint program, GLuint* loc, const char* name
 ) {
@@ -322,6 +363,7 @@ void init_gl(void) {
     init_polygon_vao();
     init_all_programs();
     init_gbuffer();
+    init_light_mask_buffer();
 }
 
 #define _GET_UNIFORM_LOC \
@@ -353,6 +395,12 @@ int set_attrib(
 int set_uniform_1i(GLuint program, const char* name, GLint val) {
     _GET_UNIFORM_LOC
     glUniform1i(loc, val);
+    return 1;
+}
+
+int set_uniform_1ui(GLuint program, const char* name, GLuint val) {
+    _GET_UNIFORM_LOC
+    glUniform1ui(loc, val);
     return 1;
 }
 

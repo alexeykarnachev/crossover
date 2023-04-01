@@ -1,6 +1,6 @@
 #version 460 core
 
-#define MAX_N_LIGHTS 64
+#define MAX_N_LIGHTS 32
 
 struct Light {
     vec3 color;
@@ -15,6 +15,7 @@ in vec2 fs_uv_pos;
 uniform sampler2D world_pos_tex;
 uniform sampler2D normals_tex;
 uniform sampler2D diffuse_tex;
+uniform sampler2D light_mask_tex;
 
 uniform int enable_lights;
 uniform int n_lights;
@@ -27,29 +28,31 @@ void main(void) {
     vec3 world_pos = texture(world_pos_tex, uv).xyz;
     vec3 normal = texture(normals_tex, uv).xyz;
     vec3 diffuse_color = texture(diffuse_tex, uv).xyz;
+    int light_mask = int(texture(light_mask_tex, uv).r);
 
     vec3 color = vec3(0.0);
     if (enable_lights == 1 && length(normal) > 0.000001) {
         normal = normalize(normal);
 
         for (int i = 0; i < min(MAX_N_LIGHTS, n_lights); ++i) {
-            Light light = lights[i];
-            
-            vec3 light_dir;
-            float attenuation;
-            if (light.is_dir == 1) {
-                light_dir = normalize(light.vec);
-                attenuation = 1.0;
-            } else {
-                vec3 light_to_pos = world_pos - light.vec;
-                float light_dist = length(light_to_pos);
-                light_dir = normalize(light_to_pos);
-                attenuation = 1.0 / dot(light.attenuation, vec3(1.0, light_dist, light_dist * light_dist));
+            if ((light_mask & 1 << i) != 0) {
+                Light light = lights[i];
+                
+                vec3 light_dir;
+                float attenuation;
+                if (light.is_dir == 1) {
+                    light_dir = normalize(light.vec);
+                    attenuation = 1.0;
+                } else {
+                    vec3 light_to_pos = world_pos - light.vec;
+                    float light_dist = length(light_to_pos);
+                    light_dir = normalize(light_to_pos);
+                    attenuation = 1.0 / dot(light.attenuation, vec3(1.0, light_dist, light_dist * light_dist));
+                }
+
+                float diffuse = max(dot(normal, -light_dir), 0.0);
+                color += diffuse_color * diffuse * light.color * light.power * attenuation;
             }
-
-            float diffuse = max(dot(normal, -light_dir), 0.0);
-            color += diffuse_color * diffuse * light.color * light.power * attenuation;
-
         }
     } else {
         color = diffuse_color;

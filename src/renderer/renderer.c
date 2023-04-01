@@ -124,13 +124,12 @@ static void set_material_shape_uniform(
 }
 
 static RenderCall prepare_primitive_render_call(
+    GLuint program,
     Transformation transformation,
     Primitive primitive,
     MaterialShape material_shape,
     float render_layer
 ) {
-    GLuint program = PRIMITIVE_PROGRAM;
-    glUseProgram(program);
     set_uniform_camera(program, SCENE.transformations[SCENE.camera]);
     set_uniform_1i(program, "primitive_type", primitive.type);
     set_uniform_1f(program, "render_layer", render_layer);
@@ -205,13 +204,42 @@ static void execute_render_call(RenderCall render_call, int fill_type) {
 }
 
 void render_scene(float dt) {
-    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
-    glViewport(0, 0, GBUFFER_WIDTH, GBUFFER_HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // -------------------------------------------------------------------
+    // Collect lights from scene
+    static Light lights[MAX_N_LIGHTS];
+    static Primitive light_vision_primitives[MAX_N_LIGHTS];
+    static Transformation light_transformations[MAX_N_LIGHTS];
+    int n_lights = 0;
+    for (int entity = 0; entity < SCENE.n_entities; ++entity) {
+        if (n_lights == MAX_N_LIGHTS) {
+            break;
+        }
+
+        if (!check_if_entity_has_component(
+                entity, LIGHT_COMPONENT | TRANSFORMATION_COMPONENT
+            )) {
+            continue;
+        }
+
+        Transformation transformation = SCENE.transformations[entity];
+        Light light = SCENE.lights[entity];
+
+        lights[n_lights] = light;
+        light_vision_primitives[n_lights] = init_circle_primitive(
+            light.radius
+        );
+        light_transformations[n_lights] = transformation;
+
+        n_lights += 1;
+    }
 
     // -------------------------------------------------------------------
     // Render primitives
+    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
+    glViewport(0, 0, GBUFFER_WIDTH, GBUFFER_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
+    glUseProgram(PRIMITIVE_PROGRAM);
 
     int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
                              | MATERIAL_SHAPE_COMPONENT
@@ -227,7 +255,11 @@ void render_scene(float dt) {
         float render_layer = SCENE.render_layers[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
-            transformation, primitive, material_shape, render_layer
+            PRIMITIVE_PROGRAM,
+            transformation,
+            primitive,
+            material_shape,
+            render_layer
         );
 
         if (DEBUG.shading.materials) {
@@ -239,10 +271,15 @@ void render_scene(float dt) {
         }
     }
 
+    // -------------------------------------------------------------------
+    // Render bullets
+    glUseProgram(PRIMITIVE_PROGRAM);
     render_bullets(dt);
 
     // -------------------------------------------------------------------
     // Render debug and editor-related primitives
+    glUseProgram(PRIMITIVE_PROGRAM);
+
     if (!EDITOR.is_playing) {
         render_entity_handles();
         render_colliders();
@@ -258,6 +295,7 @@ void render_scene(float dt) {
     for (int i = 0; i < DEBUG.n_primitives; ++i) {
         DebugPrimitive dp = DEBUG.primitives[i];
         RenderCall render_call = prepare_primitive_render_call(
+            PRIMITIVE_PROGRAM,
             dp.transformation,
             dp.primitive,
             init_plane_material_shape(init_color_material(dp.color)),
@@ -268,6 +306,31 @@ void render_scene(float dt) {
 
     DEBUG.n_primitives = 0;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    // -------------------------------------------------------------------
+    // Render light mask
+    glBindFramebuffer(GL_FRAMEBUFFER, LIGHT_MASK_BUFFER.fbo);
+    glViewport(0, 0, GBUFFER_WIDTH, GBUFFER_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
+    glUseProgram(LIGHT_MASK_PROGRAM);
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    for (int i = 0; i < n_lights; ++i) {
+        RenderCall render_call = prepare_primitive_render_call(
+            LIGHT_MASK_PROGRAM,
+            light_transformations[i],
+            light_vision_primitives[i],
+            init_default_plane_material_shape(),
+            0.0
+        );
+        set_uniform_1i(LIGHT_MASK_PROGRAM, "light_idx", i);
+        execute_render_call(render_call, FILL);
+    }
+    glDisable(GL_BLEND);
 
     // -------------------------------------------------------------------
     // Blit color to the output frame buffer
@@ -286,27 +349,16 @@ void render_scene(float dt) {
     static char vec_name[32];
     static char power_name[32];
 
-    int n_lights = 0;
     if (DEBUG.shading.lights == 1) {
-        for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-            if (n_lights == MAX_N_LIGHTS) {
-                break;
-            }
+        for (int i = 0; i < n_lights; ++i) {
+            Transformation transformation = light_transformations[i];
+            Light light = lights[i];
 
-            if (!check_if_entity_has_component(
-                    entity, LIGHT_COMPONENT | TRANSFORMATION_COMPONENT
-                )) {
-                continue;
-            }
-
-            Transformation transformation = SCENE.transformations[entity];
-            Light light = SCENE.lights[entity];
-
-            sprintf(color_name, "lights[%d].color", n_lights);
-            sprintf(attenuation_name, "lights[%d].attenuation", n_lights);
-            sprintf(is_dir_name, "lights[%d].is_dir", n_lights);
-            sprintf(vec_name, "lights[%d].vec", n_lights);
-            sprintf(power_name, "lights[%d].power", n_lights);
+            sprintf(color_name, "lights[%d].color", i);
+            sprintf(attenuation_name, "lights[%d].attenuation", i);
+            sprintf(is_dir_name, "lights[%d].is_dir", i);
+            sprintf(vec_name, "lights[%d].vec", i);
+            sprintf(power_name, "lights[%d].power", i);
 
             set_uniform_3fv(program, color_name, (float*)&light.color, 1);
             set_uniform_3fv(
@@ -327,8 +379,6 @@ void render_scene(float dt) {
                 );
                 set_uniform_3fv(program, vec_name, (float*)&position, 1);
             }
-
-            n_lights += 1;
         }
     }
 
@@ -347,6 +397,10 @@ void render_scene(float dt) {
     set_uniform_1i(program, "diffuse_tex", 2);
     glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, GBUFFER.diffuse_tex);
+
+    set_uniform_1i(program, "light_mask_tex", 3);
+    glActiveTexture(GL_TEXTURE0 + 3);
+    glBindTexture(GL_TEXTURE_2D, LIGHT_MASK_BUFFER.light_mask_tex);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

@@ -771,7 +771,10 @@ static void render_component_inspector(int entity, ComponentType type) {
                 0
             );
             ig_drag_float(
-                "power", (float*)&light->power, -0.0, 1000.0, 1.0, 0
+                "radius", (float*)&light->radius, 0.0, 100.0, 1.0, 0
+            );
+            ig_drag_float(
+                "power", (float*)&light->power, 0.0, 1000.0, 1.0, 0
             );
 
             igCheckbox("is dir.", (bool*)(&light->is_dir));
