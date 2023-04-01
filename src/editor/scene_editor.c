@@ -465,7 +465,8 @@ static void render_brain_ai_controller_inspector(int entity) {
     }
 }
 
-static void render_material(Material* material) {
+static void render_material(MaterialShape* material_shape, int idx) {
+    Material* material = &material_shape->materials[idx];
     int type = render_component_type_picker(
         "Material",
         material->type,
@@ -555,6 +556,21 @@ static void render_material(Material* material) {
             break;
         }
     }
+
+    if (material_shape->type == CUBE_MATERIAL_SHAPE) {
+        if (igButton("Apply to all sides", IG_VEC2_ZERO)) {
+            for (int i = 0; i < 5; ++i) {
+                material_shape->materials[i] = *material;
+            }
+
+            if (idx < 4) {
+                float side_size = material_shape->side_sizes[idx];
+                for (int i = 0; i < 4; ++i) {
+                    material_shape->side_sizes[i] = side_size;
+                }
+            }
+        }
+    }
 }
 
 static void render_material_shape_side(
@@ -566,7 +582,7 @@ static void render_material_shape_side(
         ig_same_line();
     }
     if (igBeginMenu(name, 1)) {
-        render_material(&material_shape->materials[idx]);
+        render_material(material_shape, idx);
         igEndMenu();
     }
 }
@@ -725,7 +741,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             change_material_shape_type(material_shape, type);
             switch (type) {
                 case PLANE_MATERIAL_SHAPE: {
-                    render_material(&material_shape->materials[0]);
+                    render_material(material_shape, 0);
                     break;
                 }
                 case CUBE_MATERIAL_SHAPE: {
