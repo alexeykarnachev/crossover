@@ -1,7 +1,7 @@
 # CROSSOVER
 A little 2d sandbox to play with genetic AI training with several fancy features (dynamic light, pseudo 3d materials, game engine-like editor)
 
-![thumbnail](./imgs/thumbnail.png)
+![thumbnail](./thumbnail.png)
 
 
 ## Quick Start
