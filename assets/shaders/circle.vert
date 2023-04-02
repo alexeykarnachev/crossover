@@ -12,11 +12,12 @@ struct Camera {
 in vec2 vs_pos;
 in vec4 vs_geometry;  // vec3(x, y, elevation, radius)
 in float vs_render_layer;
+in vec3 vs_color;
 
 uniform Camera camera;
 
 out vec3 fs_world_pos;
-out vec2 fs_uv_pos;
+out vec3 fs_color;
 
 vec2 rotate(vec2 point, vec2 center, float angle) {
     vec2 p0 = point - center;
@@ -38,7 +39,12 @@ vec2 world2proj(vec2 world_pos) {
 void main(void) {
     float radius = vs_geometry.w;
     vec2 translation = vs_geometry.xy;
+    float elevation = vs_geometry.z;
     vec2 world_pos = vs_pos * radius + translation;
     vec2 proj_pos = world2proj(world_pos);
+
+    fs_world_pos = vec3(world_pos, elevation);
+    fs_color = vs_color;
+
     gl_Position = vec4(proj_pos, vs_render_layer, 1.0);
 }

@@ -35,11 +35,12 @@ static GLuint CIRCLE_VAO;
 static GLuint CIRCLE_POS_VBO;
 static GLuint CIRCLE_GEOMETRY_VBO;
 static GLuint CIRCLE_RENDER_LAYER_VBO;
+static GLuint CIRCLE_COLOR_VBO;
 
 static int N_CIRCLES = 0;
-static float CIRCLE_POS_DATA[MAX_N_POLYGON_VERTICES * 2];
 static float CIRCLE_GEOMETRY_DATA[MAX_N_ENTITIES * 4];
 static float CIRCLE_RENDER_LAYER_DATA[MAX_N_ENTITIES];
+static float CIRCLE_COLOR_DATA[MAX_N_ENTITIES * 3];
 
 static void set_uniform_camera(GLuint program, Transformation camera) {
     CameraFrustum frustum = get_camera_frustum();
@@ -63,9 +64,18 @@ static void update_buffers(void) {
             continue;
         }
 
+        MaterialShape material_shape = SCENE.material_shapes[entity];
+        MaterialShapeType material_shape_type = material_shape.type;
+        MaterialType material_type = material_shape.materials[0].type;
+        int can_be_instanced = material_shape_type == PLANE_MATERIAL_SHAPE
+                               && material_type == COLOR_MATERIAL;
+        if (can_be_instanced != 1) {
+            continue;
+        }
+
+        Vec3 color = material_shape.materials[0].color;
         Primitive primitive = SCENE.primitives[entity];
         Transformation transformation = SCENE.transformations[entity];
-        MaterialShape material_shape = SCENE.material_shapes[entity];
         float render_layer = SCENE.render_layers[entity];
 
         switch (primitive.type) {
@@ -78,7 +88,13 @@ static void update_buffers(void) {
                     = transformation.elevation;
                 CIRCLE_GEOMETRY_DATA[N_CIRCLES * 4 + 3]
                     = primitive.p.circle.radius;
+
                 CIRCLE_RENDER_LAYER_DATA[N_CIRCLES] = render_layer;
+
+                CIRCLE_COLOR_DATA[N_CIRCLES * 3 + 0] = color.x;
+                CIRCLE_COLOR_DATA[N_CIRCLES * 3 + 1] = color.y;
+                CIRCLE_COLOR_DATA[N_CIRCLES * 3 + 2] = color.z;
+
                 N_CIRCLES += 1;
                 break;
             }
@@ -100,14 +116,13 @@ static void update_buffers(void) {
         N_CIRCLES * sizeof(float),
         CIRCLE_RENDER_LAYER_DATA
     );
-}
 
-static void set_uniform_material_shape(
-    GLuint program, MaterialShape material_shape
-) {
-    float* color = (float*)&material_shape.materials[0].color;
-    set_uniform_3fv(
-        program, "material_shape.materials[0].color", color, 1
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_COLOR_VBO);
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        0,
+        N_CIRCLES * sizeof(float) * 3,
+        CIRCLE_COLOR_DATA
     );
 }
 
@@ -121,16 +136,17 @@ static void render_circles(void) {
     set_attrib(CIRCLE_PROGRAM, "vs_geometry", 4, GL_FLOAT, 0);
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_RENDER_LAYER_VBO);
     set_attrib(CIRCLE_PROGRAM, "vs_render_layer", 1, GL_FLOAT, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_COLOR_VBO);
+    set_attrib(CIRCLE_PROGRAM, "vs_color", 3, GL_FLOAT, 0);
 
     glVertexAttribDivisor(0, 0);
     glVertexAttribDivisor(1, 1);
     glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
 
     set_uniform_camera(
         CIRCLE_PROGRAM, SCENE.transformations[SCENE.camera]
     );
-    MaterialShape material_shape = init_default_plane_material_shape();
-    set_uniform_material_shape(CIRCLE_PROGRAM, material_shape);
 
     glDrawArraysInstanced(
         GL_TRIANGLE_FAN, 0, MAX_N_POLYGON_VERTICES, N_CIRCLES
@@ -198,6 +214,23 @@ static void init_circle_vao(void) {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
     glVertexAttribDivisor(2, 1);
+    GL_CHECK_ERRORS();
+
+    // -------------------------------------------------------------------
+    // Circle instance data: color
+    glGenBuffers(1, &CIRCLE_COLOR_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_COLOR_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        MAX_N_ENTITIES * 3 * sizeof(float),
+        0,
+        GL_DYNAMIC_DRAW
+    );
+    GL_CHECK_ERRORS();
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribDivisor(3, 1);
     GL_CHECK_ERRORS();
 
     // Bind default back
