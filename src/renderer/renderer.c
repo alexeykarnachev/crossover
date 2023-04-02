@@ -102,13 +102,18 @@ static void update_buffers(void) {
     );
 }
 
+static void set_uniform_material_shape(
+    GLuint program, MaterialShape material_shape
+) {
+    float* color = (float*)&material_shape.materials[0].color;
+    set_uniform_3fv(
+        program, "material_shape.materials[0].color", color, 1
+    );
+}
+
 static void render_circles(void) {
     glBindVertexArray(CIRCLE_VAO);
     glUseProgram(CIRCLE_PROGRAM);
-
-    set_uniform_camera(
-        CIRCLE_PROGRAM, SCENE.transformations[SCENE.camera]
-    );
 
     glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_POS_VBO);
     set_attrib(CIRCLE_PROGRAM, "vs_pos", 2, GL_FLOAT, 0);
@@ -120,6 +125,12 @@ static void render_circles(void) {
     glVertexAttribDivisor(0, 0);
     glVertexAttribDivisor(1, 1);
     glVertexAttribDivisor(2, 1);
+
+    set_uniform_camera(
+        CIRCLE_PROGRAM, SCENE.transformations[SCENE.camera]
+    );
+    MaterialShape material_shape = init_default_plane_material_shape();
+    set_uniform_material_shape(CIRCLE_PROGRAM, material_shape);
 
     glDrawArraysInstanced(
         GL_TRIANGLE_FAN, 0, MAX_N_POLYGON_VERTICES, N_CIRCLES
