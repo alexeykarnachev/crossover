@@ -12,6 +12,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct GBuffer {
+    GLuint fbo;
+    GLuint rbo;
+    GLuint world_pos_tex;
+    GLuint normals_tex;
+    GLuint diffuse_tex;
+} GBuffer;
+
+typedef struct LightMaskBuffer {
+    GLuint fbo;
+    GLuint light_mask_tex;
+} LightMaskBuffer;
+
+static GBuffer GBUFFER;
+static LightMaskBuffer LIGHT_MASK_BUFFER;
+
+static GLuint CIRCLE_PROGRAM;
+static GLuint DEBUG_SCREEN_RECT_PROGRAM;
+
+static GLuint CIRCLE_VAO;
+static GLuint CIRCLE_POS_VBO;
+static GLuint CIRCLE_GEOMETRY_VBO;
+static GLuint CIRCLE_RENDER_LAYER_VBO;
+
 static int N_CIRCLES = 0;
 static float CIRCLE_POS_DATA[MAX_N_POLYGON_VERTICES * 2];
 static float CIRCLE_GEOMETRY_DATA[MAX_N_ENTITIES * 4];
@@ -78,13 +102,8 @@ static void update_buffers(void) {
     );
 }
 
-void render_scene(float dt) {
-    update_buffers();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
-    glViewport(0, 0, GBUFFER_WIDTH, GBUFFER_HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_CULL_FACE);
+static void render_circles(void) {
+    glBindVertexArray(CIRCLE_VAO);
     glUseProgram(CIRCLE_PROGRAM);
 
     set_uniform_camera(
@@ -105,8 +124,197 @@ void render_scene(float dt) {
     glDrawArraysInstanced(
         GL_TRIANGLE_FAN, 0, MAX_N_POLYGON_VERTICES, N_CIRCLES
     );
+}
+
+void render_scene(float dt) {
+    update_buffers();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glUseProgram(0);
-    glEnable(GL_CULL_FACE);
+    glViewport(0, 0, APP.window_width, APP.window_height);
+    glDisable(GL_CULL_FACE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    render_circles();
+}
+
+static void init_circle_vao(void) {
+    Vec2 vertices[MAX_N_POLYGON_VERTICES];
+    get_unit_circle_fan_vertices(vertices, MAX_N_POLYGON_VERTICES);
+
+    glCreateVertexArrays(1, &CIRCLE_VAO);
+    glBindVertexArray(CIRCLE_VAO);
+
+    // -------------------------------------------------------------------
+    // Circle vertex data (positions which are common for all instances)
+    glGenBuffers(1, &CIRCLE_POS_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_POS_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER, sizeof(vertices), (float*)vertices, GL_STATIC_DRAW
+    );
+    GL_CHECK_ERRORS();
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribDivisor(0, 0);
+    GL_CHECK_ERRORS();
+
+    // -------------------------------------------------------------------
+    // Circle instance data: vec4(x, y, elevation, radius)
+    glGenBuffers(1, &CIRCLE_GEOMETRY_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_GEOMETRY_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        MAX_N_ENTITIES * 4 * sizeof(float),
+        0,
+        GL_DYNAMIC_DRAW
+    );
+    GL_CHECK_ERRORS();
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribDivisor(1, 1);
+    GL_CHECK_ERRORS();
+
+    // -------------------------------------------------------------------
+    // Circle instance data: render_layer
+    glGenBuffers(1, &CIRCLE_RENDER_LAYER_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_RENDER_LAYER_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER, MAX_N_ENTITIES * sizeof(float), 0, GL_DYNAMIC_DRAW
+    );
+    GL_CHECK_ERRORS();
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribDivisor(2, 1);
+    GL_CHECK_ERRORS();
+
+    // Bind default back
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+static int init_all_programs(void) {
+    int ok = 1;
+
+    CIRCLE_PROGRAM = glCreateProgram();
+    ok &= init_program(
+        CIRCLE_PROGRAM, CIRCLE_VERT_SHADER, MATERIAL_FRAG_SHADER
+    );
+
+    DEBUG_SCREEN_RECT_PROGRAM = glCreateProgram();
+    ok &= init_program(
+        DEBUG_SCREEN_RECT_PROGRAM,
+        SCREEN_RECT_VERT_SHADER,
+        PLANE_COLOR_FRAG_SHADER
+    );
+
+    // COLOR_PROGRAM = glCreateProgram();
+    // ok &= init_program(
+    //     COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
+    // );
+
+    // LIGHT_MASK_PROGRAM = glCreateProgram();
+    // ok &= init_program(
+    //     LIGHT_MASK_PROGRAM, PRIMITIVE_VERT_SHADER,
+    //     LIGHT_MASK_FRAG_SHADER
+    // );
+
+    return ok;
+}
+
+static int init_gbuffer(void) {
+    // TODO: Factor out textures creations (a lot of repetitions here)
+    glGenFramebuffers(1, &GBUFFER.fbo);
+    glGenRenderbuffers(1, &GBUFFER.rbo);
+
+    init_texture_2d(
+        &GBUFFER.world_pos_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGB32F,
+        GL_RGB,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    init_texture_2d(
+        &GBUFFER.normals_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGB32F,
+        GL_RGB,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    init_texture_2d(
+        &GBUFFER.diffuse_tex,
+        NULL,
+        0,
+        GBUFFER_WIDTH,
+        GBUFFER_HEIGHT,
+        GL_RGBA32F,
+        GL_RGBA,
+        GL_FLOAT,
+        GL_NEAREST
+    );
+
+    glBindRenderbuffer(GL_RENDERBUFFER, GBUFFER.rbo);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER, GL_DEPTH_COMPONENT, GBUFFER_WIDTH, GBUFFER_HEIGHT
+    );
+    GL_CHECK_ERRORS();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 0,
+        GL_TEXTURE_2D,
+        GBUFFER.world_pos_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 1,
+        GL_TEXTURE_2D,
+        GBUFFER.normals_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + 2,
+        GL_TEXTURE_2D,
+        GBUFFER.diffuse_tex,
+        0
+    );
+    GL_CHECK_ERRORS();
+
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, GBUFFER.rbo
+    );
+    GL_CHECK_ERRORS();
+
+    GLuint buffers[3] = {
+        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, buffers);
+    GL_CHECK_ERRORS();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return 1;
+}
+
+void init_renderer(void) {
+    init_all_programs();
+    init_circle_vao();
+    // init_gbuffer();
 }

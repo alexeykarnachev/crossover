@@ -6,79 +6,9 @@
 #include "../renderer.h"
 #include "../utils.h"
 #include <errno.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-GBuffer GBUFFER;
-LightMaskBuffer LIGHT_MASK_BUFFER;
-
-GLuint CIRCLE_PROGRAM;
-GLuint COLOR_PROGRAM;
-GLuint LIGHT_MASK_PROGRAM;
-
-GLuint CIRCLE_VAO;
-GLuint CIRCLE_POS_VBO;
-GLuint CIRCLE_GEOMETRY_VBO;
-GLuint CIRCLE_RENDER_LAYER_VBO;
-
-static void init_circle_vao(void) {
-    Vec2 vertices[MAX_N_POLYGON_VERTICES];
-    get_unit_circle_fan_vertices(vertices, MAX_N_POLYGON_VERTICES);
-
-    glCreateVertexArrays(1, &CIRCLE_VAO);
-    glBindVertexArray(CIRCLE_VAO);
-
-    // -------------------------------------------------------------------
-    // Circle vertex data (positions which are common for all instances)
-    glGenBuffers(1, &CIRCLE_POS_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_POS_VBO);
-    glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), (float*)vertices, GL_STATIC_DRAW
-    );
-    GL_CHECK_ERRORS();
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(0, 0);
-    GL_CHECK_ERRORS();
-
-    // -------------------------------------------------------------------
-    // Circle instance data: vec4(x, y, elevation, radius)
-    glGenBuffers(1, &CIRCLE_GEOMETRY_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_GEOMETRY_VBO);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        MAX_N_ENTITIES * 4 * sizeof(float),
-        0,
-        GL_DYNAMIC_DRAW
-    );
-    GL_CHECK_ERRORS();
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(1, 1);
-    GL_CHECK_ERRORS();
-
-    // -------------------------------------------------------------------
-    // Circle instance data: render_layer
-    glGenBuffers(1, &CIRCLE_RENDER_LAYER_VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CIRCLE_RENDER_LAYER_VBO);
-    glBufferData(
-        GL_ARRAY_BUFFER, MAX_N_ENTITIES * sizeof(float), 0, GL_DYNAMIC_DRAW
-    );
-    GL_CHECK_ERRORS();
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
-    glVertexAttribDivisor(2, 1);
-    GL_CHECK_ERRORS();
-
-    // Bind default back
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
 
 static int compile_program_source(
     const GLchar* source, GLenum shader_type, GLuint* shader
@@ -135,7 +65,7 @@ static int compile_program_file(
     return 1;
 }
 
-static int create_program(
+int init_program(
     GLuint program, const char* vert_file_path, const char* frag_file_path
 ) {
     GLuint vert_shader = 0;
@@ -177,37 +107,15 @@ static int create_program(
     return 1;
 }
 
-static int init_all_programs(void) {
-    int ok = 1;
-
-    CIRCLE_PROGRAM = glCreateProgram();
-    ok &= create_program(
-        CIRCLE_PROGRAM, CIRCLE_VERT_SHADER, MATERIAL_FRAG_SHADER
-    );
-
-    // COLOR_PROGRAM = glCreateProgram();
-    // ok &= create_program(
-    //     COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
-    // );
-
-    // LIGHT_MASK_PROGRAM = glCreateProgram();
-    // ok &= create_program(
-    //     LIGHT_MASK_PROGRAM, PRIMITIVE_VERT_SHADER,
-    //     LIGHT_MASK_FRAG_SHADER
-    // );
-
-    return ok;
-}
-
-static int create_texture_2d(
+int init_texture_2d(
     GLuint* tex,
     void* data,
-    size_t level,
-    size_t width,
-    size_t height,
-    size_t internal_format,
-    size_t format,
-    size_t type,
+    int level,
+    int width,
+    int height,
+    int internal_format,
+    int format,
+    int type,
     int filter
 ) {
     glCreateTextures(GL_TEXTURE_2D, 1, tex);
@@ -235,133 +143,7 @@ static int create_texture_2d(
     return 1;
 }
 
-static int init_gbuffer(void) {
-    // TODO: Factor out textures creations (a lot of repetitions here)
-    glGenFramebuffers(1, &GBUFFER.fbo);
-    glGenRenderbuffers(1, &GBUFFER.rbo);
-
-    create_texture_2d(
-        &GBUFFER.world_pos_tex,
-        NULL,
-        0,
-        GBUFFER_WIDTH,
-        GBUFFER_HEIGHT,
-        GL_RGB32F,
-        GL_RGB,
-        GL_FLOAT,
-        GL_NEAREST
-    );
-
-    create_texture_2d(
-        &GBUFFER.normals_tex,
-        NULL,
-        0,
-        GBUFFER_WIDTH,
-        GBUFFER_HEIGHT,
-        GL_RGB32F,
-        GL_RGB,
-        GL_FLOAT,
-        GL_NEAREST
-    );
-
-    create_texture_2d(
-        &GBUFFER.diffuse_tex,
-        NULL,
-        0,
-        GBUFFER_WIDTH,
-        GBUFFER_HEIGHT,
-        GL_RGBA32F,
-        GL_RGBA,
-        GL_FLOAT,
-        GL_NEAREST
-    );
-
-    glBindRenderbuffer(GL_RENDERBUFFER, GBUFFER.rbo);
-    glRenderbufferStorage(
-        GL_RENDERBUFFER, GL_DEPTH_COMPONENT, GBUFFER_WIDTH, GBUFFER_HEIGHT
-    );
-    GL_CHECK_ERRORS();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 0,
-        GL_TEXTURE_2D,
-        GBUFFER.world_pos_tex,
-        0
-    );
-    GL_CHECK_ERRORS();
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 1,
-        GL_TEXTURE_2D,
-        GBUFFER.normals_tex,
-        0
-    );
-    GL_CHECK_ERRORS();
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 2,
-        GL_TEXTURE_2D,
-        GBUFFER.diffuse_tex,
-        0
-    );
-    GL_CHECK_ERRORS();
-
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, GBUFFER.rbo
-    );
-    GL_CHECK_ERRORS();
-
-    GLuint buffers[3] = {
-        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(3, buffers);
-    GL_CHECK_ERRORS();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    return 1;
-}
-
-static int init_light_mask_buffer(void) {
-    glGenFramebuffers(1, &LIGHT_MASK_BUFFER.fbo);
-
-    create_texture_2d(
-        &LIGHT_MASK_BUFFER.light_mask_tex,
-        NULL,
-        0,
-        GBUFFER_WIDTH,
-        GBUFFER_HEIGHT,
-        GL_R32F,
-        GL_RED,
-        GL_FLOAT,
-        GL_NEAREST
-    );
-
-    glBindFramebuffer(GL_FRAMEBUFFER, LIGHT_MASK_BUFFER.fbo);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 0,
-        GL_TEXTURE_2D,
-        LIGHT_MASK_BUFFER.light_mask_tex,
-        0
-    );
-    GL_CHECK_ERRORS();
-
-    GLuint buffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, buffers);
-    GL_CHECK_ERRORS();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    return 1;
-}
-
-static int get_attrib_location(
-    GLuint program, GLuint* loc, const char* name
-) {
+int get_attrib_location(GLuint program, GLuint* loc, const char* name) {
     GLuint _loc = glGetAttribLocation(program, name);
     *loc = _loc;
 
@@ -379,9 +161,7 @@ static int get_attrib_location(
     return 1;
 }
 
-static int get_uniform_location(
-    GLuint program, GLuint* loc, const char* name
-) {
+int get_uniform_location(GLuint program, GLuint* loc, const char* name) {
     GLuint _loc = glGetUniformLocation(program, name);
     *loc = _loc;
 
@@ -397,13 +177,6 @@ static int get_uniform_location(
     }
 
     return 1;
-}
-
-void init_gl(void) {
-    init_all_programs();
-    init_circle_vao();
-    init_gbuffer();
-    init_light_mask_buffer();
 }
 
 #define _GET_UNIFORM_LOC \

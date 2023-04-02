@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     init_editor();
 
     init_app(WINDOW_WIDTH, WINDOW_HEIGHT);
-    init_gl();
+    init_renderer();
     init_debug();
 
     while (!APP.key_states[GLFW_KEY_ESCAPE]) {

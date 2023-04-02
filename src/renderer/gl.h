@@ -16,27 +16,20 @@
         } \
     } while (0)
 
-typedef struct GBuffer {
-    GLuint fbo;
-    GLuint rbo;
-    GLuint world_pos_tex;
-    GLuint normals_tex;
-    GLuint diffuse_tex;
-} GBuffer;
-
-typedef struct LightMaskBuffer {
-    GLuint fbo;
-    GLuint light_mask_tex;
-} LightMaskBuffer;
-
-extern GBuffer GBUFFER;
-extern LightMaskBuffer LIGHT_MASK_BUFFER;
-extern GLuint CIRCLE_PROGRAM;
-
-extern GLuint CIRCLE_VAO;
-extern GLuint CIRCLE_POS_VBO;
-extern GLuint CIRCLE_GEOMETRY_VBO;
-extern GLuint CIRCLE_RENDER_LAYER_VBO;
+int init_program(
+    GLuint program, const char* vert_file_path, const char* frag_file_path
+);
+int init_texture_2d(
+    GLuint* tex,
+    void* data,
+    int level,
+    int width,
+    int height,
+    int internal_format,
+    int format,
+    int type,
+    int filter
+);
 
 int set_attrib(
     GLuint program,
@@ -64,3 +57,5 @@ int set_uniform_3fv(
 int set_uniform_4fv(
     GLuint program, const char* name, GLfloat* data, int n_values
 );
+int get_attrib_location(GLuint program, GLuint* loc, const char* name);
+int get_uniform_location(GLuint program, GLuint* loc, const char* name);
