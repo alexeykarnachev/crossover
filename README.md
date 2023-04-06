@@ -16,5 +16,5 @@ Run
 ./bin/crossover
 ```
 
-I've tried to add some cross-platform support and part of the codebase has been adopted for it.
+I've tried to add some cross-platform support and part of the codebase has been adapted for it.
 Though, I didn't try to build it in any environment but Ubuntu 20.04.6 LTS
