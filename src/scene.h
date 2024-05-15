@@ -7,7 +7,7 @@
 #include "system.h"
 #include <stdint.h>
 
-#define N_SCENE_TILES N_X_SCENE_TILES* N_Y_SCENE_TILES
+#define N_SCENE_TILES N_X_SCENE_TILES *N_Y_SCENE_TILES
 
 typedef struct Scene {
     float time;
@@ -58,8 +58,8 @@ int reset_camera(void);
 Vec2 get_cursor_scene_pos(void);
 
 void reset_scene(void);
-void save_scene(const char* file_path, ResultMessage* res_msg);
-void load_scene(const char* file_path, ResultMessage* res_msg);
+void save_scene(const char *file_path, ResultMessage *res_msg);
+void load_scene(const char *file_path, ResultMessage *res_msg);
 void update_scene(float dt, int is_playing);
 void update_position(int entity, Vec2 position);
 void update_orientation(int entity, float orientation);

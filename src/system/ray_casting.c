@@ -4,9 +4,7 @@
 #include "../scene.h"
 #include <string.h>
 
-RayCastResult cast_ray(
-    Vec2 start, Vec2 ray, int target_components, int ray_owner
-) {
+RayCastResult cast_ray(Vec2 start, Vec2 ray, int target_components, int ray_owner) {
     int required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT
                              | target_components;
     RayCastResult result;
@@ -27,8 +25,7 @@ RayCastResult cast_ray(
     // detection. Could be factored out
     do {
         int tile = curr_tile.y * N_X_SCENE_TILES + curr_tile.x;
-        if (curr_tile.x != -1 && curr_tile.y != -1 && tile >= 0
-            && tile < N_SCENE_TILES) {
+        if (curr_tile.x != -1 && curr_tile.y != -1 && tile >= 0 && tile < N_SCENE_TILES) {
             append_array(&targets, &SCENE.tile_to_entities[tile]);
         }
 
@@ -57,8 +54,7 @@ RayCastResult cast_ray(
             continue;
         }
 
-        Transformation entity_transformation
-            = SCENE.transformations[entity];
+        Transformation entity_transformation = SCENE.transformations[entity];
         Primitive entity_collider = SCENE.colliders[entity];
 
         Vec2 collision_position;
@@ -79,11 +75,7 @@ RayCastResult cast_ray(
                 apply_transformation(vertices, nv, entity_transformation);
 
                 is_collided = intersect_line_with_polygon_nearest(
-                    start,
-                    add(start, ray),
-                    vertices,
-                    nv,
-                    &collision_position
+                    start, add(start, ray), vertices, nv, &collision_position
                 );
             }
         }
@@ -93,8 +85,7 @@ RayCastResult cast_ray(
         }
 
         float new_dist = dist(start, collision_position);
-        if (result.entity == -1
-            || new_dist < dist(start, result.position)) {
+        if (result.entity == -1 || new_dist < dist(start, result.position)) {
             result.position = collision_position;
             result.entity = entity;
         }

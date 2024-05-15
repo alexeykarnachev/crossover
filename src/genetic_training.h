@@ -36,7 +36,7 @@ typedef struct GeneticTraining {
     } evolution;
 } GeneticTraining;
 
-extern GeneticTraining* GENETIC_TRAINING;
+extern GeneticTraining *GENETIC_TRAINING;
 extern pid_t GENETIC_TRAINING_PID;
 
 void init_genetic_training(void);

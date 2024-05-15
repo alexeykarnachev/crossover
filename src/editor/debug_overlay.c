@@ -9,7 +9,7 @@
 #include "common.h"
 
 void render_debug_overlay(void) {
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
     ImVec2 position = {0, io->DisplaySize.y};
     ImVec2 pivot = {0, 1};
     igSetNextWindowPos(position, ImGuiCond_Always, pivot);
@@ -34,14 +34,9 @@ void render_debug_overlay(void) {
 
         ImVec4 color;
         switch (RESULT_MESSAGE.flag) {
-            case SUCCESS_RESULT:
-                color = IG_GREEN_COLOR;
-                break;
-            case FAIL_RESULT:
-                color = IG_RED_COLOR;
-                break;
-            default:
-                color = IG_YELLOW_COLOR;
+            case SUCCESS_RESULT: color = IG_GREEN_COLOR; break;
+            case FAIL_RESULT: color = IG_RED_COLOR; break;
+            default: color = IG_YELLOW_COLOR;
         }
         igTextColored(color, RESULT_MESSAGE.msg);
     }

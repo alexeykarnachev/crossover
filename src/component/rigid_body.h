@@ -9,7 +9,7 @@ typedef enum RigidBodyType {
 } RigidBodyType;
 
 extern RigidBodyType RIGID_BODY_TYPES[N_RIGID_BODY_TYPES];
-const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES];
+extern const char *RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES];
 
 typedef struct StaticRigidBody {
 } StaticRigidBody;
@@ -42,9 +42,7 @@ typedef struct RigidBody {
     } b;
 } RigidBody;
 
-void change_rigid_body_type(
-    RigidBody* rigid_body, RigidBodyType target_type
-);
+void change_rigid_body_type(RigidBody *rigid_body, RigidBodyType target_type);
 
 RigidBody init_static_rigid_body(void);
 RigidBody init_kinematic_rigid_body(void);
@@ -60,7 +58,5 @@ RigidBody init_default_static_rigid_body(void);
 RigidBody init_default_kinematic_rigid_body(void);
 RigidBody init_default_dynamic_rigid_body(void);
 
-void apply_move_force_to_rb(
-    RigidBody* rb, float move_orientation, float force_magnitude
-);
-void apply_angular_torque_to_rb(RigidBody* rb, float orientation_diff);
+void apply_move_force_to_rb(RigidBody *rb, float move_orientation, float force_magnitude);
+void apply_angular_torque_to_rb(RigidBody *rb, float orientation_diff);

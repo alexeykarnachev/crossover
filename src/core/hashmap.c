@@ -12,21 +12,20 @@
 
 HashMap init_hashmap(void) {
     int size = INITIAL_HASHMAP_CAPACITY * sizeof(HashMapItem);
-    HashMapItem* items = (HashMapItem*)malloc(size);
+    HashMapItem *items = (HashMapItem *)malloc(size);
     memset(items, 0, size);
-    HashMap hashmap = {
-        .items = items, .length = 0, .capacity = INITIAL_HASHMAP_CAPACITY};
+    HashMap hashmap = {.items = items, .length = 0, .capacity = INITIAL_HASHMAP_CAPACITY};
     return hashmap;
 }
 
-void destroy_hashmap(HashMap* hashmap) {
+void destroy_hashmap(HashMap *hashmap) {
     free(hashmap->items);
     hashmap->items = NULL;
     hashmap->length = 0;
     hashmap->capacity = 0;
 }
 
-static uint64_t get_key_hash(char* key) {
+static uint64_t get_key_hash(char *key) {
     int key_length = strlen(key);
     if (key_length > MAX_HASHMAP_KEY_LENGTH) {
         fprintf(
@@ -43,14 +42,14 @@ static uint64_t get_key_hash(char* key) {
     return hash;
 }
 
-static void resize_hashmap(HashMap* hashmap) {
+static void resize_hashmap(HashMap *hashmap) {
     int old_length = hashmap->length;
     int old_capacity = hashmap->capacity;
     int new_capacity = old_capacity * 2;
     int new_size = new_capacity * sizeof(HashMapItem);
 
-    HashMapItem* old_items = hashmap->items;
-    HashMapItem* new_items = (HashMapItem*)malloc(new_size);
+    HashMapItem *old_items = hashmap->items;
+    HashMapItem *new_items = (HashMapItem *)malloc(new_size);
     memset(new_items, 0, new_size);
 
     hashmap->items = new_items;
@@ -78,7 +77,7 @@ static void resize_hashmap(HashMap* hashmap) {
     free(old_items);
 }
 
-void hashmap_put(HashMap* hashmap, char* key, void* value) {
+void hashmap_put(HashMap *hashmap, char *key, void *value) {
     uint64_t hash = get_key_hash(key);
     int idx = hash % hashmap->capacity;
     while (hashmap->items[idx].key[0] != '\0') {
@@ -102,8 +101,8 @@ void hashmap_put(HashMap* hashmap, char* key, void* value) {
     }
 }
 
-void* hashmap_get(HashMap* hashmap, char* key) {
-    void* value = hashmap_try_get(hashmap, key);
+void *hashmap_get(HashMap *hashmap, char *key) {
+    void *value = hashmap_try_get(hashmap, key);
     if (value == NULL) {
         fprintf(stderr, "ERROR: No such key in hashmap: %s\n", key);
         exit(1);
@@ -111,10 +110,10 @@ void* hashmap_get(HashMap* hashmap, char* key) {
     return value;
 }
 
-void* hashmap_try_get(HashMap* hashmap, char* key) {
+void *hashmap_try_get(HashMap *hashmap, char *key) {
     uint64_t hash = get_key_hash(key);
     int idx = hash % hashmap->capacity;
-    char* candidate_key = hashmap->items[idx].key;
+    char *candidate_key = hashmap->items[idx].key;
     int items_checked = 0;
     int hashmap_length = hashmap->length;
     int hashmap_capacity = hashmap->capacity;
@@ -131,7 +130,7 @@ void* hashmap_try_get(HashMap* hashmap, char* key) {
     } while (1);
 }
 
-void print_hashmap(HashMap* hashmap) {
+void print_hashmap(HashMap *hashmap) {
     printf("{\n");
     for (int i = 0; i < hashmap->capacity; ++i) {
         HashMapItem item = hashmap->items[i];

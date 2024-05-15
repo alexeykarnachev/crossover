@@ -12,7 +12,7 @@ void update_camera() {
         return;
     }
 
-    Transformation* camera = &SCENE.transformations[SCENE.camera];
+    Transformation *camera = &SCENE.transformations[SCENE.camera];
 
     SCENE.camera_view_width -= CAMERA_SCROLL_SENSITIVITY * APP.scroll_dy;
     SCENE.camera_view_width = max(EPS, SCENE.camera_view_width);

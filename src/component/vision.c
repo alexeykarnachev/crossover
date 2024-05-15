@@ -24,6 +24,6 @@ Vision init_vision(float fov, float distance, int n_view_rays) {
     return v;
 }
 
-void reset_vision(Vision* v) {
+void reset_vision(Vision *v) {
     memset(v->observations, -1, sizeof(RayCastResult) * v->n_view_rays);
 }

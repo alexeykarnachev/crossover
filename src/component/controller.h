@@ -12,7 +12,7 @@ typedef enum ControllerType {
 } ControllerType;
 
 extern ControllerType CONTROLLER_TYPES[N_CONTROLLER_TYPES];
-extern const char* CONTROLLER_TYPE_NAMES[N_CONTROLLER_TYPES];
+extern const char *CONTROLLER_TYPE_NAMES[N_CONTROLLER_TYPES];
 
 typedef struct PlayerKeyboardController {
 } PlayerKeyboardController;
@@ -37,15 +37,11 @@ typedef struct Controller {
     } c;
 } Controller;
 
-void change_controller_type(
-    Controller* controller, ControllerType target_type
-);
+void change_controller_type(Controller *controller, ControllerType target_type);
 Controller init_player_keyboard_controller(
     float kinematic_speed, float dynamic_force_magnitude
 );
-Controller init_dummy_ai_controller(
-    float kinematic_speed, float dynamic_force_magnitude
-);
+Controller init_dummy_ai_controller(float kinematic_speed, float dynamic_force_magnitude);
 Controller init_brain_ai_controller(
     float kinematic_speed, float dynamic_force_magnitude, float temperature
 );

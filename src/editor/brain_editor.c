@@ -13,9 +13,7 @@ static BrainParams PREV_BRAIN_PARAMS;
 static ResultMessage BRAIN_RESULT_MESSAGE = {.flag = UNKNOWN_RESULT};
 
 static void init_and_save_as(void) {
-    char* fp = save_nfd(
-        EDITOR.project.default_search_path, BRAIN_FILTER, 1
-    );
+    char *fp = save_nfd(EDITOR.project.default_search_path, BRAIN_FILTER, 1);
     if (fp == NULL) {
         return;
     }
@@ -32,9 +30,7 @@ static void render_brain_menu_bar(void) {
         if (igBeginMenu("File", 1)) {
             if (menu_item("Open", "", false, 1)) {
                 EDITOR.is_playing = 0;
-                char* fp = open_nfd(
-                    EDITOR.project.default_search_path, BRAIN_FILTER, 1
-                );
+                char *fp = open_nfd(EDITOR.project.default_search_path, BRAIN_FILTER, 1);
                 if (fp != NULL) {
                     Brain brain;
                     load_local_brain(&brain, fp, &BRAIN_RESULT_MESSAGE);
@@ -71,9 +67,7 @@ static void render_brain_menu_bar(void) {
 static void render_brain_inputs() {
     igText("Inputs");
 
-    ig_drag_int(
-        "N view rays", &BRAIN_PARAMS.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0
-    );
+    ig_drag_int("N view rays", &BRAIN_PARAMS.n_view_rays, 0, MAX_N_VIEW_RAYS, 1, 0);
 
     ig_add_button("Add", &BRAIN_PARAMS.n_inputs, 1, MAX_N_BRAIN_INPUTS);
     ig_same_line();
@@ -82,13 +76,13 @@ static void render_brain_inputs() {
     igText("Size: %d", get_brain_input_size(BRAIN_PARAMS));
 
     for (int i = 0; i < BRAIN_PARAMS.n_inputs; ++i) {
-        BrainInput* picked_input = &BRAIN_PARAMS.inputs[i];
+        BrainInput *picked_input = &BRAIN_PARAMS.inputs[i];
 
         sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
             STR_BUFFER,
             picked_input->type,
-            (int*)BRAIN_INPUT_TYPES,
+            (int *)BRAIN_INPUT_TYPES,
             N_BRAIN_INPUT_TYPES,
             BRAIN_INPUT_TYPE_NAMES
         );
@@ -99,8 +93,7 @@ static void render_brain_inputs() {
 
             igPushID_Int(IG_UNIQUE_ID++);
             if (igBeginMenu("", 1)) {
-                uint64_t* components
-                    = &picked_input->i.target_entity.components;
+                uint64_t *components = &picked_input->i.target_entity.components;
                 render_component_checkboxes(components);
                 igEndMenu();
             }
@@ -117,7 +110,7 @@ static void render_brain_layers(void) {
     ig_sub_button("Delete", &BRAIN_PARAMS.n_layers, 1, 0);
 
     for (int i = 0; i < BRAIN_PARAMS.n_layers; ++i) {
-        int* size = &BRAIN_PARAMS.layer_sizes[i];
+        int *size = &BRAIN_PARAMS.layer_sizes[i];
         sprintf(STR_BUFFER, ": %d", i);
         ig_drag_int(STR_BUFFER, size, 1, MAX_BRAIN_LAYER_SIZE, 1, 0);
     }
@@ -134,13 +127,13 @@ static void render_brain_outputs() {
     igText("Size: %d", get_brain_output_size(BRAIN_PARAMS));
 
     for (int i = 0; i < BRAIN_PARAMS.n_outputs; ++i) {
-        BrainOutput* picked_output = &BRAIN_PARAMS.outputs[i];
+        BrainOutput *picked_output = &BRAIN_PARAMS.outputs[i];
 
         sprintf(STR_BUFFER, ": %d", i);
         int type = render_component_type_picker(
             STR_BUFFER,
             picked_output->type,
-            (int*)BRAIN_OUTPUT_TYPES,
+            (int *)BRAIN_OUTPUT_TYPES,
             N_BRAIN_OUTPUT_TYPES,
             BRAIN_OUTPUT_TYPE_NAMES
         );
@@ -150,12 +143,9 @@ static void render_brain_outputs() {
             igPushID_Int(IG_UNIQUE_ID++);
             ig_same_line();
             if (igBeginMenu("", 1)) {
-                int* value
-                    = &picked_output->o.move_orientation.n_directions;
+                int *value = &picked_output->o.move_orientation.n_directions;
                 igText("n directions");
-                ig_drag_int(
-                    "##", value, MIN_N_DIRECTIONS, MAX_N_DIRECTIONS, 1, 0
-                );
+                ig_drag_int("##", value, MIN_N_DIRECTIONS, MAX_N_DIRECTIONS, 1, 0);
                 igEndMenu();
             }
             igPopID();
@@ -167,9 +157,7 @@ static void render_brain_footer(void) {
     igText("N weights: %d", get_brain_size(BRAIN_PARAMS));
 
     igSeparator();
-    int is_changed = memcmp(
-        &PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams)
-    );
+    int is_changed = memcmp(&PREV_BRAIN_PARAMS, &BRAIN_PARAMS, sizeof(BrainParams));
     if (is_changed || BRAIN_RESULT_MESSAGE.flag == UNKNOWN_RESULT) {
         BRAIN_RESULT_MESSAGE.flag = UNKNOWN_RESULT;
         igTextColored(IG_YELLOW_COLOR, "INFO: Brain is not saved");

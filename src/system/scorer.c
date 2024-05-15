@@ -4,47 +4,47 @@
 
 // TODO: All these functions could be generalized somehow...
 void update_get_killed_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.get_killed;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.get_killed;
     scorer->value += scorer->weight;
 }
 
 void update_do_kill_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_kill;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.do_kill;
     scorer->value += scorer->weight;
 }
 
 void update_do_move_score(int entity, Vec2 step) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_move;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.do_move;
     scorer->value += scorer->weight * length(step);
 }
 
 void update_do_rotation_score(int entity, float angular_step) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_rotation;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.do_rotation;
     scorer->value += scorer->weight * fabs(angular_step);
 }
 
 void update_do_shoot_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_shoot;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.do_shoot;
     scorer->value += scorer->weight;
 }
 
 void update_do_hit_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.do_hit;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.do_hit;
     scorer->value += scorer->weight;
 }
 
 void update_get_hit_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.get_hit;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.get_hit;
     scorer->value += scorer->weight;
 }
 
 void update_get_rb_collided_score(int entity) {
-    ScalarScore* scorer = &SCENE.scorers[entity].scalars.get_rb_collided;
+    ScalarScore *scorer = &SCENE.scorers[entity].scalars.get_rb_collided;
     scorer->value += scorer->weight;
 }
 
 void update_exploration_score(int entity, float dt) {
-    Scorer* scorer = &SCENE.scorers[entity];
+    Scorer *scorer = &SCENE.scorers[entity];
     Vec2 start_position = scorer->exploration.start_position;
     Vec2 curr_position = SCENE.transformations[entity].curr_position;
     Vec2 diff = sub(curr_position, start_position);
@@ -70,7 +70,7 @@ void update_exploration_score(int entity, float dt) {
 
     if (min(cell_x, cell_y) >= 0 && cell_x < EXPLORATION_GRID_WIDTH
         && cell_y < EXPLORATION_GRID_HEIGHT) {
-        int* is_visited = &scorer->exploration.grid[cell_x][cell_y];
+        int *is_visited = &scorer->exploration.grid[cell_x][cell_y];
         if (*is_visited == 0) {
             *is_visited = 1;
             float weight = scorer->exploration.new_cell_score.weight;
@@ -82,12 +82,9 @@ void update_exploration_score(int entity, float dt) {
             scorer->exploration.cell_enter_time = SCENE.time;
         } else {
             float weight = scorer->exploration.stay_in_cell_score.weight;
-            float stay_in_cell_time
-                = SCENE.time - scorer->exploration.cell_enter_time;
-            if (stay_in_cell_time
-                > scorer->exploration.stay_in_cell_delay) {
-                scorer->exploration.stay_in_cell_score.value += weight
-                                                                * dt;
+            float stay_in_cell_time = SCENE.time - scorer->exploration.cell_enter_time;
+            if (stay_in_cell_time > scorer->exploration.stay_in_cell_delay) {
+                scorer->exploration.stay_in_cell_score.value += weight * dt;
             }
         }
     }

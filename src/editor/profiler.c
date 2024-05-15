@@ -1,5 +1,4 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "../app.h"
 #include "../debug.h"
 #include "../editor.h"
 #include "../nfd_utils.h"
@@ -42,7 +41,7 @@ static void start_profiler(void) {
             }
         }
 
-        SimulationStatus* status = &PROFILER->progress.status;
+        SimulationStatus *status = &PROFILER->progress.status;
         *status = SIMULATION_RUNNING;
 
         while (1) {
@@ -53,8 +52,8 @@ static void start_profiler(void) {
             profiler_pop(PROFILER);
 
             for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
-                char* name = PROFILER->progress.stages_names[i];
-                ProfilerStage* stage = (ProfilerStage*)hashmap_get(
+                char *name = PROFILER->progress.stages_names[i];
+                ProfilerStage *stage = (ProfilerStage *)hashmap_get(
                     &PROFILER->progress.stages_map, name
                 );
                 PROFILER->progress.stages_summary[i] = *stage;
@@ -76,10 +75,10 @@ static void start_profiler(void) {
 static void render_profiler_menu_bar(void) {
     if (igBeginMenu("Profiler", 1)) {
         if (igBeginMenu("File", 1)) {
-            if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {}
-            if (menu_item(
-                    "Save As (TODO: Not implemented)", "", false, 1
-                )) {}
+            if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {
+            }
+            if (menu_item("Save As (TODO: Not implemented)", "", false, 1)) {
+            }
             igEndMenu();
         }
 
@@ -99,9 +98,7 @@ static void render_profiler_menu_bar(void) {
 static void render_scene_selection(void) {
     if (igButton("Open Scene", IG_VEC2_ZERO)) {
         EDITOR.is_playing = 0;
-        char* fp = open_nfd(
-            EDITOR.project.default_search_path, SCENE_FILTER, 1
-        );
+        char *fp = open_nfd(EDITOR.project.default_search_path, SCENE_FILTER, 1);
         if (fp != NULL) {
             strcpy(PROFILER->scene_file_path, fp);
             NFD_FreePath(fp);
@@ -117,11 +114,7 @@ static void render_scene_selection(void) {
         }
     } else {
         static char text[MAX_PATH_LENGTH + 16];
-        sprintf(
-            text,
-            "Scene: %s",
-            get_short_file_path(PROFILER->scene_file_path)
-        );
+        sprintf(text, "Scene: %s", get_short_file_path(PROFILER->scene_file_path));
         igTextColored(IG_GREEN_COLOR, text);
     }
 }
@@ -133,7 +126,7 @@ static void render_scene_selection(void) {
 // (start, stop, reset, kill, etc).
 // Also, maybe some multiprocessing routine code could be factored out...
 static void render_profiler_controls(void) {
-    SimulationStatus* status = &PROFILER->progress.status;
+    SimulationStatus *status = &PROFILER->progress.status;
     switch (*status) {
         case SIMULATION_RUNNING: {
             if (igButton("Pause", IG_VEC2_ZERO)) {
@@ -164,9 +157,9 @@ static void render_profiler_controls(void) {
     }
 }
 
-static int compare_stages(const void* a, const void* b) {
-    const ProfilerStage* s1 = (const ProfilerStage*)a;
-    const ProfilerStage* s2 = (const ProfilerStage*)b;
+static int compare_stages(const void *a, const void *b) {
+    const ProfilerStage *s1 = (const ProfilerStage *)a;
+    const ProfilerStage *s2 = (const ProfilerStage *)b;
     return strcmp(s1->name, s2->name);
 }
 
@@ -180,29 +173,24 @@ static void render_stages_summary(void) {
     static int show_abs_time = 1;
     static int show_call_time = 1;
     static int show_n_calls = 1;
-    igCheckbox("Absolute percentage", (bool*)(&show_abs_percentage));
-    igCheckbox("Absolute time", (bool*)(&show_abs_time));
-    igCheckbox("Call time", (bool*)(&show_call_time));
-    igCheckbox("N calls", (bool*)(&show_n_calls));
+    igCheckbox("Absolute percentage", (bool *)(&show_abs_percentage));
+    igCheckbox("Absolute time", (bool *)(&show_abs_time));
+    igCheckbox("Call time", (bool *)(&show_call_time));
+    igCheckbox("N calls", (bool *)(&show_n_calls));
     igSeparator();
 
     static ProfilerStage stages[MAX_N_PROFILER_STAGES];
     static int depths[MAX_N_PROFILER_STAGES];
     static int last_dot_positions[MAX_N_PROFILER_STAGES];
-    static char display_name
-        [MAX_PROFILER_STAGE_NAME_LENGTH + MAX_PROFILER_STAGES_DEPTH * 4];
+    static char
+        display_name[MAX_PROFILER_STAGE_NAME_LENGTH + MAX_PROFILER_STAGES_DEPTH * 4];
 
     memcpy(
         stages,
         PROFILER->progress.stages_summary,
         sizeof(ProfilerStage) * PROFILER->progress.n_stages
     );
-    qsort(
-        stages,
-        PROFILER->progress.n_stages,
-        sizeof(ProfilerStage),
-        compare_stages
-    );
+    qsort(stages, PROFILER->progress.n_stages, sizeof(ProfilerStage), compare_stages);
 
     float total_time = 0;
     for (int i = 0; i < PROFILER->progress.n_stages; ++i) {
@@ -228,7 +216,7 @@ static void render_stages_summary(void) {
         ProfilerStage stage = stages[i];
         int last_dot_position = last_dot_positions[i];
         int depth = depths[i];
-        char* name = &stage.name[last_dot_position + 1];
+        char *name = &stage.name[last_dot_position + 1];
         memset(display_name, '\0', sizeof(display_name));
 
         if (depth > 0) {
@@ -243,43 +231,37 @@ static void render_stages_summary(void) {
 
         if (show_abs_percentage) {
             ig_same_line();
-            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical, 1.0);
 
             ig_same_line();
             float percentage = stage.time / total_time;
             float hue = (1.0 - percentage) * 120.0 / 360.0;
             ImVec4 color = {0.0, 0.0, 0.0, 1.0};
-            igColorConvertHSVtoRGB(
-                hue, 1.0, 1.0, &color.x, &color.y, &color.z
-            );
+            igColorConvertHSVtoRGB(hue, 1.0, 1.0, &color.x, &color.y, &color.z);
             igTextColored(color, " %.2f %% ", 100.0 * percentage);
         }
 
         if (show_abs_time) {
             ig_same_line();
-            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical, 1.0);
             ig_same_line();
             igTextColored(IG_GRAY_COLOR, " %.4f s ", stage.time);
         }
 
         if (show_call_time) {
             ig_same_line();
-            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical, 1.0);
             ig_same_line();
             igTextColored(
-                IG_GRAY_COLOR,
-                " %.4f ms/call ",
-                1000.0 * stage.time / stage.n_calls
+                IG_GRAY_COLOR, " %.4f ms/call ", 1000.0 * stage.time / stage.n_calls
             );
         }
 
         if (show_n_calls) {
             ig_same_line();
-            igSeparatorEx(ImGuiSeparatorFlags_Vertical);
+            igSeparatorEx(ImGuiSeparatorFlags_Vertical, 1.0);
             ig_same_line();
-            igTextColored(
-                IG_GRAY_COLOR, " %.2e calls ", (double)stage.n_calls
-            );
+            igTextColored(IG_GRAY_COLOR, " %.2e calls ", (double)stage.n_calls);
         }
     }
 }
@@ -289,7 +271,7 @@ void render_profiler_editor(void) {
     igSeparator();
 
     if (PROFILER->progress.status == SIMULATION_NOT_STARTED) {
-        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+        igCheckbox("All immortal", (bool *)&DEBUG.gameplay.all_immortal);
     }
 
     render_scene_selection();

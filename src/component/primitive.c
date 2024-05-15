@@ -20,36 +20,22 @@
     } while (0)
 
 PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES] = {
-    CIRCLE_PRIMITIVE,
-    RECTANGLE_PRIMITIVE,
-    LINE_PRIMITIVE,
-    POLYGON_PRIMITIVE};
-const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES] = {
+    CIRCLE_PRIMITIVE, RECTANGLE_PRIMITIVE, LINE_PRIMITIVE, POLYGON_PRIMITIVE};
+const char *PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES] = {
     "Circle", "Rectangle", "Line", "Polygon"};
 
-void change_primitive_type(
-    Primitive* primitive, PrimitiveType target_type
-) {
+void change_primitive_type(Primitive *primitive, PrimitiveType target_type) {
     PrimitiveType source_type = primitive->type;
     if (source_type == target_type) {
         return;
     }
 
     switch (target_type) {
-        case CIRCLE_PRIMITIVE:
-            *primitive = init_default_circle_primitive();
-            break;
-        case RECTANGLE_PRIMITIVE:
-            *primitive = init_default_rectangle_primitive();
-            break;
-        case LINE_PRIMITIVE:
-            *primitive = init_default_line_primitive();
-            break;
-        case POLYGON_PRIMITIVE:
-            *primitive = init_default_polygon_primitive();
-            break;
-        default:
-            PRIMITIVE_TYPE_ERROR("change_primitive_type", source_type);
+        case CIRCLE_PRIMITIVE: *primitive = init_default_circle_primitive(); break;
+        case RECTANGLE_PRIMITIVE: *primitive = init_default_rectangle_primitive(); break;
+        case LINE_PRIMITIVE: *primitive = init_default_line_primitive(); break;
+        case POLYGON_PRIMITIVE: *primitive = init_default_polygon_primitive(); break;
+        default: PRIMITIVE_TYPE_ERROR("change_primitive_type", source_type);
     }
 }
 
@@ -80,9 +66,7 @@ Primitive init_line_primitive(Vec2 b) {
     return primitive;
 }
 
-Primitive init_polygon_primitive(
-    Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices
-) {
+Primitive init_polygon_primitive(Vec2 vertices[MAX_N_POLYGON_VERTICES], int n_vertices) {
     Primitive primitive = {0};
 
     primitive.type = POLYGON_PRIMITIVE;
@@ -110,9 +94,7 @@ Primitive init_default_polygon_primitive(void) {
     return init_polygon_primitive(vertices, 3);
 }
 
-static int get_rectangle_vertices(
-    Rectangle rectangle, Vec2 out[MAX_N_POLYGON_VERTICES]
-) {
+static int get_rectangle_vertices(Rectangle rectangle, Vec2 out[MAX_N_POLYGON_VERTICES]) {
     Vec2 origin = vec2(0.5 * rectangle.width, 0.5 * rectangle.height);
 
     Vec2 d = {0.0, 0.0};
@@ -140,9 +122,7 @@ static int get_line_vertices(Line line, Vec2 out[MAX_N_POLYGON_VERTICES]) {
     return 2;
 }
 
-static int get_polygon_vertices(
-    Polygon polygon, Vec2 out[MAX_N_POLYGON_VERTICES]
-) {
+static int get_polygon_vertices(Polygon polygon, Vec2 out[MAX_N_POLYGON_VERTICES]) {
     memcpy(out, polygon.vertices, sizeof(Vec2) * polygon.n_vertices);
     return polygon.n_vertices;
 }
@@ -165,27 +145,20 @@ static int get_line_fan_vertices(
     return 4;
 }
 
-int get_primitive_vertices(
-    Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]
-) {
+int get_primitive_vertices(Primitive primitive, Vec2 vertices[MAX_N_POLYGON_VERTICES]) {
     PrimitiveType type = primitive.type;
     int n_vertices;
 
     switch (type) {
-        case CIRCLE_PRIMITIVE:
-            n_vertices = 0;
+        case CIRCLE_PRIMITIVE: n_vertices = 0;
         case RECTANGLE_PRIMITIVE:
-            n_vertices = get_rectangle_vertices(
-                primitive.p.rectangle, vertices
-            );
+            n_vertices = get_rectangle_vertices(primitive.p.rectangle, vertices);
             break;
         case LINE_PRIMITIVE:
             n_vertices = get_line_vertices(primitive.p.line, vertices);
             break;
         case POLYGON_PRIMITIVE:
-            n_vertices = get_polygon_vertices(
-                primitive.p.polygon, vertices
-            );
+            n_vertices = get_polygon_vertices(primitive.p.polygon, vertices);
             break;
         default: {
             PRIMITIVE_TYPE_ERROR("get_primitive_vertices", type);
@@ -204,13 +177,10 @@ int get_primitive_fan_vertices(
     switch (type) {
         case LINE_PRIMITIVE: {
             float line_width = SCENE.camera_view_width * LINE_WIDTH_SCALE;
-            n_vertices = get_line_fan_vertices(
-                primitive.p.line, line_width, vertices
-            );
+            n_vertices = get_line_fan_vertices(primitive.p.line, line_width, vertices);
             break;
         }
-        default:
-            n_vertices = get_primitive_vertices(primitive, vertices);
+        default: n_vertices = get_primitive_vertices(primitive, vertices);
     }
 
     return n_vertices;
@@ -220,7 +190,7 @@ void get_vertex_uvs(
     Vec2 vertices[MAX_N_POLYGON_VERTICES],
     int n,
     Vec2 uvs[MAX_N_POLYGON_VERTICES],
-    Vec2* uv_size
+    Vec2 *uv_size
 ) {
     float min_x = FLT_MAX;
     float max_x = -FLT_MAX;
@@ -246,13 +216,13 @@ void get_vertex_uvs(
     }
 }
 
-void add_polygon_vertex(Polygon* polygon) {
+void add_polygon_vertex(Polygon *polygon) {
     if (polygon->n_vertices == MAX_N_POLYGON_VERTICES) {
         fprintf(stderr, "ERROR: Can't add more vertices to the polygon\n");
         exit(1);
     }
 
-    float max_dist = -HUGE_VAL;
+    float max_dist = -FLT_MAX;
     int insert_pos;
     Vec2 new_vertex;
     for (int i = 0; i < polygon->n_vertices; ++i) {
@@ -280,11 +250,9 @@ void add_polygon_vertex(Polygon* polygon) {
     }
 
     polygon->n_vertices += 1;
-    memcpy(
-        polygon->vertices, new_vertices, sizeof(Vec2) * polygon->n_vertices
-    );
+    memcpy(polygon->vertices, new_vertices, sizeof(Vec2) * polygon->n_vertices);
 }
 
-void delete_polygon_vertex(Polygon* polygon) {
+void delete_polygon_vertex(Polygon *polygon) {
     polygon->n_vertices -= 1;
 }

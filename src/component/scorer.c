@@ -6,7 +6,7 @@
 #include <string.h>
 
 // TODO: Could be generalized with macros or loop or something like this
-void reset_scorer(Scorer* scorer) {
+void reset_scorer(Scorer *scorer) {
     scorer->scalars.do_kill.value = 0.0;
     scorer->scalars.do_move.value = 0.0;
     scorer->scalars.do_rotation.value = 0.0;
@@ -24,7 +24,7 @@ void reset_scorer(Scorer* scorer) {
 }
 
 // TODO: Could be generalized with macros or loop or something like this
-float get_total_score(Scorer* scorer) {
+float get_total_score(Scorer *scorer) {
     float total_score = 0.0;
     total_score += scorer->scalars.do_kill.value;
     total_score += scorer->scalars.do_move.value;
@@ -41,14 +41,14 @@ float get_total_score(Scorer* scorer) {
     return total_score;
 }
 
-void read_scorer(FILE* fp, Scorer* scorer) {
+void read_scorer(FILE *fp, Scorer *scorer) {
     memset(scorer, 0, sizeof(Scorer));
 
     fread(&scorer->scalars, sizeof(scorer->scalars), 1, fp);
     int n_explored_cells;
     fread(&n_explored_cells, sizeof(int), 1, fp);
 
-    int* explored_cells = (int*)malloc(n_explored_cells * sizeof(int));
+    int *explored_cells = (int *)malloc(n_explored_cells * sizeof(int));
     fread(explored_cells, sizeof(int), n_explored_cells, fp);
     for (int i = 0; i < n_explored_cells; ++i) {
         int cell = explored_cells[i];
@@ -64,15 +64,13 @@ void read_scorer(FILE* fp, Scorer* scorer) {
     fread(&scorer->exploration.stay_in_cell_delay, sizeof(float), 1, fp);
     fread(&scorer->exploration.new_cell_score, sizeof(ScalarScore), 1, fp);
     fread(&scorer->exploration.old_cell_score, sizeof(ScalarScore), 1, fp);
-    fread(
-        &scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp
-    );
+    fread(&scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp);
 
     free(explored_cells);
 }
 
-void write_scorer(FILE* fp, Scorer* scorer) {
-    int* explored_cells = (int*)malloc(sizeof(scorer->exploration.grid));
+void write_scorer(FILE *fp, Scorer *scorer) {
+    int *explored_cells = (int *)malloc(sizeof(scorer->exploration.grid));
     int n_explored_cells = 0;
     for (int i = 0; i < EXPLORATION_GRID_HEIGHT; ++i) {
         for (int j = 0; j < EXPLORATION_GRID_WIDTH; ++j) {
@@ -92,26 +90,20 @@ void write_scorer(FILE* fp, Scorer* scorer) {
     fwrite(&scorer->exploration.cell_size, sizeof(float), 1, fp);
     fwrite(&scorer->exploration.cell_enter_time, sizeof(float), 1, fp);
     fwrite(&scorer->exploration.stay_in_cell_delay, sizeof(float), 1, fp);
-    fwrite(
-        &scorer->exploration.new_cell_score, sizeof(ScalarScore), 1, fp
-    );
-    fwrite(
-        &scorer->exploration.old_cell_score, sizeof(ScalarScore), 1, fp
-    );
-    fwrite(
-        &scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp
-    );
+    fwrite(&scorer->exploration.new_cell_score, sizeof(ScalarScore), 1, fp);
+    fwrite(&scorer->exploration.old_cell_score, sizeof(ScalarScore), 1, fp);
+    fwrite(&scorer->exploration.stay_in_cell_score, sizeof(ScalarScore), 1, fp);
 
     free(explored_cells);
 }
 
-void write_n_scorers(FILE* fp, Scorer* scorers, int n) {
+void write_n_scorers(FILE *fp, Scorer *scorers, int n) {
     for (int i = 0; i < n; ++i) {
         write_scorer(fp, scorers++);
     }
 }
 
-void read_n_scorers(FILE* fp, Scorer* scorers, int n) {
+void read_n_scorers(FILE *fp, Scorer *scorers, int n) {
     for (int i = 0; i < n; ++i) {
         read_scorer(fp, scorers++);
     }

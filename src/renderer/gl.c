@@ -26,10 +26,7 @@ static void init_polygon_vao(void) {
     glGenBuffers(1, &POLYGON_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, POLYGON_VBO);
     glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(Vec2) * 2 * MAX_N_POLYGON_VERTICES,
-        NULL,
-        GL_DYNAMIC_DRAW
+        GL_ARRAY_BUFFER, sizeof(Vec2) * 2 * MAX_N_POLYGON_VERTICES, NULL, GL_DYNAMIC_DRAW
     );
     GL_CHECK_ERRORS();
 
@@ -42,7 +39,7 @@ static void init_polygon_vao(void) {
 }
 
 static int compile_program_source(
-    const GLchar* source, GLenum shader_type, GLuint* shader
+    const GLchar *source, GLenum shader_type, GLuint *shader
 ) {
     *shader = glCreateShader(shader_type);
     glShaderSource(*shader, 1, &source, NULL);
@@ -53,23 +50,17 @@ static int compile_program_source(
     if (is_compiled != GL_TRUE) {
         GLchar message[1024];
         GLsizei message_size = 0;
-        glGetShaderInfoLog(
-            *shader, sizeof(message), &message_size, message
-        );
-        fprintf(
-            stderr,
-            "ERROR: failed to compile the shader source %s\n",
-            message
-        );
+        glGetShaderInfoLog(*shader, sizeof(message), &message_size, message);
+        fprintf(stderr, "ERROR: failed to compile the shader source %s\n", message);
         return 0;
     }
     return 1;
 }
 
 static int compile_program_file(
-    const char* file_path, GLenum shader_type, GLuint* shader
+    const char *file_path, GLenum shader_type, GLuint *shader
 ) {
-    const char* source = read_cstr_file(file_path, "r", NULL);
+    const char *source = read_cstr_file(file_path, "r", NULL);
     if (source == NULL) {
         fprintf(
             stderr,
@@ -82,13 +73,11 @@ static int compile_program_file(
     }
 
     int is_compiled = compile_program_source(source, shader_type, shader);
-    free((char*)source);
+    free((char *)source);
 
     if (!is_compiled) {
         fprintf(
-            stderr,
-            "ERROR: failed to compile the shader source file `%s`\n",
-            file_path
+            stderr, "ERROR: failed to compile the shader source file `%s`\n", file_path
         );
         return 0;
     }
@@ -97,21 +86,17 @@ static int compile_program_file(
 }
 
 static int create_program(
-    GLuint program, const char* vert_file_path, const char* frag_file_path
+    GLuint program, const char *vert_file_path, const char *frag_file_path
 ) {
     GLuint vert_shader = 0;
     GLuint frag_shader = 0;
 
     int is_compiled = 1;
 
-    is_compiled &= compile_program_file(
-        vert_file_path, GL_VERTEX_SHADER, &vert_shader
-    );
+    is_compiled &= compile_program_file(vert_file_path, GL_VERTEX_SHADER, &vert_shader);
     glAttachShader(program, vert_shader);
 
-    is_compiled &= compile_program_file(
-        frag_file_path, GL_FRAGMENT_SHADER, &frag_shader
-    );
+    is_compiled &= compile_program_file(frag_file_path, GL_FRAGMENT_SHADER, &frag_shader);
     glAttachShader(program, frag_shader);
 
     if (!is_compiled) {
@@ -128,9 +113,7 @@ static int create_program(
     if (is_linked != GL_TRUE) {
         GLchar message[1024];
         GLsizei message_size = 0;
-        glGetProgramInfoLog(
-            program, sizeof(message), &message_size, message
-        );
+        glGetProgramInfoLog(program, sizeof(message), &message_size, message);
         fprintf(stderr, "ERROR: failed to link the program %s\n", message);
         return 0;
     }
@@ -142,14 +125,10 @@ static int init_all_programs(void) {
     int ok = 1;
 
     PRIMITIVE_PROGRAM = glCreateProgram();
-    ok &= create_program(
-        PRIMITIVE_PROGRAM, PRIMITIVE_VERT_SHADER, PRIMITIVE_FRAG_SHADER
-    );
+    ok &= create_program(PRIMITIVE_PROGRAM, PRIMITIVE_VERT_SHADER, PRIMITIVE_FRAG_SHADER);
 
     COLOR_PROGRAM = glCreateProgram();
-    ok &= create_program(
-        COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER
-    );
+    ok &= create_program(COLOR_PROGRAM, SCREEN_RECT_VERT_SHADER, COLOR_FRAG_SHADER);
 
     LIGHT_MASK_PROGRAM = glCreateProgram();
     ok &= create_program(
@@ -160,8 +139,8 @@ static int init_all_programs(void) {
 }
 
 static int create_texture_2d(
-    GLuint* tex,
-    void* data,
+    GLuint *tex,
+    void *data,
     size_t level,
     size_t width,
     size_t height,
@@ -174,15 +153,7 @@ static int create_texture_2d(
     glBindTexture(GL_TEXTURE_2D, *tex);
 
     glTexImage2D(
-        GL_TEXTURE_2D,
-        level,
-        internal_format,
-        width,
-        height,
-        0,
-        format,
-        type,
-        data
+        GL_TEXTURE_2D, level, internal_format, width, height, 0, format, type, data
     );
     GL_CHECK_ERRORS();
 
@@ -244,29 +215,17 @@ static int init_gbuffer(void) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, GBUFFER.fbo);
     glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 0,
-        GL_TEXTURE_2D,
-        GBUFFER.world_pos_tex,
-        0
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 0, GL_TEXTURE_2D, GBUFFER.world_pos_tex, 0
     );
     GL_CHECK_ERRORS();
 
     glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 1,
-        GL_TEXTURE_2D,
-        GBUFFER.normals_tex,
-        0
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 1, GL_TEXTURE_2D, GBUFFER.normals_tex, 0
     );
     GL_CHECK_ERRORS();
 
     glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + 2,
-        GL_TEXTURE_2D,
-        GBUFFER.diffuse_tex,
-        0
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 2, GL_TEXTURE_2D, GBUFFER.diffuse_tex, 0
     );
     GL_CHECK_ERRORS();
 
@@ -319,18 +278,14 @@ static int init_light_mask_buffer(void) {
     return 1;
 }
 
-static int get_attrib_location(
-    GLuint program, GLuint* loc, const char* name
-) {
+static int get_attrib_location(GLuint program, GLuint *loc, const char *name) {
     GLuint _loc = glGetAttribLocation(program, name);
     *loc = _loc;
 
     if (_loc == -1) {
 #ifndef IGNORE_SHADER_LOC_ERRORS
         fprintf(
-            stderr,
-            "ERROR: failed to get the location of the attribute `%s`\n",
-            name
+            stderr, "ERROR: failed to get the location of the attribute `%s`\n", name
         );
         return 0;
 #endif
@@ -339,19 +294,13 @@ static int get_attrib_location(
     return 1;
 }
 
-static int get_uniform_location(
-    GLuint program, GLuint* loc, const char* name
-) {
+static int get_uniform_location(GLuint program, GLuint *loc, const char *name) {
     GLuint _loc = glGetUniformLocation(program, name);
     *loc = _loc;
 
     if (_loc == -1) {
 #ifndef IGNORE_SHADER_LOC_ERRORS
-        fprintf(
-            stderr,
-            "ERROR: failed to get the location of the uniform `%s`\n",
-            name
-        );
+        fprintf(stderr, "ERROR: failed to get the location of the uniform `%s`\n", name);
         return 0;
 #endif
     }
@@ -374,11 +323,7 @@ void init_gl(void) {
     }
 
 int set_attrib(
-    GLuint program,
-    const char* name,
-    GLint n_elems,
-    GLenum type,
-    int offset_n_bytes
+    GLuint program, const char *name, GLint n_elems, GLenum type, int offset_n_bytes
 ) {
     glUseProgram(program);
     GLuint loc;
@@ -386,65 +331,55 @@ int set_attrib(
         return 0;
     }
 
-    void* offset = (void*)(uint64_t)offset_n_bytes;
+    void *offset = (void *)(uint64_t)offset_n_bytes;
     glEnableVertexAttribArray(loc);
     glVertexAttribPointer(loc, n_elems, type, GL_FALSE, 0, offset);
     return 1;
 }
 
-int set_uniform_1i(GLuint program, const char* name, GLint val) {
+int set_uniform_1i(GLuint program, const char *name, GLint val) {
     _GET_UNIFORM_LOC
     glUniform1i(loc, val);
     return 1;
 }
 
-int set_uniform_1ui(GLuint program, const char* name, GLuint val) {
+int set_uniform_1ui(GLuint program, const char *name, GLuint val) {
     _GET_UNIFORM_LOC
     glUniform1ui(loc, val);
     return 1;
 }
 
-int set_uniform_2iv(
-    GLuint program, const char* name, GLint* data, int n_values
-) {
+int set_uniform_2iv(GLuint program, const char *name, GLint *data, int n_values) {
     _GET_UNIFORM_LOC
     glUniform2iv(loc, n_values, data);
     return 1;
 }
 
-int set_uniform_4iv(
-    GLuint program, const char* name, GLint* data, int n_values
-) {
+int set_uniform_4iv(GLuint program, const char *name, GLint *data, int n_values) {
     _GET_UNIFORM_LOC
     glUniform4iv(loc, n_values, data);
     return 1;
 }
 
-int set_uniform_1f(GLuint program, const char* name, GLfloat val) {
+int set_uniform_1f(GLuint program, const char *name, GLfloat val) {
     _GET_UNIFORM_LOC
     glUniform1f(loc, val);
     return 1;
 }
 
-int set_uniform_2fv(
-    GLuint program, const char* name, GLfloat* data, int n_values
-) {
+int set_uniform_2fv(GLuint program, const char *name, GLfloat *data, int n_values) {
     _GET_UNIFORM_LOC
     glUniform2fv(loc, n_values, data);
     return 1;
 }
 
-int set_uniform_3fv(
-    GLuint program, const char* name, GLfloat* data, int n_values
-) {
+int set_uniform_3fv(GLuint program, const char *name, GLfloat *data, int n_values) {
     _GET_UNIFORM_LOC
     glUniform3fv(loc, n_values, data);
     return 1;
 }
 
-int set_uniform_4fv(
-    GLuint program, const char* name, GLfloat* data, int n_values
-) {
+int set_uniform_4fv(GLuint program, const char *name, GLfloat *data, int n_values) {
     _GET_UNIFORM_LOC
     glUniform4fv(loc, n_values, data);
     return 1;

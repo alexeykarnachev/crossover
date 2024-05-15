@@ -29,14 +29,10 @@ void update_debug(void) {
 }
 
 void render_debug_primitive(
-    Transformation t,
-    Primitive p,
-    Vec3 color,
-    float render_layer,
-    int fill_type
+    Transformation t, Primitive p, Vec3 color, float render_layer, int fill_type
 ) {
     if (DEBUG.n_primitives < MAX_N_DEBUG_PRIMITIVES) {
-        DebugPrimitive* dp = &DEBUG.primitives[DEBUG.n_primitives++];
+        DebugPrimitive *dp = &DEBUG.primitives[DEBUG.n_primitives++];
         dp->transformation = t;
         dp->primitive = p;
         dp->color = color;
@@ -49,16 +45,12 @@ void render_debug_primitive(
 
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color, float render_layer) {
     Vec2 d = sub(e, s);
-    Transformation t = init_transformation(
-        add(s, scale(d, 0.5)), 0.0, 0.0
-    );
+    Transformation t = init_transformation(add(s, scale(d, 0.5)), 0.0, 0.0);
     Primitive p = init_line_primitive(d);
     render_debug_primitive(t, p, color, render_layer, FILL);
 }
 
-void render_debug_circle(
-    Vec2 c, float r, Vec3 color, float render_layer, int fill_type
-) {
+void render_debug_circle(Vec2 c, float r, Vec3 color, float render_layer, int fill_type) {
     Transformation t = init_transformation(c, 0.0, 0.0);
     Primitive p = init_circle_primitive(r);
     render_debug_primitive(t, p, color, render_layer, fill_type);

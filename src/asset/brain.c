@@ -38,7 +38,7 @@
 Brain BRAINS[BRAINS_ARRAY_CAPACITY] = {0};
 int N_BRAINS = 0;
 
-void destroy_brain(Brain* brain) {
+void destroy_brain(Brain *brain) {
     if (brain->weights == NULL) {
         fprintf(stderr, "ERROR: Can't destroy Brain with NULL weights\n");
         exit(1);
@@ -50,7 +50,7 @@ void destroy_brain(Brain* brain) {
 void destroy_brains(void) {
     int n_brains = 0;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
-        Brain* brain = &BRAINS[i];
+        Brain *brain = &BRAINS[i];
         if (brain->params.key[0] == '\0') {
             if (brain->weights != NULL) {
                 fprintf(
@@ -85,7 +85,7 @@ void destroy_brains(void) {
 
 // --------------------------------------------------------
 // Brain general
-Brain* add_brain_clone(Brain* brain, int allow_replacement) {
+Brain *add_brain_clone(Brain *brain, int allow_replacement) {
     if (N_BRAINS++ >= MAX_N_BRAINS) {
         fprintf(stderr, "ERROR: Can't initalize more Brains\n");
         exit(1);
@@ -130,7 +130,7 @@ Brain* add_brain_clone(Brain* brain, int allow_replacement) {
 
     BRAINS[idx] = *brain;
     int n_bytes = get_brain_size(brain->params) * sizeof(float);
-    float* new_weights = malloc(n_bytes);
+    float *new_weights = malloc(n_bytes);
     memcpy(new_weights, brain->weights, n_bytes);
     BRAINS[idx].weights = new_weights;
     return &BRAINS[idx];
@@ -139,7 +139,7 @@ Brain* add_brain_clone(Brain* brain, int allow_replacement) {
 Brain init_local_brain(BrainParams params) {
     int n_weights = get_brain_size(params);
     int weights_n_bytes = sizeof(float) * n_weights;
-    float* weights = (float*)malloc(weights_n_bytes);
+    float *weights = (float *)malloc(weights_n_bytes);
     for (int i = 0; i < n_weights; ++i) {
         weights[i] = ((float)rand() / RAND_MAX) * 2.0 - 1.0;
         // TODO: Implement more clever weights initialization
@@ -150,33 +150,31 @@ Brain init_local_brain(BrainParams params) {
     return brain;
 }
 
-Brain* init_brain(BrainParams params) {
+Brain *init_brain(BrainParams params) {
     Brain local_brain = init_local_brain(params);
-    Brain* brain = add_brain_clone(&local_brain, 0);
+    Brain *brain = add_brain_clone(&local_brain, 0);
     destroy_brain(&local_brain);
     return brain;
 }
 
-Brain* load_brain(
-    char* file_path, ResultMessage* res_msg, int allow_replacement
-) {
+Brain *load_brain(char *file_path, ResultMessage *res_msg, int allow_replacement) {
     Brain local_brain;
-    Brain* brain = NULL;
+    Brain *brain = NULL;
     load_local_brain(&local_brain, file_path, res_msg);
     if (res_msg->flag == SUCCESS_RESULT) {
-        Brain* brain = add_brain_clone(&local_brain, allow_replacement);
+        Brain *brain = add_brain_clone(&local_brain, allow_replacement);
         destroy_brain(&local_brain);
     }
     return brain;
 }
 
-void reload_all_brains(ResultMessage* res_msg) {
+void reload_all_brains(ResultMessage *res_msg) {
     res_msg->flag = FAIL_RESULT;
 
     int n_brains_realoded = 0;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
-        Brain* brain = &BRAINS[i];
-        char* file_path = brain->params.key;
+        Brain *brain = &BRAINS[i];
+        char *file_path = brain->params.key;
         if (file_path[0] != '\0') {
             load_brain(file_path, res_msg, 1);
             if (res_msg->flag == SUCCESS_RESULT) {
@@ -202,7 +200,7 @@ void reload_all_brains(ResultMessage* res_msg) {
     strcpy(res_msg->msg, str);
 }
 
-Brain* get_brain(char* key, int allow_null) {
+Brain *get_brain(char *key, int allow_null) {
     // TODO: Reuse HashMap struct here
     uint64_t hash = get_bytes_hash(key, strlen(key));
     int idx = hash % BRAINS_ARRAY_CAPACITY;
@@ -226,8 +224,8 @@ Brain* get_brain(char* key, int allow_null) {
     return NULL;
 }
 
-Brain* get_or_load_brain(char* key) {
-    Brain* brain = get_brain(key, 1);
+Brain *get_or_load_brain(char *key) {
+    Brain *brain = get_brain(key, 1);
     if (brain == NULL) {
         ResultMessage res_msg = {0};
         brain = load_brain(key, &res_msg, 0);
@@ -235,8 +233,8 @@ Brain* get_or_load_brain(char* key) {
     return brain;
 }
 
-Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights) {
-    Brain* src_brain = get_brain(src_key, 0);
+Brain *clone_brain(char *dst_key, char *src_key, int randomize_weights) {
+    Brain *src_brain = get_brain(src_key, 0);
     if (get_brain(dst_key, 1) != NULL) {
         fprintf(
             stderr,
@@ -249,7 +247,7 @@ Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights) {
 
     BrainParams params = src_brain->params;
     strcpy(params.key, dst_key);
-    Brain* dst_brain = init_brain(params);
+    Brain *dst_brain = init_brain(params);
     if (!randomize_weights) {
         int n_bytes = get_brain_size(params) * sizeof(float);
         memcpy(dst_brain->weights, src_brain->weights, n_bytes);
@@ -257,9 +255,7 @@ Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights) {
     return dst_brain;
 }
 
-void clone_ptr_brain_into(
-    Brain* dst_brain, Brain* src_brain, int randomize_weights
-) {
+void clone_ptr_brain_into(Brain *dst_brain, Brain *src_brain, int randomize_weights) {
     BrainParams params = src_brain->params;
     *dst_brain = init_local_brain(params);
     if (!randomize_weights) {
@@ -268,14 +264,12 @@ void clone_ptr_brain_into(
     }
 }
 
-void clone_key_brain_into(
-    Brain* dst_brain, char* src_key, int randomize_weights
-) {
-    Brain* src_brain = get_brain(src_key, 0);
+void clone_key_brain_into(Brain *dst_brain, char *src_key, int randomize_weights) {
+    Brain *src_brain = get_brain(src_key, 0);
     clone_ptr_brain_into(dst_brain, src_brain, randomize_weights);
 }
 
-void randomize_brain(Brain* brain) {
+void randomize_brain(Brain *brain) {
     BrainParams params = brain->params;
     int n_weights = get_brain_size(params);
     for (int i = 0; i < n_weights; ++i) {
@@ -283,10 +277,8 @@ void randomize_brain(Brain* brain) {
     }
 }
 
-void load_local_brain(
-    Brain* brain, char* file_path, ResultMessage* res_msg
-) {
-    FILE* fp = open_file(file_path, res_msg, "rb");
+void load_local_brain(Brain *brain, char *file_path, ResultMessage *res_msg) {
+    FILE *fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
@@ -316,20 +308,18 @@ void load_local_brain(
     sprintf(res_msg->msg, "INFO: Brain is loaded");
 }
 
-void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "wb");
+void save_brain(char *file_path, Brain *brain, ResultMessage *res_msg) {
+    FILE *fp = open_file(file_path, res_msg, "wb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
 
-    float* weights = brain->weights;
+    float *weights = brain->weights;
     int n_weights = get_brain_size(brain->params);
 
     if (weights == NULL || n_weights == 0) {
         res_msg->flag = FAIL_RESULT;
-        strcpy(
-            res_msg->msg, "ERROR: Can't save the Brain without weights"
-        );
+        strcpy(res_msg->msg, "ERROR: Can't save the Brain without weights");
         return;
     }
 
@@ -366,10 +356,7 @@ uint64_t get_brain_required_input_types(BrainParams params) {
                 components |= RIGID_BODY_COMPONENT;
                 break;
             }
-            default:
-                BRAIN_INPUT_TYPE_ERROR(
-                    "get_brain_required_components", type
-                );
+            default: BRAIN_INPUT_TYPE_ERROR("get_brain_required_components", type);
         }
     }
 
@@ -384,7 +371,7 @@ int get_brain_size(BrainParams params) {
     }
 
     int n_layers = params.n_layers;
-    int* layer_sizes = params.layer_sizes;
+    int *layer_sizes = params.layer_sizes;
     int inp_layer_size = input_size;
     int out_layer_size;
     int n_weights = 0;
@@ -398,10 +385,7 @@ int get_brain_size(BrainParams params) {
 }
 
 Brain crossover_brains(
-    Brain* brain0,
-    Brain* brain1,
-    float mutation_rate,
-    float mutation_strength
+    Brain *brain0, Brain *brain1, float mutation_rate, float mutation_strength
 ) {
     int n_weights0 = get_brain_size(brain0->params);
     int n_weights1 = get_brain_size(brain1->params);
@@ -418,8 +402,7 @@ Brain crossover_brains(
 
     Brain brain = init_local_brain(brain0->params);
     for (int i = 0; i < n_weights0; ++i) {
-        float weight = frand01() < 0.5 ? brain0->weights[i]
-                                       : brain1->weights[i];
+        float weight = frand01() < 0.5 ? brain0->weights[i] : brain1->weights[i];
         if (frand01() < mutation_rate) {
             weight += (frand01() * 2.0 - 1.0) * mutation_strength;
         }
@@ -432,15 +415,9 @@ Brain crossover_brains(
 // --------------------------------------------------------
 // Brain inputs
 BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES] = {
-    TARGET_ENTITY_INPUT,
-    TARGET_DISTANCE_INPUT,
-    SELF_HEALTH_INPUT,
-    SELF_SPEED_INPUT};
-const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES] = {
-    "Entity (target)",
-    "Distance (target)",
-    "Health (self)",
-    "Speed (self)"};
+    TARGET_ENTITY_INPUT, TARGET_DISTANCE_INPUT, SELF_HEALTH_INPUT, SELF_SPEED_INPUT};
+const char *BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES] = {
+    "Entity (target)", "Distance (target)", "Health (self)", "Speed (self)"};
 
 BrainInput init_target_entity_brain_input(void) {
     BrainInput input;
@@ -478,29 +455,20 @@ BrainInput init_self_speed_brain_input(void) {
     return input;
 }
 
-void change_brain_input_type(
-    BrainInput* brain_input, BrainInputType target_type
-) {
+void change_brain_input_type(BrainInput *brain_input, BrainInputType target_type) {
     BrainInputType source_type = brain_input->type;
     if (source_type == target_type) {
         return;
     }
 
     switch (target_type) {
-        case TARGET_ENTITY_INPUT:
-            *brain_input = init_target_entity_brain_input();
-            break;
+        case TARGET_ENTITY_INPUT: *brain_input = init_target_entity_brain_input(); break;
         case TARGET_DISTANCE_INPUT:
             *brain_input = init_target_distance_brain_input();
             break;
-        case SELF_HEALTH_INPUT:
-            *brain_input = init_self_health_brain_input();
-            break;
-        case SELF_SPEED_INPUT:
-            *brain_input = init_self_speed_brain_input();
-            break;
-        default:
-            BRAIN_INPUT_TYPE_ERROR("change_brain_input_type", source_type);
+        case SELF_HEALTH_INPUT: *brain_input = init_self_health_brain_input(); break;
+        case SELF_SPEED_INPUT: *brain_input = init_self_speed_brain_input(); break;
+        default: BRAIN_INPUT_TYPE_ERROR("change_brain_input_type", source_type);
     }
 }
 
@@ -511,20 +479,11 @@ int get_brain_input_size(BrainParams params) {
         BrainInput input = params.inputs[i];
         BrainInputType type = input.type;
         switch (type) {
-            case TARGET_ENTITY_INPUT:
-                input_size += n_view_rays;
-                break;
-            case TARGET_DISTANCE_INPUT:
-                input_size += n_view_rays;
-                break;
-            case SELF_HEALTH_INPUT:
-                input_size += 1;
-                break;
-            case SELF_SPEED_INPUT:
-                input_size += 1;
-                break;
-            default:
-                BRAIN_INPUT_TYPE_ERROR("get_brain_input_size", type);
+            case TARGET_ENTITY_INPUT: input_size += n_view_rays; break;
+            case TARGET_DISTANCE_INPUT: input_size += n_view_rays; break;
+            case SELF_HEALTH_INPUT: input_size += 1; break;
+            case SELF_SPEED_INPUT: input_size += 1; break;
+            default: BRAIN_INPUT_TYPE_ERROR("get_brain_input_size", type);
         }
     }
 
@@ -538,7 +497,7 @@ BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES] = {
     MOVE_ORIENTATION_OUTPUT,
     IS_SHOOTING_OUTPUT,
     IS_MOVING_OUTPUT};
-const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES] = {
+const char *BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES] = {
     "Look at orientation", "Move orientation", "Is shooting", "Is moving"};
 
 BrainOutput init_watch_orientation_brain_output(void) {
@@ -577,9 +536,7 @@ BrainOutput init_is_moving_brain_output(void) {
     return output;
 }
 
-void change_brain_output_type(
-    BrainOutput* brain_output, BrainOutputType target_type
-) {
+void change_brain_output_type(BrainOutput *brain_output, BrainOutputType target_type) {
     BrainOutputType source_type = brain_output->type;
     if (source_type == target_type) {
         return;
@@ -592,16 +549,9 @@ void change_brain_output_type(
         case MOVE_ORIENTATION_OUTPUT:
             *brain_output = init_move_orientation_brain_output();
             break;
-        case IS_SHOOTING_OUTPUT:
-            *brain_output = init_is_shooting_brain_output();
-            break;
-        case IS_MOVING_OUTPUT:
-            *brain_output = init_is_moving_brain_output();
-            break;
-        default:
-            BRAIN_INPUT_TYPE_ERROR(
-                "change_brain_output_type", source_type
-            );
+        case IS_SHOOTING_OUTPUT: *brain_output = init_is_shooting_brain_output(); break;
+        case IS_MOVING_OUTPUT: *brain_output = init_is_moving_brain_output(); break;
+        default: BRAIN_INPUT_TYPE_ERROR("change_brain_output_type", source_type);
     }
 }
 
@@ -612,20 +562,13 @@ int get_brain_output_size(BrainParams params) {
         BrainOutput output = params.outputs[i];
         BrainOutputType type = output.type;
         switch (type) {
-            case WATCH_ORIENTATION_OUTPUT:
-                output_size += n_view_rays;
-                break;
+            case WATCH_ORIENTATION_OUTPUT: output_size += n_view_rays; break;
             case MOVE_ORIENTATION_OUTPUT:
                 output_size += output.o.move_orientation.n_directions;
                 break;
-            case IS_SHOOTING_OUTPUT:
-                output_size += 1;
-                break;
-            case IS_MOVING_OUTPUT:
-                output_size += 1;
-                break;
-            default:
-                BRAIN_INPUT_TYPE_ERROR("get_brain_output_size", type);
+            case IS_SHOOTING_OUTPUT: output_size += 1; break;
+            case IS_MOVING_OUTPUT: output_size += 1; break;
+            default: BRAIN_INPUT_TYPE_ERROR("get_brain_output_size", type);
         }
     }
 

@@ -33,10 +33,7 @@ void push_collision(Collision collision) {
 
 Collision pop_collision(void) {
     if (N_COLLISIONS == 0) {
-        fprintf(
-            stderr,
-            "ERROR: Can't pop collision from the empty collisions array\n"
-        );
+        fprintf(stderr, "ERROR: Can't pop collision from the empty collisions array\n");
         exit(1);
     }
     Collision collision = COLLISIONS[--N_COLLISIONS];
@@ -44,11 +41,7 @@ Collision pop_collision(void) {
 }
 
 static void update_overlap(
-    Vec2 bound0,
-    Vec2 bound1,
-    Vec2 axis,
-    Vec2* min_overlap_axis,
-    float* min_overlap
+    Vec2 bound0, Vec2 bound1, Vec2 axis, Vec2 *min_overlap_axis, float *min_overlap
 ) {
     float r0 = 0.5 * (bound0.y - bound0.x);
     float r1 = 0.5 * (bound1.y - bound1.x);
@@ -63,9 +56,7 @@ static void update_overlap(
     }
 }
 
-static int collide_circles(
-    Vec2 p0, float r0, Vec2 p1, float r1, Collision* collision
-) {
+static int collide_circles(Vec2 p0, float r0, Vec2 p1, float r1, Collision *collision) {
     Vec2 axis = sub(p1, p0);
     float dist = length(axis);
     axis = normalize(axis);
@@ -80,25 +71,19 @@ static int collide_circles(
 }
 
 static int collide_circle_with_polygon(
-    Vec2 position,
-    float radius,
-    Vec2 vertices[],
-    int n,
-    Collision* collision
+    Vec2 position, float radius, Vec2 vertices[], int n, Collision *collision
 ) {
     Vec2 nearest_vertex;
     Vec2 min_overlap_axis;
-    float nearest_dist = HUGE_VAL;
-    float min_overlap = HUGE_VAL;
+    float nearest_dist = FLT_MAX;
+    float min_overlap = FLT_MAX;
     for (int vertex_idx = 0; vertex_idx < n; ++vertex_idx) {
         Vec2 v0 = vertices[vertex_idx];
         Vec2 v1 = vertices[vertex_idx < n - 1 ? vertex_idx + 1 : 0];
         Vec2 axis = normalize(rotate90(sub(v1, v0)));
         Vec2 bound0 = get_circle_proj_bound(position, radius, axis);
         Vec2 bound1 = get_polygon_proj_bound(vertices, n, axis);
-        update_overlap(
-            bound0, bound1, axis, &min_overlap_axis, &min_overlap
-        );
+        update_overlap(bound0, bound1, axis, &min_overlap_axis, &min_overlap);
 
         float curr_dist = dist(v0, position);
         if (curr_dist < nearest_dist) {
@@ -121,16 +106,12 @@ static int collide_circle_with_polygon(
 }
 
 static int collide_polygons(
-    Vec2 vertices0[],
-    int n0,
-    Vec2 vertices1[],
-    int n1,
-    Collision* collision
+    Vec2 vertices0[], int n0, Vec2 vertices1[], int n1, Collision *collision
 ) {
     Vec2 min_overlap_axis;
-    float min_overlap = HUGE_VAL;
+    float min_overlap = FLT_MAX;
     for (int i = 0; i < n0 + n1; i++) {
-        Vec2* vertices;
+        Vec2 *vertices;
         int n;
         if (i < n0) {
             vertices = vertices0;
@@ -145,9 +126,7 @@ static int collide_polygons(
             Vec2 axis = normalize(rotate90(sub(v1, v0)));
             Vec2 bound0 = get_polygon_proj_bound(vertices0, n0, axis);
             Vec2 bound1 = get_polygon_proj_bound(vertices1, n1, axis);
-            update_overlap(
-                bound0, bound1, axis, &min_overlap_axis, &min_overlap
-            );
+            update_overlap(bound0, bound1, axis, &min_overlap_axis, &min_overlap);
         }
     }
 
@@ -163,7 +142,7 @@ int collide_primitives(
     Transformation transformation0,
     Primitive primitive1,
     Transformation transformation1,
-    Collision* collision
+    Collision *collision
 ) {
     Vec2 vertices0[MAX_N_POLYGON_VERTICES];
     Vec2 vertices1[MAX_N_POLYGON_VERTICES];
@@ -172,8 +151,7 @@ int collide_primitives(
     apply_transformation(vertices0, nv0, transformation0);
     apply_transformation(vertices1, nv1, transformation1);
     int collided;
-    if (primitive0.type == CIRCLE_PRIMITIVE
-        && primitive1.type == CIRCLE_PRIMITIVE) {
+    if (primitive0.type == CIRCLE_PRIMITIVE && primitive1.type == CIRCLE_PRIMITIVE) {
         collided = collide_circles(
             transformation0.curr_position,
             primitive0.p.circle.radius,
@@ -199,9 +177,7 @@ int collide_primitives(
             collision
         );
     } else {
-        collided = collide_polygons(
-            vertices0, nv0, vertices1, nv1, collision
-        );
+        collided = collide_polygons(vertices0, nv0, vertices1, nv1, collision);
         collision->mtv = flip(collision->mtv);
     }
 
@@ -215,7 +191,7 @@ static void update_tiling(void) {
             continue;
         }
         Transformation transformation = SCENE.transformations[entity];
-        int* need_update_tiling = &SCENE.need_update_tiling[entity];
+        int *need_update_tiling = &SCENE.need_update_tiling[entity];
 
         // NOTE: Don't update tiling if the entity didn't change the
         // position
@@ -258,8 +234,7 @@ static void update_tiling(void) {
         Vec2 curr = start;
         do {
             int tile = curr.y * N_X_SCENE_TILES + curr.x;
-            if (curr.x != -1 && curr.y != -1 && tile >= 0
-                && tile < N_SCENE_TILES) {
+            if (curr.x != -1 && curr.y != -1 && tile >= 0 && tile < N_SCENE_TILES) {
                 entity_enters_tile(entity, tile);
             }
 
@@ -274,21 +249,16 @@ static void update_tiling(void) {
 }
 
 static int check_if_entities_can_collide(int entity0, int entity1) {
-    int has_rb0 = check_if_entity_has_component(
-        entity0, RIGID_BODY_COMPONENT
-    );
-    int has_rb1 = check_if_entity_has_component(
-        entity1, RIGID_BODY_COMPONENT
-    );
+    int has_rb0 = check_if_entity_has_component(entity0, RIGID_BODY_COMPONENT);
+    int has_rb1 = check_if_entity_has_component(entity1, RIGID_BODY_COMPONENT);
 
     if (has_rb0 == 0 || has_rb1 == 0) {
         return 0;
     }
 
-    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
-    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
-    if (rb0->type != DYNAMIC_RIGID_BODY
-        && rb1->type != DYNAMIC_RIGID_BODY) {
+    RigidBody *rb0 = &SCENE.rigid_bodies[entity0];
+    RigidBody *rb1 = &SCENE.rigid_bodies[entity1];
+    if (rb0->type != DYNAMIC_RIGID_BODY && rb1->type != DYNAMIC_RIGID_BODY) {
         return 0;
     }
 
@@ -315,14 +285,13 @@ static void compute_collisions(void) {
         Transformation transformation0 = SCENE.transformations[entity];
 
 #ifdef OPTIMIZED_COLLISIONS
-        Array* tiles = &SCENE.entity_to_tiles[entity];
+        Array *tiles = &SCENE.entity_to_tiles[entity];
         static int collided_targets[MAX_N_ENTITIES];
         memset(collided_targets, 0, sizeof(collided_targets));
         for (int i_tile = 0; i_tile < tiles->length; ++i_tile) {
             int tile = array_get(tiles, i_tile);
-            Array* targets = &SCENE.tile_to_entities[tile];
-            for (int i_target = 0; i_target < targets->length;
-                 ++i_target) {
+            Array *targets = &SCENE.tile_to_entities[tile];
+            for (int i_target = 0; i_target < targets->length; ++i_target) {
                 int target = array_get(targets, i_target);
 #else
         for (int target = 0; target < SCENE.n_entities; ++target) {
@@ -337,10 +306,8 @@ static void compute_collisions(void) {
 
                 collided_targets[target] = 1;
                 Primitive primitive1 = SCENE.colliders[target];
-                Transformation transformation1
-                    = SCENE.transformations[target];
-                Collision collision = {
-                    .entity0 = entity, .entity1 = target};
+                Transformation transformation1 = SCENE.transformations[target];
+                Collision collision = {.entity0 = entity, .entity1 = target};
 
                 if (collide_primitives(
                         primitive0,
@@ -358,10 +325,10 @@ static void compute_collisions(void) {
 
 static void resolve_mtv(int entity0, int entity1, Collision collision) {
     Vec2 mtv = collision.mtv;
-    RigidBody* rb0 = &SCENE.rigid_bodies[entity0];
-    RigidBody* rb1 = &SCENE.rigid_bodies[entity1];
-    Transformation* transformation0 = &SCENE.transformations[entity0];
-    Transformation* transformation1 = &SCENE.transformations[entity1];
+    RigidBody *rb0 = &SCENE.rigid_bodies[entity0];
+    RigidBody *rb1 = &SCENE.rigid_bodies[entity1];
+    Transformation *transformation0 = &SCENE.transformations[entity0];
+    Transformation *transformation1 = &SCENE.transformations[entity1];
     if (check_if_entities_can_collide(entity0, entity1) == 0) {
         fprintf(
             stderr,
@@ -371,20 +338,13 @@ static void resolve_mtv(int entity0, int entity1, Collision collision) {
         exit(1);
     }
 
-    if (rb0->type == DYNAMIC_RIGID_BODY
-        && rb1->type == DYNAMIC_RIGID_BODY) {
-        update_position(
-            entity0, add(transformation0->curr_position, scale(mtv, 0.5))
-        );
-        update_position(
-            entity1, add(transformation1->curr_position, scale(mtv, -0.5))
-        );
+    if (rb0->type == DYNAMIC_RIGID_BODY && rb1->type == DYNAMIC_RIGID_BODY) {
+        update_position(entity0, add(transformation0->curr_position, scale(mtv, 0.5)));
+        update_position(entity1, add(transformation1->curr_position, scale(mtv, -0.5)));
     } else if (rb0->type == DYNAMIC_RIGID_BODY) {
         update_position(entity0, add(transformation0->curr_position, mtv));
     } else if (rb1->type == DYNAMIC_RIGID_BODY) {
-        update_position(
-            entity1, add(transformation1->curr_position, flip(mtv))
-        );
+        update_position(entity1, add(transformation1->curr_position, flip(mtv)));
     } else {
         fprintf(
             stderr,
@@ -409,9 +369,7 @@ static void resolve_collisions(int is_playing) {
             Collision collision = pop_collision();
             int entity0 = collision.entity0;
             int entity1 = collision.entity1;
-            int can_collide = check_if_entities_can_collide(
-                entity0, entity1
-            );
+            int can_collide = check_if_entities_can_collide(entity0, entity1);
             if (can_collide == 0) {
                 fprintf(
                     stderr,
@@ -452,11 +410,7 @@ void render_colliders(void) {
         Transformation transformation = SCENE.transformations[entity];
         Primitive primitive = SCENE.colliders[entity];
         render_debug_primitive(
-            transformation,
-            primitive,
-            SKYBLUE_COLOR,
-            DEBUG_RENDER_LAYER,
-            LINE
+            transformation, primitive, SKYBLUE_COLOR, DEBUG_RENDER_LAYER, LINE
         );
     }
 }

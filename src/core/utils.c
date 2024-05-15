@@ -17,9 +17,7 @@
 #include <sys/time.h>
 #endif
 
-FILE* open_file(
-    const char* file_path, ResultMessage* res_msg, const char* mode
-) {
+FILE *open_file(const char *file_path, ResultMessage *res_msg, const char *mode) {
     memset(res_msg, 0, sizeof(ResultMessage));
 
     if (file_path == NULL) {
@@ -27,7 +25,7 @@ FILE* open_file(
         return NULL;
     }
 
-    FILE* fp = fopen(file_path, mode);
+    FILE *fp = fopen(file_path, mode);
     if (!fp) {
         static char msg[MAX_RESULT_MESSAGE_LENGTH + 64];
         sprintf(msg, "ERROR: Can't open the file: %s\n", file_path);
@@ -39,31 +37,23 @@ FILE* open_file(
     return fp;
 }
 
-char* read_cstr_file(
-    const char* restrict file_path, const char* mode, long* n_bytes
-) {
-    FILE* file = NULL;
-    char* content = NULL;
+char *read_cstr_file(const char *restrict file_path, const char *mode, long *n_bytes) {
+    FILE *file = NULL;
+    char *content = NULL;
 
     file = fopen(file_path, mode);
-    if (file == NULL)
-        goto fail;
-    if (fseek(file, 0, SEEK_END) < 0)
-        goto fail;
+    if (file == NULL) goto fail;
+    if (fseek(file, 0, SEEK_END) < 0) goto fail;
 
     long size = ftell(file);
-    if (size < 0)
-        goto fail;
-    if (fseek(file, 0, SEEK_SET) < 0)
-        goto fail;
+    if (size < 0) goto fail;
+    if (fseek(file, 0, SEEK_SET) < 0) goto fail;
 
     content = malloc(size + 1);
-    if (content == NULL)
-        goto fail;
+    if (content == NULL) goto fail;
 
     long read_size = fread(content, 1, size, file);
-    if (ferror(file))
-        goto fail;
+    if (ferror(file)) goto fail;
 
     content[size] = '\0';
     if (file) {
@@ -88,7 +78,7 @@ fail:
     return NULL;
 }
 
-void write_str_to_file(const char* str, FILE* fp, int allow_null) {
+void write_str_to_file(const char *str, FILE *fp, int allow_null) {
     if (str == NULL && !allow_null) {
         fprintf(
             stderr,
@@ -108,11 +98,11 @@ void write_str_to_file(const char* str, FILE* fp, int allow_null) {
     }
 }
 
-void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
+void read_str_from_file(char **str_p, FILE *fp, int allow_null) {
     uint32_t str_len;
     fread(&str_len, sizeof(uint32_t), 1, fp);
     if (str_len > 0) {
-        char* buffer = (char*)malloc(str_len + 1);
+        char *buffer = (char *)malloc(str_len + 1);
         fread(buffer, sizeof(char), str_len, fp);
         buffer[str_len] = '\0';
         *str_p = buffer;
@@ -128,7 +118,7 @@ void read_str_from_file(char** str_p, FILE* fp, int allow_null) {
     }
 }
 
-char* increment_file_name_version(char* file_name) {
+char *increment_file_name_version(char *file_name) {
     regex_t regex;
     regmatch_t match[2];
 
@@ -137,8 +127,8 @@ char* increment_file_name_version(char* file_name) {
         exit(1);
     }
 
-    char* new_file_name = NULL;
-    char* version_str = NULL;
+    char *new_file_name = NULL;
+    char *version_str = NULL;
     int new_file_name_length = 0;
     if (regexec(&regex, file_name, 2, match, 0) == 0) {
         version_str = strndup(
@@ -165,28 +155,17 @@ char* increment_file_name_version(char* file_name) {
             &file_name[match[0].rm_eo]
         );
     } else {
-        const char* ext = strrchr(file_name, '.');
+        const char *ext = strrchr(file_name, '.');
         if (ext == NULL) {
             new_file_name_length = snprintf(NULL, 0, "%s.v0", file_name);
             new_file_name = malloc(new_file_name_length + 1);
             sprintf(new_file_name, "%s.v0", file_name);
         } else {
             new_file_name_length = snprintf(
-                NULL,
-                0,
-                "%.*s.v0%s",
-                (int)(ext - file_name),
-                file_name,
-                ext
+                NULL, 0, "%.*s.v0%s", (int)(ext - file_name), file_name, ext
             );
             new_file_name = malloc(new_file_name_length + 1);
-            sprintf(
-                new_file_name,
-                "%.*s.v0%s",
-                (int)(ext - file_name),
-                file_name,
-                ext
-            );
+            sprintf(new_file_name, "%.*s.v0%s", (int)(ext - file_name), file_name, ext);
         }
     }
 
@@ -196,12 +175,12 @@ char* increment_file_name_version(char* file_name) {
     return new_file_name;
 }
 
-uint64_t get_bytes_hash(const char* bytes, int n_bytes) {
+uint64_t get_bytes_hash(const char *bytes, int n_bytes) {
     uint64_t p1 = 7;
     uint64_t p2 = 31;
 
     uint64_t hash = p1;
-    for (const char* p = bytes; n_bytes != 0; n_bytes--, p++) {
+    for (const char *p = bytes; n_bytes != 0; n_bytes--, p++) {
         hash = hash * p2 + *p;
     }
 
@@ -226,8 +205,7 @@ static void merge(
     int i = 0, j = 0, k = 0;
 
     while (i < left_size && j < right_size) {
-        if ((descending && left[i] >= right[j])
-            || (!descending && left[i] <= right[j])) {
+        if ((descending && left[i] >= right[j]) || (!descending && left[i] <= right[j])) {
             arr[k] = left[i];
             idx[k] = left_idx[i];
             i++;
@@ -275,17 +253,7 @@ void sort(float arr[], int idx[], int n, int descending) {
 
     sort(left, left_idx, mid, descending);
     sort(right, right_idx, n - mid, descending);
-    merge(
-        arr,
-        idx,
-        left,
-        left_idx,
-        mid,
-        right,
-        right_idx,
-        n - mid,
-        descending
-    );
+    merge(arr, idx, left, left_idx, mid, right, right_idx, n - mid, descending);
 }
 
 void argsort(float arr[], int idx[], int n, int descending) {
@@ -301,7 +269,7 @@ int choose_idx(int n) {
     return (int)(r * n);
 }
 
-int argmax(float* vals, int n) {
+int argmax(float *vals, int n) {
     float max_val = -FLT_MAX;
     int max_val_idx = 0;
     for (int i = 0; i < n; ++i) {
@@ -319,7 +287,7 @@ float sigmoid(float x) {
     return 1.0 / (1.0 + exp(-x));
 }
 
-void softmax(float* x, int n) {
+void softmax(float *x, int n) {
     float max_x = x[0];
     for (int i = 1; i < n; i++) {
         if (x[i] > max_x) {
@@ -345,10 +313,10 @@ int sample_binary(float weight, float temperature) {
     return res;
 }
 
-int sample_multinomial(float* weights, int n, float temperature) {
+int sample_multinomial(float *weights, int n, float temperature) {
     temperature = max(temperature, EPS);
-    static int* _idx = NULL;
-    static float* _weights = NULL;
+    static int *_idx = NULL;
+    static float *_weights = NULL;
     static int _n = 0;
     if (_n < n) {
         _n = n;
@@ -374,9 +342,7 @@ int sample_multinomial(float* weights, int n, float temperature) {
         }
     }
 
-    fprintf(
-        stderr, "ERROR: Unreachable in `sample_multinomial`. It's a bug\n"
-    );
+    fprintf(stderr, "ERROR: Unreachable in `sample_multinomial`. It's a bug\n");
     exit(1);
 }
 
@@ -390,8 +356,8 @@ void shuffle(int arr[], int n) {
     }
 }
 
-void swap_ptrs(void** p0, void** p1) {
-    void* tmp = *p0;
+void swap_ptrs(void **p0, void **p1) {
+    void *tmp = *p0;
     *p0 = *p1;
     *p1 = tmp;
 }

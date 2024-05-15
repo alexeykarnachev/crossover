@@ -6,7 +6,7 @@
 #define N_MATERIAL_TYPES 2
 typedef enum MaterialType { COLOR_MATERIAL, BRICK_MATERIAL } MaterialType;
 extern MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES];
-extern const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
+extern const char *MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES];
 
 typedef struct Material {
     MaterialType type;
@@ -24,7 +24,7 @@ typedef struct Material {
     IVec2 smooth_joint;
 } Material;
 
-void change_material_type(Material* material, MaterialType target_type);
+void change_material_type(Material *material, MaterialType target_type);
 
 Material init_color_material(Vec3 color);
 Material init_brick_material(
@@ -48,7 +48,7 @@ typedef enum MaterialShapeType {
     CUBE_MATERIAL_SHAPE
 } MaterialShapeType;
 extern MaterialShapeType MATERIAL_SHAPE_TYPES[N_MATERIAL_SHAPE_TYPES];
-extern const char* MATERIAL_SHAPE_TYPE_NAMES[N_MATERIAL_SHAPE_TYPES];
+extern const char *MATERIAL_SHAPE_TYPE_NAMES[N_MATERIAL_SHAPE_TYPES];
 
 typedef struct MaterialShape {
     MaterialShapeType type;
@@ -61,13 +61,11 @@ typedef struct MaterialShape {
 } MaterialShape;
 
 void change_material_shape_type(
-    MaterialShape* material_shape, MaterialShapeType target_type
+    MaterialShape *material_shape, MaterialShapeType target_type
 );
 
 MaterialShape init_plane_material_shape(Material material);
-MaterialShape init_cube_material_shape(
-    Material side_materials[5], float side_sizes[4]
-);
+MaterialShape init_cube_material_shape(Material side_materials[5], float side_sizes[4]);
 MaterialShape init_default_plane_material_shape(void);
 MaterialShape init_default_cube_material_shape(void);
 

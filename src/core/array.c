@@ -8,21 +8,20 @@
 
 Array init_array(void) {
     int size = INITIAL_ARRAY_CAPACITY * sizeof(float);
-    float* data = (float*)malloc(size);
+    float *data = (float *)malloc(size);
     memset(data, 0, size);
-    Array array = {
-        .data = data, .length = 0, .capacity = INITIAL_ARRAY_CAPACITY};
+    Array array = {.data = data, .length = 0, .capacity = INITIAL_ARRAY_CAPACITY};
     return array;
 }
 
-void destroy_array(Array* arr) {
+void destroy_array(Array *arr) {
     free(arr->data);
     arr->data = NULL;
     arr->length = 0;
     arr->capacity = 0;
 }
 
-void empty_array(Array* arr) {
+void empty_array(Array *arr) {
     if (arr->data == NULL) {
         *arr = init_array();
     } else {
@@ -30,16 +29,16 @@ void empty_array(Array* arr) {
     }
 }
 
-void append_array(Array* dest, Array* src) {
+void append_array(Array *dest, Array *src) {
     for (int i = 0; i < src->length; ++i) {
         array_push(dest, array_get(src, i));
     }
 }
 
-static void resize_array(Array* arr) {
+static void resize_array(Array *arr) {
     int new_capacity = arr->capacity * 2;
     int new_size = new_capacity * sizeof(float);
-    float* new_data = (float*)malloc(new_size);
+    float *new_data = (float *)malloc(new_size);
     memset(new_data, 0, new_size);
 
     memcpy(new_data, arr->data, arr->capacity * sizeof(float));
@@ -49,7 +48,7 @@ static void resize_array(Array* arr) {
     arr->data = new_data;
 }
 
-void array_push(Array* arr, float val) {
+void array_push(Array *arr, float val) {
     if (arr->data == NULL || arr->capacity == 0) {
         fprintf(stderr, "ERROR: Can't push into the destroyed array\n");
         exit(1);
@@ -61,7 +60,7 @@ void array_push(Array* arr, float val) {
     }
 }
 
-float array_get(Array* arr, int idx) {
+float array_get(Array *arr, int idx) {
     if (idx >= arr->length || idx < 0) {
         fprintf(
             stderr,
@@ -75,7 +74,7 @@ float array_get(Array* arr, int idx) {
     return arr->data[idx];
 }
 
-void array_set(Array* arr, int idx, float val) {
+void array_set(Array *arr, int idx, float val) {
     if (idx >= arr->length || idx < 0) {
         fprintf(
             stderr,
@@ -89,7 +88,7 @@ void array_set(Array* arr, int idx, float val) {
     arr->data[idx] = val;
 }
 
-float array_peek(Array* arr) {
+float array_peek(Array *arr) {
     if (arr->length <= 0) {
         fprintf(stderr, "ERROR: Can't peek from the empty array\n");
         exit(1);
@@ -97,9 +96,7 @@ float array_peek(Array* arr) {
     return arr->data[arr->length - 1];
 }
 
-void array_remove_value(
-    Array* arr, float remove_val, int fail_if_not_present
-) {
+void array_remove_value(Array *arr, float remove_val, int fail_if_not_present) {
     int idx = -1;
     for (int i = 0; i < arr->length; ++i) {
         float this_val = array_get(arr, i);

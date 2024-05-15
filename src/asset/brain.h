@@ -34,12 +34,10 @@ typedef struct BrainInput {
     } i;
 } BrainInput;
 
-void change_brain_input_type(
-    BrainInput* brain_input, BrainInputType target_type
-);
+void change_brain_input_type(BrainInput *brain_input, BrainInputType target_type);
 
-BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
-const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
+extern BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
+extern const char *BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
 
 typedef enum BrainOutputType {
     WATCH_ORIENTATION_OUTPUT,
@@ -71,13 +69,11 @@ typedef struct BrainOutput {
     } o;
 } BrainOutput;
 
-void change_brain_output_type(
-    BrainOutput* brain_output, BrainOutputType target_type
-);
+void change_brain_output_type(BrainOutput *brain_output, BrainOutputType target_type);
 
 #define N_BRAIN_OUTPUT_TYPES 4
-BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
-const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
+extern BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
+extern const char *BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
 typedef struct BrainParams {
     char key[MAX_PATH_LENGTH + 32];
@@ -93,42 +89,31 @@ typedef struct BrainParams {
 
 typedef struct Brain {
     BrainParams params;
-    float* weights;
+    float *weights;
 } Brain;
 
 extern Brain BRAINS[BRAINS_ARRAY_CAPACITY];
 extern int N_BRAINS;
 
 Brain init_local_brain(BrainParams params);
-Brain* init_brain(BrainParams params);
-void randomize_brain(Brain* brain);
-Brain* add_brain_clone(Brain* brain, int allow_replacement);
+Brain *init_brain(BrainParams params);
+void randomize_brain(Brain *brain);
+Brain *add_brain_clone(Brain *brain, int allow_replacement);
 void destroy_brains(void);
-void destroy_brain(Brain* brain);
-void save_brain(char* file_path, Brain* brain, ResultMessage* res_msg);
-BrainParams load_brain_params(char* file_path, ResultMessage* res_msg);
-void load_local_brain(
-    Brain* brain, char* file_path, ResultMessage* res_msg
-);
-Brain* load_brain(
-    char* file_path, ResultMessage* res_msg, int allow_replacement
-);
-void reload_all_brains(ResultMessage* res_msg);
-Brain* get_brain(char* key, int allow_null);
-Brain* get_or_load_brain(char* key);
-Brain* clone_brain(char* dst_key, char* src_key, int randomize_weights);
+void destroy_brain(Brain *brain);
+void save_brain(char *file_path, Brain *brain, ResultMessage *res_msg);
+BrainParams load_brain_params(char *file_path, ResultMessage *res_msg);
+void load_local_brain(Brain *brain, char *file_path, ResultMessage *res_msg);
+Brain *load_brain(char *file_path, ResultMessage *res_msg, int allow_replacement);
+void reload_all_brains(ResultMessage *res_msg);
+Brain *get_brain(char *key, int allow_null);
+Brain *get_or_load_brain(char *key);
+Brain *clone_brain(char *dst_key, char *src_key, int randomize_weights);
 Brain crossover_brains(
-    Brain* brain0,
-    Brain* brain1,
-    float mutation_rate,
-    float mutation_strength
+    Brain *brain0, Brain *brain1, float mutation_rate, float mutation_strength
 );
-void clone_key_brain_into(
-    Brain* dst_brain, char* src_key, int randomize_weights
-);
-void clone_ptr_brain_into(
-    Brain* dst_brain, Brain* src_brain, int randomize_weights
-);
+void clone_key_brain_into(Brain *dst_brain, char *src_key, int randomize_weights);
+void clone_ptr_brain_into(Brain *dst_brain, Brain *src_brain, int randomize_weights);
 
 int get_brain_input_size(BrainParams params);
 int get_brain_output_size(BrainParams params);

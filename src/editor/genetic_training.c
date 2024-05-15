@@ -22,10 +22,10 @@ static float MAX_SCORE = -FLT_MAX;
 static void render_genetic_training_menu_bar(void) {
     if (igBeginMenu("Genetic Training", 1)) {
         if (igBeginMenu("File", 1)) {
-            if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {}
-            if (menu_item(
-                    "Save As (TODO: Not implemented)", "", false, 1
-                )) {}
+            if (menu_item("Open (TODO: Not implemented)", "", false, 1)) {
+            }
+            if (menu_item("Save As (TODO: Not implemented)", "", false, 1)) {
+            }
             igEndMenu();
         }
 
@@ -55,7 +55,7 @@ static void render_entities_without_scorer(void) {
         static char str[16];
         sprintf(str, "Entity: %d", entity);
 
-        Scorer* scorer = &SCENE.scorers[entity];
+        Scorer *scorer = &SCENE.scorers[entity];
         if (igButton("Fix", IG_VEC2_ZERO)) {
             reset_scorer(scorer);
             SCENE.components[entity] |= SCORER_COMPONENT;
@@ -64,8 +64,7 @@ static void render_entities_without_scorer(void) {
 }
 
 static void render_entities_to_train(void) {
-    int n_entities_to_train
-        = GENETIC_TRAINING->progress.n_entities_to_train;
+    int n_entities_to_train = GENETIC_TRAINING->progress.n_entities_to_train;
     igText("%d Entities to train:", n_entities_to_train);
     for (int e = 0; e < n_entities_to_train; ++e) {
         int entity = GENETIC_TRAINING->progress.entities_to_train[e];
@@ -73,17 +72,13 @@ static void render_entities_to_train(void) {
         sprintf(str, "  Entity: %d", entity);
 
         if (igBeginMenu(str, 1)) {
-            igCheckbox(
-                "is frozen",
-                (bool*)&GENETIC_TRAINING->progress.is_frozen[e]
-            );
+            igCheckbox("is frozen", (bool *)&GENETIC_TRAINING->progress.is_frozen[e]);
             SimulationStatus status = GENETIC_TRAINING->progress.status;
             if (status == SIMULATION_NOT_STARTED) {
-                Scorer* scorer = &SCENE.scorers[entity];
+                Scorer *scorer = &SCENE.scorers[entity];
                 render_scorer_weights_inspector(scorer);
             } else if (GENETIC_TRAINING->progress.episode > 0) {
-                Scorer* scorer
-                    = &GENETIC_TRAINING->progress.best_scorers[e];
+                Scorer *scorer = &GENETIC_TRAINING->progress.best_scorers[e];
                 igText("Total: %.2f", get_total_score(scorer));
                 igSeparator();
                 render_scorer_values_inspector(scorer);
@@ -94,66 +89,33 @@ static void render_entities_to_train(void) {
 }
 
 static void render_genetic_training_parameters(void) {
-    int is_started = GENETIC_TRAINING->progress.status
-                     == SIMULATION_NOT_STARTED;
+    int is_started = GENETIC_TRAINING->progress.status == SIMULATION_NOT_STARTED;
     if (is_started) {
         igText("Simulation:");
         ig_drag_float(
-            "Timestep (ms)",
-            &GENETIC_TRAINING->simulation.dt_ms,
-            1.0,
-            100.0,
-            1.0,
-            0
+            "Timestep (ms)", &GENETIC_TRAINING->simulation.dt_ms, 1.0, 100.0, 1.0, 0
         );
         igSeparator();
     }
 
     igText("Population:");
     ig_drag_float(
-        "Episode time (s)",
-        &GENETIC_TRAINING->population.episode_time,
-        5.0,
-        600.0,
-        1.0,
-        0
+        "Episode time (s)", &GENETIC_TRAINING->population.episode_time, 5.0, 600.0, 1.0, 0
     );
 
     if (is_started) {
         ig_drag_int(
-            "Episodes",
-            &GENETIC_TRAINING->population.n_episodes,
-            10,
-            MAX_N_EPISODES,
-            1,
-            0
+            "Episodes", &GENETIC_TRAINING->population.n_episodes, 10, MAX_N_EPISODES, 1, 0
         );
     }
 
     igText("Evolution:");
-    ig_drag_int(
-        "Elite streak",
-        &GENETIC_TRAINING->evolution.elite_streak,
-        1,
-        100,
-        1,
-        0
+    ig_drag_int("Elite streak", &GENETIC_TRAINING->evolution.elite_streak, 1, 100, 1, 0);
+    ig_drag_float(
+        "Elite ratio", &GENETIC_TRAINING->evolution.elite_ratio, 0.01, 0.9, 0.01, 0
     );
     ig_drag_float(
-        "Elite ratio",
-        &GENETIC_TRAINING->evolution.elite_ratio,
-        0.01,
-        0.9,
-        0.01,
-        0
-    );
-    ig_drag_float(
-        "Mutation rate",
-        &GENETIC_TRAINING->evolution.mutation_rate,
-        0.01,
-        0.9,
-        0.01,
-        0
+        "Mutation rate", &GENETIC_TRAINING->evolution.mutation_rate, 0.01, 0.9, 0.01, 0
     );
     ig_drag_float(
         "Mutation strength",
@@ -166,7 +128,7 @@ static void render_genetic_training_parameters(void) {
 }
 
 static void render_genetic_training_controls(void) {
-    SimulationStatus* status = &GENETIC_TRAINING->progress.status;
+    SimulationStatus *status = &GENETIC_TRAINING->progress.status;
     switch (*status) {
         case SIMULATION_RUNNING: {
             if (igButton("Pause", IG_VEC2_ZERO)) {
@@ -215,9 +177,7 @@ static void render_genetic_training_controls(void) {
     if (GENETIC_TRAINING_PID != 0 && GENETIC_TRAINING_PID != -1) {
         ig_same_line();
         if (igButton("Stop", IG_VEC2_ZERO)) {
-            for (int e = 0;
-                 e < GENETIC_TRAINING->progress.n_entities_to_train;
-                 ++e) {
+            for (int e = 0; e < GENETIC_TRAINING->progress.n_entities_to_train; ++e) {
                 destroy_array(&SCORES[e]);
             }
             kill_genetic_training();
@@ -227,35 +187,28 @@ static void render_genetic_training_controls(void) {
 }
 
 static void render_evolution_progress_bar(void) {
-    GeneticTraining* params = GENETIC_TRAINING;
-    float fraction = (float)params->progress.episode
-                     / params->population.n_episodes;
+    GeneticTraining *params = GENETIC_TRAINING;
+    float fraction = (float)params->progress.episode / params->population.n_episodes;
     ImVec2 size_arg = {0.0, 0.0};
     igProgressBar(fraction, size_arg, "");
     ig_same_line();
     igText("Generation: %d", params->progress.generation);
 
-    fraction = (float)params->progress.episode_time
-               / params->population.episode_time;
+    fraction = (float)params->progress.episode_time / params->population.episode_time;
     igProgressBar(fraction, size_arg, "");
     ig_same_line();
-    igText(
-        "Episode: %d/%d",
-        params->progress.episode,
-        params->population.n_episodes
-    );
+    igText("Episode: %d/%d", params->progress.episode, params->population.n_episodes);
 }
 
 // TODO: Bug! Plots are drawn for entities which are present in the
 // main process. E.g if the entity in main process dies, it disappears
 // from the genetic training process (or at lease genetic training plot)
 static void render_evolution_plots(void) {
-    ImPlotContext* ctx = ImPlot_CreateContext();
+    ImPlotContext *ctx = ImPlot_CreateContext();
     ImPlot_SetCurrentContext(ctx);
 
     float n = GENETIC_TRAINING->progress.generation + 1;
-    int n_entities_to_train
-        = GENETIC_TRAINING->progress.n_entities_to_train;
+    int n_entities_to_train = GENETIC_TRAINING->progress.n_entities_to_train;
 
     if (ImPlot_BeginPlot("Best scores", IG_VEC2_ZERO, 0)) {
         int offset = 0;
@@ -271,16 +224,10 @@ static void render_evolution_plots(void) {
             0
         );
         for (int e = 0; e < n_entities_to_train; ++e) {
-            float* ys = SCORES[e].data;
+            float *ys = SCORES[e].data;
             char str[16];
-            sprintf(
-                str,
-                "Entity: %d",
-                GENETIC_TRAINING->progress.entities_to_train[e]
-            );
-            ImPlot_PlotLine_FloatPtrInt(
-                str, ys, n, 1.0, 0.0, 0, 0, stride
-            );
+            sprintf(str, "Entity: %d", GENETIC_TRAINING->progress.entities_to_train[e]);
+            ImPlot_PlotLine_FloatPtrInt(str, ys, n, 1.0, 0.0, 0, 0, stride);
         }
 
         ImPlot_EndPlot();
@@ -300,13 +247,9 @@ static void render_evolution_plots(void) {
                 continue;
             }
 
-            float* streaks = GENETIC_TRAINING->progress.elite_streaks[e];
+            float *streaks = GENETIC_TRAINING->progress.elite_streaks[e];
             char str[16];
-            sprintf(
-                str,
-                "Entity: %d",
-                GENETIC_TRAINING->progress.entities_to_train[e]
-            );
+            sprintf(str, "Entity: %d", GENETIC_TRAINING->progress.entities_to_train[e]);
             ImPlot_PlotHistogram_FloatPtr(
                 str, streaks, episode, 40, bar_scale, range, hist_flags
             );
@@ -332,30 +275,27 @@ static void update_counters(void) {
             continue;
         }
 
-        char* key = controller.c.brain_ai.key;
+        char *key = controller.c.brain_ai.key;
         if (key[0] == '\0') {
             continue;
         }
-        Brain* brain = get_or_load_brain(key);
+        Brain *brain = get_or_load_brain(key);
 
-        int has_scorer = check_if_entity_has_component(
-            entity, SCORER_COMPONENT
-        );
+        int has_scorer = check_if_entity_has_component(entity, SCORER_COMPONENT);
         if (brain->params.is_trainable) {
             if (has_scorer) {
-                GENETIC_TRAINING->progress.entities_to_train
-                    [GENETIC_TRAINING->progress.n_entities_to_train++]
+                GENETIC_TRAINING->progress
+                    .entities_to_train[GENETIC_TRAINING->progress.n_entities_to_train++]
                     = entity;
             } else {
-                ENTITIES_WITHOUT_SCORERS[N_ENTITIES_WITHOUT_SCORER++]
-                    = entity;
+                ENTITIES_WITHOUT_SCORERS[N_ENTITIES_WITHOUT_SCORER++] = entity;
             }
         }
     }
 }
 
 static void update_evolution_history(void) {
-    GeneticTraining* params = GENETIC_TRAINING;
+    GeneticTraining *params = GENETIC_TRAINING;
 
     if (SCORES[0].data == NULL) {
         for (int e = 0; e < MAX_N_ENTITIES_TO_TRAIN; ++e) {
@@ -365,7 +305,7 @@ static void update_evolution_history(void) {
 
     int gen = params->progress.generation;
     for (int e = 0; e < params->progress.n_entities_to_train; ++e) {
-        Scorer* scorer = &params->progress.best_scorers[e];
+        Scorer *scorer = &params->progress.best_scorers[e];
         float val = get_total_score(scorer);
 
         int n_scores = SCORES[e].length;
@@ -426,7 +366,7 @@ void render_genetic_training_editor(void) {
     // genetic training on (like in profiler)
 
     if (GENETIC_TRAINING->progress.status == SIMULATION_NOT_STARTED) {
-        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+        igCheckbox("All immortal", (bool *)&DEBUG.gameplay.all_immortal);
     }
 
     render_entities_without_scorer();

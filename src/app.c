@@ -12,44 +12,36 @@
 #include <string.h>
 
 Application APP;
-static GLFWwindow* WINDOW;
+static GLFWwindow *WINDOW;
 
-static void framebuffer_size_callback(
-    GLFWwindow* window, int width, int height
-) {
-    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+static void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    Application *app = (Application *)(glfwGetWindowUserPointer(window));
     app->window_width = width;
     app->window_height = height;
 }
 
 static void key_callback(
-    GLFWwindow* window, int key, int scancode, int action, int mods
+    GLFWwindow *window, int key, int scancode, int action, int mods
 ) {
-    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+    Application *app = (Application *)(glfwGetWindowUserPointer(window));
     if (key != GLFW_KEY_UNKNOWN) {
         app->_inputs_accum.key_states[key] = (int)(action != GLFW_RELEASE);
     }
 }
 
-static void mouse_button_callback(
-    GLFWwindow* window, int button, int action, int mods
-) {
-    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    Application *app = (Application *)(glfwGetWindowUserPointer(window));
     int state = (int)(action != GLFW_RELEASE);
     app->_inputs_accum.mouse_button_states[button] = state;
 }
 
-static void scroll_callback(
-    GLFWwindow* window, double xoffset, double yoffset
-) {
-    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    Application *app = (Application *)(glfwGetWindowUserPointer(window));
     app->_inputs_accum.scroll_dy += yoffset;
 }
 
-static void cursor_position_callback(
-    GLFWwindow* window, double x, double y
-) {
-    Application* app = (Application*)(glfwGetWindowUserPointer(window));
+static void cursor_position_callback(GLFWwindow *window, double x, double y) {
+    Application *app = (Application *)(glfwGetWindowUserPointer(window));
     app->_inputs_accum.cursor_x = x;
     app->_inputs_accum.cursor_y = y;
 }
@@ -75,9 +67,7 @@ void init_app(int window_width, int window_height) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    WINDOW = glfwCreateWindow(
-        window_width, window_height, "Crossover", NULL, NULL
-    );
+    WINDOW = glfwCreateWindow(window_width, window_height, "Crossover", NULL, NULL);
     if (WINDOW == NULL) {
         printf("Failed to create window! Terminating!\n");
         glfwTerminate();
@@ -118,11 +108,7 @@ void update_window() {
     APP.dt = curr_time - APP.time;
     APP.time = curr_time;
 
-    memcpy(
-        APP.key_states,
-        APP._inputs_accum.key_states,
-        sizeof(APP.key_states)
-    );
+    memcpy(APP.key_states, APP._inputs_accum.key_states, sizeof(APP.key_states));
     memcpy(
         APP.mouse_button_states,
         APP._inputs_accum.mouse_button_states,

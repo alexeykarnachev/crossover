@@ -23,6 +23,6 @@ int collide_primitives(
     Transformation transformation0,
     Primitive primitive1,
     Transformation transformation1,
-    Collision* collision
+    Collision *collision
 );
 void render_colliders(void);

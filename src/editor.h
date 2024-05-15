@@ -12,9 +12,9 @@
     profiler_pop(PROFILER);
 
 typedef struct Project {
-    char* project_file_path;
-    char* scene_file_path;
-    char* default_search_path;
+    char *project_file_path;
+    char *scene_file_path;
+    char *default_search_path;
 } Project;
 
 typedef struct PickedEntity {
@@ -76,8 +76,8 @@ void save_editor_scene(void);
 void save_editor_scene_as(void);
 void reload_editor_scene(void);
 
-void load_editor_project(const char* file_path, ResultMessage* res_msg);
-void save_editor_project(ResultMessage* res_msg);
+void load_editor_project(const char *file_path, ResultMessage *res_msg);
+void save_editor_project(ResultMessage *res_msg);
 
 void pick_entity(int entity);
 int check_if_cursor_on_entity(int entity);

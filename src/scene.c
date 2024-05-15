@@ -26,9 +26,7 @@ Vec2 get_cursor_scene_pos(void) {
     float y = frustum.bot_left.y + size.y * screen_pos.y;
 
     Transformation camera = SCENE.transformations[SCENE.camera];
-    Vec2 position = rotate(
-        vec2(x, y), vec2(0.0, 0.0), camera.curr_orientation
-    );
+    Vec2 position = rotate(vec2(x, y), vec2(0.0, 0.0), camera.curr_orientation);
     return position;
 }
 
@@ -55,8 +53,8 @@ void reset_scene(void) {
     SCENE.n_entities = 0;
 }
 
-void save_scene(const char* file_path, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "wb");
+void save_scene(const char *file_path, ResultMessage *res_msg) {
+    FILE *fp = open_file(file_path, res_msg, "wb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
@@ -69,16 +67,12 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     fwrite(&SCENE.n_entities, sizeof(int), 1, fp);
     fwrite(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
     fwrite(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
-    fwrite(
-        SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
-    );
+    fwrite(SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp);
     fwrite(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
     fwrite(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fwrite(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fwrite(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fwrite(
-        SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp
-    );
+    fwrite(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
     fwrite(SCENE.lights, sizeof(Light), SCENE.n_entities, fp);
     fwrite(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fwrite(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
@@ -96,7 +90,7 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     fwrite(&N_BRAINS, sizeof(int), 1, fp);
     int n_brains = 0;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
-        Brain* brain = &BRAINS[i];
+        Brain *brain = &BRAINS[i];
         if (strlen(brain->params.key) == 0) {
             continue;
         }
@@ -128,8 +122,8 @@ void save_scene(const char* file_path, ResultMessage* res_msg) {
     return;
 }
 
-void load_scene(const char* file_path, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "rb");
+void load_scene(const char *file_path, ResultMessage *res_msg) {
+    FILE *fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
@@ -160,16 +154,12 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
 
     fread(SCENE.components, sizeof(uint64_t), SCENE.n_entities, fp);
     fread(SCENE.names, sizeof(SCENE.names), SCENE.n_entities, fp);
-    fread(
-        SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp
-    );
+    fread(SCENE.transformations, sizeof(Transformation), SCENE.n_entities, fp);
     fread(SCENE.rigid_bodies, sizeof(RigidBody), SCENE.n_entities, fp);
     fread(SCENE.visions, sizeof(Vision), SCENE.n_entities, fp);
     fread(SCENE.colliders, sizeof(Primitive), SCENE.n_entities, fp);
     fread(SCENE.primitives, sizeof(Primitive), SCENE.n_entities, fp);
-    fread(
-        SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp
-    );
+    fread(SCENE.material_shapes, sizeof(MaterialShape), SCENE.n_entities, fp);
     fread(SCENE.lights, sizeof(Light), SCENE.n_entities, fp);
     fread(SCENE.guns, sizeof(Gun), SCENE.n_entities, fp);
     fread(SCENE.bullets, sizeof(Bullet), SCENE.n_entities, fp);
@@ -187,9 +177,9 @@ void load_scene(const char* file_path, ResultMessage* res_msg) {
     int n_brains;
     fread(&n_brains, sizeof(int), 1, fp);
     for (int i = 0; i < n_brains; ++i) {
-        char* key;
+        char *key;
         read_str_from_file(&key, fp, 0);
-        Brain* brain = load_brain(key, res_msg, 0);
+        Brain *brain = load_brain(key, res_msg, 0);
         free(key);
         // TODO: Currently `get_brain_size` returns the number weights.
         // It may be confusing. It's better to make the explicitly named
@@ -250,7 +240,7 @@ void entity_enters_tile(int entity, int tile) {
 }
 
 void entity_leaves_all_tiles(int entity) {
-    Array* tiles = &SCENE.entity_to_tiles[entity];
+    Array *tiles = &SCENE.entity_to_tiles[entity];
     for (int t = 0; t < tiles->length; ++t) {
         int tile = (int)array_get(tiles, t);
         array_remove_value(&SCENE.tile_to_entities[tile], entity, 0);
@@ -302,7 +292,7 @@ int check_if_entity_has_hidden_component(int entity, ComponentType type) {
     return (SCENE.hiddens[entity] & type) == type;
 }
 
-static int spawn_entity(char* name) {
+static int spawn_entity(char *name) {
     if (strlen(name) > MAX_ENTITY_NAME_LENGTH) {
         fprintf(
             stderr,
@@ -339,28 +329,23 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.transformations[entity_copy].elevation
                         = SCENE.transformations[entity].elevation;
                     update_orientation(
-                        entity_copy,
-                        SCENE.transformations[entity].curr_orientation
+                        entity_copy, SCENE.transformations[entity].curr_orientation
                     );
                     break;
                 case RIGID_BODY_COMPONENT:
-                    SCENE.rigid_bodies[entity_copy]
-                        = SCENE.rigid_bodies[entity];
+                    SCENE.rigid_bodies[entity_copy] = SCENE.rigid_bodies[entity];
                     break;
                 case COLLIDER_COMPONENT:
                     SCENE.colliders[entity_copy] = SCENE.colliders[entity];
                     break;
                 case PRIMITIVE_COMPONENT:
-                    SCENE.primitives[entity_copy]
-                        = SCENE.primitives[entity];
+                    SCENE.primitives[entity_copy] = SCENE.primitives[entity];
                     break;
                 case RENDER_LAYER_COMPONENT:
-                    SCENE.render_layers[entity_copy]
-                        = SCENE.render_layers[entity];
+                    SCENE.render_layers[entity_copy] = SCENE.render_layers[entity];
                     break;
                 case MATERIAL_SHAPE_COMPONENT:
-                    SCENE.material_shapes[entity_copy]
-                        = SCENE.material_shapes[entity];
+                    SCENE.material_shapes[entity_copy] = SCENE.material_shapes[entity];
                     break;
                 case LIGHT_COMPONENT:
                     SCENE.lights[entity_copy] = SCENE.lights[entity];
@@ -368,17 +353,12 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                 case VISION_COMPONENT:
                     SCENE.visions[entity_copy] = SCENE.visions[entity];
                     break;
-                case OBSERVABLE_COMPONENT:
-                    break;
-                case TTL_COMPONENT:
-                    SCENE.ttls[entity_copy] = SCENE.ttls[entity];
-                    break;
+                case OBSERVABLE_COMPONENT: break;
+                case TTL_COMPONENT: SCENE.ttls[entity_copy] = SCENE.ttls[entity]; break;
                 case HEALTH_COMPONENT:
                     SCENE.healths[entity_copy] = SCENE.healths[entity];
                     break;
-                case GUN_COMPONENT:
-                    SCENE.guns[entity_copy] = SCENE.guns[entity];
-                    break;
+                case GUN_COMPONENT: SCENE.guns[entity_copy] = SCENE.guns[entity]; break;
                 case BULLET_COMPONENT:
                     SCENE.bullets[entity_copy] = SCENE.bullets[entity];
                     break;
@@ -386,8 +366,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.owners[entity_copy] = SCENE.owners[entity];
                     break;
                 case CONTROLLER_COMPONENT:
-                    SCENE.controllers[entity_copy]
-                        = SCENE.controllers[entity];
+                    SCENE.controllers[entity_copy] = SCENE.controllers[entity];
                     break;
                 case SCORER_COMPONENT:
                     SCENE.scorers[entity_copy] = SCENE.scorers[entity];
@@ -396,9 +375,7 @@ int spawn_entity_copy(int entity, Transformation transformation) {
                     SCENE.hiddens[entity_copy] = SCENE.hiddens[entity];
                     break;
                 default: {
-                    const char* component_name = get_component_type_name(
-                        type
-                    );
+                    const char *component_name = get_component_type_name(type);
                     fprintf(
                         stderr,
                         "ERROR: Can't copy the entity with the component: "
@@ -463,10 +440,9 @@ int spawn_obstacle(
     SCENE.primitives[entity] = primitive;
     SCENE.colliders[entity] = collider;
     SCENE.material_shapes[entity] = material_shape;
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | COLLIDER_COMPONENT | OBSERVABLE_COMPONENT
-                               | RIGID_BODY_COMPONENT | PRIMITIVE_COMPONENT
-                               | MATERIAL_SHAPE_COMPONENT
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT
+                               | OBSERVABLE_COMPONENT | RIGID_BODY_COMPONENT
+                               | PRIMITIVE_COMPONENT | MATERIAL_SHAPE_COMPONENT
                                | RENDER_LAYER_COMPONENT;
 
     return entity;
@@ -482,10 +458,8 @@ int spawn_sprite(
     SCENE.transformations[entity] = transformation;
     SCENE.primitives[entity] = primitive;
     SCENE.material_shapes[entity] = material_shape;
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT
-                               | PRIMITIVE_COMPONENT
-                               | MATERIAL_SHAPE_COMPONENT
-                               | RENDER_LAYER_COMPONENT;
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
+                               | MATERIAL_SHAPE_COMPONENT | RENDER_LAYER_COMPONENT;
 
     return entity;
 }
@@ -502,14 +476,12 @@ int spawn_bullet(Bullet bullet, int owner, float ttl) {
     if (check_if_entity_has_component(owner, RENDER_LAYER_COMPONENT)) {
         SCENE.render_layers[entity] = SCENE.render_layers[owner];
     }
-    SCENE.components[entity] = TRANSFORMATION_COMPONENT | TTL_COMPONENT
-                               | BULLET_COMPONENT | OWNER_COMPONENT
-                               | RENDER_LAYER_COMPONENT | LIGHT_COMPONENT;
+    SCENE.components[entity] = TRANSFORMATION_COMPONENT | TTL_COMPONENT | BULLET_COMPONENT
+                               | OWNER_COMPONENT | RENDER_LAYER_COMPONENT
+                               | LIGHT_COMPONENT;
 }
 
-int spawn_default_ai_guy(
-    Transformation transformation, Controller controller
-) {
+int spawn_default_ai_guy(Transformation transformation, Controller controller) {
     return spawn_guy(
         transformation,
         init_default_dynamic_rigid_body(),
@@ -632,8 +604,7 @@ int spawn_default_polygon_sprite(Transformation transformation) {
 CameraFrustum get_camera_frustum() {
     CameraFrustum frustum;
     if (SCENE.camera != -1) {
-        Transformation transformation
-            = SCENE.transformations[SCENE.camera];
+        Transformation transformation = SCENE.transformations[SCENE.camera];
         float aspect_ratio = (float)APP.window_width / APP.window_height;
         float height = SCENE.camera_view_width / aspect_ratio;
         Vec2 half_size = scale(vec2(SCENE.camera_view_width, height), 0.5);
@@ -651,7 +622,7 @@ void center_camera_on_entity(int entity) {
 
 int reset_camera(void) {
     SCENE.camera = spawn_entity("Camera");
-    Transformation* transformation = &SCENE.transformations[SCENE.camera];
+    Transformation *transformation = &SCENE.transformations[SCENE.camera];
     update_position(SCENE.camera, vec2(0.0, 0.0));
     update_orientation(SCENE.camera, 0.0);
 
@@ -662,7 +633,7 @@ int reset_camera(void) {
 }
 
 void update_position(int entity, Vec2 position) {
-    Transformation* t = &SCENE.transformations[entity];
+    Transformation *t = &SCENE.transformations[entity];
     t->prev_position = t->curr_position;
     t->curr_position = position;
     SCENE.need_update_tiling[entity] = 1;
@@ -670,7 +641,7 @@ void update_position(int entity, Vec2 position) {
 
 void update_orientation(int entity, float orientation) {
     orientation = fmodf(orientation, 2.0 * PI);
-    Transformation* t = &SCENE.transformations[entity];
+    Transformation *t = &SCENE.transformations[entity];
     t->prev_orientation = t->curr_orientation;
     t->curr_orientation = orientation;
     SCENE.need_update_tiling[entity] = 1;

@@ -4,13 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-nfdchar_t* open_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
+nfdchar_t *open_nfd(
+    const nfdchar_t *search_path, nfdfilteritem_t *filter_items, int n_filter_items
 ) {
     NFD_Init();
-    nfdchar_t* file_path;
+    nfdchar_t *file_path;
     nfdresult_t result = NFD_OpenDialog(
         &file_path, filter_items, n_filter_items, search_path
     );
@@ -27,13 +25,11 @@ nfdchar_t* open_nfd(
     return file_path;
 }
 
-nfdchar_t* save_nfd(
-    const nfdchar_t* search_path,
-    nfdfilteritem_t* filter_items,
-    int n_filter_items
+nfdchar_t *save_nfd(
+    const nfdchar_t *search_path, nfdfilteritem_t *filter_items, int n_filter_items
 ) {
     NFD_Init();
-    nfdchar_t* file_path;
+    nfdchar_t *file_path;
     nfdresult_t result = NFD_SaveDialogN(
         &file_path, filter_items, n_filter_items, search_path, NULL
     );

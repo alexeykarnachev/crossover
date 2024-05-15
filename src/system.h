@@ -17,9 +17,7 @@ typedef struct BrainFitsEntityError {
     int n_reasons;
 } BrainFitsEntityError;
 
-BrainFitsEntityError check_if_brain_fits_entity(
-    BrainParams params, int entity
-);
+BrainFitsEntityError check_if_brain_fits_entity(BrainParams params, int entity);
 
 void update_camera(void);
 void update_bullets(float dt);
@@ -42,6 +40,4 @@ void render_debug_player(void);
 void render_debug_visions(void);
 void render_bullets(float dt);
 
-RayCastResult cast_ray(
-    Vec2 start, Vec2 ray, int target_components, int ray_owner
-);
+RayCastResult cast_ray(Vec2 start, Vec2 ray, int target_components, int ray_owner);

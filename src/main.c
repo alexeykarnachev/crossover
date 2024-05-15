@@ -15,7 +15,7 @@ static void shutdown(int sig) {
     kill(0, SIGTERM);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     signal(SIGINT, shutdown);
 
     init_editor();

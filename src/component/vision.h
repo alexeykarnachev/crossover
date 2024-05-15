@@ -16,4 +16,4 @@ typedef struct Vision {
 } Vision;
 
 Vision init_vision(float fov, float distance, int n_view_rays);
-void reset_vision(Vision* vision);
+void reset_vision(Vision *vision);

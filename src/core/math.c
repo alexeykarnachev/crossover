@@ -1,5 +1,6 @@
 #include "../math.h"
 
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -21,7 +22,7 @@ float max(float x, float y) {
 };
 
 float min_n(float vals[], int n) {
-    float res = HUGE_VAL;
+    float res = FLT_MAX;
     for (int i = 0; i < n; ++i) {
         res = min(res, vals[i]);
     }
@@ -29,7 +30,7 @@ float min_n(float vals[], int n) {
 }
 
 float max_n(float vals[], int n) {
-    float res = -HUGE_VAL;
+    float res = -FLT_MAX;
     for (int i = 0; i < n; ++i) {
         res = max(res, vals[i]);
     }
@@ -73,9 +74,8 @@ int any(int vals[], int n) {
 }
 
 float normalize_orientation(float orientation) {
-    float mod_orientation = fmod(orientation, 2.0f * M_PI);
-    return (mod_orientation < 0.0f) ? mod_orientation + 2.0f * M_PI
-                                    : mod_orientation;
+    float mod_orientation = fmod(orientation, 2.0f * PI);
+    return (mod_orientation < 0.0f) ? mod_orientation + 2.0f * PI : mod_orientation;
 }
 
 float get_orientations_diff(float r0, float r1) {
@@ -211,9 +211,7 @@ Vec2 point_to_axis(Vec2 p, Vec2 axis) {
 }
 
 Vec2 round_vec_by_grid(Vec2 v, float grid_size) {
-    Vec2 rounded = vec2(
-        round_by_grid(v.x, grid_size), round_by_grid(v.y, grid_size)
-    );
+    Vec2 rounded = vec2(round_by_grid(v.x, grid_size), round_by_grid(v.y, grid_size));
     return rounded;
 }
 
@@ -248,7 +246,7 @@ int neq(Vec2 v0, Vec2 v1) {
     return eq(v0, v1) == 0;
 }
 
-void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2* out) {
+void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2 *out) {
     float t;
     if (fabs(a.x - b.x) < EPS) {
         float y = p.y;
@@ -275,9 +273,7 @@ void project_point_on_line(Vec2 p, Vec2 a, Vec2 b, Vec2* out) {
     out->y = y;
 }
 
-void project_circle_on_axis(
-    Vec2 position, float radius, Vec2 axis, Vec2 out[2]
-) {
+void project_circle_on_axis(Vec2 position, float radius, Vec2 axis, Vec2 out[2]) {
     axis = normalize(axis);
     Vec2 r = scale(axis, radius);
     float k0 = dot(axis, add(position, r));
@@ -286,12 +282,10 @@ void project_circle_on_axis(
     out[1] = scale(axis, k1);
 }
 
-void project_polygon_on_axis(
-    Vec2 vertices[], int n, Vec2 axis, Vec2 out[2]
-) {
+void project_polygon_on_axis(Vec2 vertices[], int n, Vec2 axis, Vec2 out[2]) {
     axis = normalize(axis);
-    float k0 = HUGE_VAL;
-    float k1 = -HUGE_VAL;
+    float k0 = FLT_MAX;
+    float k1 = -FLT_MAX;
     for (int i = 0; i < n; ++i) {
         float k = dot(axis, vertices[i]);
         k0 = min(k0, k);
@@ -312,8 +306,8 @@ Vec2 get_circle_proj_bound(Vec2 position, float radius, Vec2 axis) {
 Vec2 get_polygon_proj_bound(Vec2 vertices[], int n, Vec2 axis) {
     // NOTE: Input `axis` needs to be normalized!
 
-    float min_k = HUGE_VAL;
-    float max_k = -HUGE_VAL;
+    float min_k = FLT_MAX;
+    float max_k = -FLT_MAX;
     for (int i = 0; i < n; ++i) {
         float k = dot(vertices[i], axis);
         min_k = min(min_k, k);
@@ -322,7 +316,7 @@ Vec2 get_polygon_proj_bound(Vec2 vertices[], int n, Vec2 axis) {
     return vec2(min_k, max_k);
 }
 
-int intersect_lines(Vec2 s0, Vec2 e0, Vec2 s1, Vec2 e1, Vec2* out) {
+int intersect_lines(Vec2 s0, Vec2 e0, Vec2 s1, Vec2 e1, Vec2 *out) {
     Vec2 d0 = sub(e0, s0);
     Vec2 d1 = sub(e1, s1);
 
@@ -344,9 +338,7 @@ int intersect_lines(Vec2 s0, Vec2 e0, Vec2 s1, Vec2 e1, Vec2* out) {
     return 0;
 }
 
-int intersect_line_with_circle(
-    Vec2 s, Vec2 e, Vec2 position, float r, Vec2* out
-) {
+int intersect_line_with_circle(Vec2 s, Vec2 e, Vec2 position, float r, Vec2 *out) {
     float x1 = s.x;
     float y1 = s.y;
     float x2 = e.x;
@@ -358,8 +350,7 @@ int intersect_line_with_circle(
     float dy = y2 - y1;
     float a = dx * dx + dy * dy;
     float b = 2 * (dx * (x1 - cx) + dy * (y1 - cy));
-    float c = cx * cx + cy * cy + x1 * x1 + y1 * y1
-              - 2 * (cx * x1 + cy * y1) - r * r;
+    float c = cx * cx + cy * cy + x1 * x1 + y1 * y1 - 2 * (cx * x1 + cy * y1) - r * r;
 
     float det = b * b - 4 * a * c;
     int n_points = 0;
@@ -382,9 +373,7 @@ int intersect_line_with_circle(
     return n_points;
 }
 
-int intersect_line_with_circle_nearest(
-    Vec2 s, Vec2 e, Vec2 c, float r, Vec2* out
-) {
+int intersect_line_with_circle_nearest(Vec2 s, Vec2 e, Vec2 c, float r, Vec2 *out) {
     Vec2 res[2];
     int n_intersects = intersect_line_with_circle(s, e, c, r, res);
     if (n_intersects <= 1) {
@@ -399,9 +388,9 @@ int intersect_line_with_circle_nearest(
 }
 
 int intersect_line_with_polygon_nearest(
-    Vec2 s, Vec2 e, Vec2 vertices[], int n, Vec2* out
+    Vec2 s, Vec2 e, Vec2 vertices[], int n, Vec2 *out
 ) {
-    float nearest_dist = HUGE_VAL;
+    float nearest_dist = FLT_MAX;
     Vec2 nearest_point;
 
     for (int i = 0; i < n; ++i) {
@@ -416,7 +405,7 @@ int intersect_line_with_polygon_nearest(
         }
     }
 
-    if (nearest_dist < HUGE_VAL) {
+    if (nearest_dist < FLT_MAX) {
         *out = nearest_point;
         return 1;
     }
@@ -424,6 +413,6 @@ int intersect_line_with_polygon_nearest(
     return 0;
 }
 
-void print_vec2(const char* name, Vec2 v) {
+void print_vec2(const char *name, Vec2 v) {
     printf("%s (x: %f, y: %f)\n", name, v.x, v.y);
 }

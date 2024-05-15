@@ -18,23 +18,18 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
+const char *RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
 #define ASSERT_PROJECT(fn_name) \
     do { \
         if (EDITOR.project.project_file_path == NULL) { \
-            fprintf( \
-                stderr, \
-                "ERROR: Can't %s with not initialized Project\n", \
-                fn_name \
-            ); \
+            fprintf(stderr, "ERROR: Can't %s with not initialized Project\n", fn_name); \
             exit(1); \
         } \
     } while (0)
 
 Editor EDITOR;
 
-Profiler* PROFILER;
 static int PROFILER_SHMID;
 static int PROFILER_STAGES_MAP_SHMID;
 
@@ -50,9 +45,9 @@ void init_editor(void) {
 
     reset_editor();
 
-    FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "rb");
+    FILE *fp = fopen(RECENT_PROJECT_FILE_PATH, "rb");
     if (fp) {
-        char* file_path;
+        char *file_path;
         read_str_from_file(&file_path, fp, 0);
         load_editor_project(file_path, &RESULT_MESSAGE);
         free(file_path);
@@ -60,18 +55,16 @@ void init_editor(void) {
 
     // Initialize Profiler shared object
     {
-        PROFILER_SHMID = shmget(
-            IPC_PRIVATE, sizeof(Profiler), 0666 | IPC_CREAT
-        );
+        PROFILER_SHMID = shmget(IPC_PRIVATE, sizeof(Profiler), 0666 | IPC_CREAT);
         if (PROFILER_SHMID == -1) {
             perror("ERROR: Failed to create shared memory segment for the "
                    "Profiler\n");
             exit(1);
         }
 
-        PROFILER = (Profiler*)shmat(PROFILER_SHMID, NULL, 0);
+        PROFILER = (Profiler *)shmat(PROFILER_SHMID, NULL, 0);
 
-        if (PROFILER == (Profiler*)-1) {
+        if (PROFILER == (Profiler *)-1) {
             perror("ERROR: Failed to create shared memory segment for the "
                    "Profiler\n");
             exit(1);
@@ -117,14 +110,14 @@ void destroy_editor(void) {
     EDITOR_DESTROYED = 1;
 }
 
-static void update_recent_project(const char* recent_project_file_path) {
-    FILE* fp = fopen(RECENT_PROJECT_FILE_PATH, "wb");
+static void update_recent_project(const char *recent_project_file_path) {
+    FILE *fp = fopen(RECENT_PROJECT_FILE_PATH, "wb");
     write_str_to_file(recent_project_file_path, fp, 0);
     fclose(fp);
 }
 
-void load_editor_project(const char* file_path, ResultMessage* res_msg) {
-    FILE* fp = open_file(file_path, res_msg, "rb");
+void load_editor_project(const char *file_path, ResultMessage *res_msg) {
+    FILE *fp = open_file(file_path, res_msg, "rb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
@@ -144,7 +137,7 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
         return;
     }
 
-    Project* project = &EDITOR.project;
+    Project *project = &EDITOR.project;
     read_str_from_file(&project->project_file_path, fp, 0);
     read_str_from_file(&project->scene_file_path, fp, 1);
     read_str_from_file(&project->default_search_path, fp, 1);
@@ -164,8 +157,8 @@ void load_editor_project(const char* file_path, ResultMessage* res_msg) {
     return;
 }
 
-void save_editor_project(ResultMessage* res_msg) {
-    FILE* fp = open_file(EDITOR.project.project_file_path, res_msg, "wb");
+void save_editor_project(ResultMessage *res_msg) {
+    FILE *fp = open_file(EDITOR.project.project_file_path, res_msg, "wb");
     if (res_msg->flag != SUCCESS_RESULT) {
         return;
     }
@@ -187,14 +180,12 @@ void save_editor_project(ResultMessage* res_msg) {
 }
 
 void new_editor_project(void) {
-    nfdchar_t* file_path = save_nfd(NULL, PROJECT_FILTER, 1);
+    nfdchar_t *file_path = save_nfd(NULL, PROJECT_FILTER, 1);
 
     if (file_path != NULL) {
-        char* default_search_path = (char*)malloc(
-            sizeof(char) * strlen(file_path) + 1
-        );
+        char *default_search_path = (char *)malloc(sizeof(char) * strlen(file_path) + 1);
         strcpy(default_search_path, file_path);
-        char* last_sep_loc = strrchr(default_search_path, PATH_SEPARATOR);
+        char *last_sep_loc = strrchr(default_search_path, PATH_SEPARATOR);
         if (last_sep_loc) {
             *last_sep_loc = '\0';
         }
@@ -219,7 +210,7 @@ void new_editor_scene(void) {
 
 void open_editor_project(void) {
     EDITOR.is_playing = 0;
-    nfdchar_t* file_path = open_nfd(
+    nfdchar_t *file_path = open_nfd(
         EDITOR.project.default_search_path, PROJECT_FILTER, 1
     );
     if (file_path != NULL) {
@@ -233,9 +224,7 @@ void open_editor_scene(void) {
     ASSERT_PROJECT("open_editor_scene");
 
     EDITOR.is_playing = 0;
-    char* scene_file_path = open_nfd(
-        EDITOR.project.default_search_path, SCENE_FILTER, 1
-    );
+    char *scene_file_path = open_nfd(EDITOR.project.default_search_path, SCENE_FILTER, 1);
     load_scene(scene_file_path, &RESULT_MESSAGE);
     if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
         reset_editor();
@@ -250,7 +239,7 @@ void save_editor_scene(void) {
     if (EDITOR.project.scene_file_path != NULL) {
         save_scene(EDITOR.project.scene_file_path, &RESULT_MESSAGE);
     } else {
-        char* scene_file_path = save_nfd(
+        char *scene_file_path = save_nfd(
             EDITOR.project.default_search_path, SCENE_FILTER, 1
         );
         save_scene(scene_file_path, &RESULT_MESSAGE);
@@ -272,9 +261,7 @@ void reload_editor_scene(void) {
 void save_editor_scene_as(void) {
     ASSERT_PROJECT("save_editor_scene_as");
 
-    char* scene_file_path = save_nfd(
-        EDITOR.project.default_search_path, SCENE_FILTER, 1
-    );
+    char *scene_file_path = save_nfd(EDITOR.project.default_search_path, SCENE_FILTER, 1);
     save_scene(scene_file_path, &RESULT_MESSAGE);
     if (RESULT_MESSAGE.flag == SUCCESS_RESULT) {
         EDITOR.project.scene_file_path = scene_file_path;
@@ -304,7 +291,7 @@ void update_editor(void) {
         }
     }
 
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
     if (io->WantCaptureMouse) {
         clear_mouse_states();
     }
@@ -320,7 +307,7 @@ void update_editor(void) {
 
 void render_editor(void) {
     IG_UNIQUE_ID = 0;
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
@@ -355,18 +342,14 @@ void render_editor(void) {
     } else if (EDITOR.is_editing_genetic_training) {
         ig_center_next_window();
         igOpenPopup_Str("render_genetic_training_editor", 0);
-        if (igBeginPopup(
-                "render_genetic_training_editor", ImGuiWindowFlags_Modal
-            )) {
+        if (igBeginPopup("render_genetic_training_editor", ImGuiWindowFlags_Modal)) {
             render_genetic_training_editor();
             igEndPopup();
         }
     } else if (EDITOR.is_editing_profiler) {
         ig_center_next_window();
         igOpenPopup_Str("render_profiler_editor", 0);
-        if (igBeginPopup(
-                "render_profiler_editor", ImGuiWindowFlags_Modal
-            )) {
+        if (igBeginPopup("render_profiler_editor", ImGuiWindowFlags_Modal)) {
             render_profiler_editor();
             igEndPopup();
         }

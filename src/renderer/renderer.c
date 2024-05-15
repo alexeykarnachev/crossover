@@ -14,9 +14,7 @@
 static void set_uniform_camera(GLuint program, Transformation camera) {
     CameraFrustum frustum = get_camera_frustum();
     Vec2 view_size = sub(frustum.top_right, frustum.bot_left);
-    set_uniform_2fv(
-        program, "camera.position", (float*)&camera.curr_position, 1
-    );
+    set_uniform_2fv(program, "camera.position", (float *)&camera.curr_position, 1);
     set_uniform_1f(program, "camera.orientation", camera.curr_orientation);
     set_uniform_1f(program, "camera.view_width", view_size.x);
     set_uniform_1f(program, "camera.view_height", view_size.y);
@@ -26,10 +24,7 @@ static void set_uniform_circle(
     GLuint program, Transformation transformation, Circle circle
 ) {
     set_uniform_2fv(
-        program,
-        "circle.position",
-        (float*)&transformation.curr_position,
-        1
+        program, "circle.position", (float *)&transformation.curr_position, 1
     );
     set_uniform_1f(program, "circle.radius", circle.radius);
     set_uniform_1i(program, "circle.n_polygons", N_POLYGONS_IN_CIRCLE);
@@ -40,15 +35,13 @@ typedef struct RenderCall {
     GLuint draw_mode;
 } RenderCall;
 
-static void set_material_uniform(
-    GLuint program, Material material, int idx
-) {
+static void set_material_uniform(GLuint program, Material material, int idx) {
     static char name[128];
     sprintf(name, "material_shape.materials[%d].type", idx);
     MaterialType type = material.type;
     set_uniform_1i(program, name, type);
 
-    float* color = (float*)&material.color;
+    float *color = (float *)&material.color;
     switch (type) {
         case COLOR_MATERIAL: {
             sprintf(name, "material_shape.materials[%d].color", idx);
@@ -59,34 +52,32 @@ static void set_material_uniform(
             sprintf(name, "material_shape.materials[%d].color", idx);
             set_uniform_3fv(program, name, color, 1);
 
-            float* shear = (float*)&material.shear;
+            float *shear = (float *)&material.shear;
             sprintf(name, "material_shape.materials[%d].shear", idx);
             set_uniform_2fv(program, name, shear, 1);
 
-            float* brick_size = (float*)&material.brick_size;
+            float *brick_size = (float *)&material.brick_size;
             sprintf(name, "material_shape.materials[%d].brick_size", idx);
             set_uniform_2fv(program, name, brick_size, 1);
 
-            float* joint_size = (float*)&material.joint_size;
+            float *joint_size = (float *)&material.joint_size;
             sprintf(name, "material_shape.materials[%d].joint_size", idx);
             set_uniform_2fv(program, name, joint_size, 1);
 
-            float* offset = (float*)&material.offset;
+            float *offset = (float *)&material.offset;
             sprintf(name, "material_shape.materials[%d].offset", idx);
             set_uniform_2fv(program, name, offset, 1);
 
-            int* mirror = (int*)&material.mirror;
+            int *mirror = (int *)&material.mirror;
             sprintf(name, "material_shape.materials[%d].mirror", idx);
             set_uniform_2iv(program, name, mirror, 1);
 
-            int* orientation = (int*)&material.orientation;
+            int *orientation = (int *)&material.orientation;
             sprintf(name, "material_shape.materials[%d].orientation", idx);
             set_uniform_2iv(program, name, orientation, 1);
 
-            int* smooth_joint = (int*)&material.smooth_joint;
-            sprintf(
-                name, "material_shape.materials[%d].smooth_joint", idx
-            );
+            int *smooth_joint = (int *)&material.smooth_joint;
+            sprintf(name, "material_shape.materials[%d].smooth_joint", idx);
             set_uniform_2iv(program, name, smooth_joint, 1);
 
             break;
@@ -94,9 +85,7 @@ static void set_material_uniform(
     }
 }
 
-static void set_material_shape_uniform(
-    GLuint program, MaterialShape material_shape
-) {
+static void set_material_shape_uniform(GLuint program, MaterialShape material_shape) {
     set_uniform_1i(program, "material_shape.type", material_shape.type);
 
     switch (material_shape.type) {
@@ -107,10 +96,7 @@ static void set_material_shape_uniform(
         }
         case CUBE_MATERIAL_SHAPE: {
             set_uniform_4fv(
-                program,
-                "material_shape.side_sizes",
-                material_shape.side_sizes,
-                1
+                program, "material_shape.side_sizes", material_shape.side_sizes, 1
             );
             for (int i = 0; i < 5; ++i) {
                 Material material = material_shape.materials[i];
@@ -118,8 +104,7 @@ static void set_material_shape_uniform(
             }
             break;
         }
-        default:
-            break;
+        default: break;
     }
 }
 
@@ -156,14 +141,9 @@ static RenderCall prepare_primitive_render_call(
         get_vertex_uvs(vertices, n_vertices, uvs, &uv_size);
         apply_transformation(vertices, n_vertices, transformation);
 
+        glBufferSubData(GL_ARRAY_BUFFER, 0, total_attrib_size, (float *)vertices);
         glBufferSubData(
-            GL_ARRAY_BUFFER, 0, total_attrib_size, (float*)vertices
-        );
-        glBufferSubData(
-            GL_ARRAY_BUFFER,
-            total_attrib_size,
-            total_attrib_size,
-            (float*)uvs
+            GL_ARRAY_BUFFER, total_attrib_size, total_attrib_size, (float *)uvs
         );
     }
 
@@ -172,10 +152,8 @@ static RenderCall prepare_primitive_render_call(
 
     set_attrib(program, "vs_world_pos", 2, GL_FLOAT, 0);
     set_attrib(program, "vs_uv_pos", 2, GL_FLOAT, total_attrib_size);
-    set_uniform_1f(
-        program, "orientation", transformation.curr_orientation
-    );
-    set_uniform_2fv(program, "uv_size", (float*)&uv_size, 1);
+    set_uniform_1f(program, "orientation", transformation.curr_orientation);
+    set_uniform_2fv(program, "uv_size", (float *)&uv_size, 1);
 
     RenderCall render_call;
     render_call.n_vertices = n_vertices;
@@ -195,8 +173,7 @@ static void execute_render_call(RenderCall render_call, int fill_type) {
             fill_type_gl = GL_FILL;
             break;
         }
-        default:
-            fill_type_gl = GL_FILL;
+        default: fill_type_gl = GL_FILL;
     }
 
     glPolygonMode(GL_FRONT_AND_BACK, fill_type_gl);
@@ -225,9 +202,7 @@ void render_scene(float dt) {
         Light light = SCENE.lights[entity];
 
         lights[n_lights] = light;
-        light_vision_primitives[n_lights] = init_circle_primitive(
-            light.radius
-        );
+        light_vision_primitives[n_lights] = init_circle_primitive(light.radius);
         light_transformations[n_lights] = transformation;
 
         n_lights += 1;
@@ -242,8 +217,7 @@ void render_scene(float dt) {
     glUseProgram(PRIMITIVE_PROGRAM);
 
     int required_component = TRANSFORMATION_COMPONENT | PRIMITIVE_COMPONENT
-                             | MATERIAL_SHAPE_COMPONENT
-                             | RENDER_LAYER_COMPONENT;
+                             | MATERIAL_SHAPE_COMPONENT | RENDER_LAYER_COMPONENT;
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;
@@ -255,11 +229,7 @@ void render_scene(float dt) {
         float render_layer = SCENE.render_layers[entity];
 
         RenderCall render_call = prepare_primitive_render_call(
-            PRIMITIVE_PROGRAM,
-            transformation,
-            primitive,
-            material_shape,
-            render_layer
+            PRIMITIVE_PROGRAM, transformation, primitive, material_shape, render_layer
         );
 
         if (DEBUG.shading.materials) {
@@ -360,24 +330,20 @@ void render_scene(float dt) {
             sprintf(vec_name, "lights[%d].vec", i);
             sprintf(power_name, "lights[%d].power", i);
 
-            set_uniform_3fv(program, color_name, (float*)&light.color, 1);
-            set_uniform_3fv(
-                program, attenuation_name, (float*)&light.attenuation, 1
-            );
+            set_uniform_3fv(program, color_name, (float *)&light.color, 1);
+            set_uniform_3fv(program, attenuation_name, (float *)&light.attenuation, 1);
             set_uniform_1f(program, power_name, light.power);
             set_uniform_1i(program, is_dir_name, light.is_dir);
 
             if (light.is_dir == 1) {
-                set_uniform_3fv(
-                    program, vec_name, (float*)&light.direction, 1
-                );
+                set_uniform_3fv(program, vec_name, (float *)&light.direction, 1);
             } else {
                 Vec3 position = vec3(
                     transformation.curr_position.x,
                     transformation.curr_position.y,
                     transformation.elevation
                 );
-                set_uniform_3fv(program, vec_name, (float*)&position, 1);
+                set_uniform_3fv(program, vec_name, (float *)&position, 1);
             }
         }
     }

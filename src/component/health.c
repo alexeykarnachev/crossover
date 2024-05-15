@@ -1,9 +1,7 @@
 #include "health.h"
 
 Health init_health(
-    float initial_value,
-    int resurrection_is_active,
-    float resurrection_delay
+    float initial_value, int resurrection_is_active, float resurrection_delay
 ) {
     Health health = {
         .resurrection
@@ -20,7 +18,5 @@ Health init_default_health(void) {
     float initial_value = 1000.0;
     int resurrection_is_active = 0;
     float resurrection_delay = 5.0;
-    return init_health(
-        initial_value, resurrection_is_active, resurrection_delay
-    );
+    return init_health(initial_value, resurrection_is_active, resurrection_delay);
 }

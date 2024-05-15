@@ -49,16 +49,10 @@ void init_debug(void);
 void update_debug(void);
 
 void render_debug_primitive(
-    Transformation t,
-    Primitive p,
-    Vec3 color,
-    float render_layer,
-    int fill_type
+    Transformation t, Primitive p, Vec3 color, float render_layer, int fill_type
 );
 void render_debug_line(Vec2 s, Vec2 e, Vec3 color, float render_layer);
-void render_debug_circle(
-    Vec2 c, float r, Vec3 color, float render_layer, int fill_type
-);
+void render_debug_circle(Vec2 c, float r, Vec3 color, float render_layer, int fill_type);
 void render_debug_rectangle(
     Vec2 position,
     float width,

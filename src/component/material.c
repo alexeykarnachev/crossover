@@ -19,25 +19,19 @@
         exit(1); \
     } while (0)
 
-MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES] = {
-    COLOR_MATERIAL, BRICK_MATERIAL};
-const char* MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES] = {"Color", "Brick"};
+MaterialType MATERIAL_TYPES[N_MATERIAL_TYPES] = {COLOR_MATERIAL, BRICK_MATERIAL};
+const char *MATERIAL_TYPE_NAMES[N_MATERIAL_TYPES] = {"Color", "Brick"};
 
-void change_material_type(Material* material, MaterialType target_type) {
+void change_material_type(Material *material, MaterialType target_type) {
     MaterialType source_type = material->type;
     if (source_type == target_type) {
         return;
     }
 
     switch (target_type) {
-        case COLOR_MATERIAL:
-            *material = init_default_color_material();
-            break;
-        case BRICK_MATERIAL:
-            *material = init_default_brick_material();
-            break;
-        default:
-            MATERIAL_TYPE_ERROR("change_material_type", source_type);
+        case COLOR_MATERIAL: *material = init_default_color_material(); break;
+        case BRICK_MATERIAL: *material = init_default_brick_material(); break;
+        default: MATERIAL_TYPE_ERROR("change_material_type", source_type);
     }
 }
 
@@ -85,14 +79,7 @@ Material init_default_brick_material(void) {
     IVec2 orientation = ivec2(1, 0);
     IVec2 smooth_joint = ivec2(1, 1);
     return init_brick_material(
-        color,
-        shear,
-        brick_size,
-        joint_size,
-        offset,
-        mirror,
-        orientation,
-        smooth_joint
+        color, shear, brick_size, joint_size, offset, mirror, orientation, smooth_joint
     );
 }
 
@@ -113,11 +100,10 @@ Material init_default_brick_material(void) {
 
 MaterialShapeType MATERIAL_SHAPE_TYPES[N_MATERIAL_SHAPE_TYPES] = {
     PLANE_MATERIAL_SHAPE, CUBE_MATERIAL_SHAPE};
-const char* MATERIAL_SHAPE_TYPE_NAMES[N_MATERIAL_SHAPE_TYPES] = {
-    "Plane", "Cube"};
+const char *MATERIAL_SHAPE_TYPE_NAMES[N_MATERIAL_SHAPE_TYPES] = {"Plane", "Cube"};
 
 void change_material_shape_type(
-    MaterialShape* material_shape, MaterialShapeType target_type
+    MaterialShape *material_shape, MaterialShapeType target_type
 ) {
     MaterialShapeType source_type = material_shape->type;
     if (source_type == target_type) {
@@ -131,10 +117,7 @@ void change_material_shape_type(
         case CUBE_MATERIAL_SHAPE:
             *material_shape = init_default_cube_material_shape();
             break;
-        default:
-            MATERIAL_SHAPE_TYPE_ERROR(
-                "change_material_shape_type", source_type
-            );
+        default: MATERIAL_SHAPE_TYPE_ERROR("change_material_shape_type", source_type);
     }
 }
 
@@ -145,9 +128,7 @@ MaterialShape init_plane_material_shape(Material material) {
     return material_shape;
 }
 
-MaterialShape init_cube_material_shape(
-    Material materials[5], float side_sizes[4]
-) {
+MaterialShape init_cube_material_shape(Material materials[5], float side_sizes[4]) {
     MaterialShape material_shape = {0};
     material_shape.type = CUBE_MATERIAL_SHAPE;
     memcpy(material_shape.materials, materials, sizeof(Material) * 5);

@@ -38,11 +38,10 @@ void render_main_menu_bar(void) {
         }
 
         if (igBeginMenu("Edit", 1)) {
-            if (menu_item("Project", "", false, proj_loaded)) {}
+            if (menu_item("Project", "", false, proj_loaded)) {
+            }
             if (igIsItemHovered(0)) {
-                igSetTooltip(
-                    "TODO: Project settings editor is not implemented yet"
-                );
+                igSetTooltip("TODO: Project settings editor is not implemented yet");
             }
             igEndMenu();
         }

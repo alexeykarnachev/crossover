@@ -20,13 +20,12 @@ static void try_shoot(int entity) {
         return;
     }
 
-    Gun* gun = &SCENE.guns[entity];
+    Gun *gun = &SCENE.guns[entity];
     Transformation transformation = SCENE.transformations[entity];
 
     float time_since_last_shoot = (SCENE.time - gun->last_time_shoot);
     float shoot_period = 1.0 / gun->fire_rate;
-    int can_shoot = gun->last_time_shoot == 0
-                    || time_since_last_shoot > shoot_period;
+    int can_shoot = gun->last_time_shoot == 0 || time_since_last_shoot > shoot_period;
     if (can_shoot) {
         gun->last_time_shoot = SCENE.time;
         Bullet bullet = init_bullet(gun->bullet.speed);
@@ -63,7 +62,7 @@ static ControllerAction get_player_keyboard_action(int entity) {
     }
 
     ControllerAction action = {0};
-    Transformation* transformation = &SCENE.transformations[entity];
+    Transformation *transformation = &SCENE.transformations[entity];
 
     Vec2 look_at = get_cursor_scene_pos();
     action.watch_orientation = get_vec_orientation(
@@ -78,9 +77,7 @@ static ControllerAction get_player_keyboard_action(int entity) {
 
     if (length(move_dir) > EPS) {
         Transformation camera = SCENE.transformations[SCENE.camera];
-        move_dir = rotate(
-            move_dir, vec2(0.0, 0.0), camera.curr_orientation
-        );
+        move_dir = rotate(move_dir, vec2(0.0, 0.0), camera.curr_orientation);
         action.move_orientation = get_vec_orientation(move_dir);
         action.is_moving = 1;
     }
@@ -108,15 +105,12 @@ static ControllerAction get_dummy_ai_action(int entity) {
     action.is_moving = 0;
 
     Vec2 nearest_target_position;
-    float nearest_dist = HUGE_VAL;
+    float nearest_dist = FLT_MAX;
     for (int i = 0; i < vision.n_view_rays; ++i) {
         RayCastResult observation = vision.observations[i];
         int target = observation.entity;
 
-        if (target != -1
-            && check_if_entity_has_component(
-                target, CONTROLLER_COMPONENT
-            )) {
+        if (target != -1 && check_if_entity_has_component(target, CONTROLLER_COMPONENT)) {
             Vec2 target_position = observation.position;
             float d = dist(position, target_position);
             if (d < nearest_dist) {
@@ -126,7 +120,7 @@ static ControllerAction get_dummy_ai_action(int entity) {
         }
     }
 
-    if (nearest_dist < HUGE_VAL) {
+    if (nearest_dist < FLT_MAX) {
         action.is_moving = 1;
         action.move_orientation = get_vec_orientation(
             sub(nearest_target_position, position)
@@ -140,35 +134,29 @@ static ControllerAction get_dummy_ai_action(int entity) {
 
 static ControllerAction get_brain_ai_action(int entity) {
     ControllerAction action = {0};
-    BrainAIController* ai = &SCENE.controllers[entity].c.brain_ai;
+    BrainAIController *ai = &SCENE.controllers[entity].c.brain_ai;
     if (ai->key[0] == '\0') {
         return action;
     }
 
-    Brain* brain = get_or_load_brain(ai->key);
+    Brain *brain = get_or_load_brain(ai->key);
     if (brain == NULL) {
-        fprintf(
-            stderr,
-            "WARNING: BrainAIController can't find the Brain: %s\n",
-            ai->key
-        );
+        fprintf(stderr, "WARNING: BrainAIController can't find the Brain: %s\n", ai->key);
         ai->key[0] = '\0';
         return action;
     }
 
     BrainParams params = brain->params;
     int n_view_rays = params.n_view_rays;
-    float* inp = BRAIN_INPUT;
-    BrainFitsEntityError error = check_if_brain_fits_entity(
-        params, entity
-    );
+    float *inp = BRAIN_INPUT;
+    BrainFitsEntityError error = check_if_brain_fits_entity(params, entity);
     if (error.n_reasons != 0) {
         return action;
     }
 
     float orientation = SCENE.transformations[entity].curr_orientation;
     // Construct Brain input array
-    Vision* vision = &SCENE.visions[entity];
+    Vision *vision = &SCENE.visions[entity];
     Vec2 position = SCENE.transformations[entity].curr_position;
     Health health = SCENE.healths[entity];
     RigidBody rb = SCENE.rigid_bodies[entity];
@@ -182,9 +170,7 @@ static ControllerAction get_brain_ai_action(int entity) {
                 for (int i_ray = 0; i_ray < n_view_rays; ++i_ray) {
                     int target = vision->observations[i_ray].entity;
                     if (target != -1) {
-                        *inp++ = check_if_entity_has_component(
-                            target, components
-                        );
+                        *inp++ = check_if_entity_has_component(target, components);
                     } else {
                         *inp++ = 0;
                     }
@@ -193,12 +179,10 @@ static ControllerAction get_brain_ai_action(int entity) {
             }
             case TARGET_DISTANCE_INPUT: {
                 for (int i_ray = 0; i_ray < n_view_rays; ++i_ray) {
-                    RayCastResult* observation
-                        = &vision->observations[i_ray];
+                    RayCastResult *observation = &vision->observations[i_ray];
                     if (observation->entity != -1) {
                         Vec2 target_position = observation->position;
-                        float d = dist(target_position, position)
-                                  / vision->distance;
+                        float d = dist(target_position, position) / vision->distance;
                         *inp++ = d;
                     } else {
                         *inp++ = 0;
@@ -232,7 +216,7 @@ static ControllerAction get_brain_ai_action(int entity) {
 
     // Perform forward pass
     inp = BRAIN_INPUT;
-    float* weights = brain->weights;
+    float *weights = brain->weights;
     int inp_size = get_brain_input_size(params);
 
     for (int i_layer = 0; i_layer < params.n_layers + 1; ++i_layer) {
@@ -273,24 +257,17 @@ static ControllerAction get_brain_ai_action(int entity) {
         BrainOutputType type = output.type;
         switch (type) {
             case WATCH_ORIENTATION_OUTPUT: {
-                int best_ray_idx = sample_multinomial(
-                    inp, n_view_rays, ai->temperature
-                );
+                int best_ray_idx = sample_multinomial(inp, n_view_rays, ai->temperature);
                 Vec2 look_at = vision->observations[best_ray_idx].position;
-                action.watch_orientation = get_vec_orientation(
-                    sub(look_at, position)
-                );
+                action.watch_orientation = get_vec_orientation(sub(look_at, position));
                 inp += n_view_rays;
                 break;
             }
             case MOVE_ORIENTATION_OUTPUT: {
                 int n_dirs = output.o.move_orientation.n_directions;
-                int best_dir_idx = sample_multinomial(
-                    inp, n_dirs, ai->temperature
-                );
+                int best_dir_idx = sample_multinomial(inp, n_dirs, ai->temperature);
                 float dir_step = 2.0 * PI / n_dirs;
-                action.move_orientation = dir_step * best_dir_idx
-                                          + orientation;
+                action.move_orientation = dir_step * best_dir_idx + orientation;
                 inp += n_dirs;
                 break;
             }
@@ -319,23 +296,13 @@ static ControllerAction get_brain_ai_action(int entity) {
     return action;
 }
 
-BrainFitsEntityError check_if_brain_fits_entity(
-    BrainParams params, int entity
-) {
-    int has_vision = check_if_entity_has_component(
-        entity, VISION_COMPONENT
-    );
-    int has_health = check_if_entity_has_component(
-        entity, HEALTH_COMPONENT
-    );
-    int has_rb = check_if_entity_has_component(
-        entity, RIGID_BODY_COMPONENT
-    );
-    int has_static_rb = has_rb
-                        && (SCENE.rigid_bodies[entity].type
-                            == STATIC_RIGID_BODY);
+BrainFitsEntityError check_if_brain_fits_entity(BrainParams params, int entity) {
+    int has_vision = check_if_entity_has_component(entity, VISION_COMPONENT);
+    int has_health = check_if_entity_has_component(entity, HEALTH_COMPONENT);
+    int has_rb = check_if_entity_has_component(entity, RIGID_BODY_COMPONENT);
+    int has_static_rb = has_rb && (SCENE.rigid_bodies[entity].type == STATIC_RIGID_BODY);
 
-    Vision* vision = &SCENE.visions[entity];
+    Vision *vision = &SCENE.visions[entity];
     int n_view_rays = vision->n_view_rays;
     int vision_error = 0;
     int n_view_rays_error = 0;
@@ -376,12 +343,10 @@ BrainFitsEntityError check_if_brain_fits_entity(
         error.reasons[error.n_reasons++] = HEALTH_COMPONENT_MISSED_ERROR;
     }
     if (rb_error) {
-        error.reasons[error.n_reasons++]
-            = RIGID_BODY_COMPONENT_MISSED_ERROR;
+        error.reasons[error.n_reasons++] = RIGID_BODY_COMPONENT_MISSED_ERROR;
     }
     if (static_rb_error) {
-        error.reasons[error.n_reasons++]
-            = STATIC_RIGID_BODY_COMPONENT_ERROR;
+        error.reasons[error.n_reasons++] = STATIC_RIGID_BODY_COMPONENT_ERROR;
     }
 
     return error;
@@ -389,10 +354,9 @@ BrainFitsEntityError check_if_brain_fits_entity(
 
 void update_controllers() {
     for (int entity = 0; entity < SCENE.n_entities; ++entity) {
-        int required_component = TRANSFORMATION_COMPONENT
-                                 | RIGID_BODY_COMPONENT
+        int required_component = TRANSFORMATION_COMPONENT | RIGID_BODY_COMPONENT
                                  | CONTROLLER_COMPONENT;
-        RigidBody* rb = &SCENE.rigid_bodies[entity];
+        RigidBody *rb = &SCENE.rigid_bodies[entity];
 
         if (!check_if_entity_has_component(entity, required_component)) {
             continue;
@@ -434,8 +398,7 @@ void update_controllers() {
         if (rb->type == KINEMATIC_RIGID_BODY) {
             if (is_moving) {
                 rb->b.kinematic_rb.linear_velocity = scale(
-                    get_orientation_vec(move_orientation),
-                    controller.kinematic_speed
+                    get_orientation_vec(move_orientation), controller.kinematic_speed
                 );
             } else {
                 rb->b.kinematic_rb.linear_velocity = vec2(0.0, 0.0);
@@ -444,9 +407,7 @@ void update_controllers() {
         } else if (rb->type == DYNAMIC_RIGID_BODY) {
             if (is_moving) {
                 apply_move_force_to_rb(
-                    rb,
-                    move_orientation,
-                    controller.dynamic_force_magnitude
+                    rb, move_orientation, controller.dynamic_force_magnitude
                 );
             }
             float orientation_diff = get_orientations_diff(

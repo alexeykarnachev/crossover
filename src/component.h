@@ -33,5 +33,5 @@ typedef enum ComponentType {
     HIDDEN_COMPONENT = 1 << 16
 } ComponentType;
 
-ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES];
-const char* get_component_type_name(ComponentType type);
+extern ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES];
+const char *get_component_type_name(ComponentType type);

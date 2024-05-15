@@ -20,48 +20,37 @@ void update_bullets(float dt) {
         if (check_if_entity_has_component(entity, OWNER_COMPONENT)) {
             bullet_owner = SCENE.owners[entity];
         }
-        Transformation* transformation = &SCENE.transformations[entity];
+        Transformation *transformation = &SCENE.transformations[entity];
         Bullet bullet = SCENE.bullets[entity];
         Vec2 velocity = scale(
-            get_orientation_vec(transformation->curr_orientation),
-            bullet.speed
+            get_orientation_vec(transformation->curr_orientation), bullet.speed
         );
         Vec2 ray = scale(velocity, dt);
-        int target_required_component = TRANSFORMATION_COMPONENT
-                                        | COLLIDER_COMPONENT
+        int target_required_component = TRANSFORMATION_COMPONENT | COLLIDER_COMPONENT
                                         | RIGID_BODY_COMPONENT;
         RayCastResult result = cast_ray(
-            transformation->curr_position,
-            ray,
-            target_required_component,
-            bullet_owner
+            transformation->curr_position, ray, target_required_component, bullet_owner
         );
         int target = result.entity;
         if (target != -1) {
             if (check_if_entity_has_component(target, HEALTH_COMPONENT)) {
                 float damage = length(velocity);
-                Health* health = &SCENE.healths[target];
+                Health *health = &SCENE.healths[target];
                 health->curr_value -= damage;
                 health->damage_dealler = bullet_owner;
 
-                if (check_if_entity_has_component(
-                        target, SCORER_COMPONENT
-                    )) {
+                if (check_if_entity_has_component(target, SCORER_COMPONENT)) {
                     update_get_hit_score(target);
                 }
 
                 if (bullet_owner != -1
-                    && check_if_entity_has_component(
-                        bullet_owner, SCORER_COMPONENT
-                    )) {
+                    && check_if_entity_has_component(bullet_owner, SCORER_COMPONENT)) {
                     update_do_hit_score(bullet_owner);
                 }
             }
             destroy_entity(entity);
         } else {
-            Vec2 position = add(
-                transformation->curr_position, scale(velocity, dt)
-            );
+            Vec2 position = add(transformation->curr_position, scale(velocity, dt));
             update_position(entity, position);
         }
     }
@@ -78,8 +67,7 @@ void render_bullets(float dt) {
         Transformation transformation = SCENE.transformations[entity];
         Bullet bullet = SCENE.bullets[entity];
         Vec2 velocity = scale(
-            get_orientation_vec(transformation.curr_orientation),
-            bullet.speed
+            get_orientation_vec(transformation.curr_orientation), bullet.speed
         );
         Vec2 ray = scale(velocity, dt);
         render_debug_line(

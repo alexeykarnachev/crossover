@@ -36,9 +36,9 @@ typedef struct Scorer {
     } exploration;
 } Scorer;
 
-void reset_scorer(Scorer* scorer);
-float get_total_score(Scorer* scorer);
-void read_scorer(FILE* fp, Scorer* scorer);
-void write_scorer(FILE* fp, Scorer* scorer);
-void write_n_scorers(FILE* fp, Scorer* scorers, int n);
-void read_n_scorers(FILE* fp, Scorer* scorers, int n);
+void reset_scorer(Scorer *scorer);
+float get_total_score(Scorer *scorer);
+void read_scorer(FILE *fp, Scorer *scorer);
+void write_scorer(FILE *fp, Scorer *scorer);
+void write_n_scorers(FILE *fp, Scorer *scorers, int n);
+void read_n_scorers(FILE *fp, Scorer *scorers, int n);

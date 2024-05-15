@@ -15,8 +15,7 @@
 #define IG_DRAG_SCALAR_SCORE_WEIGHT(name) \
     ig_drag_float(#name, &scorer->name.weight, -FLT_MAX, FLT_MAX, 0.1, 0)
 
-#define IG_TEXT_SCORE_VALUE(name) \
-    igText("%.4f: " #name, scorer->name.value)
+#define IG_TEXT_SCORE_VALUE(name) igText("%.4f: " #name, scorer->name.value)
 
 static int N_SCALAR_SCORES = 8;
 #define CHECK_ALL_SCORES_HANDLED(scorer) \
@@ -45,17 +44,15 @@ ImVec4 IG_YELLOW_COLOR = {1.0, 1.0, 0.0, 1.0};
 ImVec4 IG_PRESSED_BUTTON_COLOR = {0.0, 0.5, 0.9, 1.0};
 
 ImGuiWindowFlags GHOST_WINDOW_FLAGS
-    = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar
-      | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
-      | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav
-      | ImGuiWindowFlags_NoBackground
-      | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDocking
-      | ImGuiWindowFlags_NoInputs;
+    = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove
+      | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav
+      | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus
+      | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoInputs;
 
-ImGuiColorEditFlags COLOR_PICKER_FLAGS
-    = ImGuiColorEditFlags_PickerHueWheel
-      | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs
-      | ImGuiColorEditFlags_NoAlpha;
+ImGuiColorEditFlags COLOR_PICKER_FLAGS = ImGuiColorEditFlags_PickerHueWheel
+                                         | ImGuiColorEditFlags_NoSidePreview
+                                         | ImGuiColorEditFlags_NoInputs
+                                         | ImGuiColorEditFlags_NoAlpha;
 
 void ig_same_line(void) {
     igSameLine(0.0, igGetStyle()->ItemSpacing.y);
@@ -73,12 +70,7 @@ void ig_center_next_window(void) {
 }
 
 int ig_drag_float(
-    char* label,
-    float* value,
-    float min_val,
-    float max_val,
-    float step,
-    int flags
+    char *label, float *value, float min_val, float max_val, float step, int flags
 ) {
     float init_value = *value;
     igPushItemWidth(SLIDER_WIDTH);
@@ -90,12 +82,7 @@ int ig_drag_float(
 }
 
 int ig_drag_float2(
-    char* label,
-    float values[2],
-    float min_val,
-    float max_val,
-    float step,
-    int flags
+    char *label, float values[2], float min_val, float max_val, float step, int flags
 ) {
     float init_values[2] = {values[0], values[1]};
     igPushItemWidth(SLIDER_WIDTH);
@@ -107,12 +94,7 @@ int ig_drag_float2(
 }
 
 int ig_drag_float3(
-    char* label,
-    float values[3],
-    float min_val,
-    float max_val,
-    float step,
-    int flags
+    char *label, float values[3], float min_val, float max_val, float step, int flags
 ) {
     float init_values[3] = {values[0], values[1], values[2]};
     igPushItemWidth(SLIDER_WIDTH);
@@ -125,12 +107,7 @@ int ig_drag_float3(
 }
 
 int ig_drag_float4(
-    char* label,
-    float values[4],
-    float min_val,
-    float max_val,
-    float step,
-    int flags
+    char *label, float values[4], float min_val, float max_val, float step, int flags
 ) {
     float init_values[4] = {values[0], values[1], values[2], values[3]};
     igPushItemWidth(SLIDER_WIDTH);
@@ -142,9 +119,7 @@ int ig_drag_float4(
            || values[2] != init_values[2] || values[3] != init_values[3];
 }
 
-int ig_drag_int(
-    char* label, int* value, int min_val, int max_val, int step, int flags
-) {
+int ig_drag_int(char *label, int *value, int min_val, int max_val, int step, int flags) {
     int init_value = *value;
     igPushItemWidth(SLIDER_WIDTH);
     igPushID_Int(IG_UNIQUE_ID++);
@@ -154,7 +129,7 @@ int ig_drag_int(
     return *value != init_value;
 }
 
-int ig_add_button(const char* label, int* val, int add, int max_val) {
+int ig_add_button(const char *label, int *val, int add, int max_val) {
     int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
@@ -167,7 +142,7 @@ int ig_add_button(const char* label, int* val, int add, int max_val) {
     return is_changed;
 }
 
-int ig_sub_button(const char* label, int* val, int sub, int min_val) {
+int ig_sub_button(const char *label, int *val, int sub, int min_val) {
     int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
@@ -180,7 +155,7 @@ int ig_sub_button(const char* label, int* val, int sub, int min_val) {
     return is_changed;
 }
 
-int ig_set_button(const char* label, int* val, int set) {
+int ig_set_button(const char *label, int *val, int set) {
     int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
@@ -191,7 +166,7 @@ int ig_set_button(const char* label, int* val, int set) {
     return is_changed;
 }
 
-int ig_mem_reset_button(const char* label, void* ptr, int size) {
+int ig_mem_reset_button(const char *label, void *ptr, int size) {
     int is_changed = 0;
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
@@ -202,7 +177,7 @@ int ig_mem_reset_button(const char* label, void* ptr, int size) {
     return is_changed;
 }
 
-void ig_xor_button(const char* label, int* val) {
+void ig_xor_button(const char *label, int *val) {
     igPushID_Int(IG_UNIQUE_ID++);
     if (igButton(label, IG_VEC2_ZERO)) {
         *val = *val ^ 1;
@@ -210,16 +185,16 @@ void ig_xor_button(const char* label, int* val) {
     igPopID();
 }
 
-void render_component_checkboxes(uint64_t* components) {
+void render_component_checkboxes(uint64_t *components) {
     int flags[N_COMPONENT_TYPES] = {0};
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
         flags[i] = (*components & (1 << i)) != 0;
     }
 
     for (int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        const char* name = get_component_type_name(COMPONENT_TYPES[i]);
+        const char *name = get_component_type_name(COMPONENT_TYPES[i]);
         if (name != NULL) {
-            igCheckbox(name, (bool*)(&flags[i]));
+            igCheckbox(name, (bool *)(&flags[i]));
         }
     }
 
@@ -229,20 +204,20 @@ void render_component_checkboxes(uint64_t* components) {
 }
 
 int render_component_type_picker(
-    const char* combo_name,
+    const char *combo_name,
     int picked_type,
-    int* types,
+    int *types,
     int n_types,
-    const char* type_names[]
+    const char *type_names[]
 ) {
-    const char* picked_type_name = type_names[picked_type];
+    const char *picked_type_name = type_names[picked_type];
     int new_type = picked_type;
 
     igPushID_Int(IG_UNIQUE_ID++);
     if (igBeginCombo(combo_name, picked_type_name, 0)) {
         for (int i = 0; i < n_types; ++i) {
             PrimitiveType type = types[i];
-            const char* type_name = type_names[type];
+            const char *type_name = type_names[type];
             int is_picked = strcmp(picked_type_name, type_name) == 0;
             if (igSelectable_Bool(type_name, is_picked, 0, IG_VEC2_ZERO)) {
                 picked_type_name = type_name;
@@ -260,11 +235,11 @@ int render_component_type_picker(
     return new_type;
 }
 
-char* get_short_file_path(char* file_path) {
+char *get_short_file_path(char *file_path) {
     return &file_path[strlen(EDITOR.project.default_search_path)];
 }
 
-void render_scorer_weights_inspector(Scorer* scorer) {
+void render_scorer_weights_inspector(Scorer *scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
     IG_DRAG_SCALAR_SCORE_WEIGHT(scalars.do_kill);
@@ -283,8 +258,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
         scorer->exploration.cell_size = 1.0;
         scorer->exploration.start_position = position;
         scorer->exploration.prev_cell = vec2(
-            (int)EXPLORATION_GRID_HEIGHT / 2,
-            (int)EXPLORATION_GRID_WIDTH / 2
+            (int)EXPLORATION_GRID_HEIGHT / 2, (int)EXPLORATION_GRID_WIDTH / 2
         );
     }
 
@@ -293,14 +267,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
         IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.new_cell_score);
         IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.old_cell_score);
         IG_DRAG_SCALAR_SCORE_WEIGHT(exploration.stay_in_cell_score);
-        ig_drag_float(
-            "cell_size",
-            &scorer->exploration.cell_size,
-            0.5,
-            100.0,
-            0.1,
-            1.0
-        );
+        ig_drag_float("cell_size", &scorer->exploration.cell_size, 0.5, 100.0, 0.1, 1.0);
         ig_drag_float(
             "stay_in_cell_delay",
             &scorer->exploration.stay_in_cell_delay,
@@ -319,24 +286,19 @@ void render_scorer_weights_inspector(Scorer* scorer) {
             (int)scorer->exploration.prev_cell.x,
             (int)scorer->exploration.prev_cell.y
         );
-        igText(
-            "cell_enter_time: %.4f", scorer->exploration.cell_enter_time
-        );
+        igText("cell_enter_time: %.4f", scorer->exploration.cell_enter_time);
 
         igEndMenu();
     }
     if (cell_size != scorer->exploration.cell_size) {
-        memset(
-            scorer->exploration.grid, 0, sizeof(scorer->exploration.grid)
-        );
+        memset(scorer->exploration.grid, 0, sizeof(scorer->exploration.grid));
         scorer->exploration.cell_enter_time = SCENE.time;
         scorer->exploration.new_cell_score.value = 0.0;
         scorer->exploration.old_cell_score.value = 0.0;
         scorer->exploration.stay_in_cell_score.value = 0.0;
         scorer->exploration.start_position = position;
         scorer->exploration.prev_cell = vec2(
-            (int)EXPLORATION_GRID_HEIGHT / 2,
-            (int)EXPLORATION_GRID_WIDTH / 2
+            (int)EXPLORATION_GRID_HEIGHT / 2, (int)EXPLORATION_GRID_WIDTH / 2
         );
     }
 
@@ -348,7 +310,7 @@ void render_scorer_weights_inspector(Scorer* scorer) {
     }
 }
 
-void render_scorer_values_inspector(Scorer* scorer) {
+void render_scorer_values_inspector(Scorer *scorer) {
     CHECK_ALL_SCORES_HANDLED(scorer);
 
     IG_TEXT_SCORE_VALUE(scalars.do_kill);

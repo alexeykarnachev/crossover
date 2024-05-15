@@ -23,42 +23,25 @@ ComponentType COMPONENT_TYPES[N_COMPONENT_TYPES] = {
     HIDDEN_COMPONENT};
 
 // TODO: Factor out this function into the array of names
-const char* get_component_type_name(ComponentType type) {
+const char *get_component_type_name(ComponentType type) {
     switch (type) {
-        case TRANSFORMATION_COMPONENT:
-            return "Transformation";
-        case COLLIDER_COMPONENT:
-            return "Collider";
-        case PRIMITIVE_COMPONENT:
-            return "Primitive";
-        case RENDER_LAYER_COMPONENT:
-            return "Render layer";
-        case MATERIAL_SHAPE_COMPONENT:
-            return "Material Shape";
-        case LIGHT_COMPONENT:
-            return "Light";
-        case VISION_COMPONENT:
-            return "Vision";
-        case RIGID_BODY_COMPONENT:
-            return "Rigid body";
-        case OBSERVABLE_COMPONENT:
-            return "Observable";
-        case TTL_COMPONENT:
-            return "TTL";
-        case HEALTH_COMPONENT:
-            return "Health";
-        case GUN_COMPONENT:
-            return "Gun";
-        case BULLET_COMPONENT:
-            return "Bullet";
-        case OWNER_COMPONENT:
-            return "Owner";
-        case CONTROLLER_COMPONENT:
-            return "Controller";
-        case SCORER_COMPONENT:
-            return "Scorer";
-        case HIDDEN_COMPONENT:
-            return NULL;
+        case TRANSFORMATION_COMPONENT: return "Transformation";
+        case COLLIDER_COMPONENT: return "Collider";
+        case PRIMITIVE_COMPONENT: return "Primitive";
+        case RENDER_LAYER_COMPONENT: return "Render layer";
+        case MATERIAL_SHAPE_COMPONENT: return "Material Shape";
+        case LIGHT_COMPONENT: return "Light";
+        case VISION_COMPONENT: return "Vision";
+        case RIGID_BODY_COMPONENT: return "Rigid body";
+        case OBSERVABLE_COMPONENT: return "Observable";
+        case TTL_COMPONENT: return "TTL";
+        case HEALTH_COMPONENT: return "Health";
+        case GUN_COMPONENT: return "Gun";
+        case BULLET_COMPONENT: return "Bullet";
+        case OWNER_COMPONENT: return "Owner";
+        case CONTROLLER_COMPONENT: return "Controller";
+        case SCORER_COMPONENT: return "Scorer";
+        case HIDDEN_COMPONENT: return NULL;
         default: {
             fprintf(
                 stderr,

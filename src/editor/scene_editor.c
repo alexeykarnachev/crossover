@@ -63,8 +63,8 @@ static void render_edit_button(ComponentType component_type) {
 }
 
 static void render_primitive_header_settings(
-    Primitive* target_primitive,
-    Primitive* source_primitive,
+    Primitive *target_primitive,
+    Primitive *source_primitive,
     ComponentType target_component_type
 ) {
     // "Copy primitive" button
@@ -101,7 +101,7 @@ static void render_primitive_header_settings(
     int type = render_component_type_picker(
         "Type",
         target_primitive->type,
-        (int*)PRIMITIVE_TYPES,
+        (int *)PRIMITIVE_TYPES,
         N_PRIMITIVE_TYPES,
         PRIMITIVE_TYPE_NAMES
     );
@@ -109,11 +109,11 @@ static void render_primitive_header_settings(
 }
 
 static void render_primitive_geometry_settings(
-    Primitive* target_primitive,
-    Primitive* source_primitive,
+    Primitive *target_primitive,
+    Primitive *source_primitive,
     ComponentType target_component_type
 ) {
-    PrimitiveType* target_primitive_type = &target_primitive->type;
+    PrimitiveType *target_primitive_type = &target_primitive->type;
     switch (*target_primitive_type) {
         case CIRCLE_PRIMITIVE: {
             render_edit_button(target_component_type);
@@ -121,7 +121,7 @@ static void render_primitive_geometry_settings(
                 target_primitive, source_primitive, target_component_type
             );
 
-            float* radius = &target_primitive->p.circle.radius;
+            float *radius = &target_primitive->p.circle.radius;
             ig_drag_float("radius", radius, 0.0, FLT_MAX, 0.05, 0);
             break;
         }
@@ -131,8 +131,8 @@ static void render_primitive_geometry_settings(
                 target_primitive, source_primitive, target_component_type
             );
 
-            float* width = &target_primitive->p.rectangle.width;
-            float* height = &target_primitive->p.rectangle.height;
+            float *width = &target_primitive->p.rectangle.width;
+            float *height = &target_primitive->p.rectangle.height;
             ig_drag_float("width", width, 0.0, FLT_MAX, 0.05, 0);
             ig_drag_float("height", height, 0.0, FLT_MAX, 0.05, 0);
             break;
@@ -143,7 +143,7 @@ static void render_primitive_geometry_settings(
                 target_primitive, source_primitive, target_component_type
             );
 
-            float* b = (float*)&target_primitive->p.line.b;
+            float *b = (float *)&target_primitive->p.line.b;
             ig_drag_float2("b", b, -FLT_MAX, FLT_MAX, 0.05, 0);
             break;
         }
@@ -153,7 +153,7 @@ static void render_primitive_geometry_settings(
                 target_primitive, source_primitive, target_component_type
             );
 
-            Polygon* polygon = &target_primitive->p.polygon;
+            Polygon *polygon = &target_primitive->p.polygon;
             if (igButton("Add vertex", IG_VEC2_ZERO)) {
                 add_polygon_vertex(polygon);
             }
@@ -166,7 +166,7 @@ static void render_primitive_geometry_settings(
             for (int i = 0; i < polygon->n_vertices; ++i) {
                 char label[16];
                 sprintf(label, "v: %d", i);
-                float* vertex = (float*)&polygon->vertices[i];
+                float *vertex = (float *)&polygon->vertices[i];
                 ig_drag_float2(label, vertex, -FLT_MAX, FLT_MAX, 0.05, 0);
             }
             break;
@@ -178,11 +178,11 @@ static void render_primitive_geometry_settings(
 }
 
 static void render_game_controls(void) {
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
     ImGuiWindowFlags flags = GHOST_WINDOW_FLAGS;
     flags ^= ImGuiWindowFlags_NoInputs;
 
-    char* name = "Game controls";
+    char *name = "Game controls";
 
     if (igBegin(name, NULL, flags)) {
         if (EDITOR.is_playing && igButton("Stop", IG_VEC2_ZERO)) {
@@ -194,8 +194,7 @@ static void render_game_controls(void) {
 
     ImVec2 window_size;
     igGetWindowSize(&window_size);
-    ImVec2 position = {
-        0.5 * (io->DisplaySize.x - window_size.x), igGetFrameHeight()};
+    ImVec2 position = {0.5 * (io->DisplaySize.x - window_size.x), igGetFrameHeight()};
     igSetWindowPos_Str(name, position, ImGuiCond_Always);
     igSetWindowSize_Str(name, IG_VEC2_ZERO, ImGuiCond_Always);
 
@@ -213,9 +212,7 @@ static void render_context_menu(void) {
         cursor_scene_pos = get_cursor_scene_pos();
         float elevation = 2.0;
         transformation = init_transformation(
-            round_vec_by_grid(cursor_scene_pos, EDITOR.drag_grid_size),
-            0.0,
-            elevation
+            round_vec_by_grid(cursor_scene_pos, EDITOR.drag_grid_size), 0.0, elevation
         );
         igOpenPopup_Str("context_menu", 0);
     }
@@ -231,9 +228,7 @@ static void render_context_menu(void) {
     if (igBeginMenu("Spawn", 1)) {
         if (igBeginMenu("Guy", 1)) {
             if (menu_item("Player Keyboard", "", 0, 1)) {
-                pick_entity(
-                    spawn_default_player_keyboard_guy(transformation)
-                );
+                pick_entity(spawn_default_player_keyboard_guy(transformation));
             }
             if (menu_item("Dummy AI", "", 0, 1)) {
                 pick_entity(spawn_default_dummy_ai_guy(transformation));
@@ -252,12 +247,10 @@ static void render_context_menu(void) {
                 pick_entity(spawn_default_circle_obstacle(transformation));
             }
             if (menu_item("Rectangle", "", 0, 1)) {
-                pick_entity(spawn_default_rectangle_obstacle(transformation
-                ));
+                pick_entity(spawn_default_rectangle_obstacle(transformation));
             }
             if (menu_item("Polygon", "", 0, 1)) {
-                pick_entity(spawn_default_polygon_obstacle(transformation)
-                );
+                pick_entity(spawn_default_polygon_obstacle(transformation));
             }
             igEndMenu();
         }
@@ -270,8 +263,7 @@ static void render_context_menu(void) {
                 pick_entity(spawn_default_circle_sprite(transformation));
             }
             if (menu_item("Rectangle", "", 0, 1)) {
-                pick_entity(spawn_default_rectangle_sprite(transformation)
-                );
+                pick_entity(spawn_default_rectangle_sprite(transformation));
             }
             if (menu_item("Polygon", "", 0, 1)) {
                 pick_entity(spawn_default_polygon_sprite(transformation));
@@ -282,16 +274,12 @@ static void render_context_menu(void) {
     }
 
     igSeparator();
-    if (menu_item(
-            "Copy", "Ctrl+C", 0, EDITOR.picked_entity.entity != -1
-        )) {
+    if (menu_item("Copy", "Ctrl+C", 0, EDITOR.picked_entity.entity != -1)) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     }
     if (menu_item("Paste", "Ctrl+V", 0, EDITOR.entity_to_copy != -1)) {
         // TODO: Copy elevation from the copyied entity
-        pick_entity(
-            spawn_entity_copy(EDITOR.entity_to_copy, transformation)
-        );
+        pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, transformation));
     }
     if (menu_item("Delete", "Del", 0, EDITOR.picked_entity.entity != -1)) {
         // TODO: Don't delete the object if "del" is pressed,
@@ -302,7 +290,7 @@ static void render_context_menu(void) {
     igEndPopup();
 }
 
-static char* get_brain_params_text(BrainParams params) {
+static char *get_brain_params_text(BrainParams params) {
     static char text[128];
     sprintf(
         text,
@@ -321,11 +309,11 @@ static char* get_brain_params_text(BrainParams params) {
     return text;
 }
 
-char* render_brain_asset_selector(void) {
-    char* selected_key = NULL;
+char *render_brain_asset_selector(void) {
+    char *selected_key = NULL;
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
-        Brain* brain = &BRAINS[i];
-        char* key = brain->params.key;
+        Brain *brain = &BRAINS[i];
+        char *key = brain->params.key;
         if (strlen(key) == 0) {
             continue;
         }
@@ -345,8 +333,8 @@ char* render_brain_asset_selector(void) {
 
 static void render_brain_asset_editor(void) {
     for (int i = 0; i < BRAINS_ARRAY_CAPACITY; ++i) {
-        Brain* brain = &BRAINS[i];
-        char* key = brain->params.key;
+        Brain *brain = &BRAINS[i];
+        char *key = brain->params.key;
         if (strlen(key) == 0) {
             continue;
         }
@@ -357,8 +345,7 @@ static void render_brain_asset_editor(void) {
             igText(get_brain_params_text(brain->params));
 
             igSeparator();
-            if (brain->params.is_trainable
-                && igButton("Freeze weights", IG_VEC2_ZERO)) {
+            if (brain->params.is_trainable && igButton("Freeze weights", IG_VEC2_ZERO)) {
                 brain->params.is_trainable = 0;
                 save_brain(key, brain, &RESULT_MESSAGE);
             } else if (!brain->params.is_trainable && igButton("Make trainable", IG_VEC2_ZERO)) {
@@ -372,15 +359,15 @@ static void render_brain_asset_editor(void) {
 }
 
 static void render_brain_ai_controller_inspector(int entity) {
-    Controller* controller = &SCENE.controllers[entity];
-    BrainAIController* ai = &controller->c.brain_ai;
+    Controller *controller = &SCENE.controllers[entity];
+    BrainAIController *ai = &controller->c.brain_ai;
 
-    Brain* brain = NULL;
+    Brain *brain = NULL;
     if (ai->key[0] != '\0') {
         brain = get_or_load_brain(ai->key);
     }
 
-    char* selected_key = NULL;
+    char *selected_key = NULL;
     if (brain == NULL) {
         igTextColored(IG_YELLOW_COLOR, "WARNING: Brain is missed |");
         ig_same_line();
@@ -405,16 +392,13 @@ static void render_brain_ai_controller_inspector(int entity) {
 
     if (brain != NULL) {
         BrainParams params = brain->params;
-        BrainFitsEntityError error = check_if_brain_fits_entity(
-            params, entity
-        );
+        BrainFitsEntityError error = check_if_brain_fits_entity(params, entity);
         for (int i = 0; i < error.n_reasons; ++i) {
             BrainFitsEntityErrorReason reason = error.reasons[i];
             switch (reason) {
                 case VISION_COMPONENT_MISSED_ERROR: {
                     igTextColored(
-                        IG_RED_COLOR,
-                        "ERROR: This Brain requires Vision component\n"
+                        IG_RED_COLOR, "ERROR: This Brain requires Vision component\n"
                     );
                     ig_same_line();
                     if (igButton("Fix", IG_VEC2_ZERO)) {
@@ -424,8 +408,7 @@ static void render_brain_ai_controller_inspector(int entity) {
                 }
                 case HEALTH_COMPONENT_MISSED_ERROR: {
                     igTextColored(
-                        IG_RED_COLOR,
-                        "ERROR: This Brain requires Health component\n"
+                        IG_RED_COLOR, "ERROR: This Brain requires Health component\n"
                     );
                     ig_same_line();
                     if (igButton("Fix", IG_VEC2_ZERO)) {
@@ -443,8 +426,7 @@ static void render_brain_ai_controller_inspector(int entity) {
                     );
                     ig_same_line();
                     if (igButton("Fix", IG_VEC2_ZERO)) {
-                        SCENE.visions[entity].n_view_rays
-                            = params.n_view_rays;
+                        SCENE.visions[entity].n_view_rays = params.n_view_rays;
                     }
                 }
             }
@@ -453,24 +435,18 @@ static void render_brain_ai_controller_inspector(int entity) {
         if (error.n_reasons > 0) {
             igTextColored(IG_RED_COLOR, "Brain: DOESN'T FIT");
         } else {
-            igTextColored(
-                IG_GREEN_COLOR,
-                "Brain: %s",
-                get_short_file_path(params.key)
-            );
-            ig_drag_float(
-                "temperature", &ai->temperature, 0.0, 10.0, 0.01, 0
-            );
+            igTextColored(IG_GREEN_COLOR, "Brain: %s", get_short_file_path(params.key));
+            ig_drag_float("temperature", &ai->temperature, 0.0, 10.0, 0.01, 0);
         }
     }
 }
 
-static void render_material(MaterialShape* material_shape, int idx) {
-    Material* material = &material_shape->materials[idx];
+static void render_material(MaterialShape *material_shape, int idx) {
+    Material *material = &material_shape->materials[idx];
     int type = render_component_type_picker(
         "Material",
         material->type,
-        (int*)MATERIAL_TYPES,
+        (int *)MATERIAL_TYPES,
         N_MATERIAL_TYPES,
         MATERIAL_TYPE_NAMES
     );
@@ -478,53 +454,37 @@ static void render_material(MaterialShape* material_shape, int idx) {
 
     switch (type) {
         case COLOR_MATERIAL: {
-            float* color = (float*)&material->color;
+            float *color = (float *)&material->color;
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
             break;
         }
         case BRICK_MATERIAL: {
-            float* color = (float*)&material->color;
-            float* brick_size = (float*)&material->brick_size;
-            float* joint_size = (float*)&material->joint_size;
-            float* offset = (float*)&material->offset;
-            IVec2* mirror = &material->mirror;
-            IVec2* orientation = &material->orientation;
-            IVec2* smooth_joint = &material->smooth_joint;
+            float *color = (float *)&material->color;
+            float *brick_size = (float *)&material->brick_size;
+            float *joint_size = (float *)&material->joint_size;
+            float *offset = (float *)&material->offset;
+            IVec2 *mirror = &material->mirror;
+            IVec2 *orientation = &material->orientation;
+            IVec2 *smooth_joint = &material->smooth_joint;
 
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
-            ig_drag_float2(
-                "joint size", joint_size, 0.00, FLT_MAX, 0.01, 0
-            );
+            ig_drag_float2("joint size", joint_size, 0.00, FLT_MAX, 0.01, 0);
             ig_drag_float2("offset", offset, 0.00, FLT_MAX, 0.001, 0);
 
             if (orientation->x == 1) {
                 ig_drag_float(
-                    "brick_size",
-                    &material->brick_size.x,
-                    0.01,
-                    FLT_MAX,
-                    0.01,
-                    0
+                    "brick_size", &material->brick_size.x, 0.01, FLT_MAX, 0.01, 0
                 );
                 material->brick_size.y = material->brick_size.x * 0.5;
-                ig_drag_float(
-                    "shear", &material->shear.x, -5.0, 5.0, 0.05, 0
-                );
+                ig_drag_float("shear", &material->shear.x, -5.0, 5.0, 0.05, 0);
             } else {
                 ig_drag_float(
-                    "brick_size",
-                    &material->brick_size.y,
-                    0.01,
-                    FLT_MAX,
-                    0.01,
-                    0
+                    "brick_size", &material->brick_size.y, 0.01, FLT_MAX, 0.01, 0
                 );
                 material->brick_size.x = material->brick_size.y * 0.5;
-                ig_drag_float(
-                    "shear", &material->shear.y, -5.0, 5.0, 0.05, 0
-                );
+                ig_drag_float("shear", &material->shear.y, -5.0, 5.0, 0.05, 0);
             }
 
             if (igButton("orientation", IG_VEC2_ZERO)) {
@@ -536,9 +496,7 @@ static void render_material(MaterialShape* material_shape, int idx) {
             igText(": %s", orientation->x == 1 ? "hor." : "vert.");
 
             if (igButton("smooth joint", IG_VEC2_ZERO)) {
-                *smooth_joint = ivec2(
-                    smooth_joint->x ^ 1, smooth_joint->y ^ 1
-                );
+                *smooth_joint = ivec2(smooth_joint->x ^ 1, smooth_joint->y ^ 1);
             }
             ig_same_line();
             igText(": %s", smooth_joint->x == 1 ? "on" : "off");
@@ -574,10 +532,10 @@ static void render_material(MaterialShape* material_shape, int idx) {
 }
 
 static void render_material_shape_side(
-    MaterialShape* material_shape, char* name, int idx
+    MaterialShape *material_shape, char *name, int idx
 ) {
     if (idx < 4) {
-        float* size = &material_shape->side_sizes[idx];
+        float *size = &material_shape->side_sizes[idx];
         ig_drag_float("##", size, 0.0, FLT_MAX, 0.05, 0);
         ig_same_line();
     }
@@ -591,7 +549,7 @@ static void render_component_inspector(int entity, ComponentType type) {
     if (!check_if_entity_has_component(entity, type)) {
         return;
     }
-    const char* name = get_component_type_name(type);
+    const char *name = get_component_type_name(type);
     int node = igTreeNodeEx_Str(name, ImGuiTreeNodeFlags_DefaultOpen);
     if (!node) {
         return;
@@ -599,16 +557,13 @@ static void render_component_inspector(int entity, ComponentType type) {
 
     switch (type) {
         case TRANSFORMATION_COMPONENT: {
-            Transformation* transformation
-                = &SCENE.transformations[entity];
+            Transformation *transformation = &SCENE.transformations[entity];
             Vec2 pos = transformation->curr_position;
-            float* orient = &transformation->curr_orientation;
-            float* elevation = &transformation->elevation;
+            float *orient = &transformation->curr_orientation;
+            float *elevation = &transformation->elevation;
 
             render_edit_button(TRANSFORMATION_COMPONENT);
-            ig_drag_float2(
-                "position", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0
-            );
+            ig_drag_float2("position", (float *)&pos, -FLT_MAX, FLT_MAX, 0.05, 0);
             ig_drag_float("orientation", orient, -PI, PI, 0.05, 0);
             ig_drag_float("elevation", elevation, 0.0, 10.0, 0.05, 0);
 
@@ -623,20 +578,18 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case RIGID_BODY_COMPONENT: {
-            RigidBody* rb = &SCENE.rigid_bodies[entity];
+            RigidBody *rb = &SCENE.rigid_bodies[entity];
             int type = render_component_type_picker(
                 "Type",
                 rb->type,
-                (int*)RIGID_BODY_TYPES,
+                (int *)RIGID_BODY_TYPES,
                 N_RIGID_BODY_TYPES,
                 RIGID_BODY_TYPE_NAMES
             );
             change_rigid_body_type(rb, type);
 
             if (rb->type == DYNAMIC_RIGID_BODY) {
-                ig_drag_float(
-                    "mass", &rb->b.dynamic_rb.mass, 1.0, 1000.0, 1.0, 0
-                );
+                ig_drag_float("mass", &rb->b.dynamic_rb.mass, 1.0, 1000.0, 1.0, 0);
                 ig_drag_float(
                     "linear_damping",
                     &rb->b.dynamic_rb.linear_damping,
@@ -671,13 +624,8 @@ static void render_component_inspector(int entity, ComponentType type) {
                 );
             }
 
-            igText(
-                "linear speed: %.4f",
-                length(rb->b.dynamic_rb.linear_velocity)
-            );
-            igText(
-                "angular speed: %.4f", rb->b.dynamic_rb.angular_velocity
-            );
+            igText("linear speed: %.4f", length(rb->b.dynamic_rb.linear_velocity));
+            igText("angular speed: %.4f", rb->b.dynamic_rb.angular_velocity);
             if (igButton("Reset", IG_VEC2_ZERO)) {
                 rb->b.dynamic_rb.angular_velocity = 0.0;
                 rb->b.dynamic_rb.linear_velocity = vec2(0.0, 0.0);
@@ -690,35 +638,27 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case COLLIDER_COMPONENT: {
-            Primitive* source_primitive = NULL;
-            if (check_if_entity_has_component(
-                    entity, PRIMITIVE_COMPONENT
-                )) {
+            Primitive *source_primitive = NULL;
+            if (check_if_entity_has_component(entity, PRIMITIVE_COMPONENT)) {
                 source_primitive = &SCENE.primitives[entity];
             }
             render_primitive_geometry_settings(
-                &SCENE.colliders[entity],
-                source_primitive,
-                COLLIDER_COMPONENT
+                &SCENE.colliders[entity], source_primitive, COLLIDER_COMPONENT
             );
             break;
         }
         case PRIMITIVE_COMPONENT: {
-            Primitive* source_primitive = NULL;
-            if (check_if_entity_has_component(
-                    entity, COLLIDER_COMPONENT
-                )) {
+            Primitive *source_primitive = NULL;
+            if (check_if_entity_has_component(entity, COLLIDER_COMPONENT)) {
                 source_primitive = &SCENE.colliders[entity];
             }
             render_primitive_geometry_settings(
-                &SCENE.primitives[entity],
-                source_primitive,
-                PRIMITIVE_COMPONENT
+                &SCENE.primitives[entity], source_primitive, PRIMITIVE_COMPONENT
             );
             break;
         }
         case MATERIAL_SHAPE_COMPONENT: {
-            MaterialShape* material_shape = &SCENE.material_shapes[entity];
+            MaterialShape *material_shape = &SCENE.material_shapes[entity];
             int has_primitive = check_if_entity_has_component(
                 entity, PRIMITIVE_COMPONENT
             );
@@ -733,7 +673,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             int type = render_component_type_picker(
                 "Shape",
                 material_shape->type,
-                (int*)MATERIAL_SHAPE_TYPES,
+                (int *)MATERIAL_SHAPE_TYPES,
                 N_MATERIAL_SHAPE_TYPES,
                 MATERIAL_SHAPE_TYPE_NAMES
             );
@@ -758,34 +698,20 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case LIGHT_COMPONENT: {
-            Light* light = &SCENE.lights[entity];
-            float* color = (float*)&light->color;
+            Light *light = &SCENE.lights[entity];
+            float *color = (float *)&light->color;
             igText("color");
             igColorPicker3("##", color, COLOR_PICKER_FLAGS);
             ig_drag_float3(
-                "attenuation",
-                (float*)&light->attenuation,
-                0.0,
-                10.0,
-                0.01,
-                0
+                "attenuation", (float *)&light->attenuation, 0.0, 10.0, 0.01, 0
             );
-            ig_drag_float(
-                "radius", (float*)&light->radius, 0.0, 100.0, 1.0, 0
-            );
-            ig_drag_float(
-                "power", (float*)&light->power, 0.0, 1000.0, 1.0, 0
-            );
+            ig_drag_float("radius", (float *)&light->radius, 0.0, 100.0, 1.0, 0);
+            ig_drag_float("power", (float *)&light->power, 0.0, 1000.0, 1.0, 0);
 
-            igCheckbox("is dir.", (bool*)(&light->is_dir));
+            igCheckbox("is dir.", (bool *)(&light->is_dir));
             if (light->is_dir == 1) {
                 ig_drag_float2(
-                    "direction",
-                    (float*)&light->direction,
-                    -FLT_MAX,
-                    FLT_MAX,
-                    0.05,
-                    0
+                    "direction", (float *)&light->direction, -FLT_MAX, FLT_MAX, 0.05, 0
                 );
                 if (igButton("Normalize", IG_VEC2_ZERO)) {
                     light->direction = normalize(light->direction);
@@ -794,15 +720,15 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case RENDER_LAYER_COMPONENT: {
-            float* render_layer = &SCENE.render_layers[entity];
+            float *render_layer = &SCENE.render_layers[entity];
             ig_drag_float("z", render_layer, -1.0, 1.0, 0.1, 0);
             break;
         }
         case VISION_COMPONENT: {
-            Vision* vision = &SCENE.visions[entity];
-            int* n_view_rays = &vision->n_view_rays;
-            float* distance = &vision->distance;
-            float* fov = &vision->fov;
+            Vision *vision = &SCENE.visions[entity];
+            int *n_view_rays = &vision->n_view_rays;
+            float *distance = &vision->distance;
+            float *fov = &vision->fov;
 
             ig_drag_float("fov", fov, 0.0, 2.0 * PI, 0.05, 0);
             ig_drag_float("distance", distance, 0.0, FLT_MAX, 0.1, 0);
@@ -810,11 +736,9 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case CONTROLLER_COMPONENT: {
-            Controller* controller = &SCENE.controllers[entity];
-            RigidBody* rb = &SCENE.rigid_bodies[entity];
-            int has_rb = check_if_entity_has_component(
-                entity, RIGID_BODY_COMPONENT
-            );
+            Controller *controller = &SCENE.controllers[entity];
+            RigidBody *rb = &SCENE.rigid_bodies[entity];
+            int has_rb = check_if_entity_has_component(entity, RIGID_BODY_COMPONENT);
             int can_be_controlled = rb->type == KINEMATIC_RIGID_BODY
                                     || rb->type == DYNAMIC_RIGID_BODY;
             if (has_rb == 0 || can_be_controlled == 0) {
@@ -829,18 +753,13 @@ static void render_component_inspector(int entity, ComponentType type) {
             int type = render_component_type_picker(
                 "Type",
                 controller->type,
-                (int*)CONTROLLER_TYPES,
+                (int *)CONTROLLER_TYPES,
                 N_CONTROLLER_TYPES,
                 CONTROLLER_TYPE_NAMES
             );
             change_controller_type(controller, type);
             ig_drag_float(
-                "kinematic speed",
-                &controller->kinematic_speed,
-                0.0,
-                FLT_MAX,
-                0.1,
-                0
+                "kinematic speed", &controller->kinematic_speed, 0.0, FLT_MAX, 0.1, 0
             );
             ig_drag_float(
                 "dynamic force",
@@ -856,8 +775,8 @@ static void render_component_inspector(int entity, ComponentType type) {
                     break;
                 }
                 case DUMMY_AI_CONTROLLER: {
-                    DummyAIController* ai = &controller->c.dummy_ai;
-                    igCheckbox("Shoot", (bool*)(&ai->is_shooting));
+                    DummyAIController *ai = &controller->c.dummy_ai;
+                    igCheckbox("Shoot", (bool *)(&ai->is_shooting));
                     break;
                 }
                 case BRAIN_AI_CONTROLLER: {
@@ -878,7 +797,7 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case SCORER_COMPONENT: {
-            Scorer* scorer = &SCENE.scorers[entity];
+            Scorer *scorer = &SCENE.scorers[entity];
             igText("Total: %.4f", get_total_score(scorer));
             ig_same_line();
             if (igButton("Reset", IG_VEC2_ZERO)) {
@@ -897,42 +816,29 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case TTL_COMPONENT: {
-            float* ttl = &SCENE.ttls[entity];
+            float *ttl = &SCENE.ttls[entity];
             ig_drag_float("ttl", ttl, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case HEALTH_COMPONENT: {
-            Health* health = &SCENE.healths[entity];
-            igCheckbox(
-                "can resurrect", (bool*)(&health->resurrection.is_active)
-            );
+            Health *health = &SCENE.healths[entity];
+            igCheckbox("can resurrect", (bool *)(&health->resurrection.is_active));
             if (health->resurrection.is_active) {
                 ig_drag_float(
-                    "res. delay",
-                    &health->resurrection.delay,
-                    0.0,
-                    FLT_MAX,
-                    0.1,
-                    0
+                    "res. delay", &health->resurrection.delay, 0.0, FLT_MAX, 0.1, 0
                 );
             }
-            ig_drag_float(
-                "initial", &health->initial_value, 0.0, FLT_MAX, 1.0, 0
-            );
-            ig_drag_float(
-                "current", &health->curr_value, 0.0, FLT_MAX, 1.0, 0
-            );
+            ig_drag_float("initial", &health->initial_value, 0.0, FLT_MAX, 1.0, 0);
+            ig_drag_float("current", &health->curr_value, 0.0, FLT_MAX, 1.0, 0);
             break;
         }
         case GUN_COMPONENT: {
-            Gun* gun = &SCENE.guns[entity];
-            float* ttl = &gun->bullet.ttl;
-            float* speed = &gun->bullet.speed;
-            float* fire_rate = &gun->fire_rate;
+            Gun *gun = &SCENE.guns[entity];
+            float *ttl = &gun->bullet.ttl;
+            float *speed = &gun->bullet.speed;
+            float *fire_rate = &gun->fire_rate;
 
-            if (igTreeNodeEx_Str(
-                    "bullet", ImGuiTreeNodeFlags_DefaultOpen
-                )) {
+            if (igTreeNodeEx_Str("bullet", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ig_drag_float("ttl", ttl, 0.0, 30.0, 1.0, 0);
                 ig_drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
                 igTreePop();
@@ -942,8 +848,8 @@ static void render_component_inspector(int entity, ComponentType type) {
             break;
         }
         case BULLET_COMPONENT: {
-            Bullet* bullet = &SCENE.bullets[entity];
-            float* speed = &bullet->speed;
+            Bullet *bullet = &SCENE.bullets[entity];
+            float *speed = &bullet->speed;
             ig_drag_float("speed", speed, 0.0, 5000.0, 5.0, 0);
             break;
         }
@@ -963,18 +869,16 @@ static void render_camera_inspector(void) {
         reset_camera();
     }
 
-    Transformation* transformation = &SCENE.transformations[SCENE.camera];
+    Transformation *transformation = &SCENE.transformations[SCENE.camera];
     Vec2 pos = transformation->curr_position;
     float orient = transformation->curr_orientation;
 
-    ig_drag_float2("pos.", (float*)&pos, -FLT_MAX, FLT_MAX, 0.05, 0);
+    ig_drag_float2("pos.", (float *)&pos, -FLT_MAX, FLT_MAX, 0.05, 0);
     ig_drag_float("orient.", &orient, -PI, PI, 0.05, 0);
     update_position(SCENE.camera, pos);
     update_orientation(SCENE.camera, orient);
 
-    ig_drag_float(
-        "view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0
-    );
+    ig_drag_float("view width", &SCENE.camera_view_width, 0.0, 1000.0, 0.2, 0);
 }
 
 static void render_components_selector(void) {
@@ -984,7 +888,7 @@ static void render_components_selector(void) {
         return;
     }
 
-    uint64_t* components = &SCENE.components[picked_entity];
+    uint64_t *components = &SCENE.components[picked_entity];
     LAST_PICKED_ENTITY = picked_entity;
     render_component_checkboxes(components);
 }
@@ -1015,10 +919,8 @@ static void render_entities_browser(void) {
     }
 
     for (int i = 0; i < 2; ++i) {
-        const char* label = i == 0 ? "Alive" : "Trash";
-        int node = igTreeNodeEx_Str(
-            label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i)
-        );
+        const char *label = i == 0 ? "Alive" : "Trash";
+        int node = igTreeNodeEx_Str(label, ImGuiTreeNodeFlags_DefaultOpen * (1 - i));
         if (!node) {
             continue;
         }
@@ -1050,9 +952,7 @@ static void render_entities_browser(void) {
 }
 
 static void render_assets_browser(void) {
-    int node = igCollapsingHeader_TreeNodeFlags(
-        "Assets", ImGuiTreeNodeFlags_DefaultOpen
-    );
+    int node = igCollapsingHeader_TreeNodeFlags("Assets", ImGuiTreeNodeFlags_DefaultOpen);
     if (!node) {
         return;
     }
@@ -1060,11 +960,11 @@ static void render_assets_browser(void) {
     if (igTreeNodeEx_Str("Brains", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (igButton("Open", IG_VEC2_ZERO)) {
             EDITOR.is_playing = 0;
-            char* file_path = open_nfd(
+            char *file_path = open_nfd(
                 EDITOR.project.default_search_path, BRAIN_FILTER, 1
             );
             if (file_path != NULL) {
-                Brain* brain = load_brain(file_path, &RESULT_MESSAGE, 1);
+                Brain *brain = load_brain(file_path, &RESULT_MESSAGE, 1);
             }
         }
 
@@ -1091,30 +991,26 @@ static void render_debug_inspector(void) {
     }
 
     if (igTreeNodeEx_Str("Shading", 0)) {
-        igCheckbox("Materials", (bool*)(&DEBUG.shading.materials));
-        igCheckbox("Lights", (bool*)(&DEBUG.shading.lights));
-        igCheckbox("Visions", (bool*)(&DEBUG.shading.visions));
+        igCheckbox("Materials", (bool *)(&DEBUG.shading.materials));
+        igCheckbox("Lights", (bool *)(&DEBUG.shading.lights));
+        igCheckbox("Visions", (bool *)(&DEBUG.shading.visions));
 
         igSeparator();
-        igCheckbox("Grid", (bool*)(&DEBUG.shading.grid));
+        igCheckbox("Grid", (bool *)(&DEBUG.shading.grid));
         if (igButton("Reset", IG_VEC2_ZERO)) {
             DEBUG.shading.grid_tile_size = SCENE_TILE_SIZE;
         }
         ig_same_line();
-        ig_drag_float(
-            "tile size", &DEBUG.shading.grid_tile_size, 1.0, 100.0, 1.0, 0
-        );
+        ig_drag_float("tile size", &DEBUG.shading.grid_tile_size, 1.0, 100.0, 1.0, 0);
 
         igTreePop();
         igSeparator();
     }
 
     if (igTreeNodeEx_Str("Collisions", 0)) {
-        ig_drag_int(
-            "n updates", &DEBUG.collisions.n_update_steps, 1, 100, 1, 0
-        );
+        ig_drag_int("n updates", &DEBUG.collisions.n_update_steps, 1, 100, 1, 0);
 
-        igCheckbox("Resolve", (bool*)&DEBUG.collisions.resolve);
+        igCheckbox("Resolve", (bool *)&DEBUG.collisions.resolve);
 
         ig_same_line();
         if (igButton("once", IG_VEC2_ZERO)) {
@@ -1125,15 +1021,11 @@ static void render_debug_inspector(void) {
     }
 
     if (igTreeNodeEx_Str("Gameplay", 0)) {
-        igCheckbox("All immortal", (bool*)&DEBUG.gameplay.all_immortal);
+        igCheckbox("All immortal", (bool *)&DEBUG.gameplay.all_immortal);
 
         int max_game_speed = 10;
-        ig_drag_int(
-            "speed", &DEBUG.gameplay.speed, 1, max_game_speed, 1, 0
-        );
-        DEBUG.gameplay.speed = clamp(
-            DEBUG.gameplay.speed, 1, max_game_speed
-        );
+        ig_drag_int("speed", &DEBUG.gameplay.speed, 1, max_game_speed, 1, 0);
+        DEBUG.gameplay.speed = clamp(DEBUG.gameplay.speed, 1, max_game_speed);
 
         igTreePop();
         igSeparator();
@@ -1141,16 +1033,11 @@ static void render_debug_inspector(void) {
 }
 
 static void process_keys(void) {
-    if (EDITOR.key.ctrl && EDITOR.key.c
-        && EDITOR.picked_entity.entity != -1) {
+    if (EDITOR.key.ctrl && EDITOR.key.c && EDITOR.picked_entity.entity != -1) {
         EDITOR.entity_to_copy = EDITOR.picked_entity.entity;
     } else if (EDITOR.key.ctrl && EDITOR.key.v && EDITOR.entity_to_copy != -1) {
         Transformation cursor = init_transformation(
-            round_vec_by_grid(
-                get_cursor_scene_pos(), EDITOR.drag_grid_size
-            ),
-            0.0,
-            0.0
+            round_vec_by_grid(get_cursor_scene_pos(), EDITOR.drag_grid_size), 0.0, 0.0
         );
         pick_entity(spawn_entity_copy(EDITOR.entity_to_copy, cursor));
     } else if (EDITOR.key.del && EDITOR.picked_entity.entity != -1) {
@@ -1159,7 +1046,7 @@ static void process_keys(void) {
 }
 
 void render_scene_editor(void) {
-    ImGuiStyle* style = igGetStyle();
+    ImGuiStyle *style = igGetStyle();
 
     render_game_controls();
     set_next_window_at_up_left();

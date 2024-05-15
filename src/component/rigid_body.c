@@ -18,29 +18,22 @@
 RigidBodyType RIGID_BODY_TYPES[N_RIGID_BODY_TYPES] = {
     STATIC_RIGID_BODY, KINEMATIC_RIGID_BODY, DYNAMIC_RIGID_BODY};
 
-const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES] = {
+const char *RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES] = {
     "Static", "Kinematic", "Dynamic"};
 
-void change_rigid_body_type(
-    RigidBody* rigid_body, RigidBodyType target_type
-) {
+void change_rigid_body_type(RigidBody *rigid_body, RigidBodyType target_type) {
     RigidBodyType source_type = rigid_body->type;
     if (source_type == target_type) {
         return;
     }
 
     switch (target_type) {
-        case STATIC_RIGID_BODY:
-            *rigid_body = init_default_static_rigid_body();
-            break;
+        case STATIC_RIGID_BODY: *rigid_body = init_default_static_rigid_body(); break;
         case KINEMATIC_RIGID_BODY:
             *rigid_body = init_default_kinematic_rigid_body();
             break;
-        case DYNAMIC_RIGID_BODY:
-            *rigid_body = init_default_dynamic_rigid_body();
-            break;
-        default:
-            RIGID_BODY_TYPE_ERROR("change_rigid_body_type", source_type);
+        case DYNAMIC_RIGID_BODY: *rigid_body = init_default_dynamic_rigid_body(); break;
+        default: RIGID_BODY_TYPE_ERROR("change_rigid_body_type", source_type);
     }
 }
 
@@ -88,31 +81,22 @@ RigidBody init_default_dynamic_rigid_body(void) {
     float angular_damping = 4.0;
     float angular_stiffness = 100.0;
     return init_dynamic_rigid_body(
-        mass,
-        linear_damping,
-        moment_of_inertia,
-        angular_damping,
-        angular_stiffness
+        mass, linear_damping, moment_of_inertia, angular_damping, angular_stiffness
     );
 }
 
 void apply_move_force_to_rb(
-    RigidBody* rb, float move_orientation, float force_magnitude
+    RigidBody *rb, float move_orientation, float force_magnitude
 ) {
     if (rb->type != DYNAMIC_RIGID_BODY) {
-        fprintf(
-            stderr,
-            "ERROR: Can't apply move force to the non-dynamic rigid body\n"
-        );
+        fprintf(stderr, "ERROR: Can't apply move force to the non-dynamic rigid body\n");
         exit(1);
     }
-    Vec2 force = scale(
-        get_orientation_vec(move_orientation), force_magnitude
-    );
+    Vec2 force = scale(get_orientation_vec(move_orientation), force_magnitude);
     rb->b.dynamic_rb.net_force = add(rb->b.dynamic_rb.net_force, force);
 }
 
-void apply_angular_torque_to_rb(RigidBody* rb, float orientation_diff) {
+void apply_angular_torque_to_rb(RigidBody *rb, float orientation_diff) {
     if (rb->type != DYNAMIC_RIGID_BODY) {
         fprintf(
             stderr,

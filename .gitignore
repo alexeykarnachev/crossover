@@ -1,7 +1,3 @@
-dependencies/
-!dependencies/cimgui/.gitignore
-!dependencies/cimgui/imgui/.gitignore
-
-build/
-*.swp
-
+.recent_project
+imgui.ini
+deps/src
