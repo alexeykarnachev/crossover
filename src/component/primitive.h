@@ -12,7 +12,7 @@ typedef enum PrimitiveType {
 } PrimitiveType;
 
 extern PrimitiveType PRIMITIVE_TYPES[N_PRIMITIVE_TYPES];
-const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES];
+extern const char* PRIMITIVE_TYPE_NAMES[N_PRIMITIVE_TYPES];
 
 typedef struct Circle {
     float radius;

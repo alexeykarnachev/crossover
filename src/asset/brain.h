@@ -38,8 +38,8 @@ void change_brain_input_type(
     BrainInput* brain_input, BrainInputType target_type
 );
 
-BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
-const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
+extern BrainInputType BRAIN_INPUT_TYPES[N_BRAIN_INPUT_TYPES];
+extern const char* BRAIN_INPUT_TYPE_NAMES[N_BRAIN_INPUT_TYPES];
 
 typedef enum BrainOutputType {
     WATCH_ORIENTATION_OUTPUT,
@@ -76,8 +76,8 @@ void change_brain_output_type(
 );
 
 #define N_BRAIN_OUTPUT_TYPES 4
-BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
-const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
+extern BrainInputType BRAIN_OUTPUT_TYPES[N_BRAIN_OUTPUT_TYPES];
+extern const char* BRAIN_OUTPUT_TYPE_NAMES[N_BRAIN_OUTPUT_TYPES];
 
 typedef struct BrainParams {
     char key[MAX_PATH_LENGTH + 32];

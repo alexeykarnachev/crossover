@@ -17,6 +17,7 @@ include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/imgui)
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/cimplot)
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/cimplot/implot)
 include_directories(${CMAKE_BINARY_DIR}/../dependencies/cimgui/generator/output/)
+include_directories(${CMAKE_BINARY_DIR}/../dependencies/glad/include/)
 add_definitions("-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1")
 
 set(IMGUI_SOURCES 
@@ -99,7 +100,7 @@ file(GLOB TEST_SOURCES "tests/*.c")
 set(SOURCES ${SOURCES})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-add_executable(${PROJECT_NAME} ${SOURCES} "../dependencies/glad/glad.c")
+add_executable(${PROJECT_NAME} ${SOURCES} "../dependencies/glad/src/glad.c")
 add_executable(tests ${CORE_SOURCES} ${TEST_SOURCES} "tests/test_all.c")
 target_link_libraries(tests m)
 

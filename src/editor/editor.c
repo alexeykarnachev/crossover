@@ -34,7 +34,6 @@ const char* RECENT_PROJECT_FILE_PATH = "./.recent_project";
 
 Editor EDITOR;
 
-Profiler* PROFILER;
 static int PROFILER_SHMID;
 static int PROFILER_STAGES_MAP_SHMID;
 

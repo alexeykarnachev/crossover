@@ -9,7 +9,7 @@ typedef enum RigidBodyType {
 } RigidBodyType;
 
 extern RigidBodyType RIGID_BODY_TYPES[N_RIGID_BODY_TYPES];
-const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES];
+extern const char* RIGID_BODY_TYPE_NAMES[N_RIGID_BODY_TYPES];
 
 typedef struct StaticRigidBody {
 } StaticRigidBody;
